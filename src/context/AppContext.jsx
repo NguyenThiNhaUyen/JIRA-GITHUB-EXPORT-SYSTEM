@@ -4,6 +4,7 @@ import { generateWeeks } from "../utils/dateRange";
 
 const AppContext = createContext(null);
 
+/* eslint-disable react-refresh/only-export-components */
 const SEMESTERS = [
   { id: "2026-spring", name: "2026 Spring", start: "2026-01-05", end: "2026-04-20" },
   { id: "2025-fall", name: "2025 Fall", start: "2025-09-01", end: "2025-12-31" },
