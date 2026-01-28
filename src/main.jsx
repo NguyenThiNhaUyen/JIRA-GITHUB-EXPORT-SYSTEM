@@ -7,6 +7,7 @@ import App from "./App.jsx";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
+import { ToastProvider } from "./components/ui/toast.jsx";
 
 // TanStack Query client
 const queryClient = new QueryClient({
@@ -23,11 +24,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AppProvider>
-            <App />
-          </AppProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AppProvider>
+              <App />
+            </AppProvider>
+          </AuthProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>

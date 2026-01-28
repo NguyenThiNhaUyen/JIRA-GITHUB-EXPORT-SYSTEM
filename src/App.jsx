@@ -1,28 +1,168 @@
-// App: Routing configuration
+// App: Routing configuration với role-based access cho Project-Based Learning Management
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
+import RoleGuard from "./components/role-guard.jsx";
 import Login from "./pages/login.jsx";
+import Unauthorized from "./pages/unauthorized.jsx";
+import NotFound from "./pages/not-found.jsx";
+import TestUI from "./pages/test-ui.jsx";
+
+// Admin pages
+import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
+import AdminReports from "./pages/admin/admin-reports.jsx";
+import CourseManagement from "./pages/admin/course-management.jsx";
+import UserManagement from "./pages/admin/user-management.jsx";
+
+// Lecturer pages
+import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
+import ProjectsOverview from "./pages/lecturer/projects-overview.jsx";
+import ProjectDetail from "./pages/lecturer/project-detail.jsx";
+
+// Student pages
+import StudentDashboard from "./pages/student/student-dashboard.jsx";
+import StudentProject from "./pages/student/student-project.jsx";
+
+// Legacy pages
 import Home from "./pages/home.jsx";
 import Dashboard from "./pages/dashboard.jsx";
 import Tasks from "./pages/tasks.jsx";
 import Commits from "./pages/commits.jsx";
 import Deadlines from "./pages/deadlines.jsx";
 import Performance from "./pages/performance.jsx";
+
 import { useAuth } from "./context/AuthContext.jsx";
 
 export default function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userRole } = useAuth();
 
+  // Helper function to get redirect path based on role
+  const getDefaultRedirect = () => {
+    if (!userRole) return "/login";
+    switch (userRole) {
+      case "ADMIN": return "/admin";
+      case "LECTURER": return "/lecturer";
+      case "STUDENT": return "/student";
+      default: return "/login";
+    }
+  };
+
+  // Always redirect to login first, let user choose role
   return (
     <Routes>
-      {/* Public route: Login */}
+      {/* Public routes */}
+      <Route path="/test-ui" element={<TestUI />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/not-found" element={<NotFound />} />
+
+      {/* Admin routes */}
       <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminDashboard />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminReports />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/courses"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <CourseManagement />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/courses/:courseId"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <CourseManagement />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <UserManagement />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
       />
 
-      {/* Protected routes */}
+      {/* Lecturer routes */}
+      <Route
+        path="/lecturer"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerDashboard />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/course/:courseId/projects"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <ProjectsOverview />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/project/:projectId"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <ProjectDetail />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Student routes */}
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentDashboard />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/project/:projectId"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentProject />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Legacy protected routes */}
       <Route
         path="/*"
         element={
@@ -35,8 +175,8 @@ export default function App() {
                 <Route path="/commits" element={<Commits />} />
                 <Route path="/deadlines" element={<Deadlines />} />
                 <Route path="/performance" element={<Performance />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </MainLayout>
           </ProtectedRoute>
