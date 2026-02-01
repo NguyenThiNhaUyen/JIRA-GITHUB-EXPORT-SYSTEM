@@ -61,7 +61,7 @@ export default function Home() {
       {/* Jira warning banner */}
       {showJiraBanner && (
         <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-xl px-4 py-3 flex items-center gap-3">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#b45309" strokeWidth="2" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#b45309" strokeWidth="2" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           <span>Chưa kết nối Jira. Vui lòng kết nối để sử dụng đầy đủ chức năng.</span>
         </div>
       )}
@@ -72,7 +72,7 @@ export default function Home() {
       {/* Sync error callout */}
       {showSyncError && (
         <div className="bg-red-50 border border-red-300 text-red-800 rounded-xl px-4 py-3 flex items-center gap-3">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#dc2626" strokeWidth="2" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#dc2626" strokeWidth="2" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           <span>Đồng bộ dữ liệu thất bại. <button className="ml-2 px-3 py-1 rounded-lg bg-white border border-red-300 text-red-700 hover:bg-red-100 text-sm">View Sync Logs</button></span>
         </div>
       )}
@@ -168,7 +168,7 @@ function StatCard({ label, value, icon, color }) {
   };
   return (
     <div className="bg-white rounded-2xl shadow-sm border p-5 flex flex-col items-start">
-      <div className={`rounded-lg p-2 mb-2 ${colorMap[color]}`}> <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d={icon} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> </div>
+      <div className={`rounded-lg p-2 mb-2 ${colorMap[color]}`}> <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d={icon} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg> </div>
       <div className="text-2xl font-bold">{value}</div>
       <div className="text-xs text-gray-500 mt-1">{label}</div>
     </div>
@@ -188,9 +188,9 @@ function StatusPill({ status }) {
 
 function ActivityIcon({ type }) {
   const icons = {
-    sync: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="#2563eb" strokeWidth="2" d="M4 4v5h.582M20 20v-5h-.581M19.418 9A7.974 7.974 0 0012 4a8 8 0 00-7.418 5M4.582 15A7.974 7.974 0 0012 20a8 8 0 007.418-5"/></svg>,
-    export: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="#0ea5e9" strokeWidth="2" d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>,
-    connect: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="2"/><path stroke="#22c55e" strokeWidth="2" d="M8 12l2 2 4-4"/></svg>,
+    sync: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="#2563eb" strokeWidth="2" d="M4 4v5h.582M20 20v-5h-.581M19.418 9A7.974 7.974 0 0012 4a8 8 0 00-7.418 5M4.582 15A7.974 7.974 0 0012 20a8 8 0 007.418-5" /></svg>,
+    export: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="#0ea5e9" strokeWidth="2" d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" /></svg>,
+    connect: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="2" /><path stroke="#22c55e" strokeWidth="2" d="M8 12l2 2 4-4" /></svg>,
   };
   return icons[type] || null;
 }
