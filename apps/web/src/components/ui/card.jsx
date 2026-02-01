@@ -2,9 +2,9 @@
 export function Card({ children, className = '', hover = false, ...props }) {
   const baseClasses = 'bg-white rounded-xl border border-secondary-200 shadow-sm';
   const hoverClasses = hover ? 'hover:shadow-md transition-shadow duration-200' : '';
-  
+
   return (
-    <div 
+    <div
       className={`${baseClasses} ${hoverClasses} ${className}`}
       {...props}
     >
@@ -31,7 +31,7 @@ export function CardTitle({ children, className = '', ...props }) {
 
 export function CardContent({ children, className = '', ...props }) {
   return (
-    <div className={`p-6 pt-0 ${className}`} {...props}>
+    <div className={`p-6 pt-6 ${className}`} {...props}>
       {children}
     </div>
   );

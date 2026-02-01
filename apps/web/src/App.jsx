@@ -12,7 +12,8 @@ import TestUI from "./pages/test-ui.jsx";
 import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
 import AdminReports from "./pages/admin/admin-reports.jsx";
 import CourseManagement from "./pages/admin/course-management.jsx";
-import UserManagement from "./pages/admin/user-management.jsx";
+import SemesterManagement from "./pages/admin/semester-management.jsx";
+import SubjectManagement from "./pages/admin/subject-management.jsx";
 
 // Lecturer pages
 import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
@@ -98,11 +99,21 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/users"
+        path="/admin/semesters"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <UserManagement />
+              <SemesterManagement />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/subjects"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <SubjectManagement />
             </RoleGuard>
           </ProtectedRoute>
         }

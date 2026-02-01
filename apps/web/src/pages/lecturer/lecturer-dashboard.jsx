@@ -11,7 +11,7 @@ import { useToast } from "../../components/ui/toast.jsx";
 import { courseService } from "../../services/courseService.js";
 import { projectService } from "../../services/projectService.js";
 import { commitService } from "../../services/commitService.js";
-import { WeeklyTrendsChart } from "../../components/charts/weekly-trends-chart.jsx";
+// import { WeeklyTrendsChart } from "../../components/charts/weekly-trends-chart.jsx";
 import { PerformanceTrendsChart } from "../../components/charts/performance-trends-chart.jsx";
 
 const DEFAULT_PROGRESS = 65;
@@ -246,15 +246,21 @@ export default function LecturerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50">
+      {/* Premium Header with gradient */}
+      <div className="bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Lecturer Dashboard</h1>
-              <p className="text-gray-600">Chào mừng, {user?.name}!</p>
+          <div className="flex justify-between items-center py-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+                Bảng điều khiển Giảng viên
+              </h1>
+              <p className="text-green-100 text-lg">Xin chào, <span className="font-semibold">{user?.name}</span>!</p>
             </div>
-            <Button onClick={handleLogout} variant="outline">
+            <Button
+              onClick={handleLogout}
+              className="bg-white bg-opacity-40 text-green-600 hover:bg-green-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3"
+            >
               Đăng xuất
             </Button>
           </div>
@@ -352,9 +358,9 @@ export default function LecturerDashboard() {
               )}
             </div>
 
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Danh sách Project</CardTitle>
+            <Card className="mb-8 border-0 shadow-xl rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-cyan-100">
+                <CardTitle className="text-3xl text-gray-800 font-bold">Danh sách Project</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {sortedProjects.map((project) => {
@@ -416,16 +422,16 @@ export default function LecturerDashboard() {
               </CardContent>
             </Card>
 
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
               <Button variant="outline" onClick={handleViewProjectsOverview}>
                 Xem tất cả projects
               </Button>
-            </div>
+            </div> */}
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+            {/* <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
               <WeeklyTrendsChart data={weeklyTrends} />
               <PerformanceTrendsChart data={performanceTrends} />
-            </div>
+            </div> */}
           </>
         )}
       </div>

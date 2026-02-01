@@ -20,20 +20,37 @@ class MockDB {
 
     // Fresh data initialization
     this.data = {
+      // Semesters: Kỳ học (e.g., Spring 2026, Fall 2025)
       semesters: [
-        { id: '2026-spring', name: 'Spring 2026', startDate: '2026-01-05', endDate: '2026-04-20', status: 'ACTIVE' },
-        { id: '2025-fall', name: 'Fall 2025', startDate: '2025-09-01', endDate: '2025-12-31', status: 'COMPLETED' },
-      ],
-      
-      subjects: [
-        { id: 'se101', name: 'Software Engineering Fundamentals', code: 'SE101', credits: 3 },
-        { id: 'se102', name: 'Advanced Software Engineering', code: 'SE102', credits: 4 },
-        { id: 'cs201', name: 'Computer Science Fundamentals', code: 'CS201', credits: 3 },
+        { id: 'sem-spring-2026', code: 'SPRING2026', name: 'Spring 2026', startDate: '2026-01-05', endDate: '2026-04-20', status: 'ACTIVE', createdAt: '2025-12-01' },
+        { id: 'sem-fall-2025', code: 'FALL2025', name: 'Fall 2025', startDate: '2025-09-01', endDate: '2025-12-31', status: 'COMPLETED', createdAt: '2025-08-01' },
+        { id: 'sem-summer-2026', code: 'SUMMER2026', name: 'Summer 2026', startDate: '2026-05-01', endDate: '2026-08-15', status: 'UPCOMING', createdAt: '2026-01-15' },
       ],
 
+      // Subjects: Môn học
+      subjects: [
+        { id: 'subj-exe101', code: 'EXE101', name: 'Exe Project', createdAt: '2025-01-01' },
+        { id: 'subj-prn222', code: 'PRN222', name: 'Programming .NET', createdAt: '2025-01-01' },
+        { id: 'subj-swd302', code: 'SWD302', name: 'Software Development', createdAt: '2025-01-01' },
+        { id: 'subj-swt301', code: 'SWT301', name: 'Software Testing', createdAt: '2025-01-01' },
+      ],
+
+      // Courses: Lớp học cụ thể (e.g., SE1821, SE1822) - combination of Subject + Semester
       courses: [
-        { id: 'se101-2026', subjectId: 'se101', semesterId: '2026-spring', code: 'SE101.001', title: 'SE Fundamentals - Spring 2026', status: 'ACTIVE', startDate: '2026-01-05', endDate: '2026-04-20', maxStudents: 40, currentStudents: 35 },
-        { id: 'se102-2026', subjectId: 'se102', semesterId: '2026-spring', code: 'SE102.001', title: 'Advanced SE - Spring 2026', status: 'ACTIVE', startDate: '2026-01-05', endDate: '2026-04-20', maxStudents: 30, currentStudents: 28 },
+        // SWD302 Courses for Spring 2026
+        { id: 'course-se1821', code: 'se1821', subjectId: 'subj-swd302', semesterId: 'sem-spring-2026', name: 'SWD302 - se1821', description: 'Software Development - Class se1821', status: 'ACTIVE', maxStudents: 40, currentStudents: 35, createdAt: '2025-12-15' },
+        { id: 'course-se1822', code: 'se1822', subjectId: 'subj-swd302', semesterId: 'sem-spring-2026', name: 'SWD302 - se1822', description: 'Software Development - Class se1822', status: 'ACTIVE', maxStudents: 40, currentStudents: 38, createdAt: '2025-12-15' },
+        { id: 'course-se1823', code: 'se1823', subjectId: 'subj-swd302', semesterId: 'sem-spring-2026', name: 'SWD302 - se1823', description: 'Software Development - Class se1823', status: 'ACTIVE', maxStudents: 40, currentStudents: 32, createdAt: '2025-12-15' },
+
+        // EXE101 Courses for Spring 2026
+        { id: 'course-exe1821', code: 'exe1821', subjectId: 'subj-exe101', semesterId: 'sem-spring-2026', name: 'EXE101 - exe1821', description: 'Exe Project - Class exe1821', status: 'ACTIVE', maxStudents: 30, currentStudents: 28, createdAt: '2025-12-15' },
+        { id: 'course-exe1822', code: 'exe1822', subjectId: 'subj-exe101', semesterId: 'sem-spring-2026', name: 'EXE101 - exe1822', description: 'Exe Project - Class exe1822', status: 'ACTIVE', maxStudents: 30, currentStudents: 25, createdAt: '2025-12-15' },
+
+        // PRN222 Courses for Spring 2026
+        { id: 'course-prn1821', code: 'prn1821', subjectId: 'subj-prn222', semesterId: 'sem-spring-2026', name: 'PRN222 - prn1821', description: 'Programming .NET - Class prn1821', status: 'ACTIVE', maxStudents: 35, currentStudents: 30, createdAt: '2025-12-15' },
+
+        // Fall 2025 courses (completed)
+        { id: 'course-se1721', code: 'se1721', subjectId: 'subj-swd302', semesterId: 'sem-fall-2025', name: 'SWD302 - se1721', description: 'Software Development - Class se1721', status: 'COMPLETED', maxStudents: 40, currentStudents: 40, createdAt: '2025-08-15' },
       ],
 
       users: {
@@ -53,24 +70,30 @@ class MockDB {
         ]
       },
 
+      // Course-Lecturer assignments: Mỗi course chỉ có 1 giảng viên PRIMARY
       courseLecturers: [
-        { id: 'cl1', courseId: 'se101-2026', lecturerId: 'lec001', role: 'PRIMARY', assignedAt: '2025-12-01' },
-        { id: 'cl2', courseId: 'se102-2026', lecturerId: 'lec001', role: 'PRIMARY', assignedAt: '2025-12-01' },
-        { id: 'cl3', courseId: 'se101-2026', lecturerId: 'lec002', role: 'SECONDARY', assignedAt: '2025-12-01' },
+        // Lecturer 1 teaches multiple SWD courses
+        { id: 'cl1', courseId: 'course-se1821', lecturerId: 'lec001', role: 'PRIMARY', assignedAt: '2025-12-01' },
+        { id: 'cl2', courseId: 'course-se1822', lecturerId: 'lec001', role: 'PRIMARY', assignedAt: '2025-12-01' },
+        { id: 'cl3', courseId: 'course-se1823', lecturerId: 'lec001', role: 'PRIMARY', assignedAt: '2025-12-01' },
+
+        // Lecturer 2 teaches EXE and PRN courses
+        { id: 'cl4', courseId: 'course-exe1821', lecturerId: 'lec002', role: 'PRIMARY', assignedAt: '2025-12-01' },
+        { id: 'cl5', courseId: 'course-prn1821', lecturerId: 'lec002', role: 'PRIMARY', assignedAt: '2025-12-01' },
       ],
 
       courseEnrollments: [
-        { id: 'ce1', courseId: 'se101-2026', studentId: 'stu001', enrolledAt: '2025-12-15', status: 'ACTIVE' },
-        { id: 'ce2', courseId: 'se101-2026', studentId: 'stu002', enrolledAt: '2025-12-15', status: 'ACTIVE' },
-        { id: 'ce3', courseId: 'se101-2026', studentId: 'stu003', enrolledAt: '2025-12-15', status: 'ACTIVE' },
-        { id: 'ce4', courseId: 'se102-2026', studentId: 'stu004', enrolledAt: '2025-12-15', status: 'ACTIVE' },
-        { id: 'ce5', courseId: 'se102-2026', studentId: 'stu005', enrolledAt: '2025-12-15', status: 'ACTIVE' },
+        { id: 'ce1', courseId: 'course-se1821', studentId: 'stu001', enrolledAt: '2025-12-15', status: 'ACTIVE' },
+        { id: 'ce2', courseId: 'course-se1821', studentId: 'stu002', enrolledAt: '2025-12-15', status: 'ACTIVE' },
+        { id: 'ce3', courseId: 'course-se1822', studentId: 'stu003', enrolledAt: '2025-12-15', status: 'ACTIVE' },
+        { id: 'ce4', courseId: 'course-exe1821', studentId: 'stu004', enrolledAt: '2025-12-15', status: 'ACTIVE' },
+        { id: 'ce5', courseId: 'course-prn1821', studentId: 'stu005', enrolledAt: '2025-12-15', status: 'ACTIVE' },
       ],
 
       projects: [
-        { id: 'proj1', courseId: 'se101-2026', name: 'E-commerce Platform', description: 'Build a full-stack e-commerce platform', status: 'ACTIVE', startDate: '2026-01-15', endDate: '2026-04-10', createdAt: '2026-01-10' },
-        { id: 'proj2', courseId: 'se101-2026', name: 'Task Management System', description: 'Create a task management application', status: 'ACTIVE', startDate: '2026-01-15', endDate: '2026-04-10', createdAt: '2026-01-10' },
-        { id: 'proj3', courseId: 'se102-2026', name: 'AI Chatbot', description: 'Develop an AI-powered chatbot', status: 'ACTIVE', startDate: '2026-01-20', endDate: '2026-04-15', createdAt: '2026-01-15' },
+        { id: 'proj1', courseId: 'course-se1821', name: 'E-commerce Platform', description: 'Build a full-stack e-commerce platform', status: 'ACTIVE', startDate: '2026-01-15', endDate: '2026-04-10', createdAt: '2026-01-10' },
+        { id: 'proj2', courseId: 'course-se1822', name: 'Task Management System', description: 'Create a task management application', status: 'ACTIVE', startDate: '2026-01-15', endDate: '2026-04-10', createdAt: '2026-01-10' },
+        { id: 'proj3', courseId: 'course-exe1821', name: 'AI Chatbot', description: 'Develop an AI-powered chatbot', status: 'ACTIVE', startDate: '2026-01-20', endDate: '2026-04-15', createdAt: '2026-01-15' },
       ],
 
       teamMembers: [
@@ -89,9 +112,9 @@ class MockDB {
       ],
 
       studentLinks: [
-        { id: 'sl1', studentId: 'stu001', courseId: 'se101-2026', githubAccountUrl: 'https://github.com/alicejohnson', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=alicejohnson', status: 'CONFIRMED', confirmedByLecturerId: 'lec001', updatedAt: '2026-01-15T10:00:00Z' },
-        { id: 'sl2', studentId: 'stu002', courseId: 'se101-2026', githubAccountUrl: 'https://github.com/bobwilson', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=bobwilson', status: 'PENDING', confirmedByLecturerId: null, updatedAt: '2026-01-20T14:30:00Z' },
-        { id: 'sl3', studentId: 'stu003', courseId: 'se101-2026', githubAccountUrl: 'https://github.com/caroldavis', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=caroldavis', status: 'REJECTED', confirmedByLecturerId: 'lec001', updatedAt: '2026-01-18T16:20:00Z', rejectionReason: 'Invalid GitHub URL' },
+        { id: 'sl1', studentId: 'stu001', courseId: 'course-se1821', githubAccountUrl: 'https://github.com/alicejohnson', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=alicejohnson', status: 'CONFIRMED', confirmedByLecturerId: 'lec001', updatedAt: '2026-01-15T10:00:00Z' },
+        { id: 'sl2', studentId: 'stu002', courseId: 'course-se1821', githubAccountUrl: 'https://github.com/bobwilson', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=bobwilson', status: 'PENDING', confirmedByLecturerId: null, updatedAt: '2026-01-20T14:30:00Z' },
+        { id: 'sl3', studentId: 'stu003', courseId: 'course-se1822', githubAccountUrl: 'https://github.com/caroldavis', jiraAccountUrl: 'https://university.atlassian.net/secure/ViewProfile.jspa?name=caroldavis', status: 'REJECTED', confirmedByLecturerId: 'lec001', updatedAt: '2026-01-18T16:20:00Z', rejectionReason: 'Invalid GitHub URL' },
       ],
 
       commits: [
@@ -140,23 +163,23 @@ class MockDB {
 
   findMany(collection, filter = {}) {
     let items = Array.isArray(this.data[collection]) ? this.data[collection] : [];
-    
+
     Object.keys(filter).forEach(key => {
       if (filter[key] !== undefined && filter[key] !== null) {
         items = items.filter(item => item[key] === filter[key]);
       }
     });
-    
+
     return items;
   }
 
   update(collection, id, updates) {
     const items = this.data[collection];
     if (!Array.isArray(items)) return null;
-    
+
     const index = items.findIndex(item => item.id === id);
     if (index === -1) return null;
-    
+
     items[index] = { ...items[index], ...updates };
     this.save();
     return items[index];
@@ -165,10 +188,10 @@ class MockDB {
   delete(collection, id) {
     const items = this.data[collection];
     if (!Array.isArray(items)) return false;
-    
+
     const index = items.findIndex(item => item.id === id);
     if (index === -1) return false;
-    
+
     items.splice(index, 1);
     this.save();
     return true;
@@ -214,8 +237,8 @@ class MockDB {
   getCommitsStats(courseId, startDate, endDate) {
     const courseProjects = this.findMany('projects', { courseId });
     const projectIds = courseProjects.map(p => p.id);
-    
-    const commits = this.data.commits.filter(commit => 
+
+    const commits = this.data.commits.filter(commit =>
       projectIds.includes(commit.projectId) &&
       new Date(commit.committedAt) >= new Date(startDate) &&
       new Date(commit.committedAt) <= new Date(endDate)
@@ -237,29 +260,29 @@ class MockDB {
   getActiveStudents(courseId, days = 7) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    
+
     const courseProjects = this.findMany('projects', { courseId });
     const projectIds = courseProjects.map(p => p.id);
-    
+
     const recentCommits = this.data.commits.filter(commit =>
       projectIds.includes(commit.projectId) &&
       new Date(commit.committedAt) >= cutoffDate
     );
-    
+
     return [...new Set(recentCommits.map(c => c.authorStudentId))];
   }
 
   getSilentProjects(courseId, days = 7) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    
+
     const courseProjects = this.findMany('projects', { courseId });
-    
+
     return courseProjects.filter(project => {
       const lastCommit = this.data.commits
         .filter(c => c.projectId === project.id)
         .sort((a, b) => new Date(b.committedAt) - new Date(a.committedAt))[0];
-      
+
       return !lastCommit || new Date(lastCommit.committedAt) < cutoffDate;
     });
   }
