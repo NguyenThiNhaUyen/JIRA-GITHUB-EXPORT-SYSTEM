@@ -15,7 +15,7 @@ export default function ProjectsOverview() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { success, error } = useToast();
-  
+
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
@@ -30,7 +30,7 @@ export default function ProjectsOverview() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      
+
       let projectData = [];
       if (filter === 'all') {
         projectData = await projectService.getCourseProjects(courseId);
@@ -45,13 +45,13 @@ export default function ProjectsOverview() {
           hasInactiveMembers: true
         });
       }
-      
+
       setProjects(projectData);
-      
+
       // Get course info
       const enrichedProjects = await projectService.getProjects({ courseId });
       setCourse(enrichedProjects[0]?.course || null);
-      
+
     } catch (err) {
       error('Failed to load projects');
     } finally {
@@ -76,28 +76,28 @@ export default function ProjectsOverview() {
   const getLastCommitInfo = (project) => {
     const commits = project.commits || [];
     if (commits.length === 0) return 'No commits';
-    
+
     const lastCommit = commits[0];
     const date = new Date(lastCommit.committedAt);
     const now = new Date();
     const daysDiff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
+
     return daysDiff === 0 ? 'Today' : `${daysDiff} days ago`;
   };
 
   const getSyncStatusBadge = (project) => {
     const integration = project.integration;
     if (!integration) return <Badge variant="outline" size="sm">No Integration</Badge>;
-    
+
     const statusColors = {
       SUCCESS: 'success',
       ERROR: 'error',
       PENDING: 'warning'
     };
-    
+
     return (
-      <Badge 
-        variant={statusColors[integration.syncStatus] || 'outline'} 
+      <Badge
+        variant={statusColors[integration.syncStatus] || 'outline'}
         size="sm"
       >
         {integration.syncStatus}
@@ -106,19 +106,24 @@ export default function ProjectsOverview() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50">
+      {/* Premium Header with gradient */}
+      <div className="bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects Overview</h1>
-              <p className="text-gray-600">
+          <div className="flex justify-between items-center py-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+                Danh sách Dự án
+              </h1>
+              <p className="text-green-100 text-lg">
                 {course ? `${course.code} - ${course.title}` : 'Loading...'}
               </p>
             </div>
-            <Button onClick={() => navigate('/lecturer')} variant="outline">
-              Back to Dashboard
+            <Button
+              onClick={() => navigate('/lecturer')}
+              className="bg-white bg-opacity-40 text-green-600 hover:bg-green-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3"
+            >
+              ← Quay lại
             </Button>
           </div>
         </div>
@@ -126,13 +131,14 @@ export default function ProjectsOverview() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-0 shadow-lg rounded-2xl">
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={filter === 'all' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('all')}
+                className={filter === 'all' ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white border-0' : ''}
               >
                 All Projects
               </Button>
@@ -140,6 +146,7 @@ export default function ProjectsOverview() {
                 variant={filter === 'sync-error' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('sync-error')}
+                className={filter === 'sync-error' ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-0' : ''}
               >
                 Sync Error
               </Button>
@@ -147,6 +154,7 @@ export default function ProjectsOverview() {
                 variant={filter === 'no-commits-7days' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('no-commits-7days')}
+                className={filter === 'no-commits-7days' ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0' : ''}
               >
                 No Commits (7 days)
               </Button>
@@ -154,6 +162,7 @@ export default function ProjectsOverview() {
                 variant={filter === 'inactive-members-14days' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('inactive-members-14days')}
+                className={filter === 'inactive-members-14days' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-0' : ''}
               >
                 Inactive Members (14 days)
               </Button>
@@ -162,7 +171,10 @@ export default function ProjectsOverview() {
         </Card>
 
         {/* Projects Table */}
-        <Card>
+        <Card className="border-0 shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-cyan-100">
+            <CardTitle className="text-3xl text-gray-800 font-bold">Dự án</CardTitle>
+          </CardHeader>
           <CardContent className="pt-6">
             {loading ? (
               <div className="text-center py-8">
@@ -186,8 +198,12 @@ export default function ProjectsOverview() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {projects.map(project => (
-                    <TableRow key={project.id}>
+                  {projects.map((project, index) => (
+                    <TableRow
+                      key={project.id}
+                      className={`hover:bg-teal-100 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-teal-50/30'
+                        }`}
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium text-gray-900">{project.name}</div>
@@ -195,7 +211,7 @@ export default function ProjectsOverview() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant={project.status === 'ACTIVE' ? 'success' : 'secondary'}
                           size="sm"
                         >
@@ -217,14 +233,14 @@ export default function ProjectsOverview() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleSyncCommits(project.id)}
                           >
                             Sync
                           </Button>
-                          <Button 
+                          <Button
                             size="sm"
                             onClick={() => handleViewProjectDetail(project.id)}
                           >
