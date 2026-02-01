@@ -17,20 +17,14 @@ import SubjectManagement from "./pages/admin/subject-management.jsx";
 
 // Lecturer pages
 import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
-import ProjectsOverview from "./pages/lecturer/projects-overview.jsx";
-import ProjectDetail from "./pages/lecturer/project-detail.jsx";
+import ManageGroups from "./pages/lecturer/manage-groups.jsx";
+import GroupDetail from "./pages/lecturer/group-detail.jsx";
 
 // Student pages
 import StudentDashboard from "./pages/student/student-dashboard.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
 
-// Legacy pages
-import Home from "./pages/home.jsx";
-import Dashboard from "./pages/dashboard.jsx";
-import Tasks from "./pages/tasks.jsx";
-import Commits from "./pages/commits.jsx";
-import Deadlines from "./pages/deadlines.jsx";
-import Performance from "./pages/performance.jsx";
+
 
 import { useAuth } from "./context/AuthContext.jsx";
 
@@ -130,22 +124,24 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+
       <Route
-        path="/lecturer/course/:courseId/projects"
+        path="/lecturer/course/:courseId/manage-groups"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <ProjectsOverview />
+              <ManageGroups />
             </RoleGuard>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/lecturer/project/:projectId"
+        path="/lecturer/group/:groupId"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <ProjectDetail />
+              <GroupDetail />
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -180,12 +176,6 @@ export default function App() {
           <ProtectedRoute>
             <MainLayout>
               <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/commits" element={<Commits />} />
-                <Route path="/deadlines" element={<Deadlines />} />
-                <Route path="/performance" element={<Performance />} />
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
