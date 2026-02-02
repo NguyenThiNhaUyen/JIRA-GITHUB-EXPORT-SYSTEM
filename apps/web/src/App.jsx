@@ -4,6 +4,7 @@ import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
 import Login from "./pages/login.jsx";
+import ForgotPassword from "./pages/forgot-password.jsx";
 import Unauthorized from "./pages/unauthorized.jsx";
 import NotFound from "./pages/not-found.jsx";
 import TestUI from "./pages/test-ui.jsx";
@@ -21,7 +22,7 @@ import ManageGroups from "./pages/lecturer/manage-groups.jsx";
 import GroupDetail from "./pages/lecturer/group-detail.jsx";
 
 // Student pages
-import StudentDashboard from "./pages/student/student-dashboard.jsx";
+import StudentDashboard from "./pages/student/student-dashboard-new.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
 
 
@@ -48,6 +49,7 @@ export default function App() {
       {/* Public routes */}
       <Route path="/test-ui" element={<TestUI />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />
 
