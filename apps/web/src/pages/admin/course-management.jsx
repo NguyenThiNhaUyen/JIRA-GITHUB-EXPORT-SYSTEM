@@ -215,7 +215,6 @@ export default function CourseManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="font-semibold text-gray-600 uppercase text-xs">Mã lớp</TableHead>
-                    <TableHead className="font-semibold text-gray-600 uppercase text-xs">Tên lớp</TableHead>
                     <TableHead className="font-semibold text-gray-600 uppercase text-xs">Môn học</TableHead>
                     <TableHead className="font-semibold text-gray-600 uppercase text-xs">Học kỳ</TableHead>
                     <TableHead className="font-semibold text-gray-600 uppercase text-xs">Giảng viên</TableHead>
@@ -235,9 +234,6 @@ export default function CourseManagement() {
                       >
                         <TableCell className="font-bold text-pink-600 text-lg">
                           {course.code}
-                        </TableCell>
-                        <TableCell className="font-medium text-gray-900">
-                          {course.name}
                         </TableCell>
                         <TableCell>
                           <Badge

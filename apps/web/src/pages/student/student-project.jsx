@@ -8,13 +8,13 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { Badge } from "../../components/ui/badge.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
-import { 
-  getProjectById, 
-  getCommitsByProject, 
-  getSrsReportsByProject, 
+import {
+  getProjectById,
+  getCommitsByProject,
+  getSrsReportsByProject,
   getCommitsByStudent,
   mockUsers,
-  mockJiraProjects 
+  mockJiraProjects
 } from "../../mock/data.js";
 
 export default function StudentProject() {
@@ -35,10 +35,10 @@ export default function StudentProject() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Project không tồn tại</h2>
-          <Button onClick={() => window.history.back()}>Quay lại</Button>
+          <Button onClick={() => window.history.back()} className="bg-orange-600 hover:bg-orange-700">Quay lại</Button>
         </div>
       </div>
     );
@@ -49,21 +49,21 @@ export default function StudentProject() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gradient-to-r from-orange-600 to-amber-500 border-b border-orange-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-              <p className="text-gray-600">{project.description}</p>
-              <Badge variant={myRole === 'LEADER' ? 'primary' : 'outline'} className="mt-2">
+              <h1 className="text-2xl font-bold text-white">{project.name}</h1>
+              <p className="text-orange-100">{project.description}</p>
+              <Badge variant={myRole === 'LEADER' ? 'primary' : 'outline'} className="mt-2 bg-orange-100 text-orange-800 border-orange-300">
                 {myRole}
               </Badge>
             </div>
             <div className="flex space-x-3">
-              <Button variant="outline">Export báo cáo</Button>
-              <Button onClick={handleUploadSrs}>Upload SRS</Button>
+              <Button variant="outline" className="bg-white text-orange-600 border-orange-200 hover:bg-orange-50">Export báo cáo</Button>
+              <Button onClick={handleUploadSrs} className="bg-white text-orange-600 hover:bg-orange-50 border border-orange-200">Upload SRS</Button>
             </div>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function StudentProject() {
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-gray-500">Repository</div>
-              <div className="font-semibold text-blue-600 hover:underline cursor-pointer">
+              <div className="font-semibold text-orange-600 hover:underline cursor-pointer">
                 {project.githubRepo?.split('/').pop()}
               </div>
             </CardContent>
@@ -167,8 +167,8 @@ export default function StudentProject() {
                 {jiraProject ? (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{jiraProject.issueCount}</div>
+                      <div className="text-center p-4 bg-orange-50 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">{jiraProject.issueCount}</div>
                         <div className="text-sm text-gray-600">Total Issues</div>
                       </div>
                       <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -180,7 +180,7 @@ export default function StudentProject() {
                         <div className="text-sm text-gray-600">Sprints</div>
                       </div>
                     </div>
-                    
+
                     <div className="border-t pt-4">
                       <h4 className="font-semibold mb-2">Current Sprint: {jiraProject.currentSprint}</h4>
                       <Badge variant={jiraProject.sprintStatus === 'ACTIVE' ? 'success' : 'default'}>
@@ -252,7 +252,7 @@ export default function StudentProject() {
                           {report.status}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
                         <div>
                           <span className="text-gray-500">Ngày nộp:</span>
@@ -271,13 +271,13 @@ export default function StudentProject() {
                           </p>
                         </div>
                       </div>
-                      
+
                       {report.comments && (
                         <div className="mb-3">
                           <p className="text-sm text-gray-600 italic">"{report.comments}"</p>
                         </div>
                       )}
-                      
+
                       <div className="flex space-x-2">
                         <Button size="sm" variant="outline">
                           Download
@@ -291,7 +291,7 @@ export default function StudentProject() {
                     </div>
                   ))}
                 </div>
-                
+
                 {srsReports.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     Chưa có SRS report nào cho project này.
@@ -323,7 +323,7 @@ export default function StudentProject() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               <p className="mt-2 text-sm text-gray-600">
-                Kéo file vào đây hoặc <button className="text-blue-600 hover:underline">chọn file</button>
+                Kéo file vào đây hoặc <button className="text-orange-600 hover:underline">chọn file</button>
               </p>
               <p className="text-xs text-gray-500">PDF, DOC, DOCX (MAX. 10MB)</p>
             </div>
@@ -336,7 +336,7 @@ export default function StudentProject() {
             <input
               type="text"
               placeholder="VD: 1.0, 1.1, 2.0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -344,7 +344,7 @@ export default function StudentProject() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Trạng thái
             </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
               <option value="DRAFT">Draft</option>
               <option value="REVIEW">Gửi review</option>
               <option value="FINAL">Final</option>
@@ -358,7 +358,7 @@ export default function StudentProject() {
             <textarea
               rows={3}
               placeholder="Nhập ghi chú cho report này..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
