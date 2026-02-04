@@ -58,6 +58,16 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
+    /// Generate ISO 29148 SRS report from Jira
+    /// </summary>
+    [HttpPost("srs")]
+    public async Task<IActionResult> GenerateSrs([FromQuery] long projectId, [FromQuery] string format = "PDF")
+    {
+        var reportId = await _reportService.GenerateSrsReportAsync(projectId, format);
+        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "SRS Report generation started"));
+    }
+
+    /// <summary>
     /// Get report download link
     /// </summary>
     [HttpGet("{id}/download-link")]
