@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -21,9 +21,9 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// User login
+    /// Authenticate and create a session
     /// </summary>
-    [HttpPost("login")]
+    [HttpPost("sessions")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -45,9 +45,9 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// User registration
+    /// Create a new user account
     /// </summary>
-    [HttpPost("register")]
+    [HttpPost("users")]
     [ProducesResponseType(typeof(ApiResponse<UserInfo>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)

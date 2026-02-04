@@ -9,8 +9,8 @@ using System.Security.Claims;
 namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
-[Route("api/lecturer/projects")]
-[Authorize(Roles = "LECTURER,ADMIN")]
+[Route("api/projects")]
+[Authorize]
 public class ProjectsController : ControllerBase
 {
     private readonly IProjectService _projectService;
@@ -52,9 +52,9 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-    /// Get project dashboard with metrics
+    /// Get project metrics
     /// </summary>
-    [HttpGet("{projectId}/dashboard")]
+    [HttpGet("{projectId}/metrics")]
     [ProducesResponseType(typeof(ApiResponse<ProjectDashboardResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProjectDashboard(long projectId)
     {

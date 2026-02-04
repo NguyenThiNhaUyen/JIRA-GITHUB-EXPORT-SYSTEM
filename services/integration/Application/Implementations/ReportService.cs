@@ -144,6 +144,63 @@ public class ReportService : IReportService
         var reports = await _unitOfWork.ReportExports.FindAsync(r => r.requested_by_user_id == userId);
         return reports.OrderByDescending(r => r.requested_at).ToList();
     }
+
+    public async Task<long> GenerateSrsReportAsync(long projectId, string format)
+    {
+        try
+        {
+            var project = await _unitOfWork.Projects.Query()
+                .Include(p => p.project_integration)
+                    .ThenInclude(pi => pi.jira_project)
+                        .ThenInclude(jp => jp.jira_issues)
+                .FirstOrDefaultAsync(p => p.id == projectId);
+
+            if (project == null) throw new NotFoundException("Project not found");
+            
+            var integration = project.project_integration;
+            if (integration?.jira_project == null) 
+                throw new BusinessException("Project is not integrated with Jira. SRS cannot be generated.");
+
+            var reportExport = new report_export
+            {
+                report_type = "SRS_ISO29148",
+                scope = "PROJECT",
+                scope_entity_id = projectId,
+                format = format,
+                status = "COMPLETED",
+                requested_by_user_id = 1, // TODO: Get from context
+                requested_at = DateTime.UtcNow,
+                file_url = $"/reports/project_{projectId}_srs_{DateTime.UtcNow:yyyyMMdd}.{format.ToLower()}"
+            };
+
+            // Logic to organize Jira Data for SRS Sections
+            var issues = integration.jira_project.jira_issues;
+            
+            // Chapter 3: System Features (Epics -> Features)
+            var systemFeatures = issues.Where(i => i.issue_type?.ToUpper() == "EPIC" || i.issue_type?.ToUpper() == "STORY")
+                                      .OrderBy(i => i.issue_type)
+                                      .Select(i => new { i.jira_issue_key, i.title, i.description })
+                                      .ToList();
+
+            // Chapter 5: Nonfunctional Requirements (NFR)
+            var nfrs = issues.Where(i => i.issue_type?.ToUpper() == "NFR" || (i.title != null && i.title.Contains("NFR", StringComparison.OrdinalIgnoreCase)))
+                             .Select(i => new { i.jira_issue_key, i.title, i.description })
+                             .ToList();
+
+            _logger.LogInformation("Generating SRS for Project {ProjectName} with {FeatureCount} features and {NfrCount} NFRs", 
+                project.name, systemFeatures.Count, nfrs.Count);
+
+            _unitOfWork.ReportExports.Add(reportExport);
+            await _unitOfWork.SaveChangesAsync();
+
+            return reportExport.id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate SRS report for project {ProjectId}", projectId);
+            throw;
+        }
+    }
 }
 
 
