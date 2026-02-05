@@ -42,9 +42,9 @@ export function Topbar() {
 
   return (
     <header className="h-16 bg-white border-b border-blue-100 shadow-sm sticky top-0 z-10">
-      <div className="h-full px-4 lg:px-6 flex items-center gap-3 lg:gap-6">
-        {/* Search - chỉ hiển thị trên desktop */}
-        <div className="hidden md:flex flex-1 max-w-md">
+      <div className="h-full px-6 flex items-center gap-6">
+        {/* Search */}
+        <div className="flex flex-1 max-w-md">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
             <Input
@@ -55,14 +55,14 @@ export function Topbar() {
           </div>
         </div>
 
-        {/* Center controls - responsive */}
-        <div className="hidden lg:flex flex-1 items-center justify-center">
-          <div className="flex items-end gap-3 lg:gap-4 bg-blue-50 border border-blue-200 rounded-xl px-3 lg:px-4 py-2.5">
+        {/* Center controls */}
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex items-end gap-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
             <Control label="Kì học">
               <Select
                 value={semesterId}
                 onChange={(e) => changeSemester(e.target.value)}
-                className="min-w-[160px] text-sm"
+                className="min-w-[180px]"
               >
                 {SEMESTERS.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -78,7 +78,7 @@ export function Topbar() {
               <Select
                 value={weekId}
                 onChange={(e) => setWeekId(e.target.value)}
-                className="min-w-[180px] text-sm"
+                className="min-w-[200px]"
               >
                 {weeks.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -94,7 +94,7 @@ export function Topbar() {
               <Select
                 value={repoId}
                 onChange={(e) => setRepoId(e.target.value)}
-                className="min-w-[140px] text-sm"
+                className="min-w-[160px]"
               >
                 {REPOSITORIES.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -106,40 +106,23 @@ export function Topbar() {
           </div>
         </div>
 
-        {/* Mobile: Simplified controls */}
-        <div className="lg:hidden flex-1 flex items-center gap-2">
-          <Select
-            value={weekId}
-            onChange={(e) => setWeekId(e.target.value)}
-            className="flex-1 text-xs py-1.5"
-          >
-            {weeks.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.label.split(" ")[0]}
-              </option>
-            ))}
-          </Select>
-        </div>
-
         {/* Right actions */}
-        <div className="flex items-center gap-2 lg:gap-3">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
-            className="hidden sm:flex"
             onClick={() => console.log("Sync")}
           >
-            <RefreshCw size={16} className="sm:mr-2" />
-            <span className="hidden sm:inline">Sync</span>
+            <RefreshCw size={16} className="mr-2" />
+            <span>Sync</span>
           </Button>
 
           <Button
             size="sm"
-            className="hidden sm:flex"
             onClick={() => console.log("Export")}
           >
-            <Download size={16} className="sm:mr-2" />
-            <span className="hidden sm:inline">Export</span>
+            <Download size={16} className="mr-2" />
+            <span>Export</span>
           </Button>
 
           <button className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors" aria-label="Notifications">
@@ -156,7 +139,7 @@ export function Topbar() {
               <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
                 {user?.name?.charAt(0).toUpperCase() || "U"}
               </div>
-              <ChevronDown size={16} className={cn("hidden sm:block", showUserMenu && "rotate-180")} />
+              <ChevronDown size={16} className={cn(showUserMenu && "rotate-180")} />
             </button>
 
             {showUserMenu && (
