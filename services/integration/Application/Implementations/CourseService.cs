@@ -149,6 +149,12 @@ public class CourseService : ICourseService
         return _mapper.Map<CourseDetailResponse>(course);
     }
 
+    public async Task<List<CourseDetailResponse>> GetAllCoursesAsync()
+    {
+        var courses = await _unitOfWork.Courses.GetAllAsync();
+        return courses.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+    }
+
     public async Task<List<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId)
     {
         var lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUserId);

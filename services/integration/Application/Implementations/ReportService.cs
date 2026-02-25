@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -11,11 +13,19 @@ public class ReportService : IReportService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ReportService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger)
+    public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger, IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    private long GetCurrentUserId()
+    {
+        var claim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return long.TryParse(claim, out var id) ? id : 0;
     }
 
     public async Task<long> GenerateCommitStatisticsReportAsync(long courseId, string format)
@@ -32,7 +42,7 @@ public class ReportService : IReportService
                 scope_entity_id = courseId,
                 format = format,
                 status = "COMPLETED", // Assuming synchronous for now or mock completion
-                requested_by_user_id = 1, // TODO: Get from current user
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
                 file_url = $"/reports/course_{courseId}_commits.{format.ToLower()}"
             };
@@ -73,7 +83,7 @@ public class ReportService : IReportService
                 scope_entity_id = projectId,
                 format = format,
                 status = "COMPLETED",
-                requested_by_user_id = 1, 
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
                 file_url = $"/reports/project_{projectId}_roster.{format.ToLower()}"
             };
@@ -104,7 +114,7 @@ public class ReportService : IReportService
                 scope_entity_id = projectId,
                 format = format,
                 status = "COMPLETED",
-                requested_by_user_id = 1,
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
                 file_url = $"/reports/project_{projectId}_activity.{format.ToLower()}"
             };

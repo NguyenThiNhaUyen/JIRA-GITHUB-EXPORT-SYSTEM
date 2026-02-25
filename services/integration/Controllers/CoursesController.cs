@@ -43,9 +43,7 @@ public class CoursesController : ControllerBase
 
         if (userRole == "ADMIN")
         {
-            // For now ICourseService might not have GetAllActiveCourses, but we can reuse GetCoursesByLecturer or similar if needed
-            // Let's assume we want to return courses based on role
-            result = await _courseService.GetCoursesByLecturerAsync(userId); // Fallback for demo
+            result = await _courseService.GetAllCoursesAsync();
         }
         else if (userRole == "LECTURER")
         {

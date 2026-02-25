@@ -16,6 +16,7 @@ public interface ICourseService
     // Course
     Task<CourseDetailResponse> CreateCourseAsync(CreateCourseRequest request, long createdByUserId);
     Task<CourseDetailResponse> GetCourseByIdAsync(long courseId);
+    Task<List<CourseDetailResponse>> GetAllCoursesAsync();
     Task<List<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId);
     Task<List<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId);
 
