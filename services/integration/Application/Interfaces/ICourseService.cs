@@ -1,3 +1,4 @@
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 
@@ -7,18 +8,24 @@ public interface ICourseService
 {
     // Semester
     Task<SemesterInfo> CreateSemesterAsync(CreateSemesterRequest request);
-    Task<List<SemesterInfo>> GetAllSemestersAsync();
+    Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request);
+    Task DeleteSemesterAsync(long semesterId);
+    Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
 
     // Subject
     Task<SubjectInfo> CreateSubjectAsync(CreateSubjectRequest request);
-    Task<List<SubjectInfo>> GetAllSubjectsAsync();
+    Task<SubjectInfo> UpdateSubjectAsync(long subjectId, UpdateSubjectRequest request);
+    Task DeleteSubjectAsync(long subjectId);
+    Task<PagedResponse<SubjectInfo>> GetAllSubjectsAsync(PagedRequest request);
 
     // Course
     Task<CourseDetailResponse> CreateCourseAsync(CreateCourseRequest request, long createdByUserId);
+    Task<CourseDetailResponse> UpdateCourseAsync(long courseId, UpdateCourseRequest request);
+    Task DeleteCourseAsync(long courseId);
     Task<CourseDetailResponse> GetCourseByIdAsync(long courseId);
-    Task<List<CourseDetailResponse>> GetAllCoursesAsync();
-    Task<List<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId);
-    Task<List<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId);
+    Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request);
+    Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request);
+    Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request);
 
     // Lecturer Assignment
     Task AssignLecturerAsync(long courseId, long lecturerUserId);

@@ -25,11 +25,11 @@ public class SemestersController : ControllerBase
     /// Get all semesters
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<List<SemesterInfo>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<SemesterInfo>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var result = await _courseService.GetAllSemestersAsync();
-        return Ok(ApiResponse<List<SemesterInfo>>.SuccessResponse(result));
+        var result = await _courseService.GetAllSemestersAsync(request);
+        return Ok(ApiResponse<PagedResponse<SemesterInfo>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -42,5 +42,29 @@ public class SemestersController : ControllerBase
     {
         var result = await _courseService.CreateSemesterAsync(request);
         return CreatedAtAction(nameof(GetAll), ApiResponse<SemesterInfo>.SuccessResponse(result, "Semester created successfully"));
+    }
+
+    /// <summary>
+    /// Update a semester (Admin only)
+    /// </summary>
+    [HttpPut("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<SemesterInfo>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateSemesterRequest request)
+    {
+        var result = await _courseService.UpdateSemesterAsync(id, request);
+        return Ok(ApiResponse<SemesterInfo>.SuccessResponse(result, "Semester updated successfully"));
+    }
+
+    /// <summary>
+    /// Delete a semester (Admin only)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete(long id)
+    {
+        await _courseService.DeleteSemesterAsync(id);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Semester deleted successfully"));
     }
 }

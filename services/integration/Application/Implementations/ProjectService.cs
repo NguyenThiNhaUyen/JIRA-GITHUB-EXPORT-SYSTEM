@@ -1,6 +1,7 @@
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -19,19 +21,22 @@ public class ProjectService : IProjectService
     private readonly ILogger<ProjectService> _logger;
     private readonly IGitHubClient _githubClient;
     private readonly IJiraClient _jiraClient;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public ProjectService(
         IUnitOfWork unitOfWork, 
         IMapper mapper, 
         ILogger<ProjectService> logger,
         IGitHubClient githubClient,
-        IJiraClient jiraClient)
+        IJiraClient jiraClient,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _githubClient = githubClient;
         _jiraClient = jiraClient;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId)
@@ -81,10 +86,65 @@ public class ProjectService : IProjectService
         return _mapper.Map<ProjectDetailResponse>(project);
     }
 
-    public async Task<List<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId)
+    public async Task<ProjectDetailResponse> UpdateProjectAsync(long projectId, UpdateProjectRequest request)
     {
-        var projects = await _unitOfWork.Projects.FindAsync(p => p.course_id == courseId && p.status == "ACTIVE");
-        return _mapper.Map<List<ProjectDetailResponse>>(projects.ToList());
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        // Simple duplicate name check within the same course if name changed
+        if (project.name != request.Name)
+        {
+            var existing = await _unitOfWork.Projects.FirstOrDefaultAsync(p =>
+                p.course_id == project.course_id && p.name == request.Name && p.status == "ACTIVE");
+            if (existing != null) throw new BusinessException("Project with this name already exists in the course");
+        }
+
+        project.name = request.Name;
+        project.description = request.Description;
+        project.updated_at = DateTime.UtcNow;
+
+        _unitOfWork.Projects.Update(project);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<ProjectDetailResponse>(project);
+    }
+
+    public async Task DeleteProjectAsync(long projectId)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        // Soft delete
+        project.status = "INACTIVE";
+        project.updated_at = DateTime.UtcNow;
+
+        _unitOfWork.Projects.Update(project);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<PagedResponse<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId, PagedRequest request)
+    {
+        var query = _unitOfWork.Projects.Query().Where(p => p.course_id == courseId && p.status == "ACTIVE");
+
+        if (!string.IsNullOrWhiteSpace(request.Q))
+        {
+            var keyword = request.Q.ToLower();
+            query = query.Where(p => p.name.ToLower().Contains(keyword));
+        }
+
+        if (request.SortDir?.ToLower() == "desc")
+            query = query.OrderByDescending(x => x.created_at);
+        else
+            query = query.OrderBy(x => x.created_at);
+
+        int totalItems = await query.CountAsync();
+        var projects = await query
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync();
+
+        var dtoList = _mapper.Map<List<ProjectDetailResponse>>(projects);
+        return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
     }
 
     public async Task AddTeamMemberAsync(long projectId, AddTeamMemberRequest request)
@@ -294,16 +354,32 @@ public class ProjectService : IProjectService
 
         if (syncIntegration != null)
         {
-            if (syncIntegration.github_repo != null)
+            // Offload the initial sync to a background task
+            _ = Task.Run(async () =>
             {
-                await _githubClient.SyncCommitsAsync(syncIntegration.github_repo.id, syncIntegration.github_repo.owner_login, syncIntegration.github_repo.name);
-                await _githubClient.SyncPullRequestsAsync(syncIntegration.github_repo.id, syncIntegration.github_repo.owner_login, syncIntegration.github_repo.name);
-            }
+                using var scope = _serviceScopeFactory.CreateScope();
+                var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
+                var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<ProjectService>>();
 
-            if (syncIntegration.jira_project != null)
-            {
-                await _jiraClient.SyncIssuesAsync(syncIntegration.jira_project.id, syncIntegration.jira_project.jira_project_key, syncIntegration.jira_project.jira_url);
-            }
+                try
+                {
+                    if (syncIntegration.github_repo != null)
+                    {
+                        await githubClient.SyncCommitsAsync(syncIntegration.github_repo.id, syncIntegration.github_repo.owner_login, syncIntegration.github_repo.name);
+                        await githubClient.SyncPullRequestsAsync(syncIntegration.github_repo.id, syncIntegration.github_repo.owner_login, syncIntegration.github_repo.name);
+                    }
+
+                    if (syncIntegration.jira_project != null)
+                    {
+                        await jiraClient.SyncIssuesAsync(syncIntegration.jira_project.id, syncIntegration.jira_project.jira_project_key, syncIntegration.jira_project.jira_url ?? "https://atlassian.net");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Background synchronization failed for linked project {ProjectId}", projectId);
+                }
+            });
         }
     }
 

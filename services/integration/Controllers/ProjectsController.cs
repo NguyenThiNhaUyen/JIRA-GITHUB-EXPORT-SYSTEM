@@ -66,11 +66,34 @@ public class ProjectsController : ControllerBase
     /// Get all projects for a course
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<List<ProjectDetailResponse>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProjectsByCourse([FromQuery] long courseId)
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<ProjectDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectsByCourse([FromQuery] long courseId, [FromQuery] PagedRequest request)
     {
-        var result = await _projectService.GetProjectsByCourseAsync(courseId);
-        return Ok(ApiResponse<List<ProjectDetailResponse>>.SuccessResponse(result));
+        var result = await _projectService.GetProjectsByCourseAsync(courseId, request);
+        return Ok(ApiResponse<PagedResponse<ProjectDetailResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Update a project (Leader/Admin only)
+    /// </summary>
+    [HttpPut("{projectId}")]
+    [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateProject(long projectId, [FromBody] UpdateProjectRequest request)
+    {
+        var result = await _projectService.UpdateProjectAsync(projectId, request);
+        return Ok(ApiResponse<ProjectDetailResponse>.SuccessResponse(result, "Project updated successfully"));
+    }
+
+    /// <summary>
+    /// Delete a project (Admin only)
+    /// </summary>
+    [HttpDelete("{projectId}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteProject(long projectId)
+    {
+        await _projectService.DeleteProjectAsync(projectId);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Project deleted successfully"));
     }
 
     /// <summary>

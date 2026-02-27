@@ -25,11 +25,11 @@ public class SubjectsController : ControllerBase
     /// Get all subjects
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<List<SubjectInfo>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<SubjectInfo>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var result = await _courseService.GetAllSubjectsAsync();
-        return Ok(ApiResponse<List<SubjectInfo>>.SuccessResponse(result));
+        var result = await _courseService.GetAllSubjectsAsync(request);
+        return Ok(ApiResponse<PagedResponse<SubjectInfo>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -42,5 +42,29 @@ public class SubjectsController : ControllerBase
     {
         var result = await _courseService.CreateSubjectAsync(request);
         return CreatedAtAction(nameof(GetAll), ApiResponse<SubjectInfo>.SuccessResponse(result, "Subject created successfully"));
+    }
+
+    /// <summary>
+    /// Update a subject (Admin only)
+    /// </summary>
+    [HttpPut("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<SubjectInfo>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateSubjectRequest request)
+    {
+        var result = await _courseService.UpdateSubjectAsync(id, request);
+        return Ok(ApiResponse<SubjectInfo>.SuccessResponse(result, "Subject updated successfully"));
+    }
+
+    /// <summary>
+    /// Delete a subject (Admin only)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete(long id)
+    {
+        await _courseService.DeleteSubjectAsync(id);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Subject deleted successfully"));
     }
 }
