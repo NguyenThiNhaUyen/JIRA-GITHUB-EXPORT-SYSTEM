@@ -1,6 +1,8 @@
 using System.Text;
 using JiraGithubExport.IntegrationService.Application.Implementations;
+using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.IntegrationService.Background;
 using JiraGithubExport.Shared.Common;
 using JiraGithubExport.JiraService.Services.Implementations;
@@ -114,6 +116,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IProjectIntegrationService, ProjectIntegrationService>();
             builder.Services.AddScoped<IProjectDashboardService, ProjectDashboardService>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
+            builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();

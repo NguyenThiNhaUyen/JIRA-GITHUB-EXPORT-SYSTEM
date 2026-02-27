@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using Microsoft.AspNetCore.Hosting;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -20,13 +18,23 @@ public class ReportService : IReportService
     private readonly ILogger<ReportService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IWebHostEnvironment _env;
+    private readonly IExcelReportGenerator _excelReportGenerator;
+    private readonly IPdfReportGenerator _pdfReportGenerator;
 
-    public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env)
+    public ReportService(
+        IUnitOfWork unitOfWork, 
+        ILogger<ReportService> logger, 
+        IHttpContextAccessor httpContextAccessor, 
+        IWebHostEnvironment env,
+        IExcelReportGenerator excelReportGenerator,
+        IPdfReportGenerator pdfReportGenerator)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
         _env = env;
+        _excelReportGenerator = excelReportGenerator;
+        _pdfReportGenerator = pdfReportGenerator;
     }
 
     private long GetCurrentUserId()
@@ -77,70 +85,13 @@ public class ReportService : IReportService
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Commit Statistics");
-                worksheet.Cell(1, 1).Value = "Project Name";
-                worksheet.Cell(1, 2).Value = "Student Name";
-                worksheet.Cell(1, 3).Value = "Student Code";
-                worksheet.Cell(1, 4).Value = "Role";
-                
-                int row = 2;
-                foreach(var p in projects)
-                {
-                    foreach(var tm in p.team_members)
-                    {
-                        worksheet.Cell(row, 1).Value = p.name;
-                        worksheet.Cell(row, 2).Value = tm.student_user.user.full_name ?? "";
-                        worksheet.Cell(row, 3).Value = tm.student_user.student_code;
-                        worksheet.Cell(row, 4).Value = tm.team_role;
-                        row++;
-                    }
-                }
-                
-                worksheet.Columns().AdjustToContents();
-                workbook.SaveAs(filePath);
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name, projects);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                QuestPDF.Fluent.Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(2, Unit.Centimetre);
-                        page.Header().Text($"Commit Statistics - {course.course_name}").SemiBold().FontSize(20);
-                        
-                        page.Content().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                            });
-                            
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Project");
-                                header.Cell().Text("Student Name");
-                                header.Cell().Text("Student Code");
-                                header.Cell().Text("Role");
-                            });
-                            
-                            foreach(var p in projects)
-                            {
-                                foreach(var tm in p.team_members)
-                                {
-                                    table.Cell().Text(p.name);
-                                    table.Cell().Text(tm.student_user.user.full_name ?? "");
-                                    table.Cell().Text(tm.student_user.student_code);
-                                    table.Cell().Text(tm.team_role);
-                                }
-                            }
-                        });
-                    });
-                }).GeneratePdf(filePath);
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name, projects);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
             _logger.LogInformation("Generated commit stats for course {CourseName} at {FilePath}", course.course_name, filePath);
@@ -185,59 +136,13 @@ public class ReportService : IReportService
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Team Roster");
-                worksheet.Cell(1, 1).Value = "Student Name";
-                worksheet.Cell(1, 2).Value = "Student Code";
-                worksheet.Cell(1, 3).Value = "Role";
-                
-                int row = 2;
-                foreach(var tm in project.team_members)
-                {
-                    worksheet.Cell(row, 1).Value = tm.student_user.user.full_name ?? "";
-                    worksheet.Cell(row, 2).Value = tm.student_user.student_code;
-                    worksheet.Cell(row, 3).Value = tm.team_role;
-                    row++;
-                }
-                
-                worksheet.Columns().AdjustToContents();
-                workbook.SaveAs(filePath);
+                var fileBytes = _excelReportGenerator.GenerateTeamRosterReport(project);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                QuestPDF.Fluent.Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(2, Unit.Centimetre);
-                        page.Header().Text($"Team Roster - {project.name}").SemiBold().FontSize(20);
-                        
-                        page.Content().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                            });
-                            
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Student Name");
-                                header.Cell().Text("Student Code");
-                                header.Cell().Text("Role");
-                            });
-                            
-                            foreach(var tm in project.team_members)
-                            {
-                                table.Cell().Text(tm.student_user.user.full_name ?? "");
-                                table.Cell().Text(tm.student_user.student_code);
-                                table.Cell().Text(tm.team_role);
-                            }
-                        });
-                    });
-                }).GeneratePdf(filePath);
+                var fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(project);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
             _logger.LogInformation("Generated team roster for project {ProjectName} at {FilePath}", project.name, filePath);
@@ -295,71 +200,13 @@ public class ReportService : IReportService
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Activity Summary");
-                worksheet.Cell(1, 1).Value = "Student Name";
-                worksheet.Cell(1, 2).Value = "Student Code";
-                worksheet.Cell(1, 3).Value = "Commits";
-                worksheet.Cell(1, 4).Value = "Pull Requests";
-                worksheet.Cell(1, 5).Value = "Issues Completed";
-                
-                int row = 2;
-                foreach(var tm in project.team_members)
-                {
-                    var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
-                    worksheet.Cell(row, 1).Value = tm.student_user.user.full_name ?? "";
-                    worksheet.Cell(row, 2).Value = tm.student_user.student_code;
-                    worksheet.Cell(row, 3).Value = stat?.Commits ?? 0;
-                    worksheet.Cell(row, 4).Value = stat?.PRs ?? 0;
-                    worksheet.Cell(row, 5).Value = stat?.Issues ?? 0;
-                    row++;
-                }
-                
-                worksheet.Columns().AdjustToContents();
-                workbook.SaveAs(filePath);
+                var fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(project, activityList.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                QuestPDF.Fluent.Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(2, Unit.Centimetre);
-                        page.Header().Text($"Activity Summary - {project.name}").SemiBold().FontSize(20);
-                        
-                        page.Content().Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
-                            });
-                            
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Student Name");
-                                header.Cell().Text("Student Code");
-                                header.Cell().Text("Commits");
-                                header.Cell().Text("Pull Requests");
-                                header.Cell().Text("Issues");
-                            });
-                            
-                            foreach(var tm in project.team_members)
-                            {
-                                var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
-                                table.Cell().Text(tm.student_user.user.full_name ?? "");
-                                table.Cell().Text(tm.student_user.student_code);
-                                table.Cell().Text((stat?.Commits ?? 0).ToString());
-                                table.Cell().Text((stat?.PRs ?? 0).ToString());
-                                table.Cell().Text((stat?.Issues ?? 0).ToString());
-                            }
-                        });
-                    });
-                }).GeneratePdf(filePath);
+                var fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(project, activityList.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
             _logger.LogInformation("Generated activity summary for project {ProjectName} at {FilePath}", project.name, filePath);
@@ -450,32 +297,8 @@ public class ReportService : IReportService
 
             if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase) || true) // SRS defaults to PDF
             {
-                QuestPDF.Fluent.Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(2, Unit.Centimetre);
-                        page.Header().Text($"Software Requirements Specification (SRS) - {project.name}").SemiBold().FontSize(20);
-                        
-                        page.Content().Column(col =>
-                        {
-                            col.Item().PaddingTop(10).Text("3. System Features").Bold().FontSize(16);
-                            foreach(var feat in systemFeatures)
-                            {
-                                col.Item().PaddingTop(5).Text($"[{feat.jira_issue_key}] {feat.title}").SemiBold().FontSize(12);
-                                col.Item().Text(feat.description ?? "No description.").FontSize(10);
-                            }
-
-                            col.Item().PaddingTop(15).Text("5. Nonfunctional Requirements").Bold().FontSize(16);
-                            foreach(var nfr in nfrs)
-                            {
-                                col.Item().PaddingTop(5).Text($"[{nfr.jira_issue_key}] {nfr.title}").SemiBold().FontSize(12);
-                                col.Item().Text(nfr.description ?? "No description.").FontSize(10);
-                            }
-                        });
-                    });
-                }).GeneratePdf(filePath);
+                var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(project, systemFeatures.Cast<dynamic>().ToList(), nfrs.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
             _unitOfWork.ReportExports.Add(reportExport);
