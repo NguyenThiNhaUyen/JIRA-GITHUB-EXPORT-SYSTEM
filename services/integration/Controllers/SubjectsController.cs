@@ -12,12 +12,12 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 [Authorize]
 public class SubjectsController : ControllerBase
 {
-    private readonly ICourseService _courseService;
+    private readonly ISubjectService _subjectService;
     private readonly ILogger<SubjectsController> _logger;
 
-    public SubjectsController(ICourseService courseService, ILogger<SubjectsController> logger)
+    public SubjectsController(ISubjectService subjectService, ILogger<SubjectsController> logger)
     {
-        _courseService = courseService;
+        _subjectService = subjectService;
         _logger = logger;
     }
 
@@ -28,7 +28,7 @@ public class SubjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<SubjectInfo>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
-        var result = await _courseService.GetAllSubjectsAsync(request);
+        var result = await _subjectService.GetAllSubjectsAsync(request);
         return Ok(ApiResponse<PagedResponse<SubjectInfo>>.SuccessResponse(result));
     }
 
@@ -40,7 +40,7 @@ public class SubjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<SubjectInfo>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateSubjectRequest request)
     {
-        var result = await _courseService.CreateSubjectAsync(request);
+        var result = await _subjectService.CreateSubjectAsync(request);
         return CreatedAtAction(nameof(GetAll), ApiResponse<SubjectInfo>.SuccessResponse(result, "Subject created successfully"));
     }
 
@@ -52,7 +52,7 @@ public class SubjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<SubjectInfo>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateSubjectRequest request)
     {
-        var result = await _courseService.UpdateSubjectAsync(id, request);
+        var result = await _subjectService.UpdateSubjectAsync(id, request);
         return Ok(ApiResponse<SubjectInfo>.SuccessResponse(result, "Subject updated successfully"));
     }
 
@@ -61,10 +61,10 @@ public class SubjectsController : ControllerBase
     /// </summary>
     [HttpDelete("{id}")]
     [Authorize(Roles = "ADMIN")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {
-        await _courseService.DeleteSubjectAsync(id);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Subject deleted successfully"));
+        await _subjectService.DeleteSubjectAsync(id);
+        return Ok(ApiResponse.SuccessResponse("Subject deleted successfully"));
     }
 }

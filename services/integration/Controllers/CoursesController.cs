@@ -98,11 +98,11 @@ public class CoursesController : ControllerBase
     /// </summary>
     [HttpDelete("{id}")]
     [Authorize(Roles = "ADMIN")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {
         await _courseService.DeleteCourseAsync(id);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Course deleted successfully"));
+        return Ok(ApiResponse.SuccessResponse("Course deleted successfully"));
     }
 
     /// <summary>

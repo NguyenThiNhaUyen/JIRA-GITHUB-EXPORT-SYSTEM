@@ -6,17 +6,7 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface ICourseService
 {
-    // Semester
-    Task<SemesterInfo> CreateSemesterAsync(CreateSemesterRequest request);
-    Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request);
-    Task DeleteSemesterAsync(long semesterId);
-    Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
 
-    // Subject
-    Task<SubjectInfo> CreateSubjectAsync(CreateSubjectRequest request);
-    Task<SubjectInfo> UpdateSubjectAsync(long subjectId, UpdateSubjectRequest request);
-    Task DeleteSubjectAsync(long subjectId);
-    Task<PagedResponse<SubjectInfo>> GetAllSubjectsAsync(PagedRequest request);
 
     // Course
     Task<CourseDetailResponse> CreateCourseAsync(CreateCourseRequest request, long createdByUserId);

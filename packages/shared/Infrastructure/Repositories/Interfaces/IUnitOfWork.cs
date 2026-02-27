@@ -1,3 +1,4 @@
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 using JiraGithubExport.Shared.Models;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -10,9 +11,9 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<role> Roles { get; }
     IGenericRepository<semester> Semesters { get; }
     IGenericRepository<subject> Subjects { get; }
-    IGenericRepository<course> Courses { get; }
+    ICourseRepository Courses { get; }
     IGenericRepository<course_enrollment> CourseEnrollments { get; }
-    IGenericRepository<project> Projects { get; }
+    IProjectRepository Projects { get; }
     IGenericRepository<team_member> TeamMembers { get; }
     IGenericRepository<project_integration> ProjectIntegrations { get; }
     IGenericRepository<project_document> ProjectDocuments { get; }

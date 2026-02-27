@@ -17,27 +17,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-namespace JiraGithubExport.IntegrationService
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-            var builder = WebApplication.CreateBuilder(args);
-
-            // ============================================
-            // LOGGING CONFIGURATION
-            // ============================================
-
-
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
-
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Logging.SetMinimumLevel(LogLevel.Information);
-            }
+    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+    var builder = WebApplication.CreateBuilder(args);
 
             // ============================================
             // CONFIGURATION
@@ -123,10 +104,15 @@ namespace JiraGithubExport.IntegrationService
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-            // Application services
+            // Tầng Application (Services)
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ISemesterService, SemesterService>();
+            builder.Services.AddScoped<ISubjectService, SubjectService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
-            builder.Services.AddScoped<IProjectService, ProjectService>();
+            builder.Services.AddScoped<IProjectCoreService, ProjectCoreService>();
+            builder.Services.AddScoped<IProjectTeamService, ProjectTeamService>();
+            builder.Services.AddScoped<IProjectIntegrationService, ProjectIntegrationService>();
+            builder.Services.AddScoped<IProjectDashboardService, ProjectDashboardService>();
             builder.Services.AddScoped<IReportService, ReportService>();
 
             // Background Services
@@ -142,12 +128,21 @@ namespace JiraGithubExport.IntegrationService
 
 
             // ============================================
-            // API CONTROLLERS & SWAGGER
+            // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
             // ============================================
 
             builder.Services.AddControllers();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSignalR();
+            
+            // Redis Configuration
+            var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "PBLPlatform_";
+            });
             
             builder.Services.AddSwaggerGen(c =>
             {
@@ -192,9 +187,11 @@ namespace JiraGithubExport.IntegrationService
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    // For Production, change SetIsOriginAllowed(_ => true) to exact domains
+                    policy.SetIsOriginAllowed(origin => true) // Allow any origin safely with credentials
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials(); // Required for SignalR WebSockets
                 });
             });
 
@@ -208,14 +205,6 @@ namespace JiraGithubExport.IntegrationService
             // MIDDLEWARE PIPELINE
             // ============================================
             
-            // Request/Response logging
-            app.Use(async (context, next) =>
-            {
-                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-                logger.LogInformation("{Method} {Path}", context.Request.Method, context.Request.Path);
-                await next();
-            });
-
             // Global exception handler
             app.UseCustomExceptionHandler();
 
@@ -240,8 +229,9 @@ namespace JiraGithubExport.IntegrationService
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Map controllers
+            // Map controllers & SignalR Hubs
             app.MapControllers();
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
             // ============================================
             // RUN
@@ -249,9 +239,7 @@ namespace JiraGithubExport.IntegrationService
 
             app.Run();
 
-        }
-    }
-}
+
 
 
 

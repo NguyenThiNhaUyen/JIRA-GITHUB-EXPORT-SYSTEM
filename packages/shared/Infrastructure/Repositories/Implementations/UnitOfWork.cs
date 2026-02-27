@@ -1,5 +1,7 @@
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -17,9 +19,9 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<role>? _roles;
     private IGenericRepository<semester>? _semesters;
     private IGenericRepository<subject>? _subjects;
-    private IGenericRepository<course>? _courses;
+    private ICourseRepository? _courses;
     private IGenericRepository<course_enrollment>? _courseEnrollments;
-    private IGenericRepository<project>? _projects;
+    private IProjectRepository? _projects;
     private IGenericRepository<team_member>? _teamMembers;
     private IGenericRepository<project_integration>? _projectIntegrations;
     private IGenericRepository<project_document>? _projectDocuments;
@@ -46,9 +48,9 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<role> Roles => _roles ??= new GenericRepository<role>(_context);
     public IGenericRepository<semester> Semesters => _semesters ??= new GenericRepository<semester>(_context);
     public IGenericRepository<subject> Subjects => _subjects ??= new GenericRepository<subject>(_context);
-    public IGenericRepository<course> Courses => _courses ??= new GenericRepository<course>(_context);
+    public ICourseRepository Courses => _courses ??= new CourseRepository(_context);
     public IGenericRepository<course_enrollment> CourseEnrollments => _courseEnrollments ??= new GenericRepository<course_enrollment>(_context);
-    public IGenericRepository<project> Projects => _projects ??= new GenericRepository<project>(_context);
+    public IProjectRepository Projects => _projects ??= new ProjectRepository(_context);
     public IGenericRepository<team_member> TeamMembers => _teamMembers ??= new GenericRepository<team_member>(_context);
     public IGenericRepository<project_integration> ProjectIntegrations => _projectIntegrations ??= new GenericRepository<project_integration>(_context);
     public IGenericRepository<project_document> ProjectDocuments => _projectDocuments ??= new GenericRepository<project_document>(_context);

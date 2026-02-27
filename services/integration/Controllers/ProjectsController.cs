@@ -13,12 +13,23 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 [Authorize]
 public class ProjectsController : ControllerBase
 {
-    private readonly IProjectService _projectService;
+    private readonly IProjectCoreService _coreService;
+    private readonly IProjectTeamService _teamService;
+    private readonly IProjectIntegrationService _integrationService;
+    private readonly IProjectDashboardService _dashboardService;
     private readonly ILogger<ProjectsController> _logger;
 
-    public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger)
+    public ProjectsController(
+        IProjectCoreService coreService,
+        IProjectTeamService teamService,
+        IProjectIntegrationService integrationService,
+        IProjectDashboardService dashboardService,
+        ILogger<ProjectsController> logger)
     {
-        _projectService = projectService;
+        _coreService = coreService;
+        _teamService = teamService;
+        _integrationService = integrationService;
+        _dashboardService = dashboardService;
         _logger = logger;
     }
 
@@ -35,7 +46,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
     {
-        var result = await _projectService.CreateProjectAsync(request, request.CourseId);
+        var result = await _coreService.CreateProjectAsync(request, request.CourseId);
         return CreatedAtAction(nameof(GetProjectById), new { projectId = result.Id },
             ApiResponse<ProjectDetailResponse>.SuccessResponse(result, "Project created successfully"));
     }
@@ -47,7 +58,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProjectById(long projectId)
     {
-        var result = await _projectService.GetProjectByIdAsync(projectId);
+        var result = await _coreService.GetProjectByIdAsync(projectId);
         return Ok(ApiResponse<ProjectDetailResponse>.SuccessResponse(result));
     }
 
@@ -58,7 +69,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDashboardResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProjectDashboard(long projectId)
     {
-        var result = await _projectService.GetProjectDashboardAsync(projectId);
+        var result = await _dashboardService.GetProjectDashboardAsync(projectId);
         return Ok(ApiResponse<ProjectDashboardResponse>.SuccessResponse(result));
     }
 
@@ -69,7 +80,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<ProjectDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProjectsByCourse([FromQuery] long courseId, [FromQuery] PagedRequest request)
     {
-        var result = await _projectService.GetProjectsByCourseAsync(courseId, request);
+        var result = await _coreService.GetProjectsByCourseAsync(courseId, request);
         return Ok(ApiResponse<PagedResponse<ProjectDetailResponse>>.SuccessResponse(result));
     }
 
@@ -80,7 +91,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateProject(long projectId, [FromBody] UpdateProjectRequest request)
     {
-        var result = await _projectService.UpdateProjectAsync(projectId, request);
+        var result = await _coreService.UpdateProjectAsync(projectId, request);
         return Ok(ApiResponse<ProjectDetailResponse>.SuccessResponse(result, "Project updated successfully"));
     }
 
@@ -89,11 +100,11 @@ public class ProjectsController : ControllerBase
     /// </summary>
     [HttpDelete("{projectId}")]
     [Authorize(Roles = "ADMIN")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteProject(long projectId)
     {
-        await _projectService.DeleteProjectAsync(projectId);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Project deleted successfully"));
+        await _coreService.DeleteProjectAsync(projectId);
+        return Ok(ApiResponse.SuccessResponse("Project deleted successfully"));
     }
 
     /// <summary>
@@ -103,7 +114,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddTeamMember(long projectId, [FromBody] AddTeamMemberRequest request)
     {
-        await _projectService.AddTeamMemberAsync(projectId, request);
+        await _teamService.AddTeamMemberAsync(projectId, request);
         return Ok(ApiResponse.SuccessResponse("Team member added successfully"));
     }
 
@@ -114,7 +125,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveTeamMember(long projectId, long studentUserId)
     {
-        await _projectService.RemoveTeamMemberAsync(projectId, studentUserId);
+        await _teamService.RemoveTeamMemberAsync(projectId, studentUserId);
         return Ok(ApiResponse.SuccessResponse("Team member removed successfully"));
     }
 
@@ -125,7 +136,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
-        await _projectService.LinkIntegrationAsync(projectId, request);
+        await _integrationService.LinkIntegrationAsync(projectId, request);
         return Ok(ApiResponse.SuccessResponse("Integration linked successfully"));
     }
 }
