@@ -50,37 +50,37 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/lecturer',
-      builder: (context, state) => const Scaffold(
-        appBar: AppBar(title: Text('Lecturer Dashboard')),
-        body: Center(child: Text('Lecturer Dashboard (Coming soon)')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Lecturer Dashboard')),
+        body: const Center(child: Text('Lecturer Dashboard (Coming soon)')),
       ),
     ),
     GoRoute(
       path: '/lecturer/groups',
-      builder: (context, state) => const Scaffold(
-        appBar: AppBar(title: Text('Groups')),
-        body: Center(child: Text('Groups (Coming soon)')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Groups')),
+        body: const Center(child: Text('Groups (Coming soon)')),
       ),
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) => const Scaffold(
-        appBar: AppBar(title: Text('Admin Dashboard')),
-        body: Center(child: Text('Admin Dashboard (Coming soon)')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Admin Dashboard')),
+        body: const Center(child: Text('Admin Dashboard (Coming soon)')),
       ),
     ),
     GoRoute(
       path: '/admin/courses',
-      builder: (context, state) => const Scaffold(
-        appBar: AppBar(title: Text('Courses')),
-        body: Center(child: Text('Courses (Coming soon)')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Courses')),
+        body: const Center(child: Text('Courses (Coming soon)')),
       ),
     ),
     GoRoute(
       path: '/admin/semesters',
-      builder: (context, state) => const Scaffold(
-        appBar: AppBar(title: Text('Semesters')),
-        body: Center(child: Text('Semesters (Coming soon)')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Semesters')),
+        body: const Center(child: Text('Semesters (Coming soon)')),
       ),
     ),
   ],
