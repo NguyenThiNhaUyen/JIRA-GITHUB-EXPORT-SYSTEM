@@ -202,7 +202,7 @@ export default function Login() {
                 <GraduationCap className="w-5 h-5 text-teal-600" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Education Management System</h3>
+                <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Hệ Thống Quản Lý Giáo Dục</h3>
                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium truncate">
                   Nền tảng Quản lý Giáo dục
                 </p>
