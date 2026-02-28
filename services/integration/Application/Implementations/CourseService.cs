@@ -1,6 +1,7 @@
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -22,69 +23,6 @@ public class CourseService : ICourseService
         _logger = logger;
     }
 
-    // ============================================
-    // SEMESTER
-    // ============================================
-
-    public async Task<SemesterInfo> CreateSemesterAsync(CreateSemesterRequest request)
-    {
-        // Check if semester name already exists
-        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name);
-        if (existing != null)
-        {
-            throw new BusinessException("Semester with this name already exists");
-        }
-
-        var semester = new semester
-        {
-            name = request.Name,
-            start_date = DateOnly.FromDateTime(request.StartDate),
-            end_date = DateOnly.FromDateTime(request.EndDate),
-            created_at = DateTime.UtcNow
-        };
-
-        _unitOfWork.Semesters.Add(semester);
-        await _unitOfWork.SaveChangesAsync();
-
-        return _mapper.Map<SemesterInfo>(semester);
-    }
-
-    public async Task<List<SemesterInfo>> GetAllSemestersAsync()
-    {
-        var semesters = await _unitOfWork.Semesters.GetAllAsync();
-        return _mapper.Map<List<SemesterInfo>>(semesters.ToList());
-    }
-
-    // ============================================
-    // SUBJECT
-    // ============================================
-
-    public async Task<SubjectInfo> CreateSubjectAsync(CreateSubjectRequest request)
-    {
-        var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.subject_code == request.SubjectCode);
-        if (existing != null)
-        {
-            throw new BusinessException("Subject code already exists");
-        }
-
-        var subject = new subject
-        {
-            subject_code = request.SubjectCode,
-            subject_name = request.SubjectName,
-            created_at = DateTime.UtcNow
-        };
-
-        _unitOfWork.Subjects.Add(subject);
-        await _unitOfWork.SaveChangesAsync();
-
-        return _mapper.Map<SubjectInfo>(subject);
-    }
-
-    public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
-    {
-        var subjects = await _unitOfWork.Subjects.GetAllAsync();
-        return _mapper.Map<List<SubjectInfo>>(subjects.ToList());
-    }
 
     // ============================================
     // COURSE
@@ -138,6 +76,30 @@ public class CourseService : ICourseService
         return _mapper.Map<CourseDetailResponse>(createdCourse);
     }
 
+    public async Task<CourseDetailResponse> UpdateCourseAsync(long courseId, UpdateCourseRequest request)
+    {
+        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        if (course == null) throw new NotFoundException("Course not found");
+
+        course.course_name = request.CourseName;
+        course.updated_at = DateTime.UtcNow;
+
+        _unitOfWork.Courses.Update(course);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<CourseDetailResponse>(course);
+    }
+
+    public async Task DeleteCourseAsync(long courseId)
+    {
+        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        if (course == null) throw new NotFoundException("Course not found");
+
+        // Consider real cascade delete if needed or validation before delete
+        _unitOfWork.Courses.Remove(course);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
         var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
@@ -149,19 +111,43 @@ public class CourseService : ICourseService
         return _mapper.Map<CourseDetailResponse>(course);
     }
 
-    public async Task<List<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId)
+    public async Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request)
     {
-        var lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
+        var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesAsync(
+            request.Q,
+            request.SortDir,
+            request.Page,
+            request.PageSize
+        );
+
+        var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+        return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
+    }
+
+    public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request)
+    {
+        var lecturer = await _unitOfWork.Lecturers.Query()
+            .Include(l => l.courses)
+            .FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
+
         if (lecturer == null)
         {
             throw new NotFoundException("Lecturer not found");
         }
 
-        var courses = lecturer.courses.ToList();
-        return courses.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+        var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByLecturerAsync(
+            lecturerUserId,
+            request.Q,
+            request.SortDir,
+            request.Page,
+            request.PageSize
+        );
+
+        var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+        return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
     }
 
-    public async Task<List<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId)
+    public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request)
     {
         var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == studentUserId);
         if (student == null)
@@ -169,9 +155,16 @@ public class CourseService : ICourseService
             throw new NotFoundException("Student not found");
         }
 
-        var enrollments = student.course_enrollments.Where(e => e.status == "ACTIVE").ToList();
-        var courses = enrollments.Select(e => e.course).ToList();
-        return courses.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+        var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByStudentAsync(
+            studentUserId,
+            request.Q,
+            request.SortDir,
+            request.Page,
+            request.PageSize
+        );
+
+        var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+        return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
     }
 
     // ============================================
@@ -222,12 +215,22 @@ public class CourseService : ICourseService
             Failed = new List<EnrollmentFailure>()
         };
 
+        // Fetch students in bulk
+        var studentsMap = await _unitOfWork.Students.Query()
+            .Where(s => studentUserIds.Contains(s.user_id))
+            .ToDictionaryAsync(s => s.user_id, s => s);
+
+        // Fetch existing enrollments in bulk
+        var existingEnrollmentsMap = await _unitOfWork.CourseEnrollments.Query()
+            .Where(e => e.course_id == courseId && studentUserIds.Contains(e.student_user_id))
+            .ToDictionaryAsync(e => e.student_user_id, e => e);
+
         foreach (var studentUserId in studentUserIds)
         {
             try
             {
-                // Check if student exists
-                var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == studentUserId);
+                // Check if student exists in bulk memory map or missing
+                var student = studentsMap.GetValueOrDefault(studentUserId);
                 if (student == null)
                 {
                     result.Failed.Add(new EnrollmentFailure
@@ -239,8 +242,7 @@ public class CourseService : ICourseService
                 }
 
                 // Check if already enrolled
-                var existingEnrollment = await _unitOfWork.CourseEnrollments.FirstOrDefaultAsync(e =>
-                    e.course_id == courseId && e.student_user_id == studentUserId);
+                var existingEnrollment = existingEnrollmentsMap.GetValueOrDefault(studentUserId);
 
                 if (existingEnrollment != null)
                 {

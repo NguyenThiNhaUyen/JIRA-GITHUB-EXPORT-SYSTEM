@@ -6,7 +6,7 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest request);
-    Task<UserInfo> RegisterAsync(RegisterRequest request);
+    Task<LoginResponse> GoogleLoginAsync(GoogleLoginRequest request);
 }
 
 

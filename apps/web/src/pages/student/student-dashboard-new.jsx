@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import CourseCard from "../../components/student/CourseCard.jsx";
-import GroupDetails from "../../components/student/GroupDetails.jsx";
+import CourseCard from "../../components/Student/CourseCard.jsx";
+import GroupDetails from "../../components/Student/GroupDetails.jsx";
 import { BookOpen } from "lucide-react";
 
 // Mock Student Data
