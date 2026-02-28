@@ -136,11 +136,19 @@ public class AuthService : IAuthService
                     _context.users.Add(user);
                     await _context.SaveChangesAsync();
 
-                    // Assign default STUDENT role
-                    var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT");
+                    // Xử lý Role tự chọn (Demo/Testing Only)
+                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "STUDENT" : request.Role.ToUpper();
+                    var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
+                    
+                    if (!validRoles.Contains(requestedRole))
+                    {
+                        requestedRole = "STUDENT"; // Fallback an toàn
+                    }
+
+                    var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == requestedRole);
                     if (role == null)
                     {
-                        role = new role { role_name = "STUDENT" };
+                        role = new role { role_name = requestedRole };
                         _context.roles.Add(role);
                         await _context.SaveChangesAsync();
                     }

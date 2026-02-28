@@ -5,6 +5,7 @@ using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.IntegrationService.Background;
 using JiraGithubExport.Shared.Common;
+using JiraGithubExport.Shared.Models;
 using JiraGithubExport.JiraService.Services.Implementations;
 using JiraGithubExport.GithubService.Services.Implementations;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
@@ -238,7 +239,60 @@ using Microsoft.OpenApi.Models;
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
             // ============================================
-            // RUN
+            // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)
+            // ============================================
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<JiraGithubToolDbContext>();
+                    var passwordHasher = services.GetRequiredService<IPasswordHasher>();
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+
+                    // 1. Create Default Roles if not exist
+                    var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
+                    bool rolesAdded = false;
+                    foreach (var roleName in defaultRoles)
+                    {
+                        if (!context.roles.Any(r => r.role_name == roleName))
+                        {
+                            context.roles.Add(new role { role_name = roleName });
+                            rolesAdded = true;
+                        }
+                    }
+                    if (rolesAdded) context.SaveChanges();
+
+                    // 2. Create Super Admin Account if not exist
+                    string adminEmail = "admin@truonghoc.com";
+                    if (!context.users.Any(u => u.email == adminEmail))
+                    {
+                        var adminRole = context.roles.First(r => r.role_name == "ADMIN");
+                        var adminUser = new user
+                        {
+                            email = adminEmail,
+                            password = passwordHasher.HashPassword("Admin@123"), // Password mặc định
+                            full_name = "Super Admin",
+                            enabled = true,
+                            created_at = DateTime.UtcNow,
+                            updated_at = DateTime.UtcNow
+                        };
+                        adminUser.roles.Add(adminRole);
+                        context.users.Add(adminUser);
+                        context.SaveChanges();
+                        
+                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "❌ An error occurred while seeding the database.");
+                }
+            }
+
+            // ============================================
+            // RUN APPLICATION
             // ============================================
 
             app.Run();
