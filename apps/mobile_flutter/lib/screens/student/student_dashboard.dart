@@ -202,7 +202,12 @@ class StudentDashboard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: Color.fromRGBO(
+                        statusColor.red,
+                        statusColor.green,
+                        statusColor.blue,
+                        0.1,
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

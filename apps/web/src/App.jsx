@@ -9,6 +9,9 @@ import Unauthorized from "./pages/Unauthorized.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import TestUI from "./pages/test-ui.jsx";
 
+// Admin Layout
+import AdminLayout from "./layouts/AdminLayout.jsx";
+
 // Admin pages
 import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
 import AdminReports from "./pages/admin/admin-reports.jsx";
@@ -59,7 +62,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -69,7 +74,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <AdminReports />
+              <AdminLayout>
+                <AdminReports />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -79,7 +86,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <CourseManagement />
+              <AdminLayout>
+                <CourseManagement />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -89,7 +98,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <CourseManagement />
+              <AdminLayout>
+                <CourseManagement />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -99,7 +110,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <SemesterManagement />
+              <AdminLayout>
+                <SemesterManagement />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -109,7 +122,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <SubjectManagement />
+              <AdminLayout>
+                <SubjectManagement />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }

@@ -14,11 +14,11 @@ import {
     TableHead,
     TableCell,
 } from "../../components/ui/table.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
+import { CalendarDays, PlayCircle, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function SemesterManagement() {
     const navigate = useNavigate();
@@ -75,7 +75,6 @@ export default function SemesterManagement() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Auto-generate code from name
         const code = formData.name.toUpperCase().replace(/\s+/g, '');
 
         if (editingSemester) {
@@ -94,143 +93,152 @@ export default function SemesterManagement() {
         loadSemesters();
     };
 
-    const getStatusBadge = (status) => {
-        const variants = {
-            ACTIVE: "success",
-            UPCOMING: "warning",
-            COMPLETED: "default",
-        };
-        return variants[status] || "default";
-    };
-
     const getCourses = (semesterId) => {
         return db.findMany("courses", { semesterId });
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-            {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-3xl font-bold text-white tracking-tight">
-                                Quản lý Học kỳ
-                            </h1>
-                            <p className="text-indigo-100 mt-1">
-                                Quản lý các học kỳ trong hệ thống
-                            </p>
-                        </div>
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => navigate("/admin")}
-                                className="bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-0"
-                            >
-                                ← Quay lại
-                            </Button>
-                            <Button
-                                onClick={handleCreate}
-                                className="bg-white bg-opacity-30 text-indigo-600 hover:bg-indigo-50 border-0 shadow-md"
-                            >
-                                + Tạo học kỳ
-                            </Button>
-                        </div>
+        <div className="space-y-6">
+            {/* Top Stats Cards - Edaca Style */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                        <CalendarDays size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500 font-medium">Tổng số học kỳ</p>
+                        <h3 className="text-2xl font-bold text-gray-800">{semesters.length}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-green-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                        <PlayCircle size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500 font-medium">Đang diễn ra</p>
+                        <h3 className="text-2xl font-bold text-gray-800">{semesters.filter(s => s.status === 'ACTIVE').length}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                        <AlertCircle size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500 font-medium">Sắp tới</p>
+                        <h3 className="text-2xl font-bold text-gray-800">{semesters.filter(s => s.status === 'UPCOMING').length}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-400 text-white flex items-center justify-center shrink-0 shadow-inner">
+                        <CheckCircle size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500 font-medium">Đã kết thúc</p>
+                        <h3 className="text-2xl font-bold text-gray-800">{semesters.filter(s => s.status === 'COMPLETED').length}</h3>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
-                        <CardTitle className="text-2xl text-gray-800">Danh sách Học kỳ</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Tên học kỳ</TableHead>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Ngày bắt đầu</TableHead>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Ngày kết thúc</TableHead>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Mã lớp</TableHead>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Trạng thái</TableHead>
-                                        <TableHead className="font-semibold text-gray-600 uppercase text-xs">Thao tác</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {semesters.map((semester) => {
-                                        const courses = getCourses(semester.id);
-                                        return (
-                                            <TableRow
-                                                key={semester.id}
-                                                className={`hover:bg-indigo-100 transition-colors ${semesters.indexOf(semester) % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30'
-                                                    }`}
-                                            >
-                                                <TableCell className="font-medium text-gray-900">
-                                                    {semester.name}
-                                                </TableCell>
-                                                <TableCell className="text-gray-600">{semester.startDate}</TableCell>
-                                                <TableCell className="text-gray-600">{semester.endDate}</TableCell>
-                                                <TableCell>
-                                                    <div className="space-y-1">
-                                                        {courses.length > 0 ? (
-                                                            courses.slice(0, 3).map((course) => (
-                                                                <Badge
+            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                <CardHeader className="border-b border-gray-50 pb-4 pt-6 px-6">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl text-gray-800 font-bold">Danh sách Học kỳ</CardTitle>
+                        <Button
+                            onClick={handleCreate}
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-10 px-5"
+                        >
+                            + Thêm Học kỳ
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader className="bg-gray-50/50">
+                                <TableRow className="border-b border-gray-100/50 hover:bg-transparent">
+                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Tên học kỳ</TableHead>
+                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thời gian</TableHead>
+                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Các lớp học</TableHead>
+                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</TableHead>
+                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thao tác</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-50">
+                                {semesters.map((semester) => {
+                                    const courses = getCourses(semester.id);
+                                    return (
+                                        <TableRow key={semester.id} className="hover:bg-gray-50/50 transition-colors border-none group">
+                                            <TableCell className="py-4 px-6 text-center">
+                                                <span className="font-semibold text-gray-800 text-sm">{semester.name}</span>
+                                            </TableCell>
+                                            <TableCell className="py-4 px-6 text-center">
+                                                <div className="text-sm text-gray-600 font-medium">{semester.startDate}</div>
+                                                <div className="text-xs text-gray-400 mt-0.5">{semester.endDate}</div>
+                                            </TableCell>
+                                            <TableCell className="py-4 px-6 text-center">
+                                                <div className="flex flex-wrap justify-center gap-1">
+                                                    {courses.length > 0 ? (
+                                                        <>
+                                                            {courses.slice(0, 3).map((course) => (
+                                                                <span
                                                                     key={course.id}
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="mr-1 bg-blue-50 text-blue-700 border-blue-200"
+                                                                    className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50"
                                                                 >
                                                                     {course.code}
-                                                                </Badge>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-gray-400 text-sm">Chưa có lớp</span>
-                                                        )}
-                                                        {courses.length > 3 && (
-                                                            <Badge variant="outline" size="sm" className="bg-gray-100">
-                                                                +{courses.length - 3}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant={getStatusBadge(semester.status)}
-                                                        className="shadow-sm"
+                                                                </span>
+                                                            ))}
+                                                            {courses.length > 3 && (
+                                                                <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/50">
+                                                                    +{courses.length - 3}
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400 font-medium italic">Chưa có lớp</span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4 px-6 text-center">
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${semester.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                                                    semester.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                                                        'text-gray-600 bg-gray-100'
+                                                    }`}>
+                                                    {semester.status === 'ACTIVE' ? 'ĐANG DIỄN RA' : semester.status === 'UPCOMING' ? 'SẮP TỚI' : 'ĐÃ KẾT THÚC'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="py-4 px-6 text-center">
+                                                <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleEdit(semester)}
+                                                        className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
+                                                        title="Sửa"
                                                     >
-                                                        {semester.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleEdit(semester)}
-                                                            className="hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300"
-                                                        >
-                                                            Sửa
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => handleDelete(semester.id)}
-                                                            className="hover:bg-red-50 hover:text-red-700"
-                                                        >
-                                                            Xóa
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleDelete(semester.id)}
+                                                        className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                                                        title="Xóa"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Modal */}
             <Modal
@@ -246,7 +254,7 @@ export default function SemesterManagement() {
                         </label>
                         <input
                             type="text"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                             value={formData.name}
                             onChange={(e) =>
                                 setFormData({ ...formData, name: e.target.value })
@@ -262,7 +270,7 @@ export default function SemesterManagement() {
                             </label>
                             <input
                                 type="date"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                                 value={formData.startDate}
                                 onChange={(e) =>
                                     setFormData({ ...formData, startDate: e.target.value })
@@ -277,7 +285,7 @@ export default function SemesterManagement() {
                             </label>
                             <input
                                 type="date"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                                 value={formData.endDate}
                                 onChange={(e) =>
                                     setFormData({ ...formData, endDate: e.target.value })
@@ -292,29 +300,30 @@ export default function SemesterManagement() {
                             Trạng thái
                         </label>
                         <select
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                             value={formData.status}
                             onChange={(e) =>
                                 setFormData({ ...formData, status: e.target.value })
                             }
                         >
-                            <option value="UPCOMING">UPCOMING</option>
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="UPCOMING">Sắp tới (UPCOMING)</option>
+                            <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
+                            <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
                         </select>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t">
+                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() => setShowModal(false)}
+                            className="rounded-xl border-gray-200"
                         >
                             Hủy
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md"
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm"
                         >
                             {editingSemester ? "Cập nhật" : "Tạo mới"}
                         </Button>
