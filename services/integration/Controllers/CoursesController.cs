@@ -33,30 +33,28 @@ public class CoursesController : ControllerBase
     /// Get all courses (Filtered by role: Admin gets all, others get theirs)
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<List<CourseDetailResponse>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<CourseDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
         var userId = GetCurrentUserId();
         var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        List<CourseDetailResponse> result;
+        PagedResponse<CourseDetailResponse> result;
 
         if (userRole == "ADMIN")
         {
-            // For now ICourseService might not have GetAllActiveCourses, but we can reuse GetCoursesByLecturer or similar if needed
-            // Let's assume we want to return courses based on role
-            result = await _courseService.GetCoursesByLecturerAsync(userId); // Fallback for demo
+            result = await _courseService.GetAllCoursesAsync(request);
         }
         else if (userRole == "LECTURER")
         {
-            result = await _courseService.GetCoursesByLecturerAsync(userId);
+            result = await _courseService.GetCoursesByLecturerAsync(userId, request);
         }
         else
         {
-            result = await _courseService.GetCoursesByStudentAsync(userId);
+            result = await _courseService.GetCoursesByStudentAsync(userId, request);
         }
 
-        return Ok(ApiResponse<List<CourseDetailResponse>>.SuccessResponse(result));
+        return Ok(ApiResponse<PagedResponse<CourseDetailResponse>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -81,6 +79,30 @@ public class CoursesController : ControllerBase
         var userId = GetCurrentUserId();
         var result = await _courseService.CreateCourseAsync(request, userId);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<CourseDetailResponse>.SuccessResponse(result, "Course created successfully"));
+    }
+
+    /// <summary>
+    /// Update a course (Admin only)
+    /// </summary>
+    [HttpPut("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<CourseDetailResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateCourseRequest request)
+    {
+        var result = await _courseService.UpdateCourseAsync(id, request);
+        return Ok(ApiResponse<CourseDetailResponse>.SuccessResponse(result, "Course updated successfully"));
+    }
+
+    /// <summary>
+    /// Delete a course (Admin only)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete(long id)
+    {
+        await _courseService.DeleteCourseAsync(id);
+        return Ok(ApiResponse.SuccessResponse("Course deleted successfully"));
     }
 
     /// <summary>

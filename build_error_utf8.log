@@ -1,0 +1,8 @@
+﻿d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Program.cs(132,28): error CS0246: The type or namespace name 'IStudentService' could not be found (are you missing a using directive or an assembly reference?) [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Program.cs(132,45): error CS0246: The type or namespace name 'StudentService' could not be found (are you missing a using directive or an assembly reference?) [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+
+Build FAILED.
+    4 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:02.02
