@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
-import Login from "./pages/Login.jsx";
+import Login from "./pages/login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Unauthorized from "./pages/unauthorized.jsx";
 import NotFound from "./pages/NotFound.jsx";
