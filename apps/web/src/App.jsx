@@ -5,7 +5,7 @@ import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
 import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
-import Unauthorized from "./pages/Unauthorized.jsx";
+import Unauthorized from "./pages/unauthorized.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import TestUI from "./pages/test-ui.jsx";
 
