@@ -1,41 +1,52 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { TopHeader } from "../components/layout/TopHeader.jsx";
 import {
-    BookOpen, LayoutDashboard, CalendarDays, Library,
-    Users, GraduationCap, UserCog, FileBarChart,
-    BarChart3, Menu,
+    BookOpen,
+    LayoutDashboard,
+    GraduationCap,
+    Users,
+    BarChart3,
+    AlertTriangle,
+    FileText,
+    Download,
+    Menu,
 } from "lucide-react";
 
 const linkActive = "bg-teal-800 text-white shadow-md font-semibold";
 const linkIdle = "text-teal-100 hover:bg-teal-800/50 hover:text-white";
 
-const NAV = [
+const navSections = [
     {
         label: "Tổng quan",
         items: [
-            { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-            { to: "/admin/reports", icon: BarChart3, label: "Phân tích hệ thống" },
+            { to: "/lecturer", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
     {
-        label: "Học vụ",
+        label: "Quản lý",
         items: [
-            { to: "/admin/semesters", icon: CalendarDays, label: "Học kỳ" },
-            { to: "/admin/subjects", icon: Library, label: "Môn học" },
-            { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
-            { to: "/admin/lecturer-assignment", icon: UserCog, label: "Phân công giảng viên" },
+            { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lớp của tôi" },
+            { to: "/lecturer/groups", icon: Users, label: "Nhóm & Dự án" },
         ],
     },
     {
-        label: "Người dùng",
+        label: "Theo dõi",
         items: [
-            { to: "/admin/users", icon: Users, label: "Tài khoản" },
+            { to: "/lecturer/contributions", icon: BarChart3, label: "Đóng góp" },
+            { to: "/lecturer/alerts", icon: AlertTriangle, label: "Cảnh báo" },
+        ],
+    },
+    {
+        label: "Tài liệu",
+        items: [
+            { to: "/lecturer/srs", icon: FileText, label: "SRS Reports" },
+            { to: "/lecturer/reports", icon: Download, label: "Báo cáo & Export" },
         ],
     },
 ];
 
-export default function AdminLayout({ children }) {
+export default function LecturerLayout({ children }) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
@@ -57,20 +68,24 @@ export default function AdminLayout({ children }) {
                 <div className="flex items-center justify-between mb-8 px-2">
                     {!collapsed && (
                         <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="bg-white p-2 rounded-lg"><BookOpen size={20} className="text-teal-900" /></div>
+                            <div className="bg-white p-2 rounded-lg">
+                                <BookOpen size={20} className="text-teal-900" />
+                            </div>
                             <span className="font-bold text-xl text-white whitespace-nowrap tracking-wide">Devora</span>
                         </div>
                     )}
                     {collapsed && (
                         <div className="w-full flex justify-center">
-                            <div className="bg-white p-2 rounded-lg"><BookOpen size={20} className="text-teal-900" /></div>
+                            <div className="bg-white p-2 rounded-lg">
+                                <BookOpen size={20} className="text-teal-900" />
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* Nav sections */}
+                {/* Nav */}
                 <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden">
-                    {NAV.map((section) => (
+                    {navSections.map((section) => (
                         <div key={section.label} className="mb-4">
                             {!collapsed && (
                                 <div className="text-xs text-teal-400 font-medium px-4 mb-2 uppercase tracking-wider whitespace-nowrap">
@@ -83,11 +98,13 @@ export default function AdminLayout({ children }) {
                                         key={to}
                                         to={to}
                                         end={end}
-                                        className={({ isActive }) => [
-                                            "flex items-center rounded-xl px-4 py-3 text-sm transition-all duration-200",
-                                            collapsed ? "justify-center" : "gap-4",
-                                            isActive ? linkActive : linkIdle,
-                                        ].join(" ")}
+                                        className={({ isActive }) =>
+                                            [
+                                                "flex items-center rounded-xl px-4 py-3 text-sm transition-all duration-200",
+                                                collapsed ? "justify-center" : "gap-4",
+                                                isActive ? linkActive : linkIdle,
+                                            ].join(" ")
+                                        }
                                         title={label}
                                     >
                                         <Icon size={20} />

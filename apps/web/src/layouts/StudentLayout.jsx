@@ -1,10 +1,10 @@
-import { NavLink } from "react-router-dom";
+// StudentLayout — Enterprise SaaS App Shell (đồng bộ Admin/Lecturer)
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { TopHeader } from "../components/layout/TopHeader.jsx";
 import {
-    BookOpen, LayoutDashboard, CalendarDays, Library,
-    Users, GraduationCap, UserCog, FileBarChart,
-    BarChart3, Menu,
+    BookOpen, LayoutDashboard, Library, Users,
+    GitBranch, Bell, FileText, Menu,
 } from "lucide-react";
 
 const linkActive = "bg-teal-800 text-white shadow-md font-semibold";
@@ -14,28 +14,32 @@ const NAV = [
     {
         label: "Tổng quan",
         items: [
-            { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-            { to: "/admin/reports", icon: BarChart3, label: "Phân tích hệ thống" },
+            { to: "/student", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
     {
-        label: "Học vụ",
+        label: "Học tập",
         items: [
-            { to: "/admin/semesters", icon: CalendarDays, label: "Học kỳ" },
-            { to: "/admin/subjects", icon: Library, label: "Môn học" },
-            { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
-            { to: "/admin/lecturer-assignment", icon: UserCog, label: "Phân công giảng viên" },
+            { to: "/student/courses", icon: Library, label: "Lớp của tôi" },
+            { to: "/student/my-project", icon: GitBranch, label: "Nhóm của tôi" },
         ],
     },
     {
-        label: "Người dùng",
+        label: "Theo dõi",
         items: [
-            { to: "/admin/users", icon: Users, label: "Tài khoản" },
+            { to: "/student/contribution", icon: Users, label: "Đóng góp" },
+            { to: "/student/alerts", icon: Bell, label: "Thông báo / Cảnh báo" },
+        ],
+    },
+    {
+        label: "Tài liệu",
+        items: [
+            { to: "/student/srs", icon: FileText, label: "SRS" },
         ],
     },
 ];
 
-export default function AdminLayout({ children }) {
+export default function StudentLayout({ children }) {
     const [collapsed, setCollapsed] = useState(false);
 
     return (
@@ -68,7 +72,7 @@ export default function AdminLayout({ children }) {
                     )}
                 </div>
 
-                {/* Nav sections */}
+                {/* Nav */}
                 <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden">
                     {NAV.map((section) => (
                         <div key={section.label} className="mb-4">
