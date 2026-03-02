@@ -48,6 +48,17 @@ export default function GroupDetail() {
         }
     };
 
+    const handleRejectLink = (linkType) => {
+        if (!group) return;
+        try {
+            db.rejectGroupLink(groupId, linkType, user.id);
+            success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`);
+            loadGroupData();
+        } catch (err) {
+            error(`Không thể từ chối ${linkType} link`);
+        }
+    };
+
     const handleExport = () => success("Chức năng export đang được phát triển");
 
     if (!group) {
@@ -216,9 +227,10 @@ export default function GroupDetail() {
                                 icon={<GitBranch size={15} className="text-gray-700" />}
                                 label="GitHub Repository"
                                 url={group.githubRepoUrl}
-                                approved={githubApproved}
+                                status={group.githubStatus}
                                 approvedAt={group.approvedAt}
                                 onApprove={() => handleApproveLink("github")}
+                                onReject={() => handleRejectLink("github")}
                             />
 
                             <div className="border-t border-gray-50" />
@@ -228,9 +240,10 @@ export default function GroupDetail() {
                                 icon={<BookOpen size={15} className="text-gray-700" />}
                                 label="Jira Project"
                                 url={group.jiraProjectUrl}
-                                approved={jiraApproved}
+                                status={group.jiraStatus}
                                 approvedAt={group.approvedAt}
                                 onApprove={() => handleApproveLink("jira")}
+                                onReject={() => handleRejectLink("jira")}
                             />
                         </CardContent>
                     </Card>
@@ -310,7 +323,11 @@ function InfoRow({ label, value }) {
     );
 }
 
-function LinkApprovalSection({ icon, label, url, approved, approvedAt, onApprove }) {
+function LinkApprovalSection({ icon, label, url, status, approvedAt, onApprove, onReject }) {
+    const isApproved = status === "APPROVED";
+    const isRejected = status === "REJECTED";
+    const isPending = status === "PENDING";
+
     return (
         <div>
             <div className="flex items-center justify-between mb-3">
@@ -318,18 +335,20 @@ function LinkApprovalSection({ icon, label, url, approved, approvedAt, onApprove
                     {icon}
                     <span className="text-sm font-semibold text-gray-700">{label}</span>
                 </div>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${approved ? "bg-green-50 text-green-700 border border-green-100" : "bg-gray-100 text-gray-500 border border-gray-200"
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${isApproved ? "bg-green-50 text-green-700 border border-green-100" : isRejected ? "bg-red-50 text-red-700 border border-red-100" : "bg-gray-100 text-gray-500 border border-gray-200"
                     }`}>
-                    {approved ? <><CheckCircle size={10} /> Đã duyệt</> : <><Clock size={10} /> Chờ duyệt</>}
+                    {isApproved ? <><CheckCircle size={10} /> Đã duyệt</> : isRejected ? <><Shield size={10} /> Đã từ chối</> : <><Clock size={10} /> Chờ duyệt</>}
                 </span>
             </div>
 
             <div className="flex gap-2">
                 <div className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm border ${url
-                        ? approved
-                            ? "bg-white border-green-200 text-gray-800"
+                    ? isApproved
+                        ? "bg-white border-green-200 text-gray-800"
+                        : isRejected
+                            ? "bg-red-50 border-red-200 text-red-800"
                             : "bg-gray-50 border-gray-100 text-gray-600"
-                        : "bg-gray-50 border-gray-100 text-gray-300 italic"
+                    : "bg-gray-50 border-gray-100 text-gray-300 italic"
                     }`}>
                     {url ? (
                         <>
@@ -338,7 +357,7 @@ function LinkApprovalSection({ icon, label, url, approved, approvedAt, onApprove
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="shrink-0 text-blue-500 hover:text-blue-700"
+                                className={`shrink-0 ${isRejected ? 'text-red-500 hover:text-red-700' : 'text-blue-500 hover:text-blue-700'}`}
                             >
                                 <ExternalLink size={13} />
                             </a>
@@ -347,7 +366,7 @@ function LinkApprovalSection({ icon, label, url, approved, approvedAt, onApprove
                         <span>Chưa có link</span>
                     )}
                 </div>
-                {url && !approved && (
+                {url && (isPending || isRejected) && (
                     <Button
                         size="sm"
                         onClick={onApprove}
@@ -356,9 +375,19 @@ function LinkApprovalSection({ icon, label, url, approved, approvedAt, onApprove
                         Duyệt
                     </Button>
                 )}
+                {url && (isPending || isApproved) && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onReject}
+                        className="shrink-0 bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 rounded-xl px-4 shadow-sm transition-all"
+                    >
+                        Từ chối
+                    </Button>
+                )}
             </div>
 
-            {approved && approvedAt && (
+            {isApproved && approvedAt && (
                 <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
                     <CheckCircle size={10} />
                     Đã duyệt lúc {new Date(approvedAt).toLocaleString("vi-VN")}

@@ -1,32 +1,92 @@
 // SRS Reports — Lecturer
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, FileText, Eye, CheckCircle, MessageSquare, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
+import db from "../../mock/db.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { SRS_STATUS as STATUS } from "../../shared/permissions.js";
 
-const MOCK_SRS = [
-    { id: 1, group: "Nhóm SE01-G1", project: "JIRA-GitHub Export System", version: "v1.0", status: "Final", date: "2025-03-01", reviewer: "GV. Nguyễn" },
-    { id: 2, group: "Nhóm SE01-G2", project: "Library Management System", version: "v2.1", status: "Review", date: "2025-03-05", reviewer: "GV. Trần" },
-    { id: 3, group: "Nhóm SE01-G3", project: "E-Commerce Platform", version: "v1.0", status: "Draft", date: "2025-03-07", reviewer: "—" },
-    { id: 4, group: "Nhóm SE02-G1", project: "HR Management System", version: "v1.2", status: "Final", date: "2025-02-28", reviewer: "GV. Lê" },
-    { id: 5, group: "Nhóm SE02-G2", project: "Smart Parking App", version: "v0.9", status: "Draft", date: "2025-03-06", reviewer: "—" },
-    { id: 6, group: "Nhóm SE02-G3", project: "Student Portal", version: "v1.1", status: "Review", date: "2025-03-04", reviewer: "GV. Phạm" },
-];
-
-const STATUS = {
-    Final: { cls: "bg-green-50 text-green-700 border-green-100", label: "Final" },
-    Review: { cls: "bg-blue-50 text-blue-700 border-blue-100", label: "Review" },
-    Draft: { cls: "bg-gray-100 text-gray-500 border-gray-200", label: "Draft" },
-};
 
 export default function SrsReports() {
     const { success } = useToast();
+    const { user } = useAuth();
     const [selected, setSelected] = useState(null);
     const [filter, setFilter] = useState("all");
+    const [srsList, setSrsList] = useState([]);
+    const [feedbackText, setFeedbackText] = useState("");
 
-    const filtered = filter === "all" ? MOCK_SRS : MOCK_SRS.filter(s => s.status === filter);
-    const selectedSrs = MOCK_SRS.find(s => s.id === selected);
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    useEffect(() => {
+        if (selected) {
+            const s = srsList.find(s => s.id === selected);
+            if (s) setFeedbackText(s.feedback);
+        }
+    }, [selected, srsList]);
+
+    const loadData = () => {
+        if (!user) return;
+        const assignments = db.findMany('courseLecturers', { lecturerId: user.id });
+        const courseIds = assignments.map(a => a.courseId);
+
+        const allSrs = db.findMany('srsReports');
+        const lecturerSrs = allSrs.filter(srs => {
+            const project = db.findById('projects', srs.projectId);
+            return project && courseIds.includes(project.courseId);
+        }).map(srs => {
+            const project = db.findById('projects', srs.projectId);
+            // Find the group for this project via courseId (each project belongs to a course;
+            // each course has one or more groups — find the first group in that course)
+            const courseGroups = db.findMany('groups', { courseId: project.courseId });
+            // Prefer locating the group whose teamLeaderId or studentIds match the submitter;
+            // fall back to first group in the course; final fallback to project name
+            const group =
+                courseGroups.find(g => g.teamLeaderId === srs.submittedByStudentId) ||
+                courseGroups.find(g => g.studentIds?.includes(srs.submittedByStudentId)) ||
+                courseGroups[0] ||
+                { name: project.name };
+            return {
+                id: srs.id,
+                group: group.name,
+                project: project.name,
+                version: srs.version,
+                status: srs.status,
+                date: srs.submittedAt,
+                reviewer: srs.reviewedByLecturerId
+                    ? db.findById('users.lecturers', srs.reviewedByLecturerId)?.name || 'GV'
+                    : '—',
+                feedback: srs.feedback || ''
+            };
+        });
+        setSrsList(lecturerSrs);
+    };
+
+
+    const handleStatusUpdate = (srsId, newStatus) => {
+        db.update('srsReports', srsId, {
+            status: newStatus,
+            reviewedByLecturerId: user.id,
+            updatedAt: new Date().toISOString()
+        });
+        success(`Đã chuyển trạng thái SRS sang ${newStatus}`);
+        loadData();
+    };
+
+    const handleFeedback = (srsId) => {
+        db.update('srsReports', srsId, {
+            feedback: feedbackText,
+            updatedAt: new Date().toISOString()
+        });
+        success("Đã lưu nhận xét");
+        loadData();
+    };
+
+    const filtered = filter === "all" ? srsList : srsList.filter(s => s.status === filter);
+    const selectedSrs = srsList.find(s => s.id === selected);
 
     return (
         <div className="space-y-6">
@@ -47,9 +107,9 @@ export default function SrsReports() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: "Final", count: MOCK_SRS.filter(s => s.status === "Final").length, color: "text-green-700 bg-green-50 border-green-100" },
-                    { label: "Review", count: MOCK_SRS.filter(s => s.status === "Review").length, color: "text-blue-700 bg-blue-50 border-blue-100" },
-                    { label: "Draft", count: MOCK_SRS.filter(s => s.status === "Draft").length, color: "text-gray-500 bg-gray-100 border-gray-200" },
+                    { label: "Final", count: srsList.filter(s => s.status === "FINAL").length, color: "text-green-700 bg-green-50 border-green-100" },
+                    { label: "Review", count: srsList.filter(s => s.status === "REVIEW").length, color: "text-blue-700 bg-blue-50 border-blue-100" },
+                    { label: "Draft", count: srsList.filter(s => s.status === "DRAFT").length, color: "text-gray-500 bg-gray-100 border-gray-200" },
                 ].map(({ label, count, color }) => (
                     <div key={label} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${color}`}>
                         <span className="text-xs font-semibold">{label}</span>
@@ -60,7 +120,7 @@ export default function SrsReports() {
 
             {/* Filter chips */}
             <div className="flex items-center gap-2">
-                {["all", "Final", "Review", "Draft"].map(f => (
+                {["all", "FINAL", "REVIEW", "DRAFT"].map(f => (
                     <button
                         key={f}
                         onClick={() => setFilter(f)}
@@ -77,11 +137,11 @@ export default function SrsReports() {
                 {/* List */}
                 <div className="lg:col-span-3">
                     <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            <div className="col-span-5">Nhóm / Project</div>
+                        <div className="grid grid-cols-12 gap-2 px-5 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <div className="col-span-4">Nhóm / Project</div>
                             <div className="col-span-2 text-center">Phiên bản</div>
                             <div className="col-span-2 text-center">Trạng thái</div>
-                            <div className="col-span-3 text-right">Thao tác</div>
+                            <div className="col-span-4 text-right">Thao tác</div>
                         </div>
                         <CardContent className="p-0">
                             {filtered.map((srs) => {
@@ -90,9 +150,9 @@ export default function SrsReports() {
                                     <div
                                         key={srs.id}
                                         onClick={() => setSelected(srs.id === selected ? null : srs.id)}
-                                        className={`grid grid-cols-12 gap-3 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/60 transition-colors last:border-0 cursor-pointer ${selected === srs.id ? "bg-teal-50/40" : ""}`}
+                                        className={`grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/60 transition-colors last:border-0 cursor-pointer ${selected === srs.id ? "bg-teal-50/40" : ""}`}
                                     >
-                                        <div className="col-span-5">
+                                        <div className="col-span-4">
                                             <p className="text-sm font-semibold text-gray-800 truncate">{srs.group}</p>
                                             <p className="text-[11px] text-gray-400 truncate">{srs.project}</p>
                                         </div>
@@ -100,23 +160,31 @@ export default function SrsReports() {
                                             <span className="text-xs font-mono text-gray-600">{srs.version}</span>
                                         </div>
                                         <div className="col-span-2 text-center">
-                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider ${s.cls}`}>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${s.cls}`}>
                                                 {s.label}
                                             </span>
                                         </div>
-                                        <div className="col-span-3 flex items-center justify-end gap-1.5">
+                                        <div className="col-span-4 flex items-center justify-end gap-1 flex-wrap">
                                             <button
                                                 onClick={e => { e.stopPropagation(); setSelected(srs.id); }}
-                                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-2.5 py-1.5 border border-teal-100 transition-colors"
+                                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-2 py-1.5 border border-teal-100 transition-colors whitespace-nowrap"
                                             >
                                                 <Eye size={11} />View
                                             </button>
-                                            {srs.status === "Review" && (
+                                            {srs.status === "REVIEW" && (
                                                 <button
-                                                    onClick={e => { e.stopPropagation(); success(`Đã phê duyệt SRS ${srs.group}`); }}
-                                                    className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg px-2.5 py-1.5 border border-green-100 transition-colors"
+                                                    onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'FINAL'); }}
+                                                    className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg px-2 py-1.5 border border-green-100 transition-colors whitespace-nowrap"
                                                 >
                                                     <CheckCircle size={11} />Approve
+                                                </button>
+                                            )}
+                                            {srs.status === "REVIEW" && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'DRAFT'); }}
+                                                    className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-lg px-2 py-1.5 border border-red-100 transition-colors whitespace-nowrap"
+                                                >
+                                                    Reject
                                                 </button>
                                             )}
                                         </div>
@@ -183,12 +251,14 @@ export default function SrsReports() {
                                         </label>
                                         <textarea
                                             rows={3}
+                                            value={feedbackText}
+                                            onChange={(e) => setFeedbackText(e.target.value)}
                                             placeholder="Thêm nhận xét..."
                                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none transition-all"
                                         />
                                         <Button
                                             className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-8 text-xs font-semibold border-0"
-                                            onClick={() => success("Đã gửi nhận xét")}
+                                            onClick={() => handleFeedback(selectedSrs.id)}
                                         >
                                             Gửi nhận xét
                                         </Button>

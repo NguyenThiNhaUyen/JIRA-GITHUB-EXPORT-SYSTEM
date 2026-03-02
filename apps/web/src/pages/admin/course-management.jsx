@@ -29,6 +29,7 @@ export default function CourseManagement() {
   const [lecturers, setLecturers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [formData, setFormData] = useState({
@@ -208,14 +209,26 @@ export default function CourseManagement() {
 
       <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
         <CardHeader className="border-b border-gray-50 pb-4 pt-6 px-6">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-xl text-gray-800 font-bold">Danh sách lớp học</CardTitle>
-            <Button
-              onClick={handleCreate}
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-10 px-5"
-            >
-              + Thêm Lớp học
-            </Button>
+          <div className="flex justify-between items-center gap-4">
+            <CardTitle className="text-xl text-gray-800 font-bold whitespace-nowrap">Danh sách lớp học</CardTitle>
+            <div className="flex items-center gap-3 w-full justify-end">
+              <select
+                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm max-w-xs w-full"
+                value={filterSemester}
+                onChange={(e) => setFilterSemester(e.target.value)}
+              >
+                <option value="">Tất cả học kỳ</option>
+                {semesters.map(sem => (
+                  <option key={sem.id} value={sem.id}>{sem.name}</option>
+                ))}
+              </select>
+              <Button
+                onClick={handleCreate}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-10 px-5 shrink-0"
+              >
+                + Thêm Lớp học
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -232,87 +245,89 @@ export default function CourseManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-gray-50">
-                {courses.map((course, index) => {
-                  const lecturerName = getCourseLecturer(course.id);
-                  return (
-                    <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-none group">
-                      <TableCell className="py-4 px-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="w-8 flex justify-center text-sm font-medium text-gray-400">
-                            {index + 1}
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold text-gray-800 text-sm">
-                              {course.code}
+                {courses
+                  .filter(c => !filterSemester || c.semesterId === filterSemester)
+                  .map((course, index) => {
+                    const lecturerName = getCourseLecturer(course.id);
+                    return (
+                      <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-none group">
+                        <TableCell className="py-4 px-6">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="w-8 flex justify-center text-sm font-medium text-gray-400">
+                              {index + 1}
                             </div>
-                            <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
-                              {course.name}
+                            <div className="text-left">
+                              <div className="font-semibold text-gray-800 text-sm">
+                                {course.code}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
+                                {course.name}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        <div className="flex flex-col gap-1.5 items-center">
-                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
-                            {getSubjectCode(course.subjectId)}
+                        </TableCell>
+                        <TableCell className="py-4 px-6">
+                          <div className="flex flex-col gap-1.5 items-center">
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
+                              {getSubjectCode(course.subjectId)}
+                            </span>
+                            <span className="text-[11px] text-gray-500">
+                              {getSemesterName(course.semesterId)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 px-6 text-center">
+                          {lecturerName ? (
+                            <span className="text-sm font-medium text-gray-700">{lecturerName}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 font-medium italic">Chưa phân công</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-4 px-6 text-center">
+                          <div className="text-sm font-semibold text-gray-700">
+                            {course.currentStudents}<span className="text-gray-400 text-xs ml-1">/ {course.maxStudents}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 px-6 text-center">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                            course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                              'text-gray-600 bg-gray-100'
+                            }`}>
+                            {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
                           </span>
-                          <span className="text-[11px] text-gray-500">
-                            {getSemesterName(course.semesterId)}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
-                        {lecturerName ? (
-                          <span className="text-sm font-medium text-gray-700">{lecturerName}</span>
-                        ) : (
-                          <span className="text-xs text-gray-400 font-medium italic">Chưa phân công</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
-                        <div className="text-sm font-semibold text-gray-700">
-                          {course.currentStudents}<span className="text-gray-400 text-xs ml-1">/ {course.maxStudents}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
-                          course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
-                            'text-gray-600 bg-gray-100'
-                          }`}>
-                          {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
-                          <Button
-                            size="sm"
-                            onClick={() => !lecturerName && handleAssignLecturer(course)}
-                            className={`h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs ${lecturerName ? 'invisible pointer-events-none' : ''}`}
-                          >
-                            + GV
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(course)}
-                            className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
-                            title="Sửa"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(course.id)}
-                            className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
-                            title="Xóa"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        </TableCell>
+                        <TableCell className="py-4 px-6 text-center">
+                          <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
+                            <Button
+                              size="sm"
+                              onClick={() => !lecturerName && handleAssignLecturer(course)}
+                              className={`h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs ${lecturerName ? 'invisible pointer-events-none' : ''}`}
+                            >
+                              + GV
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(course)}
+                              className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
+                              title="Sửa"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(course.id)}
+                              className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                              title="Xóa"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
               </TableBody>
             </Table>
           </div>
