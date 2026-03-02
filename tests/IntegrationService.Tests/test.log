@@ -1,0 +1,212 @@
+﻿Build started 02/03/2026 10:29:16 SA.
+     1>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\obj\project.assets.json
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj (in 51 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj (in 51 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj (in 51 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj (in 51 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj (in 51 ms).
+         
+         NuGet Config files used:
+             C:\Users\Admin\AppData\Roaming\NuGet\NuGet.Config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+             C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+         All projects are up-to-date for restore.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (Restore target(s)).
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" on node 2 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:7) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) on node 2 (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (3:9) on node 1 (default targets).
+     3>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\Shared.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         Shared -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\bin\Debug\net8.0\Shared.dll
+     3>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj" (4:7) on node 2 (default targets).
+     4>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj" (5:7) on node 3 (default targets).
+     5>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+     4>CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\GithubService.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+     5>CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+     4>_ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+     5>_GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\JiraService.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+     4>_BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         GithubService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\bin\Debug\net8.0\GithubService.dll
+     4>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj" (default targets).
+     5>_BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         JiraService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\bin\Debug\net8.0\JiraService.dll
+     5>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj" (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj" (2:6) on node 4 (default targets).
+     2>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\IntegrationService.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         IntegrationService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\bin\Debug\net8.0\IntegrationService.dll
+     2>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj" (default targets).
+     1>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net9.0\IntegrationService.Tests.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         IntegrationService.Tests -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\bin\Debug\net9.0\IntegrationService.Tests.dll
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\bin\Debug\net9.0\IntegrationService.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.05]   Discovering: IntegrationService.Tests
+[xUnit.net 00:00:00.08]   Discovered:  IntegrationService.Tests
+[xUnit.net 00:00:00.09]   Starting:    IntegrationService.Tests
+[xUnit.net 00:00:00.21]       System.InvalidOperationException : The provider for the source 'IQueryable' doesn't implement 'IAsyncQueryProvider'. Only providers that implement 'IAsyncQueryProvider' can be used for Entity Framework asynchronous operations.
+[xUnit.net 00:00:00.21]       Stack Trace:
+[xUnit.net 00:00:00.21]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.21]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.21]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.21]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectIntegrationService.cs(139,0): at JiraGithubExport.IntegrationService.Application.Implementations.ProjectIntegrationService.LinkIntegrationAsync(Int64 projectId, LinkIntegrationRequest request)
+[xUnit.net 00:00:00.21]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\ProjectIntegrationServiceTests.cs(102,0): at IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ValidNewGithubIntegration_AddsIntegration()
+[xUnit.net 00:00:00.21]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.22]       System.InvalidOperationException : The provider for the source 'IQueryable' doesn't implement 'IAsyncQueryProvider'. Only providers that implement 'IAsyncQueryProvider' can be used for Entity Framework asynchronous operations.
+[xUnit.net 00:00:00.22]       Stack Trace:
+[xUnit.net 00:00:00.22]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.22]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.23]            at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.23]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectIntegrationService.cs(139,0): at JiraGithubExport.IntegrationService.Application.Implementations.ProjectIntegrationService.LinkIntegrationAsync(Int64 projectId, LinkIntegrationRequest request)
+[xUnit.net 00:00:00.23]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\ProjectIntegrationServiceTests.cs(127,0): at IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ExistingIntegration_UpdatesIntegration()
+[xUnit.net 00:00:00.23]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.23]   Finished:    IntegrationService.Tests
+  Failed IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ValidNewGithubIntegration_AddsIntegration [82 ms]
+  Error Message:
+   System.InvalidOperationException : The provider for the source 'IQueryable' doesn't implement 'IAsyncQueryProvider'. Only providers that implement 'IAsyncQueryProvider' can be used for Entity Framework asynchronous operations.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+   at JiraGithubExport.IntegrationService.Application.Implementations.ProjectIntegrationService.LinkIntegrationAsync(Int64 projectId, LinkIntegrationRequest request) in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectIntegrationService.cs:line 139
+   at IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ValidNewGithubIntegration_AddsIntegration() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\ProjectIntegrationServiceTests.cs:line 102
+--- End of stack trace from previous location ---
+  Passed IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ProjectNotFound_ThrowsNotFoundException [9 ms]
+  Passed IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_InvalidGithubUrl_ThrowsValidationException [2 ms]
+  Failed IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ExistingIntegration_UpdatesIntegration [5 ms]
+  Error Message:
+   System.InvalidOperationException : The provider for the source 'IQueryable' doesn't implement 'IAsyncQueryProvider'. Only providers that implement 'IAsyncQueryProvider' can be used for Entity Framework asynchronous operations.
+  Stack Trace:
+     at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, Expression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ExecuteAsync[TSource,TResult](MethodInfo operatorMethodInfo, IQueryable`1 source, LambdaExpression expression, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync[TSource](IQueryable`1 source, Expression`1 predicate, CancellationToken cancellationToken)
+   at JiraGithubExport.IntegrationService.Application.Implementations.ProjectIntegrationService.LinkIntegrationAsync(Int64 projectId, LinkIntegrationRequest request) in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectIntegrationService.cs:line 139
+   at IntegrationService.Tests.Services.ProjectIntegrationServiceTests.LinkIntegrationAsync_ExistingIntegration_UpdatesIntegration() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\ProjectIntegrationServiceTests.cs:line 127
+--- End of stack trace from previous location ---
+
+Total tests: 4
+     Passed: 2
+     Failed: 2
+ Total time: 0,7314 Seconds
+       _VSTestConsole:
+         MSB4181: The "VSTestTask" task returned false but did not log an error.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (VSTest target(s)) -- FAILED.
+
+Build FAILED.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.94
