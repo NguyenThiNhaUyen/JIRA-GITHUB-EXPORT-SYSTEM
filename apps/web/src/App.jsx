@@ -20,6 +20,7 @@ import SemesterManagement from "./pages/admin/semester-management.jsx";
 import SubjectManagement from "./pages/admin/subject-management.jsx";
 
 // Lecturer pages
+import LecturerLayout from "./layouts/LecturerLayout.jsx";
 import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
 import ManageGroups from "./pages/lecturer/manage-groups.jsx";
 import GroupDetail from "./pages/lecturer/group-detail.jsx";
@@ -136,7 +137,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <LecturerDashboard />
+              <LecturerLayout>
+                <LecturerDashboard />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -148,7 +151,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <ManageGroups />
+              <LecturerLayout>
+                <ManageGroups />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -158,7 +163,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <GroupDetail />
+              <LecturerLayout>
+                <GroupDetail />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
