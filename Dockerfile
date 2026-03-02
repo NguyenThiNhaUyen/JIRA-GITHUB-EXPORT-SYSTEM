@@ -7,6 +7,8 @@ COPY ["services/integration/IntegrationService.csproj", "services/integration/"]
 COPY ["services/jira-service/JiraService.csproj", "services/jira-service/"]
 COPY ["services/github-service/GithubService.csproj", "services/github-service/"]
 COPY ["packages/shared/Shared.csproj", "packages/shared/"]
+COPY ["tests/IntegrationService.Tests/IntegrationService.Tests.csproj", "tests/IntegrationService.Tests/"]
+COPY ["tests/Shared.Tests/Shared.Tests.csproj", "tests/Shared.Tests/"]
 
 # Restore dependencies
 RUN dotnet restore "JiraGithubExportSystem.sln"
