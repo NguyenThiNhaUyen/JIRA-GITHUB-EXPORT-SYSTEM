@@ -5,133 +5,17 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import CourseCard from "../../components/student/CourseCard.jsx";
-import GroupDetails from "../../components/student/GroupDetails.jsx";
-import { BookOpen } from "lucide-react";
-
-// Mock Student Data
-const MOCK_STUDENT = {
-    id: "stu001",
-    studentCode: "SE2026001",
-    name: "Nguyễn Văn A",
-    email: "anvse2026001@fpt.edu.vn",
-};
-
-// Mock Courses
-const MOCK_COURSES = [
-    {
-        id: "course-1",
-        code: "SWD392",
-        name: "Software Development",
-        lecturer: "Nguyễn Văn Nam",
-        status: "ACTIVE",
-    },
-    {
-        id: "course-2",
-        code: "PRJ301",
-        name: "Java Web Application",
-        lecturer: "Trần Thị Lan",
-        status: "ACTIVE",
-    },
-    {
-        id: "course-3",
-        code: "SWP391",
-        name: "Software Engineering Project",
-        lecturer: "Lê Văn Hùng",
-        status: "ACTIVE",
-    },
-];
-
-// Available topics (provided by lecturer)
-const AVAILABLE_TOPICS = [
-    "E-commerce Platform với AI Recommendation",
-    "Smart Campus IoT System",
-    "Banking Mobile App",
-    "Healthcare Management System",
-    "Online Learning Platform",
-    "Restaurant Management & Delivery",
-    "Social Media Platform",
-    "Data Analytics Dashboard",
-];
-
-// Student's group in each course (1 group per course)
-const MOCK_STUDENT_GROUPS = {
-    "course-1": {
-        groupId: "grp-1",
-        courseId: "course-1",
-        groupName: "Nhóm 3",
-        topic: "E-commerce Platform với AI Recommendation",
-        role: "LEADER",
-        status: "ACTIVE",
-        githubUrl: "https://github.com/team3/ecommerce-platform",
-        jiraUrl: "https://team3.atlassian.net/browse/ECOM",
-        linksStatus: "APPROVED",
-        lastCommit: "2026-01-20",
-        teamMembers: [
-            { studentId: "stu001", studentCode: "SE2026001", name: "Nguyễn Văn A", email: "anvse2026001@fpt.edu.vn", contribution: 25, isLeader: true },
-            { studentId: "stu002", studentCode: "SE2026002", name: "Trần Thị B", email: "bttse2026002@fpt.edu.vn", contribution: 22 },
-            { studentId: "stu003", studentCode: "SE2026003", name: "Lê Văn C", email: "cvlse2026003@fpt.edu.vn", contribution: 20 },
-            { studentId: "stu004", studentCode: "SE2026004", name: "Phạm Thu D", email: "dtpse2026004@fpt.edu.vn", contribution: 18 },
-            { studentId: "stu005", studentCode: "SE2026005", name: "Hoàng Minh E", email: "emhse2026005@fpt.edu.vn", contribution: 15 },
-        ],
-    },
-    "course-2": {
-        groupId: "grp-5",
-        courseId: "course-2",
-        groupName: "Nhóm 5",
-        topic: "Banking Mobile App",
-        role: "MEMBER",
-        status: "ACTIVE",
-        githubUrl: "https://github.com/team5/banking-app",
-        jiraUrl: "https://team5.atlassian.net/browse/BANK",
-        linksStatus: "PENDING",
-        lastCommit: "2026-01-21",
-        teamMembers: [
-            { studentId: "stu009", studentCode: "SE2026009", name: "Ngô Văn I", email: "ivnse2026009@fpt.edu.vn", contribution: 18, isLeader: true },
-            { studentId: "stu001", studentCode: "SE2026001", name: "Nguyễn Văn A", email: "anvse2026001@fpt.edu.vn", contribution: 17 },
-            { studentId: "stu010", studentCode: "SE2026010", name: "Trương Thị J", email: "jttse2026010@fpt.edu.vn", contribution: 16 },
-            { studentId: "stu011", studentCode: "SE2026011", name: "Mai Văn K", email: "kvmse2026011@fpt.edu.vn", contribution: 18 },
-            { studentId: "stu012", studentCode: "SE2026012", name: "Dương Thu L", email: "ltdse2026012@fpt.edu.vn", contribution: 16 },
-        ],
-    },
-    "course-3": {
-        groupId: "grp-7",
-        courseId: "course-3",
-        groupName: "Nhóm 7",
-        topic: "",
-        role: "LEADER",
-        status: "ACTIVE",
-        githubUrl: "",
-        jiraUrl: "",
-        linksStatus: "PENDING",
-        lastCommit: "2026-01-22",
-        teamMembers: [
-            { studentId: "stu001", studentCode: "SE2026001", name: "Nguyễn Văn A", email: "anvse2026001@fpt.edu.vn", contribution: 23, isLeader: true },
-            { studentId: "stu014", studentCode: "SE2026014", name: "Võ Văn N", email: "nvvse2026014@fpt.edu.vn", contribution: 21 },
-            { studentId: "stu015", studentCode: "SE2026015", name: "Phan Thị O", email: "otpse2026015@fpt.edu.vn", contribution: 19 },
-            { studentId: "stu016", studentCode: "SE2026016", name: "Cao Văn P", email: "pvcse2026016@fpt.edu.vn", contribution: 20 },
-            { studentId: "stu017", studentCode: "SE2026017", name: "Tô Thu Q", email: "qttse2026017@fpt.edu.vn", contribution: 17 },
-        ],
-    },
-};
-
-const INITIAL_SRS_REPORTS = {
-    "grp-1": [
-        { id: "srs-1", version: "1.0", submittedAt: "2026-01-12", note: "Initial SRS" },
-        { id: "srs-2", version: "1.1", submittedAt: "2026-01-18", note: "Update scope" },
-    ],
-    "grp-5": [{ id: "srs-3", version: "1.0", submittedAt: "2026-01-10", note: "Baseline" }],
-    "grp-7": [],
-};
-
-// SRS Upload Modal Component
-function SRSUploadModal({ isOpen, onClose, onSave, editingReport }) {
-    const [form, setForm] = useState({ version: "", note: "" });
-
+import db from "../../mock/db.js";
+import { LINK_STATUS as LINK_STATUS_CFG, SRS_STATUS, isGroupLeader, requireLeader, buildStudentAlerts } from "../../shared/permissions.js";
+import {
+    BookOpen, GitBranch, Bell, CheckCircle, AlertTriangle,
+    ChevronRight, Clock, ArrowRight, Link2,
+    Users, GraduationCap, Calendar, BarChart2,
+    Crown, MapPin, Github, Star, RefreshCw
+} from "lucide-react";
 
 /* ── Status config (from shared module) ── */
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
-
 
 /* ─── SRS Upload Modal ─── */
 function SRSUploadModal({ isOpen, onClose, onSave, editingReport }) {
