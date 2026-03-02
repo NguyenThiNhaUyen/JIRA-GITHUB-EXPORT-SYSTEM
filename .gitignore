@@ -28,8 +28,6 @@ artifacts/
 # NuGet
 *.nupkg
 *.snupkg
-**/packages/*
-!**/packages/build/
 
 # User-specific files
 *.rsuser

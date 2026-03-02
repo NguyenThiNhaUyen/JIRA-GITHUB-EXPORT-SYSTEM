@@ -29,6 +29,11 @@ public class SyncWorker : BackgroundService
             {
                 await DoSyncAsync(stoppingToken);
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Sync Worker cancelled gracefully.");
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred during sync process");
@@ -71,11 +76,10 @@ public class SyncWorker : BackgroundService
                     await githubClient.SyncPullRequestsAsync(integration.github_repo.id, integration.github_repo.owner_login, integration.github_repo.name);
                 }
 
-                // Sync Jira
                 if (integration.jira_project != null)
                 {
                     _logger.LogDebug("Syncing Jira for project: {ProjectName}", integration.project.name);
-                    await jiraClient.SyncIssuesAsync(integration.jira_project.id, integration.jira_project.jira_project_key, integration.jira_project.jira_url);
+                    await jiraClient.SyncIssuesAsync(integration.jira_project.id, integration.jira_project.jira_project_key, integration.jira_project.jira_url ?? "https://atlassian.net");
                 }
                 
                 _logger.LogInformation("Successfully synced integration for project {ProjectName} (ID: {ProjectId})", integration.project.name, integration.project_id);

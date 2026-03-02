@@ -1,9 +1,14 @@
+using System.Security.Claims;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -11,11 +16,42 @@ public class ReportService : IReportService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ReportService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IWebHostEnvironment _env;
+    private readonly IExcelReportGenerator _excelReportGenerator;
+    private readonly IPdfReportGenerator _pdfReportGenerator;
 
-    public ReportService(IUnitOfWork unitOfWork, ILogger<ReportService> logger)
+    public ReportService(
+        IUnitOfWork unitOfWork, 
+        ILogger<ReportService> logger, 
+        IHttpContextAccessor httpContextAccessor, 
+        IWebHostEnvironment env,
+        IExcelReportGenerator excelReportGenerator,
+        IPdfReportGenerator pdfReportGenerator)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
+        _env = env;
+        _excelReportGenerator = excelReportGenerator;
+        _pdfReportGenerator = pdfReportGenerator;
+    }
+
+    private long GetCurrentUserId()
+    {
+        var claim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return long.TryParse(claim, out var id) ? id : 0;
+    }
+
+    private string GetReportDirectory()
+    {
+        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var reportsPath = Path.Combine(webRoot, "reports");
+        if (!Directory.Exists(reportsPath))
+        {
+            Directory.CreateDirectory(reportsPath);
+        }
+        return reportsPath;
     }
 
     public async Task<long> GenerateCommitStatisticsReportAsync(long courseId, string format)
@@ -25,19 +61,21 @@ public class ReportService : IReportService
             var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
             if (course == null) throw new NotFoundException("Course not found");
 
+            string fileName = $"course_{courseId}_commits_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
+            string filePath = Path.Combine(GetReportDirectory(), fileName);
+
             var reportExport = new report_export
             {
                 report_type = "COMMIT_STATISTICS",
                 scope = "COURSE",
                 scope_entity_id = courseId,
                 format = format,
-                status = "COMPLETED", // Assuming synchronous for now or mock completion
-                requested_by_user_id = 1, // TODO: Get from current user
+                status = "COMPLETED",
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
-                file_url = $"/reports/course_{courseId}_commits.{format.ToLower()}"
+                file_url = $"/reports/{fileName}"
             };
 
-            // Data gathering logic for statistics (will be used by actual generator)
             var projects = await _unitOfWork.Projects.Query()
                 .Include(p => p.team_members)
                     .ThenInclude(tm => tm.student_user)
@@ -45,7 +83,18 @@ public class ReportService : IReportService
                 .Where(p => p.course_id == courseId)
                 .ToListAsync();
 
-            _logger.LogInformation("Gathering commit stats for course {CourseName}", course.course_name);
+            if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name, projects);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+            else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name, projects);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+
+            _logger.LogInformation("Generated commit stats for course {CourseName} at {FilePath}", course.course_name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
@@ -63,8 +112,15 @@ public class ReportService : IReportService
     {
         try
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            var project = await _unitOfWork.Projects.Query()
+                .Include(p => p.team_members)
+                    .ThenInclude(tm => tm.student_user)
+                        .ThenInclude(s => s.user)
+                .FirstOrDefaultAsync(p => p.id == projectId);
             if (project == null) throw new NotFoundException("Project not found");
+
+            string fileName = $"project_{projectId}_roster_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
+            string filePath = Path.Combine(GetReportDirectory(), fileName);
 
             var reportExport = new report_export
             {
@@ -73,10 +129,23 @@ public class ReportService : IReportService
                 scope_entity_id = projectId,
                 format = format,
                 status = "COMPLETED",
-                requested_by_user_id = 1, 
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
-                file_url = $"/reports/project_{projectId}_roster.{format.ToLower()}"
+                file_url = $"/reports/{fileName}"
             };
+
+            if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _excelReportGenerator.GenerateTeamRosterReport(project);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+            else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(project);
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+
+            _logger.LogInformation("Generated team roster for project {ProjectName} at {FilePath}", project.name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
@@ -94,8 +163,15 @@ public class ReportService : IReportService
     {
         try
         {
-            var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+            var project = await _unitOfWork.Projects.Query()
+                .Include(p => p.team_members)
+                    .ThenInclude(tm => tm.student_user)
+                        .ThenInclude(s => s.user)
+                .FirstOrDefaultAsync(p => p.id == projectId);
             if (project == null) throw new NotFoundException("Project not found");
+
+            string fileName = $"project_{projectId}_activity_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
+            string filePath = Path.Combine(GetReportDirectory(), fileName);
 
             var reportExport = new report_export
             {
@@ -104,10 +180,36 @@ public class ReportService : IReportService
                 scope_entity_id = projectId,
                 format = format,
                 status = "COMPLETED",
-                requested_by_user_id = 1,
+                requested_by_user_id = GetCurrentUserId(),
                 requested_at = DateTime.UtcNow,
-                file_url = $"/reports/project_{projectId}_activity.{format.ToLower()}"
+                file_url = $"/reports/{fileName}"
             };
+
+            var activities = await _unitOfWork.StudentActivityDailies.FindAsync(sad =>
+                sad.project_id == projectId &&
+                sad.activity_date >= DateOnly.FromDateTime(startDate) &&
+                sad.activity_date <= DateOnly.FromDateTime(endDate));
+
+            var activityList = activities.GroupBy(a => a.student_user_id)
+                .Select(g => new { 
+                    StudentId = g.Key, 
+                    Commits = g.Sum(x => x.commits_count), 
+                    PRs = g.Sum(x => x.pull_requests_count), 
+                    Issues = g.Sum(x => x.issues_completed) 
+                }).ToList();
+
+            if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(project, activityList.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+            else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(project, activityList.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
+
+            _logger.LogInformation("Generated activity summary for project {ProjectName} at {FilePath}", project.name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
@@ -151,26 +253,29 @@ public class ReportService : IReportService
         {
             var project = await _unitOfWork.Projects.Query()
                 .Include(p => p.project_integration)
-                    .ThenInclude(pi => pi.jira_project)
-                        .ThenInclude(jp => jp.jira_issues)
+                    .ThenInclude(pi => pi!.jira_project)
+                        .ThenInclude(jp => jp!.jira_issues)
                 .FirstOrDefaultAsync(p => p.id == projectId);
 
             if (project == null) throw new NotFoundException("Project not found");
             
             var integration = project.project_integration;
-            if (integration?.jira_project == null) 
+            if (integration == null || integration.jira_project == null) 
                 throw new BusinessException("Project is not integrated with Jira. SRS cannot be generated.");
+
+            string fileName = $"project_{projectId}_srs_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("pdf", StringComparison.OrdinalIgnoreCase) ? "pdf" : format.ToLower())}";
+            string filePath = Path.Combine(GetReportDirectory(), fileName);
 
             var reportExport = new report_export
             {
                 report_type = "SRS_ISO29148",
                 scope = "PROJECT",
                 scope_entity_id = projectId,
-                format = format,
+                format = "pdf",
                 status = "COMPLETED",
-                requested_by_user_id = 1, // TODO: Get from context
+                requested_by_user_id = GetCurrentUserId(), 
                 requested_at = DateTime.UtcNow,
-                file_url = $"/reports/project_{projectId}_srs_{DateTime.UtcNow:yyyyMMdd}.{format.ToLower()}"
+                file_url = $"/reports/{fileName}"
             };
 
             // Logic to organize Jira Data for SRS Sections
@@ -189,6 +294,12 @@ public class ReportService : IReportService
 
             _logger.LogInformation("Generating SRS for Project {ProjectName} with {FeatureCount} features and {NfrCount} NFRs", 
                 project.name, systemFeatures.Count, nfrs.Count);
+
+            if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase) || true) // SRS defaults to PDF
+            {
+                var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(project, systemFeatures.Cast<dynamic>().ToList(), nfrs.Cast<dynamic>().ToList());
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+            }
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();

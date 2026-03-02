@@ -58,6 +58,20 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
+    /// Generate activity summary report for a project in a date range
+    /// </summary>
+    [HttpPost("activity-summary")]
+    public async Task<IActionResult> GenerateActivitySummary(
+        [FromQuery] long projectId,
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate,
+        [FromQuery] string format = "PDF")
+    {
+        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, format);
+        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Activity summary report generation started"));
+    }
+
+    /// <summary>
     /// Generate ISO 29148 SRS report from Jira
     /// </summary>
     [HttpPost("srs")]

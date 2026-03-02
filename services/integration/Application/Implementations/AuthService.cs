@@ -6,6 +6,8 @@ using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Google.Apis.Auth;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -15,17 +17,20 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<AuthService> _logger;
+    private readonly IConfiguration _configuration;
 
     public AuthService(
         JiraGithubToolDbContext context,
         IJwtService jwtService,
         IPasswordHasher passwordHasher,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IConfiguration configuration)
     {
         _context = context;
         _jwtService = jwtService;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -80,138 +85,120 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<UserInfo> RegisterAsync(RegisterRequest request)
+    public async Task<LoginResponse> GoogleLoginAsync(GoogleLoginRequest request)
     {
-        // Validate role
-        var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
-        if (!validRoles.Contains(request.Role.ToUpper()))
-        {
-            _logger.LogWarning("Registration failed: Invalid role - {Role}", request.Role);
-            throw new ValidationException("Invalid role. Must be ADMIN, LECTURER, or STUDENT");
-        }
-
-        // Check if email already exists
-        var existingUser = await _context.users.FirstOrDefaultAsync(u => u.email == request.Email);
-        if (existingUser != null)
-        {
-            _logger.LogWarning("Registration failed: Email exists - {Email}", request.Email);
-            throw new BusinessException("Email already registered");
-        }
-
-        // Validate role-specific fields
-        if (request.Role.ToUpper() == "STUDENT" && string.IsNullOrEmpty(request.StudentCode))
-        {
-            _logger.LogWarning("Registration failed: Student code required");
-            throw new ValidationException("Student code is required for STUDENT role");
-        }
-
-        if (request.Role.ToUpper() == "LECTURER" && string.IsNullOrEmpty(request.LecturerCode))
-        {
-            _logger.LogWarning("Registration failed: Lecturer code required");
-            throw new ValidationException("Lecturer code is required for LECTURER role");
-        }
-
-        // Check if student code already exists
-        if (!string.IsNullOrEmpty(request.StudentCode))
-        {
-            var existingStudent = await _context.students
-                .FirstOrDefaultAsync(s => s.student_code == request.StudentCode);
-            if (existingStudent != null)
-            {
-                _logger.LogWarning("Registration failed: Student code exists");
-                throw new BusinessException("Student code already exists");
-            }
-        }
-
-        // Check if lecturer code already exists
-        if (!string.IsNullOrEmpty(request.LecturerCode))
-        {
-            var existingLecturer = await _context.lecturers
-                .FirstOrDefaultAsync(l => l.lecturer_code == request.LecturerCode);
-            if (existingLecturer != null)
-            {
-                _logger.LogWarning("Registration failed: Lecturer code exists");
-                throw new BusinessException("Lecturer code already exists");
-            }
-        }
-
-        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            // Create user
-            var user = new user
+            string clientId = _configuration["Authentication:Google:ClientId"] 
+                ?? throw new BusinessException("Google Client ID is not configured");
+
+            var settings = new GoogleJsonWebSignature.ValidationSettings
             {
-                email = request.Email,
-                password = _passwordHasher.HashPassword(request.Password),
-                full_name = request.FullName,
-                enabled = true,
-                created_at = DateTime.UtcNow,
-                updated_at = DateTime.UtcNow
+                Audience = new[] { clientId }
             };
 
-            _context.users.Add(user);
-            await _context.SaveChangesAsync();
-
-            // Assign role
-            var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == request.Role.ToUpper());
-            if (role == null)
+            // Verify the ID Token with Google
+            GoogleJsonWebSignature.Payload payload;
+            try
             {
-                role = new role { role_name = request.Role.ToUpper() };
-                _context.roles.Add(role);
-                await _context.SaveChangesAsync();
+                payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+            }
+            catch (InvalidJwtException ex)
+            {
+                _logger.LogWarning(ex, "Invalid Google ID Token");
+                throw new UnauthorizedException("Invalid Google ID Token");
             }
 
-            user.roles.Add(role);
-            await _context.SaveChangesAsync();
+            // Check if user exists by email
+            string email = payload.Email;
+            var user = await _context.users
+                .Include(u => u.roles)
+                .Include(u => u.student)
+                .Include(u => u.lecturer)
+                .FirstOrDefaultAsync(u => u.email == email);
 
-            // Create student or lecturer profile
-            if (request.Role.ToUpper() == "STUDENT")
+            if (user == null)
             {
-                var student = new student
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try 
                 {
-                    user_id = user.id,
-                    student_code = request.StudentCode!,
-                    major = request.Major,
-                    intake_year = request.IntakeYear,
-                    department = request.StudentDepartment,
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                _context.students.Add(student);
-                await _context.SaveChangesAsync();
-            }
-            else if (request.Role.ToUpper() == "LECTURER")
-            {
-                var lecturer = new lecturer
+                    // Create a new user if not exists
+                    user = new user
+                    {
+                        email = email,
+                        full_name = payload.Name,
+                        enabled = true,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow,
+                        password = _passwordHasher.HashPassword(Guid.NewGuid().ToString()) // Random password for SSO users
+                    };
+
+                    _context.users.Add(user);
+                    await _context.SaveChangesAsync();
+
+                    // Xử lý Role tự chọn (Demo/Testing Only)
+                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "STUDENT" : request.Role.ToUpper();
+                    var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
+                    
+                    if (!validRoles.Contains(requestedRole))
+                    {
+                        requestedRole = "STUDENT"; // Fallback an toàn
+                    }
+
+                    var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == requestedRole);
+                    if (role == null)
+                    {
+                        role = new role { role_name = requestedRole };
+                        _context.roles.Add(role);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    user.roles.Add(role);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("New user registered via Google SSO: {Email}", email);
+                } 
+                catch 
                 {
-                    user_id = user.id,
-                    lecturer_code = request.LecturerCode!,
-                    office_email = request.OfficeEmail,
-                    department = request.LecturerDepartment,
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                _context.lecturers.Add(lecturer);
-                await _context.SaveChangesAsync();
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            else if (!user.enabled)
+            {
+                _logger.LogWarning("Google Login failed: Account disabled - {Email}", email);
+                throw new UnauthorizedException("Your account has been disabled");
             }
 
-            await transaction.CommitAsync();
+            // Get roles
+            var roles = user.roles.Select(r => r.role_name).ToList();
 
-            return new UserInfo
+            // Generate JWT Token exactly like standard login
+            var token = _jwtService.GenerateToken(user, roles);
+            
+            _logger.LogInformation("User logged in successfully via Google SSO: {Email}", email);
+
+            return new LoginResponse
             {
-                Id = user.id,
-                Email = user.email,
-                FullName = user.full_name ?? user.email,
-                Roles = new List<string> { request.Role.ToUpper() },
-                StudentCode = request.StudentCode,
-                LecturerCode = request.LecturerCode
+                AccessToken = token,
+                TokenType = "Bearer",
+                ExpiresIn = 3600, // 1 hour
+                User = new UserInfo
+                {
+                    Id = user.id,
+                    Email = user.email,
+                    FullName = user.full_name ?? user.email,
+                    Roles = roles,
+                    StudentCode = user.student?.student_code,
+                    LecturerCode = user.lecturer?.lecturer_code
+                }
             };
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedException && ex is not BusinessException)
         {
-            await transaction.RollbackAsync();
-            _logger.LogError(ex, "❌ Registration failed for {Email}: {Error}", request.Email, ex.Message);
-            throw;
+            _logger.LogError(ex, "Error processing Google Login");
+            throw new BusinessException("An error occurred during Google authentication");
         }
     }
 }

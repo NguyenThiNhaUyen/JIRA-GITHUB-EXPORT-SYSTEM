@@ -44,33 +44,28 @@ public class AuthController : ControllerBase
         }
     }
 
+
     /// <summary>
-    /// Create a new user account
+    /// Authenticate and create a session via Google SSO
     /// </summary>
-    [HttpPost("users")]
-    [ProducesResponseType(typeof(ApiResponse<UserInfo>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    [HttpPost("sessions/google")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
     {
         try
         {
-            var result = await _authService.RegisterAsync(request);
-            return CreatedAtAction(
-                nameof(Register),
-                ApiResponse<UserInfo>.SuccessResponse(result, "User registered successfully"));
+            var response = await _authService.GoogleLoginAsync(request);
+            return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Google login successful"));
         }
-        catch (ValidationException ex)
+        catch (UnauthorizedException ex)
         {
-            return BadRequest(ApiResponse.ErrorResponse(ex.Message, ex.Errors));
-        }
-        catch (BusinessException ex)
-        {
-            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+            return Unauthorized(ApiResponse.ErrorResponse(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Registration failed for {Email}", request.Email);
-            return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during registration"));
+            _logger.LogError(ex, "Google Login failed");
+            return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during Google authentication"));
         }
     }
 }

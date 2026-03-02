@@ -1,8 +1,11 @@
 using System.Text;
 using JiraGithubExport.IntegrationService.Application.Implementations;
+using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.IntegrationService.Background;
 using JiraGithubExport.Shared.Common;
+using JiraGithubExport.Shared.Models;
 using JiraGithubExport.JiraService.Services.Implementations;
 using JiraGithubExport.GithubService.Services.Implementations;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
@@ -17,26 +20,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-namespace JiraGithubExport.IntegrationService
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // ============================================
-            // LOGGING CONFIGURATION
-            // ============================================
-
-
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
-
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Logging.SetMinimumLevel(LogLevel.Information);
-            }
+    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+    var builder = WebApplication.CreateBuilder(args);
 
             // ============================================
             // CONFIGURATION
@@ -86,6 +71,24 @@ namespace JiraGithubExport.IntegrationService
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
+                        return context.Response.WriteAsync(result);
+                    },
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
+                        return context.Response.WriteAsync(result);
+                    }
+                };
             });
 
             builder.Services.AddAuthorization();
@@ -104,11 +107,18 @@ namespace JiraGithubExport.IntegrationService
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-            // Application services
+            // Tầng Application (Services)
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ISemesterService, SemesterService>();
+            builder.Services.AddScoped<ISubjectService, SubjectService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
-            builder.Services.AddScoped<IProjectService, ProjectService>();
+            builder.Services.AddScoped<IProjectCoreService, ProjectCoreService>();
+            builder.Services.AddScoped<IProjectTeamService, ProjectTeamService>();
+            builder.Services.AddScoped<IProjectIntegrationService, ProjectIntegrationService>();
+            builder.Services.AddScoped<IProjectDashboardService, ProjectDashboardService>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
+            builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
@@ -123,11 +133,21 @@ namespace JiraGithubExport.IntegrationService
 
 
             // ============================================
-            // API CONTROLLERS & SWAGGER
+            // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
             // ============================================
 
             builder.Services.AddControllers();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSignalR();
+            
+            // Redis Configuration
+            var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "PBLPlatform_";
+            });
             
             builder.Services.AddSwaggerGen(c =>
             {
@@ -172,9 +192,11 @@ namespace JiraGithubExport.IntegrationService
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    // For Production, change SetIsOriginAllowed(_ => true) to exact domains
+                    policy.SetIsOriginAllowed(origin => true) // Allow any origin safely with credentials
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials(); // Required for SignalR WebSockets
                 });
             });
 
@@ -188,14 +210,6 @@ namespace JiraGithubExport.IntegrationService
             // MIDDLEWARE PIPELINE
             // ============================================
             
-            // Request/Response logging
-            app.Use(async (context, next) =>
-            {
-                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-                logger.LogInformation("{Method} {Path}", context.Request.Method, context.Request.Path);
-                await next();
-            });
-
             // Global exception handler
             app.UseCustomExceptionHandler();
 
@@ -211,6 +225,7 @@ namespace JiraGithubExport.IntegrationService
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             // CORS
             app.UseCors("AllowAll");
@@ -219,18 +234,70 @@ namespace JiraGithubExport.IntegrationService
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Map controllers
+            // Map controllers & SignalR Hubs
             app.MapControllers();
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
             // ============================================
-            // RUN
+            // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)
+            // ============================================
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<JiraGithubToolDbContext>();
+                    var passwordHasher = services.GetRequiredService<IPasswordHasher>();
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+
+                    // 1. Create Default Roles if not exist
+                    var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
+                    bool rolesAdded = false;
+                    foreach (var roleName in defaultRoles)
+                    {
+                        if (!context.roles.Any(r => r.role_name == roleName))
+                        {
+                            context.roles.Add(new role { role_name = roleName });
+                            rolesAdded = true;
+                        }
+                    }
+                    if (rolesAdded) context.SaveChanges();
+
+                    // 2. Create Super Admin Account if not exist
+                    string adminEmail = "admin@truonghoc.com";
+                    if (!context.users.Any(u => u.email == adminEmail))
+                    {
+                        var adminRole = context.roles.First(r => r.role_name == "ADMIN");
+                        var adminUser = new user
+                        {
+                            email = adminEmail,
+                            password = passwordHasher.HashPassword("Admin@123"), // Password mặc định
+                            full_name = "Super Admin",
+                            enabled = true,
+                            created_at = DateTime.UtcNow,
+                            updated_at = DateTime.UtcNow
+                        };
+                        adminUser.roles.Add(adminRole);
+                        context.users.Add(adminUser);
+                        context.SaveChanges();
+                        
+                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "❌ An error occurred while seeding the database.");
+                }
+            }
+
+            // ============================================
+            // RUN APPLICATION
             // ============================================
 
             app.Run();
 
-        }
-    }
-}
+
 
 
 
