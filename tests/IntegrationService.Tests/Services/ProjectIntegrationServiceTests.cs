@@ -74,7 +74,7 @@ namespace IntegrationService.Tests.Services
             var request = new LinkIntegrationRequest { GithubRepoUrl = "https://github.com/owner/repo" };
 
             // Act & Assert
-            await Assert.ThrowsAsync<NotFoundException>(() => _service.LinkIntegrationAsync(999, request));
+            await Assert.ThrowsAsync<NotFoundException>(() => _service.LinkIntegrationAsync(999, 1L, request));
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace IntegrationService.Tests.Services
             var request = new LinkIntegrationRequest { GithubRepoUrl = "invalidurl" };
 
             // Act & Assert
-            await Assert.ThrowsAsync<ValidationException>(() => _service.LinkIntegrationAsync(project.id, request));
+            await Assert.ThrowsAsync<ValidationException>(() => _service.LinkIntegrationAsync(project.id, 1L, request));
         }
 
         [Fact]
@@ -102,7 +102,7 @@ namespace IntegrationService.Tests.Services
             var request = new LinkIntegrationRequest { GithubRepoUrl = "https://github.com/owner/repo" };
 
             // Act
-            await _service.LinkIntegrationAsync(project.id, request);
+            await _service.LinkIntegrationAsync(project.id, 1L, request);
 
             // Assert
             var githubRepo = await _context.github_repositories.FirstOrDefaultAsync(r => r.owner_login == "owner" && r.name == "repo");
@@ -128,7 +128,7 @@ namespace IntegrationService.Tests.Services
             var request = new LinkIntegrationRequest { JiraProjectKey = "TEST" };
 
             // Act
-            await _service.LinkIntegrationAsync(project.id, request);
+            await _service.LinkIntegrationAsync(project.id, 1L, request);
 
             // Assert
             var jiraProject = await _context.jira_projects.FirstOrDefaultAsync(p => p.jira_project_key == "TEST");
