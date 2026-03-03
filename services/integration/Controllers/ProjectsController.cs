@@ -130,14 +130,41 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-    /// Link GitHub and/or Jira integration
+    /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
     /// </summary>
     [HttpPost("{projectId}/integrations")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
-        await _integrationService.LinkIntegrationAsync(projectId, request);
-        return Ok(ApiResponse.SuccessResponse("Integration linked successfully"));
+        var userId = GetCurrentUserId();
+        await _integrationService.LinkIntegrationAsync(projectId, userId, request);
+        return Ok(ApiResponse.SuccessResponse("Integration submitted. Awaiting lecturer approval."));
+    }
+
+    /// <summary>
+    /// Approve integration (Lecturer only)
+    /// </summary>
+    [HttpPost("{projectId}/integrations/approve")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ApproveIntegration(long projectId)
+    {
+        var userId = GetCurrentUserId();
+        await _integrationService.ApproveIntegrationAsync(projectId, userId);
+        return Ok(ApiResponse.SuccessResponse("Integration approved. Sync will begin shortly."));
+    }
+
+    /// <summary>
+    /// Reject integration (Lecturer only)
+    /// </summary>
+    [HttpPost("{projectId}/integrations/reject")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RejectIntegration(long projectId, [FromBody] RejectIntegrationRequest request)
+    {
+        var userId = GetCurrentUserId();
+        await _integrationService.RejectIntegrationAsync(projectId, userId, request.Reason);
+        return Ok(ApiResponse.SuccessResponse("Integration rejected."));
     }
 }
 

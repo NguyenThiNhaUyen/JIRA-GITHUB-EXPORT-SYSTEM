@@ -1,4 +1,6 @@
 using System.Text;
+using StackExchange.Redis;
+using Microsoft.AspNetCore.HttpOverrides;
 using JiraGithubExport.IntegrationService.Application.Implementations;
 using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -22,6 +24,14 @@ using Microsoft.OpenApi.Models;
 
     QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
     var builder = WebApplication.CreateBuilder(args);
+
+    // Forwarded Headers for reverse proxy (Load Balancer)
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 
             // ============================================
             // CONFIGURATION
@@ -143,6 +153,11 @@ using Microsoft.OpenApi.Models;
             
             // Redis Configuration
             var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+            
+            // Register IConnectionMultiplexer for distributed locks (e.g., SyncWorker)
+            var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+            builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = redisConnection;
@@ -210,6 +225,9 @@ using Microsoft.OpenApi.Models;
             // MIDDLEWARE PIPELINE
             // ============================================
             
+            // First middleware: Forwarded headers
+            app.UseForwardedHeaders();
+
             // Global exception handler
             app.UseCustomExceptionHandler();
 
@@ -224,7 +242,11 @@ using Microsoft.OpenApi.Models;
                 });
             }
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+
             app.UseStaticFiles();
 
             // CORS
@@ -249,6 +271,19 @@ using Microsoft.OpenApi.Models;
                     var context = services.GetRequiredService<JiraGithubToolDbContext>();
                     var passwordHasher = services.GetRequiredService<IPasswordHasher>();
                     var logger = services.GetRequiredService<ILogger<Program>>();
+
+                    // 0. Auto-migrate database on startup
+                    try
+                    {
+                        logger.LogInformation("Applying database migrations...");
+                        context.Database.Migrate();
+                        logger.LogInformation("Database migrated successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogCritical(ex, "❌ Database migration failed! Deployment halted.");
+                        throw; // Rethrow so deployment fails fast
+                    }
 
                     // 1. Create Default Roles if not exist
                     var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };

@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace JiraGithubExport.IntegrationService.Background;
 
@@ -23,11 +25,29 @@ public class SyncWorker : BackgroundService
     {
         _logger.LogInformation("Sync Worker starting...");
 
-        while (!stoppingToken.IsCancellationRequested)
+        // Use PeriodicTimer for robust loop execution
+        using var timer = new PeriodicTimer(_syncInterval);
+
+        // Run the first sync immediately
+        try
+        {
+            await TryAcquireLockAndSyncAsync(stoppingToken);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Sync Worker cancelled during initial run.");
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Initial sync failed, will retry on next cycle.");
+        }
+
+        while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             try
             {
-                await DoSyncAsync(stoppingToken);
+                await TryAcquireLockAndSyncAsync(stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -36,18 +56,53 @@ public class SyncWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred during sync process");
+                _logger.LogError(ex, "Error occurred during sync process, continuing to next cycle.");
             }
-
-            await Task.Delay(_syncInterval, stoppingToken);
         }
 
         _logger.LogInformation("Sync Worker stopping...");
     }
 
-    private async Task DoSyncAsync(CancellationToken stoppingToken)
+    private async Task TryAcquireLockAndSyncAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
+        var multiplexer = scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
+        var db = multiplexer.GetDatabase();
+
+        var lockKey = "syncworker:lock";
+        var lockToken = Guid.NewGuid().ToString();
+        var lockExpiry = TimeSpan.FromMinutes(20);
+
+        // Attempt to acquire distributed lock
+        bool acquired = await db.StringSetAsync(lockKey, lockToken, lockExpiry, When.NotExists);
+
+        if (!acquired)
+        {
+            _logger.LogInformation("Another instance is currently syncing. Skipping this cycle (Lock not acquired).");
+            return;
+        }
+
+        _logger.LogInformation("Acquired Redis lock. Starting sync cycle...");
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            await DoSyncAsync(scope, stoppingToken);
+        }
+        finally
+        {
+            stopwatch.Stop();
+            _logger.LogInformation("Sync cycle finished in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+
+            // Release the lock safely using Lua script
+            var releaseScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+            await db.ScriptEvaluateAsync(releaseScript, new RedisKey[] { lockKey }, new RedisValue[] { lockToken });
+            _logger.LogInformation("Redis lock released.");
+        }
+    }
+
+    private async Task DoSyncAsync(IServiceScope scope, CancellationToken stoppingToken)
+    {
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
         var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
@@ -92,7 +147,7 @@ public class SyncWorker : BackgroundService
             }
         }
         
-        _logger.LogInformation("Sync cycle completed at {Time}", DateTime.UtcNow);
+        _logger.LogInformation("Sync logic completed at {Time}", DateTime.UtcNow);
     }
 }
 

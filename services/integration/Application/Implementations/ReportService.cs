@@ -251,58 +251,142 @@ public class ReportService : IReportService
     {
         try
         {
+            // Load project with team, Jira, and GitHub data
             var project = await _unitOfWork.Projects.Query()
+                .Include(p => p.course)
+                .Include(p => p.team_members)
+                    .ThenInclude(tm => tm.student_user)
+                        .ThenInclude(s => s.user)
                 .Include(p => p.project_integration)
                     .ThenInclude(pi => pi!.jira_project)
                         .ThenInclude(jp => jp!.jira_issues)
+                            .ThenInclude(i => i.jira_issue_linkparent_issues)
+                                .ThenInclude(cl => cl.child_issue)
+                .Include(p => p.project_integration)
+                    .ThenInclude(pi => pi!.github_repo)
                 .FirstOrDefaultAsync(p => p.id == projectId);
 
             if (project == null) throw new NotFoundException("Project not found");
-            
+
             var integration = project.project_integration;
-            if (integration == null || integration.jira_project == null) 
+            if (integration == null || integration.jira_project == null)
                 throw new BusinessException("Project is not integrated with Jira. SRS cannot be generated.");
 
-            string fileName = $"project_{projectId}_srs_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("pdf", StringComparison.OrdinalIgnoreCase) ? "pdf" : format.ToLower())}";
+            var jiraProject  = integration.jira_project;
+            var githubRepo   = integration.github_repo;
+            var allIssues    = jiraProject.jira_issues ?? new List<jira_issue>();
+
+            // GitHub stats
+            int totalCommits = 0, totalPRs = 0;
+            string? defaultBranch = githubRepo?.default_branch;
+            if (githubRepo != null)
+            {
+                totalCommits = await _unitOfWork.GitHubCommits.Query()
+                    .CountAsync(c => c.repo_id == githubRepo.id);
+                totalPRs = await _unitOfWork.GitHubPullRequests.Query()
+                    .CountAsync(pr => pr.repo_id == githubRepo.id);
+            }
+
+            // Classify issues
+            var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
+            var taskTypes         = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
+            var nfrKeywords       = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
+            var interfaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
+
+            var systemFeatures = allIssues
+                .Where(i => i.issue_type != null && epicAndStoryTypes.Contains(i.issue_type))
+                .OrderBy(i => i.issue_type).ThenBy(i => i.jira_issue_key)
+                .Select(i => new SrsFeature
+                {
+                    IssueKey    = i.jira_issue_key,
+                    Title       = i.title ?? "(no title)",
+                    Description = i.description,
+                    IssueType   = i.issue_type ?? "",
+                    Status      = i.status,
+                    SubTasks    = allIssues
+                        .Where(sub => sub.issue_type != null && taskTypes.Contains(sub.issue_type)
+                            && i.jira_issue_linkparent_issues != null
+                            && i.jira_issue_linkparent_issues.Any(cl => cl.child_issue_id == sub.id))
+                        .Select(sub => new SrsIssueRow
+                        {
+                            IssueKey    = sub.jira_issue_key,
+                            Title       = sub.title ?? "",
+                            Description = sub.description,
+                            Priority    = sub.priority,
+                            Status      = sub.status
+                        }).ToList()
+                }).ToList();
+
+            var nfrs = allIssues
+                .Where(i => i.issue_type?.ToUpper() == "NFR"
+                    || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                .Select(i => new SrsIssueRow
+                {
+                    IssueKey    = i.jira_issue_key,
+                    Title       = i.title ?? "",
+                    Description = i.description,
+                    Priority    = i.priority,
+                    Status      = i.status
+                }).ToList();
+
+            var externalInterfaces = allIssues
+                .Where(i => interfaceKeywords.Any(kw =>
+                    (i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                    || (i.description != null && i.description.Contains(kw, StringComparison.OrdinalIgnoreCase))))
+                .Where(i => nfrs.All(n => n.IssueKey != i.jira_issue_key))
+                .Select(i => new SrsIssueRow
+                {
+                    IssueKey    = i.jira_issue_key,
+                    Title       = i.title ?? "",
+                    Description = i.description,
+                    Priority    = i.priority,
+                    Status      = i.status
+                }).ToList();
+
+            var teamMembers = project.team_members
+                ?.Select(tm => $"{tm.student_user?.user?.full_name ?? "Unknown"} [{tm.student_user?.student_code ?? ""}] — {tm.team_role}")
+                .ToList() ?? new List<string>();
+
+            var srsData = new SrsReportData
+            {
+                Project                  = project,
+                JiraProjectKey           = jiraProject.jira_project_key,
+                JiraSiteUrl              = jiraProject.jira_url ?? "",
+                GithubRepoUrl            = githubRepo?.repo_url ?? "",
+                GithubDefaultBranch      = defaultBranch,
+                GithubTotalCommits       = totalCommits,
+                GithubTotalPRs           = totalPRs,
+                TeamMembers              = teamMembers,
+                SystemFeatures           = systemFeatures,
+                NonFunctionalRequirements = nfrs,
+                ExternalInterfaces       = externalInterfaces,
+                GeneratedAt              = DateTime.UtcNow
+            };
+
+            string fileName = $"project_{projectId}_srs_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
+
+            var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(srsData);
+            await File.WriteAllBytesAsync(filePath, fileBytes);
 
             var reportExport = new report_export
             {
-                report_type = "SRS_ISO29148",
-                scope = "PROJECT",
-                scope_entity_id = projectId,
-                format = "pdf",
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(), 
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                report_type          = "SRS_ISO29148",
+                scope                = "PROJECT",
+                scope_entity_id      = projectId,
+                format               = "pdf",
+                status               = "COMPLETED",
+                requested_by_user_id = GetCurrentUserId(),
+                requested_at         = DateTime.UtcNow,
+                file_url             = $"/reports/{fileName}"
             };
-
-            // Logic to organize Jira Data for SRS Sections
-            var issues = integration.jira_project.jira_issues;
-            
-            // Chapter 3: System Features (Epics -> Features)
-            var systemFeatures = issues.Where(i => i.issue_type?.ToUpper() == "EPIC" || i.issue_type?.ToUpper() == "STORY")
-                                      .OrderBy(i => i.issue_type)
-                                      .Select(i => new { i.jira_issue_key, i.title, i.description })
-                                      .ToList();
-
-            // Chapter 5: Nonfunctional Requirements (NFR)
-            var nfrs = issues.Where(i => i.issue_type?.ToUpper() == "NFR" || (i.title != null && i.title.Contains("NFR", StringComparison.OrdinalIgnoreCase)))
-                             .Select(i => new { i.jira_issue_key, i.title, i.description })
-                             .ToList();
-
-            _logger.LogInformation("Generating SRS for Project {ProjectName} with {FeatureCount} features and {NfrCount} NFRs", 
-                project.name, systemFeatures.Count, nfrs.Count);
-
-            if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase) || true) // SRS defaults to PDF
-            {
-                var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(project, systemFeatures.Cast<dynamic>().ToList(), nfrs.Cast<dynamic>().ToList());
-                await File.WriteAllBytesAsync(filePath, fileBytes);
-            }
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Generated ISO/IEEE 29148 SRS for Project {ProjectName}: {Features} features, {Nfrs} NFRs",
+                project.name, systemFeatures.Count, nfrs.Count);
 
             return reportExport.id;
         }

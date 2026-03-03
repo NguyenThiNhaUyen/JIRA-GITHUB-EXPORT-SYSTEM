@@ -792,6 +792,18 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasConstraintName("fk_audit_logs_performed_by");
         });
 
+        // HACK for SQLite testing compatibility: Ignore PostgreSQL specific default SQL
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    property.SetDefaultValueSql(null);
+                }
+            }
+        }
+
         OnModelCreatingPartial(modelBuilder);
     }
 
