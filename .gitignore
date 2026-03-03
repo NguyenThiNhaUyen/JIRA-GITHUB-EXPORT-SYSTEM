@@ -49,3 +49,6 @@ apps/mobile_flutter/web/
 
 # Web build output
 apps/web/dist/
+
+# Env files — .env is safe to commit (no secrets), .env.local is personal
+apps/web/.env.local

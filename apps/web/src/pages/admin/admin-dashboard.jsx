@@ -5,6 +5,8 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
+// 🧪 REAL API TEST — xóa 2 dòng này sau khi xác nhận BE hoạt động
+import { getCourses } from "../../api/courseApi.js";
 import {
   BookOpen, Library, CalendarDays, Users, GraduationCap,
   FolderKanban, TrendingUp, UserCog, Plus, ChevronRight,
@@ -35,6 +37,19 @@ export default function AdminDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
+
+      // ─── 🧪 REAL API TEST — xóa block này sau khi xác nhận ───
+      try {
+        const apiResult = await getCourses({ page: 1, pageSize: 5 });
+        console.log("[API TEST] GET /api/courses →", apiResult);
+        // Nếu thấy log này trong Console → BE đang hoạt động ✅
+        // Nếu 401 → BE đang chạy nhưng cần token ✅ (expected)
+        // Nếu Network Error / 503 → Render đang cold start ⏳
+      } catch (apiErr) {
+        console.warn("[API TEST] GET /api/courses failed:", apiErr);
+      }
+      // ─── End REAL API TEST ────────────────────────────────────
+
       const semestersData = db.findMany("semesters");
       const subjectsData = db.findMany("subjects");
       const coursesData = db.findMany("courses");
