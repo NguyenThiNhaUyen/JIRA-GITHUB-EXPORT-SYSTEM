@@ -551,6 +551,24 @@ class MockDB {
 
     return this.update('groups', groupId, updates);
   }
+
+  rejectGroupLink(groupId, linkType, lecturerId) {
+    const group = this.findById('groups', groupId);
+    if (!group) return null;
+
+    const updates = {
+      approvedByLecturerId: lecturerId,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (linkType === 'github') {
+      updates.githubStatus = 'REJECTED';
+    } else if (linkType === 'jira') {
+      updates.jiraStatus = 'REJECTED';
+    }
+
+    return this.update('groups', groupId, updates);
+  }
 }
 
 // Export singleton instance

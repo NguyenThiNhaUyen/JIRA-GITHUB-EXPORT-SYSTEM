@@ -45,3 +45,13 @@ artifacts/
 # Test and coverage results
 TestResults/
 coveragereport/
+
+# Node
+node_modules
+
+# Flutter generated
+apps/mobile_flutter/windows/
+apps/mobile_flutter/web/
+
+# Web build output
+apps/web/dist/
