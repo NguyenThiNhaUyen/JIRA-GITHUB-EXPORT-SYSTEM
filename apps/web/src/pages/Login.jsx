@@ -24,9 +24,16 @@ export default function Login() {
     }
   };
 
-  const quickLogin = async (roleEmail) => {
+  const quickLogin = async (role) => {
     setError("");
-    const result = await login(roleEmail, "123456");
+    // Tài khoản mặc định BE seed — xem Program.cs
+    const QUICK_CREDS = {
+      admin: { email: "admin@truonghoc.com", password: "Admin@123" },
+      lecturer: { email: "lecturer@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
+      student: { email: "student@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
+    };
+    const creds = QUICK_CREDS[role];
+    const result = await login(creds.email, creds.password);
     if (result.success) {
       navigate(result.redirectPath);
     } else {
@@ -129,16 +136,16 @@ export default function Login() {
               <div className="flex gap-4 justify-center">
                 <button
                   type="button"
-                  onClick={() => quickLogin("admin@gmail.com")}
+                  onClick={() => quickLogin("admin")}
                   disabled={loading}
-                  title="Admin"
+                  title="Admin — admin@truonghoc.com"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <Shield size={18} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => quickLogin("lecturer@gmail.com")}
+                  onClick={() => quickLogin("lecturer")}
                   disabled={loading}
                   title="Giảng viên"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
@@ -147,7 +154,7 @@ export default function Login() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => quickLogin("student@gmail.com")}
+                  onClick={() => quickLogin("student")}
                   disabled={loading}
                   title="Sinh viên"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
@@ -155,6 +162,7 @@ export default function Login() {
                   <GraduationCap size={18} />
                 </button>
               </div>
+
             </div>
           </div>
         </div>
