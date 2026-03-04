@@ -1,19 +1,19 @@
-// Admin Dashboard — Enterprise SaaS Governance (logic unchanged, UI overhauled)
+// Admin Dashboard — Enterprise SaaS Governance
+// Courses section: REAL API | Stats: mock (pending BE endpoints)
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
-// 🧪 REAL API TEST — xóa 2 dòng này sau khi xác nhận BE hoạt động
 import { getCourses } from "../../api/courseApi.js";
 import {
   BookOpen, Library, CalendarDays, Users, GraduationCap,
   FolderKanban, TrendingUp, UserCog, Plus, ChevronRight,
-  Activity, CheckCircle, AlertCircle, Clock
+  Activity, CheckCircle, AlertCircle, Clock, WifiOff
 } from "lucide-react";
 
-// Mock recent system activity
+// Mock recent system activity (static — không cần API)
 const SYSTEM_ACTIVITY = [
   { icon: Users, color: "text-blue-600 bg-blue-50", msg: "Sinh viên mới đăng ký lớp SE001", time: "5 phút trước" },
   { icon: UserCog, color: "text-teal-600 bg-teal-50", msg: "GV. Nguyễn được phân công SE002", time: "30 phút trước" },
@@ -24,56 +24,91 @@ const SYSTEM_ACTIVITY = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { error } = useToast();
+  const { error: showError } = useToast();
 
   const [loading, setLoading] = useState(false);
+  const [courseError, setCourseError] = useState(null);
   const [stats, setStats] = useState({ semesters: 0, subjects: 0, courses: 0, lecturers: 0, students: 0, projects: 0 });
   const [recentCourses, setRecentCourses] = useState([]);
+
+  // Helper cho stats từ mock (học kỳ, môn học, giảng viên, sinh viên)
+  // TODO: thay bằng real API khi BE có endpoint GET /api/admin/stats
   const [semesters, setSemesters] = useState([]);
   const [subjects, setSubjects] = useState([]);
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
+    setLoading(true);
+    setCourseError(null);
+
+    // ── 1. Stats từ mock (học kỳ / môn học / GV / SV) ────────────
+    // TODO: Replace with real API when /api/admin/stats endpoint exists
+    const semestersData = db.findMany("semesters");
+    const subjectsData = db.findMany("subjects");
+    const lecturersData = db.findMany("users.lecturers");
+    const studentsData = db.findMany("users.students");
+    const groups = db.findMany("groups");
+    setSemesters(semestersData);
+    setSubjects(subjectsData);
+
+    // ── 2. Courses từ REAL API ─────────────────────────────────────
+    let apiCourses = [];
     try {
-      setLoading(true);
-
-      // ─── 🧪 REAL API TEST — xóa block này sau khi xác nhận ───
-      try {
-        const apiResult = await getCourses({ page: 1, pageSize: 5 });
-        console.log("[API TEST] GET /api/courses →", apiResult);
-        // Nếu thấy log này trong Console → BE đang hoạt động ✅
-        // Nếu 401 → BE đang chạy nhưng cần token ✅ (expected)
-        // Nếu Network Error / 503 → Render đang cold start ⏳
-      } catch (apiErr) {
-        console.warn("[API TEST] GET /api/courses failed:", apiErr);
-      }
-      // ─── End REAL API TEST ────────────────────────────────────
-
-      const semestersData = db.findMany("semesters");
-      const subjectsData = db.findMany("subjects");
-      const coursesData = db.findMany("courses");
-      const lecturersData = db.findMany("users.lecturers");
-      const studentsData = db.findMany("users.students");
-      const groups = db.findMany("groups");
-
-      setSemesters(semestersData);
-      setSubjects(subjectsData);
-      setRecentCourses(coursesData.slice(0, 6));
+      const result = await getCourses({ page: 1, pageSize: 6 });
+      // result = { items: FECourse[], totalCount, page, pageSize }
+      apiCourses = result.items ?? [];
+      setRecentCourses(apiCourses);
       setStats({
         semesters: semestersData.length,
         subjects: subjectsData.length,
-        courses: coursesData.length,
+        courses: result.totalCount ?? apiCourses.length,  // dùng totalCount từ API
         lecturers: lecturersData.length,
         students: studentsData.length,
         projects: groups.length,
       });
-    } catch { error("Không thể tải dữ liệu dashboard"); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.warn("[AdminDashboard] getCourses failed:", err);
+      // Fallback về mock nếu API lỗi (BE cold start, network...)
+      const mockCourses = db.findMany("courses");
+      apiCourses = mockCourses;
+      setRecentCourses(mockCourses.slice(0, 6));
+      setStats({
+        semesters: semestersData.length,
+        subjects: subjectsData.length,
+        courses: mockCourses.length,
+        lecturers: lecturersData.length,
+        students: studentsData.length,
+        projects: groups.length,
+      });
+      // Chỉ hiện lỗi khi không phải cold start timeout
+      const msg = err?.message ?? "";
+      if (!msg.includes("503") && !msg.includes("timeout")) {
+        setCourseError("Không thể tải dữ liệu lớp học từ server");
+        showError("Không thể tải dữ liệu lớp học");
+      } else {
+        setCourseError("server_cold"); // Render đang cold start
+      }
+    }
+
+    setLoading(false);
   };
 
-  const getSemesterName = (id) => semesters.find(s => s.id === id)?.code || "N/A";
-  const getSubjectName = (id) => subjects.find(s => s.id === id)?.code || "N/A";
+  const getSemesterName = (id) => {
+    // Thử từ data semester đã có (có thể là object từ API hoặc mock)
+    if (!id) return "N/A";
+    const found = semesters.find(s => String(s.id) === String(id));
+    return found?.code ?? found?.name ?? "N/A";
+  };
+
+  const getSubjectName = (id) => {
+    if (!id) return "N/A";
+    // Nếu course từ API đã có subject object, hiển thị trực tiếp
+    // Helper này dùng cho course mock fallback
+    const found = subjects.find(s => String(s.id) === String(id));
+    return found?.code ?? found?.name ?? "N/A";
+  };
+
   const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;
 
   return (
@@ -159,14 +194,25 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* ── D. Recent Courses Table ───────── */}
+      {/* ── D. Recent Courses Table (REAL API) ── */}
       <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
         <CardHeader className="border-b border-gray-50 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold text-gray-800">Lớp học phần gần đây</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold text-gray-800">Lớp học phần gần đây</CardTitle>
+              {/* Badge cho biết nguồn dữ liệu */}
+              {courseError === "server_cold" ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 font-medium flex items-center gap-1">
+                  <WifiOff size={9} /> Mock data
+                </span>
+              ) : !courseError ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100 font-medium">
+                  Live API
+                </span>
+              ) : null}
+            </div>
             <Button
-              variant="outline"
-              size="sm"
+              variant="outline" size="sm"
               onClick={() => navigate("/admin/courses")}
               className="rounded-full text-xs h-8 px-4 border-gray-200 text-gray-600 hover:bg-gray-50"
             >
@@ -188,32 +234,43 @@ export default function AdminDashboard() {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-teal-600" />
             </div>
+          ) : recentCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+              <BookOpen size={28} className="opacity-30" />
+              <p className="text-sm">Chưa có lớp học phần nào</p>
+            </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {recentCourses.map((course, i) => (
-                <div key={course.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
-                  <div className="col-span-4 flex items-center gap-3">
-                    <span className="text-xs text-gray-400 font-medium w-5 shrink-0">{i + 1}</span>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-800">{course.code}</p>
-                      <p className="text-xs text-gray-400 truncate max-w-[140px]">{course.name}</p>
+              {recentCourses.map((course, i) => {
+                // Course từ API đã có subject/semester object — dùng trực tiếp
+                const subjectCode = course.subject?.code ?? getSubjectName(course.subjectId);
+                const semesterName = course.semester?.name ?? getSemesterName(course.semesterId);
+
+                return (
+                  <div key={course.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
+                    <div className="col-span-4 flex items-center gap-3">
+                      <span className="text-xs text-gray-400 font-medium w-5 shrink-0">{i + 1}</span>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-800">{course.code}</p>
+                        <p className="text-xs text-gray-400 truncate max-w-[140px]">{course.name}</p>
+                      </div>
+                    </div>
+                    <div className="col-span-3 hidden md:flex flex-col items-center gap-1">
+                      <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                        {subjectCode}
+                      </span>
+                      <span className="text-[11px] text-gray-500">{semesterName}</span>
+                    </div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-gray-700">
+                      {course.currentStudents}
+                      <span className="text-gray-400 text-xs font-normal">/{course.maxStudents}</span>
+                    </div>
+                    <div className="col-span-3 flex items-center justify-center">
+                      <CourseStatusBadge status={course.status} />
                     </div>
                   </div>
-                  <div className="col-span-3 hidden md:flex flex-col items-center gap-1">
-                    <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                      {getSubjectName(course.subjectId)}
-                    </span>
-                    <span className="text-[11px] text-gray-500">{getSemesterName(course.semesterId)}</span>
-                  </div>
-                  <div className="col-span-2 text-center text-sm font-semibold text-gray-700">
-                    {course.currentStudents}
-                    <span className="text-gray-400 text-xs font-normal">/{course.maxStudents}</span>
-                  </div>
-                  <div className="col-span-3 flex items-center justify-center">
-                    <CourseStatusBadge status={course.status} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -243,12 +300,13 @@ function CourseStatusBadge({ status }) {
   const map = {
     ACTIVE: "bg-green-50 text-green-700",
     UPCOMING: "bg-blue-50 text-blue-700",
+    COMPLETED: "bg-gray-100 text-gray-500",
     CLOSED: "bg-gray-100 text-gray-500",
   };
-  const label = { ACTIVE: "Đang mở", UPCOMING: "Sắp mở", CLOSED: "Đã đóng" };
+  const label = { ACTIVE: "Đang mở", UPCOMING: "Sắp mở", COMPLETED: "Đã kết thúc", CLOSED: "Đã đóng" };
   return (
-    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${map[status] || map.CLOSED}`}>
-      {label[status] || status}
+    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${map[status] ?? map.CLOSED}`}>
+      {label[status] ?? status ?? "—"}
     </span>
   );
 }
