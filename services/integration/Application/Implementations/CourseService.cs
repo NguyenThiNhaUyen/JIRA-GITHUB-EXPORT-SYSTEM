@@ -199,6 +199,22 @@ public class CourseService : ICourseService
         _logger.LogInformation("Lecturer {LecturerId} assigned to course {CourseId}", lecturerUserId, courseId);
     }
 
+    public async Task RemoveLecturerAsync(long courseId, long lecturerUserId)
+    {
+        var course = await _unitOfWork.Courses.Query()
+            .Include(c => c.lecturer_users)
+            .FirstOrDefaultAsync(c => c.id == courseId);
+            
+        if (course == null) throw new NotFoundException("Course not found");
+
+        var lecturer = course.lecturer_users.FirstOrDefault(l => l.user_id == lecturerUserId);
+        if (lecturer == null) throw new NotFoundException("Lecturer is not assigned to this course");
+
+        course.lecturer_users.Remove(lecturer);
+        await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Lecturer {LecturerId} removed from course {CourseId}", lecturerUserId, courseId);
+    }
+
     // ============================================
     // ENROLL STUDENTS
     // ============================================
@@ -295,6 +311,34 @@ public class CourseService : ICourseService
         await _unitOfWork.SaveChangesAsync();
 
         return result;
+    }
+
+    public async Task RemoveStudentAsync(long courseId, long studentUserId)
+    {
+        var enrollment = await _unitOfWork.CourseEnrollments.Query()
+            .FirstOrDefaultAsync(e => e.course_id == courseId && e.student_user_id == studentUserId);
+
+        if (enrollment == null || enrollment.status != "ACTIVE")
+        {
+            throw new NotFoundException("Active enrollment not found for this student in this course");
+        }
+
+        enrollment.status = "DROPPED";
+        _unitOfWork.CourseEnrollments.Update(enrollment);
+        
+        // Optionally remove from projects in this course if needed, but keeping history is usually better
+        var teamMemberships = await _unitOfWork.TeamMembers.Query()
+            .Include(tm => tm.project)
+            .Where(tm => tm.student_user_id == studentUserId && tm.project.course_id == courseId)
+            .ToListAsync();
+            
+        foreach (var membership in teamMemberships)
+        {
+            _unitOfWork.TeamMembers.Remove(membership);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Student {StudentId} removed from course {CourseId}", studentUserId, courseId);
     }
 
     public async Task<object> GetPendingIntegrationsAsync(long courseId)

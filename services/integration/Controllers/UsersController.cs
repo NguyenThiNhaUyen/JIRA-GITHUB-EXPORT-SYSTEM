@@ -13,12 +13,10 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
-    private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserService userService, ILogger<UsersController> logger)
+    public UsersController(IUserService userService)
     {
         _userService = userService;
-        _logger = logger;
     }
 
     /// <summary>
