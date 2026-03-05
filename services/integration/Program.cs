@@ -131,6 +131,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAlertService, AlertService>();
+            builder.Services.AddScoped<ISrsService, SrsService>();
+            builder.Services.AddScoped<IInvitationService, InvitationService>();
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
@@ -278,7 +280,7 @@ using Microsoft.OpenApi.Models;
                     try
                     {
                         logger.LogInformation("Applying database migrations...");
-                        context.Database.Migrate();
+                        await context.Database.MigrateAsync();
                         logger.LogInformation("Database migrated successfully.");
                     }
                     catch (Exception ex)
@@ -292,19 +294,19 @@ using Microsoft.OpenApi.Models;
                     bool rolesAdded = false;
                     foreach (var roleName in defaultRoles)
                     {
-                        if (!context.roles.Any(r => r.role_name == roleName))
+                        if (!await context.roles.AnyAsync(r => r.role_name == roleName))
                         {
                             context.roles.Add(new role { role_name = roleName });
                             rolesAdded = true;
                         }
                     }
-                    if (rolesAdded) context.SaveChanges();
+                    if (rolesAdded) await context.SaveChangesAsync();
 
                     // 2. Create Super Admin Account if not exist
                     string adminEmail = "admin@truonghoc.com";
-                    if (!context.users.Any(u => u.email == adminEmail))
+                    if (!await context.users.AnyAsync(u => u.email == adminEmail))
                     {
-                        var adminRole = context.roles.First(r => r.role_name == "ADMIN");
+                        var adminRole = await context.roles.FirstAsync(r => r.role_name == "ADMIN");
                         var adminUser = new user
                         {
                             email = adminEmail,
@@ -316,7 +318,7 @@ using Microsoft.OpenApi.Models;
                         };
                         adminUser.roles.Add(adminRole);
                         context.users.Add(adminUser);
-                        context.SaveChanges();
+                        await context.SaveChangesAsync();
                         
                         logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
                     }
@@ -332,7 +334,7 @@ using Microsoft.OpenApi.Models;
             // RUN APPLICATION
             // ============================================
 
-            app.Run();
+            await app.RunAsync();
 
 
 

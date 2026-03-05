@@ -13,12 +13,10 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 public class SubjectsController : ControllerBase
 {
     private readonly ISubjectService _subjectService;
-    private readonly ILogger<SubjectsController> _logger;
 
-    public SubjectsController(ISubjectService subjectService, ILogger<SubjectsController> logger)
+    public SubjectsController(ISubjectService subjectService)
     {
         _subjectService = subjectService;
-        _logger = logger;
     }
 
     /// <summary>

@@ -140,4 +140,28 @@ public class CoursesController : ControllerBase
         var result = await _courseService.GetPendingIntegrationsAsync(id);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    /// <summary>
+    /// Remove a lecturer from a course (Admin only)
+    /// </summary>
+    [HttpDelete("{id}/lecturers/{lecturerId}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RemoveLecturer(long id, long lecturerId)
+    {
+        await _courseService.RemoveLecturerAsync(id, lecturerId);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Lecturer removed from course"));
+    }
+
+    /// <summary>
+    /// Remove a student enrollment from a course (Admin only)
+    /// </summary>
+    [HttpDelete("{id}/enrollments/{studentId}")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RemoveEnrollment(long id, long studentId)
+    {
+        await _courseService.RemoveStudentAsync(id, studentId);
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Student removed from course"));
+    }
 }

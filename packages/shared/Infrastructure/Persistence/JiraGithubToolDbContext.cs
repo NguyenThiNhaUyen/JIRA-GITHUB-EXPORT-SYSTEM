@@ -62,7 +62,10 @@ public partial class JiraGithubToolDbContext : DbContext
 
     public virtual DbSet<team_member> team_members { get; set; }
 
+    public virtual DbSet<team_invitation> team_invitations { get; set; }
+
     public virtual DbSet<user> users { get; set; }
+
 
     public virtual DbSet<work_link> work_links { get; set; }
 
