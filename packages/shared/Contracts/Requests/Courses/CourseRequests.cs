@@ -36,6 +36,10 @@ public class CreateCourseRequest
 
     [Required]
     public string CourseName { get; set; } = null!;
+
+    public int? MaxStudents { get; set; }
+
+    public string Status { get; set; } = "ACTIVE";
 }
 
 public class AssignLecturerRequest

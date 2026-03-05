@@ -128,4 +128,16 @@ public class CoursesController : ControllerBase
         var result = await _courseService.EnrollStudentsAsync(id, request.StudentUserIds);
         return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Enrollment completed"));
     }
+
+    /// <summary>
+    /// Get all projects pending integration approval for a course (Lecturer/Admin)
+    /// </summary>
+    [HttpGet("{id}/pending-integrations")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPendingIntegrations(long id)
+    {
+        var result = await _courseService.GetPendingIntegrationsAsync(id);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }

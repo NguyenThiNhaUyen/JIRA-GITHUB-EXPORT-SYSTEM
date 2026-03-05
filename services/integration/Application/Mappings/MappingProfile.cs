@@ -26,7 +26,8 @@ public class MappingProfile : Profile
         // COURSE MAPPINGS
         // ============================================
 
-        CreateMap<semester, SemesterInfo>();
+        CreateMap<semester, SemesterInfo>()
+            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name));
 
         CreateMap<subject, SubjectInfo>();
 
@@ -44,7 +45,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.semester))
             .ForMember(dest => dest.EnrolledStudentsCount, opt => opt.MapFrom(src => src.course_enrollments.Count(e => e.status == "ACTIVE")))
             .ForMember(dest => dest.ProjectsCount, opt => opt.MapFrom(src => src.projects.Count(p => p.status == "ACTIVE")))
-            .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users));
+            .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users))
+            .ForMember(dest => dest.MaxStudents, opt => opt.MapFrom(src => src.max_students))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status));
 
         // ============================================
         // PROJECT MAPPINGS

@@ -1,6 +1,7 @@
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
+using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
@@ -215,6 +216,33 @@ public class ProjectIntegrationService : IProjectIntegrationService
         await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Integration rejected for project {ProjectId} by lecturer {UserId}. Reason: {Reason}", projectId, rejectedByUserId, reason);
+    }
+
+    public async Task<IntegrationInfo?> GetIntegrationStatusAsync(long projectId)
+    {
+        var integration = await _unitOfWork.Projects
+            .Query()
+            .Where(p => p.id == projectId)
+            .Select(p => p.project_integration)
+            .FirstOrDefaultAsync();
+
+        if (integration == null) return null;
+
+        return new IntegrationInfo
+        {
+            ApprovalStatus = integration.approval_status,
+            GithubRepoUrl = integration.github_repo?.repo_url,
+            GithubRepoOwner = integration.github_repo?.owner_login,
+            GithubRepoName = integration.github_repo?.name,
+            JiraProjectKey = integration.jira_project?.jira_project_key,
+            JiraSiteUrl = integration.jira_project?.jira_url,
+            SubmittedByUserId = integration.submitted_by_user_id,
+            SubmittedAt = integration.submitted_at,
+            ApprovedByUserId = integration.approved_by_user_id,
+            ApprovedByName = integration.approved_by?.full_name,
+            ApprovedAt = integration.approved_at,
+            RejectedReason = integration.rejected_reason
+        };
     }
 
     private (string owner, string repoName) ParseGitHubUrl(string url)

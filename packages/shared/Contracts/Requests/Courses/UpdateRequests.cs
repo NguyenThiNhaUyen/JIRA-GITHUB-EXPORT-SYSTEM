@@ -14,5 +14,10 @@ public class UpdateSubjectRequest
 
 public class UpdateCourseRequest
 {
-    public string CourseName { get; set; } = string.Empty;
+    public string? CourseCode { get; set; }
+    public string? CourseName { get; set; }
+    public long? SubjectId { get; set; }
+    public long? SemesterId { get; set; }
+    public int? MaxStudents { get; set; }
+    public string? Status { get; set; }
 }

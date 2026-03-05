@@ -129,6 +129,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
             builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAlertService, AlertService>();
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();

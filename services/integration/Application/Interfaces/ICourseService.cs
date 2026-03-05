@@ -22,6 +22,9 @@ public interface ICourseService
 
     // Student Enrollment
     Task<EnrollmentResult> EnrollStudentsAsync(long courseId, List<long> studentUserIds);
+
+    // Pending Integrations
+    Task<object> GetPendingIntegrationsAsync(long courseId);
 }
 
 
