@@ -55,3 +55,6 @@ apps/mobile_flutter/web/
 
 # Web build output
 apps/web/dist/
+
+# Local dev settings with credentials (DO NOT COMMIT)
+appsettings.Development.json
