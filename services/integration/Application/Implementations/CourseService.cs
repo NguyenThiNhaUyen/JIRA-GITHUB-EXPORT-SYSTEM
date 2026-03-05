@@ -61,6 +61,8 @@ public class CourseService : ICourseService
             semester_id = request.SemesterId,
             course_code = request.CourseCode,
             course_name = request.CourseName,
+            max_students = request.MaxStudents,
+            status = request.Status,
             created_by_user_id = createdByUserId,
             created_at = DateTime.UtcNow,
             updated_at = DateTime.UtcNow
@@ -293,6 +295,26 @@ public class CourseService : ICourseService
         await _unitOfWork.SaveChangesAsync();
 
         return result;
+    }
+
+    public async Task<object> GetPendingIntegrationsAsync(long courseId)
+    {
+        var pendingProjects = await _unitOfWork.Courses.Query()
+            .Where(c => c.id == courseId)
+            .SelectMany(c => c.projects)
+            .Where(p => p.project_integration != null && p.project_integration.approval_status == "PENDING")
+            .Select(p => new
+            {
+                ProjectId = p.id,
+                ProjectName = p.name,
+                p.project_integration!.approval_status,
+                SubmittedAt = p.project_integration.submitted_at,
+                GithubRepoUrl = p.project_integration.github_repo != null ? p.project_integration.github_repo.repo_url : null,
+                JiraProjectKey = p.project_integration.jira_project != null ? p.project_integration.jira_project.jira_project_key : null
+            })
+            .ToListAsync();
+
+        return pendingProjects;
     }
 }
 

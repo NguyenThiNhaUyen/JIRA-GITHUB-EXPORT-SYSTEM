@@ -166,6 +166,29 @@ public class ProjectsController : ControllerBase
         await _integrationService.RejectIntegrationAsync(projectId, userId, request.Reason);
         return Ok(ApiResponse.SuccessResponse("Integration rejected."));
     }
+
+    /// <summary>
+    /// Get integration status for a project (all roles)
+    /// </summary>
+    [HttpGet("{projectId}/integration")]
+    [ProducesResponseType(typeof(ApiResponse<IntegrationInfo>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetIntegration(long projectId)
+    {
+        var result = await _integrationService.GetIntegrationStatusAsync(projectId);
+        return Ok(ApiResponse<IntegrationInfo>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Update contribution score for a team member (Lecturer/Admin only)
+    /// </summary>
+    [HttpPatch("{projectId}/members/{memberId}/contribution")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateContribution(long projectId, long memberId, [FromBody] UpdateContributionRequest request)
+    {
+        await _teamService.UpdateContributionScoreAsync(projectId, memberId, request.ContributionScore);
+        return Ok(ApiResponse.SuccessResponse("Contribution score updated"));
+    }
 }
 
 

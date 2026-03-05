@@ -15,6 +15,10 @@ public partial class user
 
     public bool enabled { get; set; }
 
+    public string? password_reset_token { get; set; }
+
+    public DateTime? password_reset_token_expires_at { get; set; }
+
     public DateTime created_at { get; set; }
 
     public DateTime updated_at { get; set; }
