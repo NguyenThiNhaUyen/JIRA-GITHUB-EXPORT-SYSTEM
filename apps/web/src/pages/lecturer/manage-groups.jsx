@@ -24,6 +24,11 @@ export default function ManageGroups() {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [newGroupTopic, setNewGroupTopic] = useState("");
 
+    const [showForceAddModal, setShowForceAddModal] = useState(false);
+    const [forceAddGroupId, setForceAddGroupId] = useState(null);
+    const [forceAddAvailableStudents, setForceAddAvailableStudents] = useState([]);
+    const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
+
     useEffect(() => { loadCourseData(); }, [courseId]);
 
     const loadCourseData = () => {
@@ -42,6 +47,51 @@ export default function ManageGroups() {
         }
     };
 
+    const handleExport = () => {
+        try {
+            // 1. Prepare CSV headers
+            const headers = ["Nhóm", "Đề Tài", "Số Thành Viên", "Reviewer", "Link GitHub", "Trạng thái GitHub", "Link Jira", "Trạng thái Jira"];
+
+            // 2. Prepare CSV rows from groups data
+            const rows = groups.map(group => {
+                const groupStudents = db.getGroupStudents(group.id);
+                // Reviewer name (lecturers assigned to the course)
+                const courseLecturers = db.findMany("courseLecturers", { courseId: course.id });
+                const reviewers = courseLecturers
+                    .map(cl => db.findById("users.lecturers", cl.lecturerId)?.name)
+                    .filter(Boolean)
+                    .join(" & ");
+
+                return [
+                    group.name,
+                    group.topic || "Chưa có đề tài",
+                    groupStudents.length,
+                    reviewers || "Chưa có",
+                    group.githubRepoUrl || "Chưa có",
+                    group.githubStatus,
+                    group.jiraProjectUrl || "Chưa có",
+                    group.jiraStatus
+                ].map(val => `"${val}"`).join(",");
+            });
+
+            // 3. Combine headers and rows
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+
+            // 4. Create Blob and trigger download
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `DanhSachNhom_${course?.code || courseId}_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            success("Đã xuất danh sách nhóm thành công!");
+        } catch (err) {
+            error("Lỗi khi xuất file");
+        }
+    };
     const handleCreateGroup = () => {
         if (selectedStudents.length === 0) { error("Vui lòng chọn ít nhất 1 học sinh"); return; }
         if (!newGroupTopic.trim()) { error("Vui lòng nhập đề tài cho nhóm"); return; }
@@ -108,6 +158,36 @@ export default function ManageGroups() {
 
     const assignedStudentIds = new Set(groups.flatMap((g) => g.studentIds));
     const availableStudents = students.filter((s) => !assignedStudentIds.has(s.id));
+
+    const handleOpenForceAdd = (groupId) => {
+        setForceAddGroupId(groupId);
+        setForceAddAvailableStudents(availableStudents); // only students not in any group yet
+        setForceAddSelectedIds([]);
+        setShowForceAddModal(true);
+    };
+
+    const toggleForceAddStudent = (studentId) => {
+        setForceAddSelectedIds((prev) =>
+            prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+        );
+    };
+
+    const handleForceAddSubmit = () => {
+        if (forceAddSelectedIds.length === 0) {
+            error("Vui lòng chọn ít nhất 1 học sinh");
+            return;
+        }
+        try {
+            const group = db.findById("groups", forceAddGroupId);
+            const updatedStudentIds = [...new Set([...group.studentIds, ...forceAddSelectedIds])];
+            db.update("groups", forceAddGroupId, { studentIds: updatedStudentIds, updatedAt: new Date().toISOString() });
+            success(`Đã thêm ${forceAddSelectedIds.length} học sinh vào nhóm`);
+            setShowForceAddModal(false);
+            loadCourseData();
+        } catch (err) {
+            error("Không thể thêm học sinh");
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -312,9 +392,18 @@ export default function ManageGroups() {
 
                                                 {/* Members */}
                                                 <div>
-                                                    <label className="block text-xs text-gray-400 font-medium mb-2">
-                                                        Thành viên ({groupStudents.length})
-                                                    </label>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <label className="block text-xs text-gray-400 font-medium">
+                                                            Thành viên ({groupStudents.length})
+                                                        </label>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleOpenForceAdd(group.id)}
+                                                            className="h-6 px-2.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200/50 text-[10px] shadow-none flex items-center gap-1"
+                                                        >
+                                                            <UserPlus size={10} /> Thêm SV
+                                                        </Button>
+                                                    </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {groupStudents.map((student) => (
                                                             <div
@@ -347,6 +436,62 @@ export default function ManageGroups() {
                     </Card>
                 </div>
             </div>
+
+            {/* Force Add Student Modal */}
+            {showForceAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[85vh]">
+                        <div className="flex items-center justify-between mb-4 shrink-0">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800">Thêm Thành Viên</h3>
+                                <p className="text-xs text-gray-500">Chèn ép sinh viên vào nhóm này</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setShowForceAddModal(false)} className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100">
+                                ×
+                            </Button>
+                        </div>
+
+                        <div className="overflow-y-auto flex-1 min-h-0 border border-gray-100 rounded-xl divide-y divide-gray-50 mb-5">
+                            {forceAddAvailableStudents.length === 0 ? (
+                                <div className="px-4 py-8 text-center bg-gray-50/50">
+                                    <p className="text-sm text-gray-500">Tất cả sinh viên trong lớp đã có nhóm.</p>
+                                </div>
+                            ) : (
+                                forceAddAvailableStudents.map((student) => (
+                                    <label
+                                        key={student.id}
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={forceAddSelectedIds.includes(student.id)}
+                                            onChange={() => toggleForceAddStudent(student.id)}
+                                            className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
+                                        />
+                                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                            {student.name?.charAt(0)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
+                                            <p className="text-xs text-gray-400">{student.studentId}</p>
+                                        </div>
+                                    </label>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="shrink-0 pt-2 border-t border-gray-50">
+                            <Button
+                                onClick={handleForceAddSubmit}
+                                disabled={forceAddSelectedIds.length === 0}
+                                className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 font-semibold text-sm shadow-sm border-0 transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 disabled:opacity-50"
+                            >
+                                Xác nhận thêm
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

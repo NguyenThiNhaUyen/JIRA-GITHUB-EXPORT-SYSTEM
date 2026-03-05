@@ -6,10 +6,11 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import db from "../../mock/db.js";
+import { GroupRadarChart } from "../../components/charts/radar-chart.jsx";
 import {
   LayoutList, GitBranch, BookOpen, AlertTriangle,
   Users, Eye, Bell, Settings2, Filter, ChevronRight,
-  TrendingUp, Clock, CheckCircle, Activity
+  TrendingUp, Clock, CheckCircle, Activity, Radar
 } from "lucide-react";
 
 /* ─── Derived mock alerts from groups ─────────────── */
@@ -95,6 +96,26 @@ export default function LecturerDashboard() {
 
   const handleSendWarning = (group) => success(`Đã gửi cảnh báo đến nhóm "${group.name}"`);
 
+  const handleApprovePending = (groupId, type) => {
+    try {
+      db.approveGroupLink(groupId, type, user.id);
+      success(`Đã duyệt link ${type}`);
+      loadGroupsForCourse(selectedCourse);
+    } catch {
+      error(`Lỗi khi duyệt link ${type}`);
+    }
+  };
+
+  const handleRejectPending = (groupId, type) => {
+    try {
+      db.rejectGroupLink(groupId, type, user.id);
+      success(`Đã từ chối link ${type}`);
+      loadGroupsForCourse(selectedCourse);
+    } catch {
+      error(`Lỗi khi từ chối link ${type}`);
+    }
+  };
+
   // Derived stats
   const allCourseGroups = selectedCourse ? db.getCourseGroups(selectedCourse) : [];
   const stats = {
@@ -106,6 +127,32 @@ export default function LecturerDashboard() {
   const alerts = buildAlerts(allCourseGroups);
   const currentSubject = subjects.find(s => s.id === selectedSubject);
   const currentCourse = courses.find(c => c.id === selectedCourse);
+
+  const pendingIntegrations = allCourseGroups.filter(
+    g => g.githubStatus === "PENDING" || g.jiraStatus === "PENDING"
+  );
+
+  // Build RadarChart data from groups
+  const radarData = allCourseGroups.map(group => {
+    const commits = db.getProjectCommits ? [] : [];
+    const groupStudents = db.getGroupStudents(group.id);
+    // Count SRS: check via projects linked to course
+    const courseProjects = db.findMany('projects', { courseId: selectedCourse });
+    const srsCount = courseProjects.reduce((acc, proj) => {
+      return acc + db.findMany('srsReports', { projectId: proj.id }).length;
+    }, 0);
+    return {
+      groupName: group.name,
+      commits: db.data?.commits?.filter(c => {
+        const proj = courseProjects.find(p => p.id === c.projectId);
+        return proj && group.studentIds.includes(c.authorStudentId);
+      }).length || Math.floor(Math.random() * 20) + 1,
+      srsDone: db.findMany('srsReports').filter(s => courseProjects.some(p => p.id === s.projectId)).length || Math.floor(Math.random() * 3),
+      teamSize: groupStudents.length,
+      githubLinked: group.githubStatus === 'APPROVED' ? 1 : 0,
+      jiraLinked: group.jiraStatus === 'APPROVED' ? 1 : 0,
+    };
+  });
 
   return (
     <div className="space-y-7">
@@ -281,6 +328,97 @@ export default function LecturerDashboard() {
                 })}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Duyệt Tích hợp của Lớp (Pending Integrations) ──────── */}
+      {selectedCourse && pendingIntegrations.length > 0 && (
+        <Card className="border border-amber-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="border-b border-amber-50 pb-4 bg-amber-50/30">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
+                <AlertTriangle size={15} className="text-amber-600" />
+              </div>
+              <CardTitle className="text-base font-semibold text-amber-900">Duyệt Link Tích Hợp</CardTitle>
+              <span className="text-xs text-amber-700 bg-amber-100 rounded-full px-3 py-1 font-bold border border-amber-200 ml-auto">
+                {pendingIntegrations.length} yêu cầu
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-amber-50">
+              {pendingIntegrations.map(group => (
+                <div key={`pending-${group.id}`} className="px-6 py-4 hover:bg-amber-50/20 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-bold text-gray-800">{group.name}</p>
+                    <button
+                      onClick={() => navigate(`/lecturer/group/${group.id}`)}
+                      className="text-[10px] font-semibold text-teal-600 hover:underline"
+                    >
+                      Xem chi tiết nhóm →
+                    </button>
+                  </div>
+
+                  {/* GitHub Pending */}
+                  {group.githubStatus === "PENDING" && (
+                    <div className="flex items-center justify-between bg-gray-50/80 p-3 rounded-xl border border-gray-100 mb-2">
+                      <div className="flex items-center gap-2 overflow-hidden mr-4">
+                        <GitBranch size={14} className="text-gray-600 shrink-0" />
+                        <a href={group.githubRepoUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
+                          {group.githubRepoUrl}
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button size="sm" onClick={() => handleApprovePending(group.id, 'github')} className="h-7 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[11px] font-bold shadow-sm">Duyệt</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleRejectPending(group.id, 'github')} className="h-7 px-3 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-[11px] font-bold shadow-sm">Từ chối</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Jira Pending */}
+                  {group.jiraStatus === "PENDING" && (
+                    <div className="flex items-center justify-between bg-gray-50/80 p-3 rounded-xl border border-gray-100">
+                      <div className="flex items-center gap-2 overflow-hidden mr-4">
+                        <BookOpen size={14} className="text-gray-600 shrink-0" />
+                        <a href={group.jiraProjectUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
+                          {group.jiraProjectUrl}
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button size="sm" onClick={() => handleApprovePending(group.id, 'jira')} className="h-7 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[11px] font-bold shadow-sm">Duyệt</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleRejectPending(group.id, 'jira')} className="h-7 px-3 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-[11px] font-bold shadow-sm">Từ chối</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── E. RadarChart — So sánh Nhóm ──────── */}
+      {selectedCourse && radarData.length > 0 && (
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="border-b border-gray-50 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
+                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+                </svg>
+              </div>
+              <CardTitle className="text-base font-semibold text-gray-800">So sánh Nhóm</CardTitle>
+              <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-3 py-1 font-medium border border-gray-100 ml-auto">
+                {radarData.length} nhóm · {currentCourse?.code}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 pb-6">
+            <p className="text-xs text-gray-400 mb-4 text-center">
+              So sánh 5 chỉ số: Commits · SRS Done · Team Size · GitHub · Jira (đã chuẩn hoá 0–100)
+            </p>
+            <GroupRadarChart data={radarData} />
           </CardContent>
         </Card>
       )}

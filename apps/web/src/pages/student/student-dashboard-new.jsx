@@ -11,7 +11,7 @@ import {
     BookOpen, GitBranch, Bell, CheckCircle, AlertTriangle,
     ChevronRight, Clock, ArrowRight, Link2,
     Users, GraduationCap, Calendar, BarChart2,
-    Crown, MapPin, Github, Star, RefreshCw
+    Crown, MapPin, Github, Star, RefreshCw, UserPlus
 } from "lucide-react";
 
 /* ── Status config (from shared module) ── */
@@ -376,6 +376,10 @@ function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onB
     const [jiraInput, setJiraInput] = useState(group.jiraProjectUrl || "");
     const [topicInput, setTopicInput] = useState(group.topic || "");
 
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [inviteAvailableStudents, setInviteAvailableStudents] = useState([]);
+    const [inviteSelectedIds, setInviteSelectedIds] = useState([]);
+
     const isLeader = group.teamLeaderId === userId;
     const ghApproved = group.githubStatus === "APPROVED";
     const jiraApproved = group.jiraStatus === "APPROVED";
@@ -389,6 +393,48 @@ function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onB
     const proj = db.findMany("projects", { courseId: course.id })[0];
     const myCommits = proj ? db.findMany("commits", { projectId: proj.id }).filter(c => c.authorStudentId === userId).length : 0;
     const totalCommits = proj ? db.findMany("commits", { projectId: proj.id }).length : 0;
+
+    const { success, error } = useToast();
+
+    const handleOpenInvite = () => {
+        // Find students enrolled in the course who are NOT in any group in this course
+        const enrollments = db.findMany("courseEnrollments", { courseId: course.id });
+        const enrolledIds = enrollments.map(e => e.studentId);
+        const allCourseGroups = db.findMany("groups", { courseId: course.id });
+        const groupedStudentIds = new Set(allCourseGroups.flatMap(g => g.studentIds));
+
+        const availableIds = enrolledIds.filter(id => !groupedStudentIds.has(id));
+        const availableStudents = availableIds.map(id => db.findById("users.students", id)).filter(Boolean);
+
+        setInviteAvailableStudents(availableStudents);
+        setInviteSelectedIds([]);
+        setShowInviteModal(true);
+    };
+
+    const toggleInviteStudent = (studentId) => {
+        setInviteSelectedIds((prev) =>
+            prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+        );
+    };
+
+    const handleInviteSubmit = () => {
+        if (inviteSelectedIds.length === 0) return;
+        try {
+            inviteSelectedIds.forEach(studentId => {
+                db.create("teamInvitations", {
+                    groupId: group.id,
+                    invitedStudentId: studentId,
+                    invitedByStudentId: userId,
+                    status: "PENDING",
+                    invitedAt: new Date().toISOString()
+                });
+            });
+            success(`Đã gửi ${inviteSelectedIds.length} lời mời tham gia nhóm!`);
+            setShowInviteModal(false);
+        } catch (err) {
+            error("Không thể gửi lời mời");
+        }
+    };
 
     return (
         <div className="space-y-5">
@@ -541,7 +587,15 @@ function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onB
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center"><Users size={14} className="text-teal-600" /></div>
                                 <CardTitle className="text-base font-semibold text-gray-800">Thành viên nhóm</CardTitle>
-                                <span className="ml-auto text-xs font-semibold text-gray-400">{groupStudents.length} người</span>
+                                <span className="ml-auto text-xs font-semibold text-gray-400 mr-2">{groupStudents.length} người</span>
+                                {isLeader && (
+                                    <button
+                                        onClick={handleOpenInvite}
+                                        className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                                    >
+                                        <UserPlus size={12} /> Mời SV
+                                    </button>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
@@ -625,6 +679,62 @@ function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onB
                     </Card>
                 </div>
             </div>
+
+            {/* Invite Student Modal */}
+            {showInviteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <div className="bg-white rounded-[24px] shadow-2xl p-6 w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[85vh]">
+                        <div className="flex items-center justify-between mb-4 shrink-0">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800">Mời Sinh Viên</h3>
+                                <p className="text-xs text-gray-500">Gửi lời mời tham gia nhóm {group.name}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setShowInviteModal(false)} className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100">
+                                ×
+                            </Button>
+                        </div>
+
+                        <div className="overflow-y-auto flex-1 min-h-0 border border-gray-100 rounded-xl divide-y divide-gray-50 mb-5">
+                            {inviteAvailableStudents.length === 0 ? (
+                                <div className="px-4 py-8 text-center bg-gray-50/50">
+                                    <p className="text-sm text-gray-500">Không có sinh viên nào mới để mời (tất cả đã có nhóm).</p>
+                                </div>
+                            ) : (
+                                inviteAvailableStudents.map((student) => (
+                                    <label
+                                        key={student.id}
+                                        className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={inviteSelectedIds.includes(student.id)}
+                                            onChange={() => toggleInviteStudent(student.id)}
+                                            className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
+                                        />
+                                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                            {student.name?.charAt(0)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
+                                            <p className="text-xs text-gray-400">{student.studentId}</p>
+                                        </div>
+                                    </label>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="shrink-0 pt-2 border-t border-gray-50">
+                            <Button
+                                onClick={handleInviteSubmit}
+                                disabled={inviteSelectedIds.length === 0}
+                                className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 font-semibold text-sm shadow-sm border-0 transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 disabled:opacity-50"
+                            >
+                                Gửi lời mời
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
