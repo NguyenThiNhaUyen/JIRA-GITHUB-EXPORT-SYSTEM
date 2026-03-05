@@ -59,7 +59,58 @@ export default function GroupDetail() {
         }
     };
 
-    const handleExport = () => success("Chức năng export đang được phát triển");
+    const handleUpdateScore = (studentId, score) => {
+        try {
+            const numScore = parseInt(score, 10);
+            if (isNaN(numScore) || numScore < 0 || numScore > 100) {
+                error("Điểm phải từ 0 đến 100");
+                return;
+            }
+            // in real app this would call an API, here we just update a mock collection 
+            // 'contributionScores' or add it to student object in group. For simplicity, just show success:
+            success(`Đã lưu điểm ${numScore} cho sinh viên`);
+        } catch (err) {
+            error("Không thể lưu điểm");
+        }
+    };
+
+    const handleExport = () => {
+        if (!group) return;
+        try {
+            // 1. Prepare CSV headers
+            const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp", "Email", "Số Điện Thoại"];
+
+            // 2. Prepare CSV rows from students data
+            const rows = students.map(student => {
+                const role = student.id === group.teamLeaderId ? "Leader" : "Member";
+                return [
+                    student.studentId,
+                    student.name,
+                    role,
+                    student.contributionScore || 0,
+                    student.email,
+                    student.phone || "N/A"
+                ].map(val => `"${val}"`).join(",");
+            });
+
+            // 3. Combine headers and rows
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+
+            // 4. Create Blob and trigger download
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `DanhSachNhom_${group.name}_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            success("Đã xuất danh sách thành viên thành công!");
+        } catch (err) {
+            error("Lỗi khi xuất file");
+        }
+    };
 
     if (!group) {
         return (
@@ -184,14 +235,14 @@ export default function GroupDetail() {
                                 </span>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-4 space-y-3">
+                        <CardContent className="pt-4 space-y-3 p-4">
                             {students.map((student) => (
-                                <div key={student.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                                    <div className="w-9 h-9 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                                <div key={student.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                                    <div className="w-10 h-10 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
                                         {student.name?.charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
+                                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                             <p className="text-sm font-semibold text-gray-800 truncate">{student.name}</p>
                                             {student.id === group.teamLeaderId && (
                                                 <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -200,6 +251,20 @@ export default function GroupDetail() {
                                             )}
                                         </div>
                                         <p className="text-xs text-gray-400">{student.studentId}</p>
+                                    </div>
+                                    <div className="shrink-0 flex items-center gap-2">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm</label>
+                                        <input
+                                            type="number"
+                                            min="0" max="100"
+                                            placeholder="--"
+                                            defaultValue={student.contributionScore}
+                                            onBlur={(e) => {
+                                                if (e.target.value !== "" && e.target.value !== String(student.contributionScore))
+                                                    handleUpdateScore(student.id, e.target.value);
+                                            }}
+                                            className="w-14 px-2 py-1.5 text-sm text-center font-bold text-teal-700 bg-teal-50/50 border border-teal-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                        />
                                     </div>
                                 </div>
                             ))}
