@@ -26,7 +26,8 @@ public class MappingProfile : Profile
         // COURSE MAPPINGS
         // ============================================
 
-        CreateMap<semester, SemesterInfo>();
+        CreateMap<semester, SemesterInfo>()
+            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name));
 
         CreateMap<subject, SubjectInfo>();
 
@@ -44,7 +45,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.semester))
             .ForMember(dest => dest.EnrolledStudentsCount, opt => opt.MapFrom(src => src.course_enrollments.Count(e => e.status == "ACTIVE")))
             .ForMember(dest => dest.ProjectsCount, opt => opt.MapFrom(src => src.projects.Count(p => p.status == "ACTIVE")))
-            .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users));
+            .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users))
+            .ForMember(dest => dest.MaxStudents, opt => opt.MapFrom(src => src.max_students))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status));
 
         // ============================================
         // PROJECT MAPPINGS
@@ -64,7 +67,15 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.GithubRepoOwner, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.owner_login : null))
             .ForMember(dest => dest.GithubRepoName, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.name : null))
             .ForMember(dest => dest.JiraProjectKey, opt => opt.MapFrom(src => src.jira_project != null ? src.jira_project.jira_project_key : null))
-            .ForMember(dest => dest.JiraSiteUrl, opt => opt.MapFrom(src => src.jira_project != null ? src.jira_project.jira_url : null));
+            .ForMember(dest => dest.JiraSiteUrl, opt => opt.MapFrom(src => src.jira_project != null ? src.jira_project.jira_url : null))
+            // Approval workflow fields
+            .ForMember(dest => dest.ApprovalStatus, opt => opt.MapFrom(src => src.approval_status))
+            .ForMember(dest => dest.SubmittedByUserId, opt => opt.MapFrom(src => src.submitted_by_user_id))
+            .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => src.submitted_at))
+            .ForMember(dest => dest.ApprovedByUserId, opt => opt.MapFrom(src => src.approved_by_user_id))
+            .ForMember(dest => dest.ApprovedByName, opt => opt.MapFrom(src => src.approved_by != null ? src.approved_by.full_name : null))
+            .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.approved_at))
+            .ForMember(dest => dest.RejectedReason, opt => opt.MapFrom(src => src.rejected_reason));
 
         CreateMap<project, ProjectDetailResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))

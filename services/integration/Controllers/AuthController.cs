@@ -68,6 +68,47 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during Google authentication"));
         }
     }
+
+    /// <summary>
+    /// Request a password reset token (sent to email; returned in dev mode)
+    /// </summary>
+    [HttpPost("auth/forgot-password")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            var token = await _authService.ForgotPasswordAsync(request.Email);
+            // In production, token is emailed, not returned. Return generic message.
+            return Ok(ApiResponse<object>.SuccessResponse(
+                new { Message = "If this email exists, a reset link has been sent.", ResetToken = token },
+                "Password reset requested"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ForgotPassword failed");
+            return StatusCode(500, ApiResponse.ErrorResponse("An error occurred"));
+        }
+    }
+
+    /// <summary>
+    /// Reset password using token received from forgot-password
+    /// </summary>
+    [HttpPost("auth/reset-password")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        try
+        {
+            await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+            return Ok(ApiResponse.SuccessResponse("Password has been reset successfully"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ResetPassword failed");
+            return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
 }
 
 

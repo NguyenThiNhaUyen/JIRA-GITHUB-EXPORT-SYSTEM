@@ -1,0 +1,107 @@
+﻿Build started 02/03/2026 10:22:31 SA.
+     1>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\obj\project.assets.json
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj (in 46 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj (in 46 ms).
+         
+         NuGet Config files used:
+             C:\Users\Admin\AppData\Roaming\NuGet\NuGet.Config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+             C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+         All projects are up-to-date for restore.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (Restore target(s)).
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" on node 1 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (1:7) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (1:8) on node 1 (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (2:6) on node 1 (default targets).
+     2>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\Shared.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         Shared -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\bin\Debug\net8.0\Shared.dll
+     2>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (default targets).
+     1>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net9.0\Shared.Tests.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         Shared.Tests -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\bin\Debug\net9.0\Shared.Tests.dll
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\bin\Debug\net9.0\Shared.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.05]   Discovering: Shared.Tests
+[xUnit.net 00:00:00.07]   Discovered:  Shared.Tests
+[xUnit.net 00:00:00.07]   Starting:    Shared.Tests
+[xUnit.net 00:00:00.16]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:00.16]       Expected: "test@example.com"
+[xUnit.net 00:00:00.16]       Actual:   null
+[xUnit.net 00:00:00.16]       Stack Trace:
+[xUnit.net 00:00:00.16]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\JwtServiceTests.cs(80,0): at Shared.Tests.Identity.JwtServiceTests.ValidateToken_WithValidToken_ReturnsClaimsPrincipal()
+[xUnit.net 00:00:00.16]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.16]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.21]   Finished:    Shared.Tests
+  Passed Shared.Tests.Identity.PasswordHasherTests.VerifyPassword_GivenInvalidHashFormat_ReturnsFalse [3 ms]
+  Passed Shared.Tests.Identity.JwtServiceTests.ValidateToken_WithInvalidToken_ReturnsNull [26 ms]
+  Passed Shared.Tests.Identity.JwtServiceTests.GenerateToken_ValidUser_ReturnsValidJwtString [16 ms]
+  Passed Shared.Tests.Identity.PasswordHasherTests.VerifyPassword_GivenIncorrectPassword_ReturnsFalse [41 ms]
+  Failed Shared.Tests.Identity.JwtServiceTests.ValidateToken_WithValidToken_ReturnsClaimsPrincipal [8 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "test@example.com"
+Actual:   null
+  Stack Trace:
+     at Shared.Tests.Identity.JwtServiceTests.ValidateToken_WithValidToken_ReturnsClaimsPrincipal() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\JwtServiceTests.cs:line 80
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed Shared.Tests.Identity.JwtServiceTests.ValidateToken_WithExpiredToken_ReturnsNull [1 ms]
+  Passed Shared.Tests.Identity.PasswordHasherTests.HashPassword_GivenValidPassword_ReturnsBase64String [21 ms]
+  Passed Shared.Tests.Identity.PasswordHasherTests.VerifyPassword_GivenCorrectPassword_ReturnsTrue [40 ms]
+
+Total tests: 8
+     Passed: 7
+     Failed: 1
+ Total time: 0,5786 Seconds
+       _VSTestConsole:
+         MSB4181: The "VSTestTask" task returned false but did not log an error.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\Shared.Tests\Shared.Tests.csproj" (VSTest target(s)) -- FAILED.
+
+Build FAILED.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.91

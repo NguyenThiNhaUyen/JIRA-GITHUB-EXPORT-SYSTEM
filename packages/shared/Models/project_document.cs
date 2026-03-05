@@ -21,9 +21,17 @@ public partial class project_document
 
     public DateTime submitted_at { get; set; }
 
+    public long? reviewer_user_id { get; set; }
+
+    public string? feedback { get; set; }
+
+    public DateTime? reviewed_at { get; set; }
+
     public virtual project project { get; set; } = null!;
 
     public virtual user submitted_by_user { get; set; } = null!;
+
+    public virtual user? reviewer_user { get; set; }
 }
 
 

@@ -1,4 +1,6 @@
 using System.Text;
+using StackExchange.Redis;
+using Microsoft.AspNetCore.HttpOverrides;
 using JiraGithubExport.IntegrationService.Application.Implementations;
 using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -22,6 +24,14 @@ using Microsoft.OpenApi.Models;
 
     QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
     var builder = WebApplication.CreateBuilder(args);
+
+    // Forwarded Headers for reverse proxy (Load Balancer)
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 
             // ============================================
             // CONFIGURATION
@@ -119,6 +129,10 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
             builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAlertService, AlertService>();
+            builder.Services.AddScoped<ISrsService, SrsService>();
+            builder.Services.AddScoped<IInvitationService, InvitationService>();
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
@@ -143,6 +157,11 @@ using Microsoft.OpenApi.Models;
             
             // Redis Configuration
             var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+            
+            // Register IConnectionMultiplexer for distributed locks (e.g., SyncWorker)
+            var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+            builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = redisConnection;
@@ -210,6 +229,9 @@ using Microsoft.OpenApi.Models;
             // MIDDLEWARE PIPELINE
             // ============================================
             
+            // First middleware: Forwarded headers
+            app.UseForwardedHeaders();
+
             // Global exception handler
             app.UseCustomExceptionHandler();
 
@@ -224,7 +246,11 @@ using Microsoft.OpenApi.Models;
                 });
             }
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+
             app.UseStaticFiles();
 
             // CORS
@@ -250,24 +276,37 @@ using Microsoft.OpenApi.Models;
                     var passwordHasher = services.GetRequiredService<IPasswordHasher>();
                     var logger = services.GetRequiredService<ILogger<Program>>();
 
+                    // 0. Auto-migrate database on startup
+                    try
+                    {
+                        logger.LogInformation("Applying database migrations...");
+                        await context.Database.MigrateAsync();
+                        logger.LogInformation("Database migrated successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogCritical(ex, "❌ Database migration failed! Deployment halted.");
+                        throw; // Rethrow so deployment fails fast
+                    }
+
                     // 1. Create Default Roles if not exist
                     var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
                     bool rolesAdded = false;
                     foreach (var roleName in defaultRoles)
                     {
-                        if (!context.roles.Any(r => r.role_name == roleName))
+                        if (!await context.roles.AnyAsync(r => r.role_name == roleName))
                         {
                             context.roles.Add(new role { role_name = roleName });
                             rolesAdded = true;
                         }
                     }
-                    if (rolesAdded) context.SaveChanges();
+                    if (rolesAdded) await context.SaveChangesAsync();
 
                     // 2. Create Super Admin Account if not exist
                     string adminEmail = "admin@truonghoc.com";
-                    if (!context.users.Any(u => u.email == adminEmail))
+                    if (!await context.users.AnyAsync(u => u.email == adminEmail))
                     {
-                        var adminRole = context.roles.First(r => r.role_name == "ADMIN");
+                        var adminRole = await context.roles.FirstAsync(r => r.role_name == "ADMIN");
                         var adminUser = new user
                         {
                             email = adminEmail,
@@ -279,7 +318,7 @@ using Microsoft.OpenApi.Models;
                         };
                         adminUser.roles.Add(adminRole);
                         context.users.Add(adminUser);
-                        context.SaveChanges();
+                        await context.SaveChangesAsync();
                         
                         logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
                     }
@@ -295,7 +334,7 @@ using Microsoft.OpenApi.Models;
             // RUN APPLICATION
             // ============================================
 
-            app.Run();
+            await app.RunAsync();
 
 
 

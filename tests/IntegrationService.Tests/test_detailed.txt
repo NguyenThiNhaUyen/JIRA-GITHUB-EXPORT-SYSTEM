@@ -1,0 +1,327 @@
+﻿Build started 02/03/2026 9:49:10 SA.
+     1>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+       Restore:
+         X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+         X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\obj\project.assets.json
+         Assets file has not changed. Skipping assets file writing. Path: D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\obj\project.assets.json
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj (in 54 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj (in 54 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj (in 54 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj (in 54 ms).
+         Restored D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj (in 54 ms).
+         
+         NuGet Config files used:
+             C:\Users\Admin\AppData\Roaming\NuGet\NuGet.Config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.FallbackLocation.config
+             C:\Program Files (x86)\NuGet\Config\Microsoft.VisualStudio.Offline.config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+             C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+         All projects are up-to-date for restore.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (Restore target(s)).
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" on node 3 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:7) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) on node 3 (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (3:9) on node 1 (default targets).
+     3>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\Shared.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         Shared -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\bin\Debug\net8.0\Shared.dll
+     3>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj" (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj" (4:7) on node 3 (default targets).
+     4>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj" (5:7) on node 2 (default targets).
+     5>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+     4>CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\GithubService.sourcelink.json' is up-to-date.
+     5>CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+     4>CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+     5>_GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\JiraService.sourcelink.json' is up-to-date.
+     4>_ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+     5>CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+     4>_BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         GithubService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\bin\Debug\net8.0\GithubService.dll
+     5>_BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+     4>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\GithubService.csproj" (default targets).
+     5>_CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         JiraService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\bin\Debug\net8.0\JiraService.dll
+     5>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\JiraService.csproj" (default targets).
+   1:8>Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (1:8) is building "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj" (2:6) on node 4 (default targets).
+     2>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _DiscoverMvcApplicationParts:
+       Skipping target "_DiscoverMvcApplicationParts" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net8.0\IntegrationService.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CreateAppHost:
+       Skipping target "_CreateAppHost" because all output files are up-to-date with respect to the input files.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _ProcessScopedCssFiles:
+       Skipping target "_ProcessScopedCssFiles" because it has no outputs.
+       _BuildCopyStaticWebAssetsPreserveNewest:
+       Skipping target "_BuildCopyStaticWebAssetsPreserveNewest" because it has no outputs.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         IntegrationService -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\bin\Debug\net8.0\IntegrationService.dll
+     2>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj" (default targets).
+     1>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj\Debug\net9.0\IntegrationService.Tests.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         IntegrationService.Tests -> D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\bin\Debug\net9.0\IntegrationService.Tests.dll
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\bin\Debug\net9.0\IntegrationService.Tests.dll (.NETCoreApp,Version=v9.0)
+VSTest version 17.14.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.10)
+[xUnit.net 00:00:00.08]   Discovering: IntegrationService.Tests
+[xUnit.net 00:00:00.12]   Discovered:  IntegrationService.Tests
+[xUnit.net 00:00:00.12]   Starting:    IntegrationService.Tests
+[xUnit.net 00:00:01.12]       Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+[xUnit.net 00:00:01.12]       Stack Trace:
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+[xUnit.net 00:00:01.12]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+[xUnit.net 00:00:01.12]            at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+[xUnit.net 00:00:01.12]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(41,0): at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext()
+[xUnit.net 00:00:01.12]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(101,0): at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_UserNotFound_ThrowsUnauthorizedException()
+[xUnit.net 00:00:01.12]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.18]       Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+[xUnit.net 00:00:01.18]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+[xUnit.net 00:00:01.18]            at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+[xUnit.net 00:00:01.18]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(41,0): at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext()
+[xUnit.net 00:00:01.19]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(125,0): at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_InvalidPassword_ThrowsUnauthorizedException()
+[xUnit.net 00:00:01.19]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.26]       Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+[xUnit.net 00:00:01.26]       Stack Trace:
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+[xUnit.net 00:00:01.26]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+[xUnit.net 00:00:01.26]            at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+[xUnit.net 00:00:01.26]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(41,0): at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext()
+[xUnit.net 00:00:01.26]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(49,0): at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_ValidCredentials_ReturnsLoginResponse()
+[xUnit.net 00:00:01.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.30]       Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+[xUnit.net 00:00:01.30]       Stack Trace:
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+[xUnit.net 00:00:01.30]            at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+[xUnit.net 00:00:01.30]            at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+[xUnit.net 00:00:01.30]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(41,0): at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext()
+[xUnit.net 00:00:01.30]         D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs(164,0): at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_AccountDisabled_ThrowsUnauthorizedException()
+[xUnit.net 00:00:01.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.30]   Finished:    IntegrationService.Tests
+  Passed IntegrationService.Tests.UnitTest1.Test1 [3 ms]
+  Failed IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_UserNotFound_ThrowsUnauthorizedException [954 ms]
+  Error Message:
+   Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+  Stack Trace:
+     at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+   at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 41
+   at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_UserNotFound_ThrowsUnauthorizedException() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 101
+--- End of stack trace from previous location ---
+  Failed IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_InvalidPassword_ThrowsUnauthorizedException [69 ms]
+  Error Message:
+   Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+  Stack Trace:
+     at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+   at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 41
+   at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_InvalidPassword_ThrowsUnauthorizedException() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 125
+--- End of stack trace from previous location ---
+  Failed IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_ValidCredentials_ReturnsLoginResponse [76 ms]
+  Error Message:
+   Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+  Stack Trace:
+     at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+   at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 41
+   at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_ValidCredentials_ReturnsLoginResponse() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 49
+--- End of stack trace from previous location ---
+  Failed IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_AccountDisabled_ThrowsUnauthorizedException [36 ms]
+  Error Message:
+   Microsoft.Data.Sqlite.SqliteException : SQLite Error 1: 'unrecognized token: ":"'.
+  Stack Trace:
+     at Microsoft.Data.Sqlite.SqliteException.ThrowExceptionForRC(Int32 rc, sqlite3 db)
+   at Microsoft.Data.Sqlite.SqliteCommand.PrepareAndEnumerateStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteCommand.GetStatements()+MoveNext()
+   at Microsoft.Data.Sqlite.SqliteDataReader.NextResult()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader(CommandBehavior behavior)
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteReader()
+   at Microsoft.Data.Sqlite.SqliteCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.CreateTables()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreated()
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.EnsureCreated()
+   at IntegrationService.Tests.Services.AuthServiceTests.CreateInMemoryDbContext() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 41
+   at IntegrationService.Tests.Services.AuthServiceTests.LoginAsync_AccountDisabled_ThrowsUnauthorizedException() in D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\Services\AuthServiceTests.cs:line 164
+--- End of stack trace from previous location ---
+
+Total tests: 5
+     Passed: 1
+     Failed: 4
+ Total time: 1,7694 Seconds
+       _VSTestConsole:
+         MSB4181: The "VSTestTask" task returned false but did not log an error.
+     1>Done Building Project "D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\tests\IntegrationService.Tests\IntegrationService.Tests.csproj" (VSTest target(s)) -- FAILED.
+
+Build FAILED.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.01

@@ -62,7 +62,10 @@ public partial class JiraGithubToolDbContext : DbContext
 
     public virtual DbSet<team_member> team_members { get; set; }
 
+    public virtual DbSet<team_invitation> team_invitations { get; set; }
+
     public virtual DbSet<user> users { get; set; }
+
 
     public virtual DbSet<work_link> work_links { get; set; }
 
@@ -791,6 +794,18 @@ public partial class JiraGithubToolDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_audit_logs_performed_by");
         });
+
+        // HACK for SQLite testing compatibility: Ignore PostgreSQL specific default SQL
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    property.SetDefaultValueSql(null);
+                }
+            }
+        }
 
         OnModelCreatingPartial(modelBuilder);
     }

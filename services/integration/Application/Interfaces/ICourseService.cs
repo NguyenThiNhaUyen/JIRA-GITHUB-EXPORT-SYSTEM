@@ -16,12 +16,16 @@ public interface ICourseService
     Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request);
     Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request);
     Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request);
-
     // Lecturer Assignment
     Task AssignLecturerAsync(long courseId, long lecturerUserId);
+    Task RemoveLecturerAsync(long courseId, long lecturerUserId);
 
     // Student Enrollment
     Task<EnrollmentResult> EnrollStudentsAsync(long courseId, List<long> studentUserIds);
+    Task RemoveStudentAsync(long courseId, long studentUserId);
+
+    // Pending Integrations
+    Task<object> GetPendingIntegrationsAsync(long courseId);
 }
 
 

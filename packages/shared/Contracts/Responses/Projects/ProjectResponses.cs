@@ -31,6 +31,14 @@ public class IntegrationInfo
     public string? GithubRepoName { get; set; }
     public string? JiraProjectKey { get; set; }
     public string? JiraSiteUrl { get; set; }
+    // Approval workflow
+    public string ApprovalStatus { get; set; } = "PENDING";
+    public long? SubmittedByUserId { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+    public long? ApprovedByUserId { get; set; }
+    public string? ApprovedByName { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public string? RejectedReason { get; set; }
 }
 
 public class ProjectDashboardResponse
