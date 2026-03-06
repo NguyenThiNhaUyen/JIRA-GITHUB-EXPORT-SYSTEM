@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSemesters, createSemester, updateSemester, getSubjects, createSubject, updateSubject } from "../api/systemApi.js";
+import { getSemesters, createSemester, updateSemester, deleteSemester, getSubjects, createSubject, updateSubject, deleteSubject as deleteSubjectApi } from "../api/systemApi.js";
 
 export const SYSTEM_KEYS = {
     all: ["system"],
@@ -26,6 +26,14 @@ export const useUpdateSemester = () => {
     });
 };
 
+export const useDeleteSemester = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deleteSemester,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.semesters() }),
+    });
+};
+
 export const useCreateSubject = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -38,6 +46,14 @@ export const useUpdateSubject = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, updates }) => updateSubject(id, updates),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
+    });
+};
+
+export const useDeleteSubject = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deleteSubjectApi,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
     });
 };

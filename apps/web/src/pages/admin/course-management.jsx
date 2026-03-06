@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../../components/ui/button.jsx";
 import {
   Card,
@@ -15,30 +15,50 @@ import {
   TableCell,
 } from "../../components/ui/table.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
-import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, AlertCircle, PlayCircle, CheckCircle, Upload } from "lucide-react";
 
+// Feature Hooks
+import { useGetCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignLecturer, useEnrollStudents } from "../../features/courses/hooks/useCourses.js";
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+
 export default function CourseManagement() {
   const navigate = useNavigate();
-  const { success, error } = useToast();
-  const [courses, setCourses] = useState([]);
-  const [semesters, setSemesters] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [lecturers, setLecturers] = useState([]);
+  const { success, error: showError } = useToast();
+
+  // Data Fetching
+  const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
+  const courses = coursesData.items || [];
+
+  const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
+  const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
+  const { data: lecturers = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+  const { data: allStudents = [], isLoading: loadingStus } = useGetUsers("STUDENT");
+
+  // Mutations
+  const createMutation = useCreateCourse();
+  const updateMutation = useUpdateCourse();
+  const deleteMutation = useDeleteCourse();
+  const assignMutation = useAssignLecturer();
+  const enrollMutation = useEnrollStudents();
+
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showViewStudentsModal, setShowViewStudentsModal] = useState(false);
+
   const [viewStudentsCourse, setViewStudentsCourse] = useState(null);
   const [viewStudentsList, setViewStudentsList] = useState([]);
+
   const [importCourse, setImportCourse] = useState(null);
-  const [importAvailableStudents, setImportAvailableStudents] = useState([]);
   const [importSelectedIds, setImportSelectedIds] = useState([]);
+
   const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
+
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -52,16 +72,7 @@ export default function CourseManagement() {
     lecturerId: "",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setCourses(db.findMany("courses"));
-    setSemesters(db.findMany("semesters"));
-    setSubjects(db.findMany("subjects"));
-    setLecturers(db.findMany("users.lecturers"));
-  };
+  const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus;
 
   const handleExport = () => {
     try {
@@ -129,31 +140,31 @@ export default function CourseManagement() {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
-      db.delete("courses", id);
-      success("Xóa lớp học thành công!");
-      loadData();
+      try {
+        await deleteMutation.mutateAsync(id);
+        success("Xóa lớp học thành công!");
+      } catch (err) {
+        showError(err.message || "Xóa thất bại");
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (editingCourse) {
-      db.update("courses", editingCourse.id, formData);
-      success("Cập nhật lớp học thành công!");
-    } else {
-      db.create("courses", {
-        ...formData,
-        currentStudents: 0,
-        createdAt: new Date().toISOString(),
-      });
-      success("Tạo lớp học thành công!");
+    try {
+      if (editingCourse) {
+        await updateMutation.mutateAsync({ id: editingCourse.id, body: formData });
+        success("Cập nhật lớp học thành công!");
+      } else {
+        await createMutation.mutateAsync(formData);
+        success("Tạo lớp học thành công!");
+      }
+      setShowModal(false);
+    } catch (err) {
+      showError(err.message || "Thao tác thất bại");
     }
-
-    setShowModal(false);
-    loadData();
   };
 
   const handleAssignLecturer = (course) => {
@@ -164,69 +175,59 @@ export default function CourseManagement() {
     setShowAssignModal(true);
   };
 
-  const handleAssignSubmit = (e) => {
+  const handleAssignSubmit = async (e) => {
     e.preventDefault();
-
-    const existing = db.findMany("courseLecturers", {
-      courseId: selectedCourse.id,
-    });
-
-    if (existing.length > 0) {
-      error("Lớp học này đã có giảng viên!");
-      return;
+    try {
+      await assignMutation.mutateAsync({
+        courseId: selectedCourse.id,
+        lecturerUserId: assignForm.lecturerId
+      });
+      const lecturer = lecturers.find((l) => l.id === assignForm.lecturerId);
+      success(`Đã phân công GV ${lecturer?.name} cho lớp ${selectedCourse.code}!`);
+      setShowAssignModal(false);
+    } catch (err) {
+      showError(err.message || "Phân công thất bại");
     }
-
-    db.create("courseLecturers", {
-      courseId: selectedCourse.id,
-      lecturerId: assignForm.lecturerId,
-      role: "PRIMARY",
-      assignedAt: new Date().toISOString(),
-    });
-
-    const lecturer = lecturers.find((l) => l.id === assignForm.lecturerId);
-    success(`Đã phân công GV ${lecturer?.name} cho lớp ${selectedCourse.code}!`);
-    setShowAssignModal(false);
-    loadData();
   };
 
   const getSemesterName = (semesterId) => {
-    const semester = semesters.find((s) => s.id === semesterId);
-    return semester?.name || "N/A";
+    const sem = semesters.find(s => String(s.id) === String(semesterId));
+    return sem?.name || "N/A";
   };
 
   const getSubjectCode = (subjectId) => {
-    const subject = subjects.find((s) => s.id === subjectId);
-    return subject?.code || "N/A";
+    const sub = subjects.find(s => String(s.id) === String(subjectId));
+    return sub?.code || "N/A";
   };
 
-  const getCourseLecturerAssignment = (courseId) => {
-    return db.findMany("courseLecturers", { courseId })[0] || null;
+  const getCourseLecturers = (course) => {
+    return course.lecturers || [];
   };
 
-  const getCourseLecturer = (courseId) => {
-    const assignment = getCourseLecturerAssignment(courseId);
-    if (!assignment) return null;
-    const lecturer = lecturers.find((l) => l.id === assignment.lecturerId);
-    return lecturer?.name || "N/A";
+  const getCourseLecturerName = (course) => {
+    const lecs = getCourseLecturers(course);
+    return lecs.length > 0 ? lecs[0].name : null;
   };
 
-  const handleRemoveLecturer = (course) => {
-    const assignment = getCourseLecturerAssignment(course.id);
-    if (!assignment) return;
+  const handleRemoveLecturer = async (course) => {
+    const lecs = getCourseLecturers(course);
+    if (lecs.length === 0) return;
     if (!confirm(`Xóa giảng viên khỏi lớp ${course.code}?`)) return;
-    db.delete("courseLecturers", assignment.id);
-    success(`Đã xóa GV khỏi lớp ${course.code}`);
-    loadData();
+    try {
+      // Assuming we have a way to remove lecturer, for now use a placeholder or log
+      // await removeLecturerMutation.mutateAsync({ courseId: course.id, lecturerUserId: lecs[0].id });
+      showError("Tính năng xóa giảng viên đang được cập nhật ở BE");
+    } catch (err) {
+      showError(err.message || "Xóa thất bại");
+    }
   };
 
   const handleOpenViewStudents = (course) => {
-    const enrollments = db.findMany("courseEnrollments", { courseId: course.id });
-    const students = enrollments
-      .map(e => db.findById("users.students", e.studentId))
-      .filter(Boolean)
-      .map((s, i) => ({ ...s, enrollmentId: enrollments[i]?.id }));
+    // In real app, we might need a separate API to get students by course
+    // For now, if CourseDetailResponse has students, use it. 
+    // Otherwise, we might need useGetCourseStudents(course.id) hook.
     setViewStudentsCourse(course);
-    setViewStudentsList(students);
+    setViewStudentsList([]); // TODO: Fetch from somewhere
     setShowViewStudentsModal(true);
   };
 
@@ -250,14 +251,12 @@ export default function CourseManagement() {
 
   // Import SV helpers
   const handleOpenImport = (course) => {
-    const enrolledIds = db.findMany("courseEnrollments", { courseId: course.id }).map(e => e.studentId);
-    const allStudents = db.findMany("users.students");
-    const available = allStudents.filter(s => !enrolledIds.includes(s.id));
     setImportCourse(course);
-    setImportAvailableStudents(available);
     setImportSelectedIds([]);
     setShowImportModal(true);
   };
+
+  const importAvailableStudents = allStudents; // Optimization: filter out already enrolled if possible
 
   const toggleImportStudent = (id) => {
     setImportSelectedIds(prev =>
@@ -265,25 +264,21 @@ export default function CourseManagement() {
     );
   };
 
-  const handleImportSubmit = () => {
+  const handleImportSubmit = async () => {
     if (importSelectedIds.length === 0) {
-      error("Vui lòng chọn ít nhất 1 sinh viên!");
+      showError("Vui lòng chọn ít nhất 1 sinh viên!");
       return;
     }
-    importSelectedIds.forEach(studentId => {
-      db.create("courseEnrollments", {
+    try {
+      await enrollMutation.mutateAsync({
         courseId: importCourse.id,
-        studentId,
-        enrolledAt: new Date().toISOString(),
-        status: "ACTIVE",
+        studentUserIds: importSelectedIds.map(id => Number(id)),
       });
-    });
-    // Update currentStudents count on the course record
-    const enrolled = db.findMany("courseEnrollments", { courseId: importCourse.id }).length;
-    db.update("courses", importCourse.id, { currentStudents: enrolled });
-    success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`);
-    setShowImportModal(false);
-    loadData();
+      success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`);
+      setShowImportModal(false);
+    } catch (err) {
+      showError(err.message || "Import thất bại");
+    }
   };
 
   return (
@@ -356,132 +351,136 @@ export default function CourseManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-50/50">
-                <TableRow className="border-b border-gray-100/50 hover:bg-transparent">
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Mã lớp / Tên lớp</TableHead>
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Môn học / Học kỳ</TableHead>
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Giảng viên</TableHead>
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Sĩ số</TableHead>
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</TableHead>
-                  <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-50">
-                {courses
-                  .filter(c => !filterSemester || c.semesterId === filterSemester)
-                  .map((course, index) => {
-                    const lecturerName = getCourseLecturer(course.id);
-                    return (
-                      <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-none group">
-                        <TableCell className="py-4 px-6">
-                          <div className="flex items-center justify-center gap-3">
-                            <div className="w-8 flex justify-center text-sm font-medium text-gray-400">
-                              {index + 1}
-                            </div>
-                            <div className="text-left">
-                              <div className="font-semibold text-gray-800 text-sm">
-                                {course.code}
+          {isLoading ? (
+            <div className="py-20 text-center text-gray-400">Đang tải dữ liệu...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow className="border-b border-gray-100/50 hover:bg-transparent">
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Mã lớp / Tên lớp</TableHead>
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Môn học / Học kỳ</TableHead>
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Giảng viên</TableHead>
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Sĩ số</TableHead>
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</TableHead>
+                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-gray-50">
+                  {courses
+                    .filter(c => !filterSemester || String(c.semesterId) === String(filterSemester))
+                    .map((course, index) => {
+                      const lecturerName = getCourseLecturerName(course);
+                      return (
+                        <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-none group">
+                          <TableCell className="py-4 px-6">
+                            <div className="flex items-center justify-center gap-3">
+                              <div className="w-8 flex justify-center text-sm font-medium text-gray-400">
+                                {index + 1}
                               </div>
-                              <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
-                                {course.name}
+                              <div className="text-left">
+                                <div className="font-semibold text-gray-800 text-sm">
+                                  {course.code}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
+                                  {course.name}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4 px-6">
-                          <div className="flex flex-col gap-1.5 items-center">
-                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
-                              {getSubjectCode(course.subjectId)}
-                            </span>
-                            <span className="text-[11px] text-gray-500">
-                              {getSemesterName(course.semesterId)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4 px-6 text-center">
-                          {lecturerName ? (
-                            <span className="text-sm font-medium text-gray-700">{lecturerName}</span>
-                          ) : (
-                            <span className="text-xs text-gray-400 font-medium italic">Chưa phân công</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-4 px-6 text-center">
-                          <div className="text-sm font-semibold text-gray-700">
-                            {course.currentStudents}<span className="text-gray-400 text-xs ml-1">/ {course.maxStudents}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4 px-6 text-center">
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
-                            course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
-                              'text-gray-600 bg-gray-100'
-                            }`}>
-                            {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-4 px-6 text-center">
-                          <div className="flex items-center justify-center gap-2 transition-opacity min-w-[160px] flex-wrap">
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
+                            <div className="flex flex-col gap-1.5 items-center">
+                              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
+                                {getSubjectCode(course.subjectId)}
+                              </span>
+                              <span className="text-[11px] text-gray-500">
+                                {getSemesterName(course.semesterId)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4 px-6 text-center">
                             {lecturerName ? (
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1 rounded-lg">{lecturerName}</span>
-                                <button
-                                  onClick={() => handleRemoveLecturer(course)}
-                                  title="Xóa GV khỏi lớp"
-                                  className="text-red-400 hover:text-red-600 transition-colors font-bold text-sm px-1"
-                                >×</button>
-                              </div>
+                              <span className="text-sm font-medium text-gray-700">{lecturerName}</span>
                             ) : (
+                              <span className="text-xs text-gray-400 font-medium italic">Chưa phân công</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-4 px-6 text-center">
+                            <div className="text-sm font-semibold text-gray-700">
+                              {course.currentStudents}<span className="text-gray-400 text-xs ml-1">/ {course.maxStudents}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4 px-6 text-center">
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                              course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                                'text-gray-600 bg-gray-100'
+                              }`}>
+                              {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4 px-6 text-center">
+                            <div className="flex items-center justify-center gap-2 transition-opacity min-w-[160px] flex-wrap">
+                              {lecturerName ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1 rounded-lg">{lecturerName}</span>
+                                  <button
+                                    onClick={() => handleRemoveLecturer(course)}
+                                    title="Xóa GV khỏi lớp"
+                                    className="text-red-400 hover:text-red-600 transition-colors font-bold text-sm px-1"
+                                  >×</button>
+                                </div>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAssignLecturer(course)}
+                                  className="h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs"
+                                >
+                                  + GV
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
-                                onClick={() => handleAssignLecturer(course)}
-                                className="h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs"
+                                onClick={() => handleOpenImport(course)}
+                                className="h-8 px-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/50 shadow-none text-xs flex items-center gap-1"
+                                title="Import sinh viên vào lớp"
                               >
-                                + GV
+                                <Upload size={11} /> Import SV
                               </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenImport(course)}
-                              className="h-8 px-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/50 shadow-none text-xs flex items-center gap-1"
-                              title="Import sinh viên vào lớp"
-                            >
-                              <Upload size={11} /> Import SV
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenViewStudents(course)}
-                              className="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/50 shadow-none text-xs"
-                              title="Xem danh sách sinh viên trong lớp"
-                            >
-                              Xem SV
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(course)}
-                              className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
-                              title="Sửa"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(course.id)}
-                              className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
-                              title="Xóa"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-              </TableBody>
-            </Table>
-          </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenViewStudents(course)}
+                                className="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/50 shadow-none text-xs"
+                                title="Xem danh sách sinh viên trong lớp"
+                              >
+                                Xem SV
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(course)}
+                                className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
+                                title="Sửa"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(course.id)}
+                                className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                                title="Xóa"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

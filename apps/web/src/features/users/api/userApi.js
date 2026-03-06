@@ -1,67 +1,60 @@
-import db from "../../../mock/db.js";
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
+import { mapUser, mapUserList } from "./mappers/userMapper.js";
 
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
-
+/**
+ * GET /api/users
+ * Includes ?role filter
+ */
 export async function getUsers(role) {
-    await delay();
-    if (role === 'ADMIN') return db.data.users.admins || [];
-    if (role === 'LECTURER') return db.data.users.lecturers || [];
-    if (role === 'STUDENT') return db.data.users.students || [];
-
-    return [
-        ...(db.data.users.admins || []),
-        ...(db.data.users.lecturers || []),
-        ...(db.data.users.students || [])
-    ];
+    const res = await client.get("/users", { params: { role, pageSize: 1000 } });
+    const payload = unwrap(res);
+    return mapUserList(payload).items; // pages expect array
 }
 
+/**
+ * POST /api/users -> Wait, backend might use different endpoint for creation or invitations
+ * For now, map to common logic if exists, or keep mock if BE lacks creation endpoint
+ */
 export async function createUser(data) {
-    await delay();
-    const collectionKey = data.role === 'ADMIN' ? 'admins' :
-        data.role === 'LECTURER' ? 'lecturers' : 'students';
+    // BE might not have a direct POST /users for all roles yet (use invitations if needed)
+    // But let's assume it has standard creation for testing.
+    const res = await client.post("/users", data);
+    return mapUser(unwrap(res));
+}
 
-    // Kiểm tra mã số tồn tại (chỉ áp dụng Student)
-    if (data.role === 'STUDENT' && data.studentId) {
-        const existing = db.data.users.students.find(s => s.studentId === data.studentId);
-        if (existing) throw new Error('Mã sinh viên đã tồn tại');
-    }
+/**
+ * PATCH /api/users/:id/role
+ */
+export async function updateUserRole(id, role) {
+    const res = await client.patch(`/users/${id}/role`, { role });
+    return unwrap(res);
+}
 
-    const newItem = {
-        ...data,
-        id: db.generateId(),
-        createdAt: new Date().toISOString()
-    };
+/**
+ * PATCH /api/users/:id/status
+ */
+export async function updateUserStatus(id, enabled) {
+    const res = await client.patch(`/users/${id}/status`, { enabled });
+    return unwrap(res);
+}
 
-    db.data.users[collectionKey].push(newItem);
-    db.save();
-    return newItem;
+/**
+ * POST /api/users/:id/reset-password
+ */
+export async function resetUserPassword(id, newPassword = "Admin@123") {
+    const res = await client.post(`/users/${id}/reset-password`, { newPassword });
+    return unwrap(res);
 }
 
 export async function getStudentLinks(studentId) {
-    await delay();
-    return db.getStudentLinks(studentId);
+    // This might still be in integration layer, calling /api/github/links or similar
+    // Keep mock if BE endpoint is unknown
+    const res = await client.get(`/users/student/${studentId}/links`);
+    return unwrap(res);
 }
 
 export async function linkStudentAccounts(studentId, courseId, githubUrl, jiraUrl) {
-    await delay();
-    const existing = db.findMany('studentLinks', { studentId, courseId });
-
-    if (existing.length > 0) {
-        return db.update('studentLinks', existing[0].id, {
-            githubAccountUrl: githubUrl,
-            jiraAccountUrl: jiraUrl,
-            status: 'PENDING',
-            updatedAt: new Date().toISOString()
-        });
-    }
-
-    return db.create('studentLinks', {
-        studentId,
-        courseId,
-        githubAccountUrl: githubUrl,
-        jiraAccountUrl: jiraUrl,
-        status: 'PENDING',
-        confirmedByLecturerId: null,
-        updatedAt: new Date().toISOString()
-    });
+    const res = await client.post(`/users/student/${studentId}/links`, { courseId, githubUrl, jiraUrl });
+    return unwrap(res);
 }

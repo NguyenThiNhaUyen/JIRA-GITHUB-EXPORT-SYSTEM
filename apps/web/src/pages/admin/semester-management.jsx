@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../../components/ui/button.jsx";
 import {
     Card,
@@ -15,15 +15,30 @@ import {
     TableCell,
 } from "../../components/ui/table.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
-import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, PlayCircle, AlertCircle, CheckCircle } from "lucide-react";
+import {
+    useGetSemesters,
+    useCreateSemester,
+    useUpdateSemester,
+    useDeleteSemester
+} from "../../features/system/hooks/useSystem.js";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 
 export default function SemesterManagement() {
     const navigate = useNavigate();
-    const { success, error } = useToast();
-    const [semesters, setSemesters] = useState([]);
+    const { success, error: showError } = useToast();
+
+    // Data Fetching
+    const { data: semesters = [], isLoading: loadingSemesters } = useGetSemesters();
+    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 1000 });
+    const allCourses = coursesData.items || [];
+
+    const createMutation = useCreateSemester();
+    const updateMutation = useUpdateSemester();
+    const deleteMutation = useDeleteSemester();
+
     const [showModal, setShowModal] = useState(false);
     const [editingSemester, setEditingSemester] = useState(null);
     const [formData, setFormData] = useState({
@@ -32,15 +47,6 @@ export default function SemesterManagement() {
         endDate: "",
         status: "UPCOMING",
     });
-
-    useEffect(() => {
-        loadSemesters();
-    }, []);
-
-    const loadSemesters = () => {
-        const data = db.findMany("semesters");
-        setSemesters(data);
-    };
 
     const handleCreate = () => {
         setEditingSemester(null);
@@ -64,37 +70,37 @@ export default function SemesterManagement() {
         setShowModal(true);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm("Bạn có chắc chắn muốn xóa học kỳ này?")) {
-            db.delete("semesters", id);
-            success("Xóa học kỳ thành công!");
-            loadSemesters();
+            try {
+                await deleteMutation.mutateAsync(id);
+                success("Xóa học kỳ thành công!");
+            } catch (err) {
+                showError(err.message || "Xóa thất bại");
+            }
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
         const code = formData.name.toUpperCase().replace(/\s+/g, '');
 
-        if (editingSemester) {
-            db.update("semesters", editingSemester.id, { ...formData, code });
-            success("Cập nhật học kỳ thành công!");
-        } else {
-            db.create("semesters", {
-                ...formData,
-                code,
-                createdAt: new Date().toISOString(),
-            });
-            success("Tạo học kỳ thành công!");
+        try {
+            if (editingSemester) {
+                await updateMutation.mutateAsync({ id: editingSemester.id, updates: { ...formData, code } });
+                success("Cập nhật học kỳ thành công!");
+            } else {
+                await createMutation.mutateAsync({ ...formData, code });
+                success("Tạo học kỳ thành công!");
+            }
+            setShowModal(false);
+        } catch (err) {
+            showError(err.message || "Thao tác thất bại");
         }
-
-        setShowModal(false);
-        loadSemesters();
     };
 
-    const getCourses = (semesterId) => {
-        return db.findMany("courses", { semesterId });
+    const getCoursesForSemester = (semesterId) => {
+        return allCourses.filter(c => c.semesterId === semesterId);
     };
 
     return (
@@ -155,88 +161,92 @@ export default function SemesterManagement() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader className="bg-gray-50/50">
-                                <TableRow className="border-b border-gray-100/50 hover:bg-transparent">
-                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Tên học kỳ</TableHead>
-                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thời gian</TableHead>
-                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Các lớp học</TableHead>
-                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</TableHead>
-                                    <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thao tác</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="divide-y divide-gray-50">
-                                {semesters.map((semester) => {
-                                    const courses = getCourses(semester.id);
-                                    return (
-                                        <TableRow key={semester.id} className="hover:bg-gray-50/50 transition-colors border-none group">
-                                            <TableCell className="py-4 px-6 text-center">
-                                                <span className="font-semibold text-gray-800 text-sm">{semester.name}</span>
-                                            </TableCell>
-                                            <TableCell className="py-4 px-6 text-center">
-                                                <div className="text-sm text-gray-600 font-medium">{semester.startDate}</div>
-                                                <div className="text-xs text-gray-400 mt-0.5">{semester.endDate}</div>
-                                            </TableCell>
-                                            <TableCell className="py-4 px-6 text-center">
-                                                <div className="flex flex-wrap justify-center gap-1">
-                                                    {courses.length > 0 ? (
-                                                        <>
-                                                            {courses.slice(0, 3).map((course) => (
-                                                                <span
-                                                                    key={course.id}
-                                                                    className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50"
-                                                                >
-                                                                    {course.code}
-                                                                </span>
-                                                            ))}
-                                                            {courses.length > 3 && (
-                                                                <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/50">
-                                                                    +{courses.length - 3}
-                                                                </span>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-400 font-medium italic">Chưa có lớp</span>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4 px-6 text-center">
-                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${semester.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
-                                                    semester.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
-                                                        'text-gray-600 bg-gray-100'
-                                                    }`}>
-                                                    {semester.status === 'ACTIVE' ? 'ĐANG DIỄN RA' : semester.status === 'UPCOMING' ? 'SẮP TỚI' : 'ĐÃ KẾT THÚC'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="py-4 px-6 text-center">
-                                                <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleEdit(semester)}
-                                                        className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
-                                                        title="Sửa"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleDelete(semester.id)}
-                                                        className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
-                                                        title="Xóa"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    {(loadingSemesters || loadingCourses) ? (
+                        <div className="py-20 text-center text-gray-400">Đang tải dữ liệu...</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader className="bg-gray-50/50">
+                                    <TableRow className="border-b border-gray-100/50 hover:bg-transparent">
+                                        <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Tên học kỳ</TableHead>
+                                        <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thời gian</TableHead>
+                                        <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Các lớp học</TableHead>
+                                        <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</TableHead>
+                                        <TableHead className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Thao tác</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-gray-50">
+                                    {semesters.map((semester) => {
+                                        const courses = getCoursesForSemester(semester.id);
+                                        return (
+                                            <TableRow key={semester.id} className="hover:bg-gray-50/50 transition-colors border-none group">
+                                                <TableCell className="py-4 px-6 text-center">
+                                                    <span className="font-semibold text-gray-800 text-sm">{semester.name}</span>
+                                                </TableCell>
+                                                <TableCell className="py-4 px-6 text-center">
+                                                    <div className="text-sm text-gray-600 font-medium">{semester.startDate}</div>
+                                                    <div className="text-xs text-gray-400 mt-0.5">{semester.endDate}</div>
+                                                </TableCell>
+                                                <TableCell className="py-4 px-6 text-center">
+                                                    <div className="flex flex-wrap justify-center gap-1">
+                                                        {courses.length > 0 ? (
+                                                            <>
+                                                                {courses.slice(0, 3).map((course) => (
+                                                                    <span
+                                                                        key={course.id}
+                                                                        className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50"
+                                                                    >
+                                                                        {course.code}
+                                                                    </span>
+                                                                ))}
+                                                                {courses.length > 3 && (
+                                                                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200/50">
+                                                                        +{courses.length - 3}
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400 font-medium italic">Chưa có lớp</span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="py-4 px-6 text-center">
+                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${semester.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                                                        semester.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                                                            'text-gray-600 bg-gray-100'
+                                                        }`}>
+                                                        {semester.status === 'ACTIVE' ? 'ĐANG DIỄN RA' : semester.status === 'UPCOMING' ? 'SẮP TỚI' : 'ĐÃ KẾT THÚC'}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="py-4 px-6 text-center">
+                                                    <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleEdit(semester)}
+                                                            className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200/50 hover:bg-blue-50 hover:border-blue-300"
+                                                            title="Sửa"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleDelete(semester.id)}
+                                                            className="h-8 w-8 p-0 rounded-lg text-red-500 border-red-200/50 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                                                            title="Xóa"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

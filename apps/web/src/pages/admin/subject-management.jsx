@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../../components/ui/button.jsx";
 import {
     Card,
@@ -15,13 +15,17 @@ import {
     TableCell,
 } from "../../components/ui/table.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
-import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import { Library, CheckCircle } from "lucide-react";
+import { useGetSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from "../../features/system/hooks/useSystem.js";
 
 export default function SubjectManagement() {
-    const { success } = useToast();
-    const [subjects, setSubjects] = useState([]);
+    const { success, error } = useToast();
+    const { data: subjects = [], isLoading } = useGetSubjects();
+    const createMutation = useCreateSubject();
+    const updateMutation = useUpdateSubject();
+    const deleteMutation = useDeleteSubject();
+
     const [showModal, setShowModal] = useState(false);
     const [editingSubject, setEditingSubject] = useState(null);
     const [formData, setFormData] = useState({
@@ -30,15 +34,6 @@ export default function SubjectManagement() {
         credits: 3,
         status: "ACTIVE",
     });
-
-    useEffect(() => {
-        loadSubjects();
-    }, []);
-
-    const loadSubjects = () => {
-        const data = db.findMany("subjects");
-        setSubjects(data);
-    };
 
     const handleCreate = () => {
         setEditingSubject(null);
@@ -62,33 +57,34 @@ export default function SubjectManagement() {
         setShowModal(true);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm("Bạn có chắc chắn muốn xóa môn học này?")) {
-            db.delete("subjects", id);
-            success("Xóa môn học thành công!");
-            loadSubjects();
+            try {
+                await deleteMutation.mutateAsync(id);
+                success("Xóa môn học thành công!");
+            } catch (err) {
+                error(err.message || "Xóa thất bại");
+            }
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const code = formData.code.toUpperCase().replace(/\s+/g, "");
 
-        if (editingSubject) {
-            db.update("subjects", editingSubject.id, { ...formData, code });
-            success("Cập nhật môn học thành công!");
-        } else {
-            db.create("subjects", {
-                ...formData,
-                code,
-                createdAt: new Date().toISOString(),
-            });
-            success("Tạo môn học thành công!");
+        try {
+            if (editingSubject) {
+                await updateMutation.mutateAsync({ id: editingSubject.id, updates: { ...formData, code } });
+                success("Cập nhật môn học thành công!");
+            } else {
+                await createMutation.mutateAsync({ ...formData, code });
+                success("Tạo môn học thành công!");
+            }
+            setShowModal(false);
+        } catch (err) {
+            error(err.message || "Thao tác thất bại");
         }
-
-        setShowModal(false);
-        loadSubjects();
     };
 
     return (

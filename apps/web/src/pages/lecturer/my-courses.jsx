@@ -1,47 +1,31 @@
 // My Courses — Lecturer "Lớp của tôi"
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
+import { Card, CardContent } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
 import { ChevronRight, GraduationCap, Users, BookOpen, Settings2, Search } from "lucide-react";
 
+// Feature Hooks
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+
 export default function MyCourses() {
-    const { user } = useAuth();
     const navigate = useNavigate();
-    const { error } = useToast();
-    const [courses, setCourses] = useState([]);
+    const { error: showError } = useToast();
     const [search, setSearch] = useState("");
-    const [loading, setLoading] = useState(false);
 
-    useEffect(() => { loadCourses(); }, []);
-
-    const loadCourses = () => {
-        try {
-            setLoading(true);
-            const allCourses = db.findMany("courses");
-            const mine = allCourses.filter(c =>
-                db.findMany("courseLecturers", { courseId: c.id, lecturerId: user?.id }).length > 0
-            );
-            // Enrich with subject + group count
-            const enriched = mine.map(c => ({
-                ...c,
-                subject: db.findById("subjects", c.subjectId),
-                groupCount: db.getCourseGroups(c.id).length,
-                enrollments: db.findMany("courseEnrollments", { courseId: c.id }).length,
-            }));
-            setCourses(enriched);
-        } catch { error("Không thể tải lớp học"); }
-        finally { setLoading(false); }
-    };
+    // Data Fetching - Backend automatically filters by lecturer based on token role
+    const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+    const courses = coursesData.items || [];
 
     const filtered = courses.filter(c =>
         c.code?.toLowerCase().includes(search.toLowerCase()) ||
         c.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.subject?.name?.toLowerCase().includes(search.toLowerCase())
+        c.subjectName?.toLowerCase().includes(search.toLowerCase())
     );
+
+    const totalGroups = courses.reduce((a, c) => a + (c.projects?.length || 0), 0);
+    const totalStudents = courses.reduce((a, c) => a + (c.currentStudents || 0), 0);
 
     return (
         <div className="space-y-6">
@@ -72,11 +56,11 @@ export default function MyCourses() {
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-4">
                 <MiniStat label="Tổng lớp" value={courses.length} color="text-teal-700 bg-teal-50 border-teal-100" />
-                <MiniStat label="Tổng nhóm" value={courses.reduce((a, c) => a + c.groupCount, 0)} color="text-blue-700 bg-blue-50 border-blue-100" />
-                <MiniStat label="Tổng sinh viên" value={courses.reduce((a, c) => a + c.enrollments, 0)} color="text-indigo-700 bg-indigo-50 border-indigo-100" />
+                <MiniStat label="Tổng nhóm" value={totalGroups} color="text-blue-700 bg-blue-50 border-blue-100" />
+                <MiniStat label="Tổng sinh viên" value={totalStudents} color="text-indigo-700 bg-indigo-50 border-indigo-100" />
             </div>
 
-            {loading ? (
+            {isLoading ? (
                 <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" /></div>
             ) : filtered.length === 0 ? (
                 <EmptyState message={search ? "Không tìm thấy lớp học phù hợp" : "Bạn chưa được giao lớp nào"} />
@@ -96,6 +80,7 @@ export default function MyCourses() {
 }
 
 function CourseCard({ course, onManage }) {
+    const groupCount = course.projects?.length || 0;
     return (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all duration-200 group">
             {/* Color bar */}
@@ -106,16 +91,16 @@ function CourseCard({ course, onManage }) {
                         <GraduationCap size={18} className="text-teal-700" />
                     </div>
                     <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        {course.subject?.code || "—"}
+                        {course.subjectCode || "—"}
                     </span>
                 </div>
                 <div>
                     <h3 className="font-bold text-gray-800 leading-snug">{course.code}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{course.name || course.subject?.name}</p>
+                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{course.name || course.subjectName}</p>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Users size={11} />{course.enrollments} sinh viên</span>
-                    <span className="flex items-center gap-1"><BookOpen size={11} />{course.groupCount} nhóm</span>
+                    <span className="flex items-center gap-1"><Users size={11} />{course.currentStudents} sinh viên</span>
+                    <span className="flex items-center gap-1"><BookOpen size={11} />{groupCount} nhóm</span>
                 </div>
                 <Button
                     onClick={onManage}
