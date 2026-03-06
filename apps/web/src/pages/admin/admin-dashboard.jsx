@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
-import { getCourses } from "../../api/courseApi.js";
+import { getCourses } from "../../features/courses/api/courseApi.js";
 import {
   BookOpen, Library, CalendarDays, Users, GraduationCap,
   FolderKanban, TrendingUp, UserCog, Plus, ChevronRight,

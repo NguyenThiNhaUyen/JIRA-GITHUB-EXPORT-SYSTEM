@@ -1,12 +1,17 @@
-// Group Detail - Enterprise UI (logic unchanged)
-import { useState, useEffect } from "react";
+// Group Detail - Rebuilt with Feature-Based & React Query
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Badge } from "../../components/ui/badge.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
+import {
+    useGetGroupById,
+    useApproveLink,
+    useRejectLink,
+    useUpdateStudentScore
+} from "../../features/groups/hooks/useGroups.js";
+
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
     Users, Calendar, CheckCircle, Clock, ExternalLink,
@@ -19,63 +24,73 @@ export default function GroupDetail() {
     const { user } = useAuth();
     const { success, error } = useToast();
 
-    const [group, setGroup] = useState(null);
-    const [students, setStudents] = useState([]);
-    const [course, setCourse] = useState(null);
+    // 1. Phép thuật fetch dữ liệu "1 dòng" từ React Query
+    const { data: groupData, isLoading, isError } = useGetGroupById(groupId);
 
-    useEffect(() => { loadGroupData(); }, [groupId]);
+    // 2. Khai báo các Mutation thay đổi trạng thái
+    const approveMutation = useApproveLink();
+    const rejectMutation = useRejectLink();
+    const updateScoreMutation = useUpdateStudentScore();
 
-    const loadGroupData = () => {
-        try {
-            const groupData = db.findById("groups", groupId);
-            if (!groupData) { error("Không tìm thấy nhóm"); navigate("/lecturer"); return; }
-            setGroup(groupData);
-            setStudents(db.getGroupStudents(groupId));
-            setCourse(db.findById("courses", groupData.courseId));
-        } catch (err) {
-            error("Không thể tải dữ liệu nhóm");
-        }
-    };
+    // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
+    if (isLoading) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+                    <p className="text-sm text-gray-400">Đang tải dữ liệu từ API...</p>
+                </div>
+            </div>
+        );
+    }
 
+    if (isError || !groupData) {
+        return (
+            <div className="flex h-full items-center justify-center flex-col gap-4">
+                <p className="text-red-500 font-semibold">Cảnh báo: Không thể tải dữ liệu nhóm</p>
+                <Button onClick={() => navigate("/lecturer")} variant="outline">Trở về bảng tin</Button>
+            </div>
+        );
+    }
+
+    // Tách dữ liệu ra để render UI
+    const { students = [], course, ...group } = groupData;
+
+    // Functions thao tác gọi thẳng mutation
     const handleApproveLink = (linkType) => {
-        if (!group) return;
-        try {
-            db.approveGroupLink(groupId, linkType, user.id);
-            success(`Đã chấp nhận ${linkType === "github" ? "GitHub" : "Jira"} link`);
-            loadGroupData();
-        } catch (err) {
-            error(`Không thể chấp nhận ${linkType} link`);
-        }
+        approveMutation.mutate(
+            { groupId, linkType, lecturerId: user.id },
+            {
+                onSuccess: () => success(`Đã duyệt ${linkType === "github" ? "GitHub" : "Jira"} link`)
+            }
+        );
     };
 
     const handleRejectLink = (linkType) => {
-        if (!group) return;
-        try {
-            db.rejectGroupLink(groupId, linkType, user.id);
-            success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`);
-            loadGroupData();
-        } catch (err) {
-            error(`Không thể từ chối ${linkType} link`);
-        }
+        rejectMutation.mutate(
+            { groupId, linkType, lecturerId: user.id },
+            {
+                onSuccess: () => success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`)
+            }
+        );
     };
 
     const handleUpdateScore = (studentId, score) => {
-        try {
-            const numScore = parseInt(score, 10);
-            if (isNaN(numScore) || numScore < 0 || numScore > 100) {
-                error("Điểm phải từ 0 đến 100");
-                return;
-            }
-            // in real app this would call an API, here we just update a mock collection 
-            // 'contributionScores' or add it to student object in group. For simplicity, just show success:
-            success(`Đã lưu điểm ${numScore} cho sinh viên`);
-        } catch (err) {
-            error("Không thể lưu điểm");
+        const numScore = parseInt(score, 10);
+        if (isNaN(numScore) || numScore < 0 || numScore > 100) {
+            error("Điểm phải từ 0 đến 100");
+            return;
         }
+
+        updateScoreMutation.mutate(
+            { groupId, studentId, score: numScore },
+            {
+                onSuccess: () => success(`Đã lưu điểm ${numScore} cho sinh viên`)
+            }
+        );
     };
 
     const handleExport = () => {
-        if (!group) return;
         try {
             // 1. Prepare CSV headers
             const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp", "Email", "Số Điện Thoại"];
@@ -112,20 +127,8 @@ export default function GroupDetail() {
         }
     };
 
-    if (!group) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-                    <p className="text-sm text-gray-400">Đang tải...</p>
-                </div>
-            </div>
-        );
-    }
-
     const githubApproved = group.githubStatus === "APPROVED";
     const jiraApproved = group.jiraStatus === "APPROVED";
-    const leader = students.find((s) => s.id === group.teamLeaderId);
     const fullyApproved = githubApproved && jiraApproved;
 
     return (
