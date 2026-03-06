@@ -333,10 +333,15 @@ using Microsoft.OpenApi.Models;
                             email = lecturerEmail,
                             password = passwordHasher.HashPassword("Admin@123"),
                             full_name = "Sample Lecturer",
-                            lecturer_code = "LEC001",
                             enabled = true,
                             created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow
+                            updated_at = DateTime.UtcNow,
+                            lecturer = new lecturer
+                            {
+                                lecturer_code = "LEC001",
+                                created_at = DateTime.UtcNow,
+                                updated_at = DateTime.UtcNow
+                            }
                         };
                         lecturerUser.roles.Add(lecturerRole);
                         context.users.Add(lecturerUser);
@@ -355,10 +360,15 @@ using Microsoft.OpenApi.Models;
                             email = studentEmail,
                             password = passwordHasher.HashPassword("Admin@123"),
                             full_name = "Sample Student",
-                            student_code = "STU001",
                             enabled = true,
                             created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow
+                            updated_at = DateTime.UtcNow,
+                            student = new student
+                            {
+                                student_code = "STU001",
+                                created_at = DateTime.UtcNow,
+                                updated_at = DateTime.UtcNow
+                            }
                         };
                         studentUser.roles.Add(studentRole);
                         context.users.Add(studentUser);
