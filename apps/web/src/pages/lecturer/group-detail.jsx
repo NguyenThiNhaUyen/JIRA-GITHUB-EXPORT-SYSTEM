@@ -1,12 +1,17 @@
-// Group Detail - Enterprise UI (logic unchanged)
-import { useState, useEffect } from "react";
+// Group Detail - Rebuilt with Feature-Based & React Query
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Badge } from "../../components/ui/badge.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
+import {
+    useGetGroupById,
+    useApproveLink,
+    useRejectLink,
+    useUpdateStudentScore
+} from "../../features/groups/hooks/useGroups.js";
+
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
     Users, Calendar, CheckCircle, Clock, ExternalLink,
@@ -19,62 +24,111 @@ export default function GroupDetail() {
     const { user } = useAuth();
     const { success, error } = useToast();
 
-    const [group, setGroup] = useState(null);
-    const [students, setStudents] = useState([]);
-    const [course, setCourse] = useState(null);
+    // 1. Phép thuật fetch dữ liệu "1 dòng" từ React Query
+    const { data: groupData, isLoading, isError } = useGetGroupById(groupId);
 
-    useEffect(() => { loadGroupData(); }, [groupId]);
+    // 2. Khai báo các Mutation thay đổi trạng thái
+    const approveMutation = useApproveLink();
+    const rejectMutation = useRejectLink();
+    const updateScoreMutation = useUpdateStudentScore();
 
-    const loadGroupData = () => {
-        try {
-            const groupData = db.findById("groups", groupId);
-            if (!groupData) { error("Không tìm thấy nhóm"); navigate("/lecturer"); return; }
-            setGroup(groupData);
-            setStudents(db.getGroupStudents(groupId));
-            setCourse(db.findById("courses", groupData.courseId));
-        } catch (err) {
-            error("Không thể tải dữ liệu nhóm");
-        }
-    };
-
-    const handleApproveLink = (linkType) => {
-        if (!group) return;
-        try {
-            db.approveGroupLink(groupId, linkType, user.id);
-            success(`Đã chấp nhận ${linkType === "github" ? "GitHub" : "Jira"} link`);
-            loadGroupData();
-        } catch (err) {
-            error(`Không thể chấp nhận ${linkType} link`);
-        }
-    };
-
-    const handleRejectLink = (linkType) => {
-        if (!group) return;
-        try {
-            db.rejectGroupLink(groupId, linkType, user.id);
-            success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`);
-            loadGroupData();
-        } catch (err) {
-            error(`Không thể từ chối ${linkType} link`);
-        }
-    };
-
-    const handleExport = () => success("Chức năng export đang được phát triển");
-
-    if (!group) {
+    // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
+    if (isLoading) {
         return (
             <div className="flex h-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-                    <p className="text-sm text-gray-400">Đang tải...</p>
+                    <p className="text-sm text-gray-400">Đang tải dữ liệu từ API...</p>
                 </div>
             </div>
         );
     }
 
+    if (isError || !groupData) {
+        return (
+            <div className="flex h-full items-center justify-center flex-col gap-4">
+                <p className="text-red-500 font-semibold">Cảnh báo: Không thể tải dữ liệu nhóm</p>
+                <Button onClick={() => navigate("/lecturer")} variant="outline">Trở về bảng tin</Button>
+            </div>
+        );
+    }
+
+    // Tách dữ liệu ra để render UI
+    const { students = [], course, ...group } = groupData;
+
+    // Functions thao tác gọi thẳng mutation
+    const handleApproveLink = (linkType) => {
+        approveMutation.mutate(
+            { groupId, linkType, lecturerId: user.id },
+            {
+                onSuccess: () => success(`Đã duyệt ${linkType === "github" ? "GitHub" : "Jira"} link`)
+            }
+        );
+    };
+
+    const handleRejectLink = (linkType) => {
+        rejectMutation.mutate(
+            { groupId, linkType, lecturerId: user.id },
+            {
+                onSuccess: () => success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`)
+            }
+        );
+    };
+
+    const handleUpdateScore = (studentId, score) => {
+        const numScore = parseInt(score, 10);
+        if (isNaN(numScore) || numScore < 0 || numScore > 100) {
+            error("Điểm phải từ 0 đến 100");
+            return;
+        }
+
+        updateScoreMutation.mutate(
+            { groupId, studentId, score: numScore },
+            {
+                onSuccess: () => success(`Đã lưu điểm ${numScore} cho sinh viên`)
+            }
+        );
+    };
+
+    const handleExport = () => {
+        try {
+            // 1. Prepare CSV headers
+            const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp", "Email", "Số Điện Thoại"];
+
+            // 2. Prepare CSV rows from students data
+            const rows = students.map(student => {
+                const role = student.id === group.teamLeaderId ? "Leader" : "Member";
+                return [
+                    student.studentId,
+                    student.name,
+                    role,
+                    student.contributionScore || 0,
+                    student.email,
+                    student.phone || "N/A"
+                ].map(val => `"${val}"`).join(",");
+            });
+
+            // 3. Combine headers and rows
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+
+            // 4. Create Blob and trigger download
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `DanhSachNhom_${group.name}_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            success("Đã xuất danh sách thành viên thành công!");
+        } catch (err) {
+            error("Lỗi khi xuất file");
+        }
+    };
+
     const githubApproved = group.githubStatus === "APPROVED";
     const jiraApproved = group.jiraStatus === "APPROVED";
-    const leader = students.find((s) => s.id === group.teamLeaderId);
     const fullyApproved = githubApproved && jiraApproved;
 
     return (
@@ -184,14 +238,14 @@ export default function GroupDetail() {
                                 </span>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-4 space-y-3">
+                        <CardContent className="pt-4 space-y-3 p-4">
                             {students.map((student) => (
-                                <div key={student.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                                    <div className="w-9 h-9 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                                <div key={student.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                                    <div className="w-10 h-10 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
                                         {student.name?.charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
+                                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                             <p className="text-sm font-semibold text-gray-800 truncate">{student.name}</p>
                                             {student.id === group.teamLeaderId && (
                                                 <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -200,6 +254,20 @@ export default function GroupDetail() {
                                             )}
                                         </div>
                                         <p className="text-xs text-gray-400">{student.studentId}</p>
+                                    </div>
+                                    <div className="shrink-0 flex items-center gap-2">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm</label>
+                                        <input
+                                            type="number"
+                                            min="0" max="100"
+                                            placeholder="--"
+                                            defaultValue={student.contributionScore}
+                                            onBlur={(e) => {
+                                                if (e.target.value !== "" && e.target.value !== String(student.contributionScore))
+                                                    handleUpdateScore(student.id, e.target.value);
+                                            }}
+                                            className="w-14 px-2 py-1.5 text-sm text-center font-bold text-teal-700 bg-teal-50/50 border border-teal-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                        />
                                     </div>
                                 </div>
                             ))}

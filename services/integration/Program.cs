@@ -322,6 +322,60 @@ using Microsoft.OpenApi.Models;
                         
                         logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
                     }
+
+                    // 3. Create Sample Lecturer Account if not exist
+                    string lecturerEmail = "lecturer@truonghoc.com";
+                    if (!await context.users.AnyAsync(u => u.email == lecturerEmail))
+                    {
+                        var lecturerRole = await context.roles.FirstAsync(r => r.role_name == "LECTURER");
+                        var lecturerUser = new user
+                        {
+                            email = lecturerEmail,
+                            password = passwordHasher.HashPassword("Admin@123"),
+                            full_name = "Sample Lecturer",
+                            enabled = true,
+                            created_at = DateTime.UtcNow,
+                            updated_at = DateTime.UtcNow,
+                            lecturer = new lecturer
+                            {
+                                lecturer_code = "LEC001",
+                                created_at = DateTime.UtcNow,
+                                updated_at = DateTime.UtcNow
+                            }
+                        };
+                        lecturerUser.roles.Add(lecturerRole);
+                        context.users.Add(lecturerUser);
+                        await context.SaveChangesAsync();
+                        
+                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Lecturer Account -> Email: {Email} | Pass: Admin@123", lecturerEmail);
+                    }
+
+                    // 4. Create Sample Student Account if not exist
+                    string studentEmail = "student@truonghoc.com";
+                    if (!await context.users.AnyAsync(u => u.email == studentEmail))
+                    {
+                        var studentRole = await context.roles.FirstAsync(r => r.role_name == "STUDENT");
+                        var studentUser = new user
+                        {
+                            email = studentEmail,
+                            password = passwordHasher.HashPassword("Admin@123"),
+                            full_name = "Sample Student",
+                            enabled = true,
+                            created_at = DateTime.UtcNow,
+                            updated_at = DateTime.UtcNow,
+                            student = new student
+                            {
+                                student_code = "STU001",
+                                created_at = DateTime.UtcNow,
+                                updated_at = DateTime.UtcNow
+                            }
+                        };
+                        studentUser.roles.Add(studentRole);
+                        context.users.Add(studentUser);
+                        await context.SaveChangesAsync();
+                        
+                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Student Account -> Email: {Email} | Pass: Admin@123", studentEmail);
+                    }
                 }
                 catch (Exception ex)
                 {

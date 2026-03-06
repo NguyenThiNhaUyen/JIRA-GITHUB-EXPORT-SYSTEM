@@ -18,7 +18,7 @@ import { Modal } from "../../components/ui/interactive.jsx";
 import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, AlertCircle, PlayCircle, CheckCircle } from "lucide-react";
+import { BookOpen, AlertCircle, PlayCircle, CheckCircle, Upload } from "lucide-react";
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -29,6 +29,13 @@ export default function CourseManagement() {
   const [lecturers, setLecturers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showViewStudentsModal, setShowViewStudentsModal] = useState(false);
+  const [viewStudentsCourse, setViewStudentsCourse] = useState(null);
+  const [viewStudentsList, setViewStudentsList] = useState([]);
+  const [importCourse, setImportCourse] = useState(null);
+  const [importAvailableStudents, setImportAvailableStudents] = useState([]);
+  const [importSelectedIds, setImportSelectedIds] = useState([]);
   const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -56,6 +63,44 @@ export default function CourseManagement() {
     setLecturers(db.findMany("users.lecturers"));
   };
 
+  const handleExport = () => {
+    try {
+      // 1. Prepare CSV headers
+      const headers = ["Mã Lớp", "Môn Học", "Học Kỳ", "Sinh Viên", "Tối Đa", "Giảng Viên"];
+
+      // 2. Prepare CSV rows from courses data
+      const rows = courses.map(course => {
+        const subjectCode = getSubjectCode(course.subjectId);
+        const semesterName = getSemesterName(course.semesterId);
+        const lecturerName = getCourseLecturer(course.id) || "Chưa có GV";
+        return [
+          course.code,
+          subjectCode,
+          semesterName,
+          course.currentStudents || 0,
+          course.maxStudents || 0,
+          lecturerName
+        ].map(val => `"${val}"`).join(","); // wrap in quotes to handle commas in data
+      });
+
+      // 3. Combine headers and rows
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n"); // \uFEFF for UTF-8 BOM
+
+      // 4. Create a Blob and trigger download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `DanhSachLopHoc_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      success("Đã xuất danh sách lớp học thành công!");
+    } catch (err) {
+      error("Lỗi khi xuất file Excel/CSV");
+    }
+  };
   const handleCreate = () => {
     setEditingCourse(null);
     setFormData({
@@ -154,12 +199,91 @@ export default function CourseManagement() {
     return subject?.code || "N/A";
   };
 
-  const getCourseLecturer = (courseId) => {
-    const assignment = db.findMany("courseLecturers", { courseId })[0];
-    if (!assignment) return null;
+  const getCourseLecturerAssignment = (courseId) => {
+    return db.findMany("courseLecturers", { courseId })[0] || null;
+  };
 
+  const getCourseLecturer = (courseId) => {
+    const assignment = getCourseLecturerAssignment(courseId);
+    if (!assignment) return null;
     const lecturer = lecturers.find((l) => l.id === assignment.lecturerId);
     return lecturer?.name || "N/A";
+  };
+
+  const handleRemoveLecturer = (course) => {
+    const assignment = getCourseLecturerAssignment(course.id);
+    if (!assignment) return;
+    if (!confirm(`Xóa giảng viên khỏi lớp ${course.code}?`)) return;
+    db.delete("courseLecturers", assignment.id);
+    success(`Đã xóa GV khỏi lớp ${course.code}`);
+    loadData();
+  };
+
+  const handleOpenViewStudents = (course) => {
+    const enrollments = db.findMany("courseEnrollments", { courseId: course.id });
+    const students = enrollments
+      .map(e => db.findById("users.students", e.studentId))
+      .filter(Boolean)
+      .map((s, i) => ({ ...s, enrollmentId: enrollments[i]?.id }));
+    setViewStudentsCourse(course);
+    setViewStudentsList(students);
+    setShowViewStudentsModal(true);
+  };
+
+  const handleKickStudent = (enrollmentId, studentName) => {
+    if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
+    // remove enrollment
+    const enrollments = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id });
+    const target = enrollments.find(e => {
+      const s = db.findById("users.students", e.studentId);
+      return s?.name === studentName;
+    });
+    if (target) db.delete("courseEnrollments", target.id);
+    // update count
+    const remaining = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id }).length;
+    db.update("courses", viewStudentsCourse.id, { currentStudents: remaining });
+    success(`Đã đuổi ${studentName} khỏi lớp`);
+    // refresh modal list
+    handleOpenViewStudents(viewStudentsCourse);
+    loadData();
+  };
+
+  // Import SV helpers
+  const handleOpenImport = (course) => {
+    const enrolledIds = db.findMany("courseEnrollments", { courseId: course.id }).map(e => e.studentId);
+    const allStudents = db.findMany("users.students");
+    const available = allStudents.filter(s => !enrolledIds.includes(s.id));
+    setImportCourse(course);
+    setImportAvailableStudents(available);
+    setImportSelectedIds([]);
+    setShowImportModal(true);
+  };
+
+  const toggleImportStudent = (id) => {
+    setImportSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleImportSubmit = () => {
+    if (importSelectedIds.length === 0) {
+      error("Vui lòng chọn ít nhất 1 sinh viên!");
+      return;
+    }
+    importSelectedIds.forEach(studentId => {
+      db.create("courseEnrollments", {
+        courseId: importCourse.id,
+        studentId,
+        enrolledAt: new Date().toISOString(),
+        status: "ACTIVE",
+      });
+    });
+    // Update currentStudents count on the course record
+    const enrolled = db.findMany("courseEnrollments", { courseId: importCourse.id }).length;
+    db.update("courses", importCourse.id, { currentStudents: enrolled });
+    success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`);
+    setShowImportModal(false);
+    loadData();
   };
 
   return (
@@ -297,13 +421,40 @@ export default function CourseManagement() {
                           </span>
                         </TableCell>
                         <TableCell className="py-4 px-6 text-center">
-                          <div className="flex items-center justify-center gap-2 transition-opacity min-w-[120px]">
+                          <div className="flex items-center justify-center gap-2 transition-opacity min-w-[160px] flex-wrap">
+                            {lecturerName ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-100 px-2 py-1 rounded-lg">{lecturerName}</span>
+                                <button
+                                  onClick={() => handleRemoveLecturer(course)}
+                                  title="Xóa GV khỏi lớp"
+                                  className="text-red-400 hover:text-red-600 transition-colors font-bold text-sm px-1"
+                                >×</button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAssignLecturer(course)}
+                                className="h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs"
+                              >
+                                + GV
+                              </Button>
+                            )}
                             <Button
                               size="sm"
-                              onClick={() => !lecturerName && handleAssignLecturer(course)}
-                              className={`h-8 px-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/50 shadow-none text-xs ${lecturerName ? 'invisible pointer-events-none' : ''}`}
+                              onClick={() => handleOpenImport(course)}
+                              className="h-8 px-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/50 shadow-none text-xs flex items-center gap-1"
+                              title="Import sinh viên vào lớp"
                             >
-                              + GV
+                              <Upload size={11} /> Import SV
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenViewStudents(course)}
+                              className="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/50 shadow-none text-xs"
+                              title="Xem danh sách sinh viên trong lớp"
+                            >
+                              Xem SV
                             </Button>
                             <Button
                               size="sm"
@@ -549,6 +700,139 @@ export default function CourseManagement() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Import Students Modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Import Sinh viên vào lớp"
+        size="lg"
+      >
+        {importCourse && (
+          <div className="space-y-4">
+            {/* Course info */}
+            <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/60">
+              <p className="text-sm text-gray-600">
+                Lớp học: <span className="font-bold text-gray-900">{importCourse.code} — {importCourse.name}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {getSubjectCode(importCourse.subjectId)} · {getSemesterName(importCourse.semesterId)}
+              </p>
+            </div>
+
+            {/* Excel upload placeholder */}
+            <div className="border-2 border-dashed border-purple-200 rounded-xl p-4 flex flex-col items-center gap-2 bg-purple-50/30 cursor-pointer hover:bg-purple-50 transition-colors">
+              <Upload size={24} className="text-purple-400" />
+              <p className="text-sm font-medium text-purple-700">Kéo & thả file Excel hoặc nhấn để chọn</p>
+              <p className="text-xs text-gray-400">.xlsx, .xls (tính năng parse sẽ kết nối BE)</p>
+            </div>
+
+            {/* Student checkbox list */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Chọn sinh viên chưa có trong lớp ({importAvailableStudents.length} SV)
+                </label>
+                {importSelectedIds.length > 0 && (
+                  <span className="text-xs font-semibold text-white bg-purple-600 rounded-full px-2 py-0.5">
+                    Đã chọn: {importSelectedIds.length}
+                  </span>
+                )}
+              </div>
+              {importAvailableStudents.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">Tất cả sinh viên đã có trong lớp này.</p>
+              ) : (
+                <div className="max-h-[280px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
+                  {importAvailableStudents.map((stu) => (
+                    <label
+                      key={stu.id}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-purple-50/40 transition-colors ${importSelectedIds.includes(stu.id) ? 'bg-purple-50' : ''
+                        }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={importSelectedIds.includes(stu.id)}
+                        onChange={() => toggleImportStudent(stu.id)}
+                        className="accent-purple-600 w-4 h-4"
+                      />
+                      <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                        {stu.name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
+                        <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowImportModal(false)}
+                className="rounded-xl border-gray-200"
+              >
+                Hủy
+              </Button>
+              <Button
+                onClick={handleImportSubmit}
+                disabled={importSelectedIds.length === 0}
+                className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm disabled:opacity-50"
+              >
+                Thêm {importSelectedIds.length > 0 ? `${importSelectedIds.length} SV` : ''} vào lớp
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* View / Kick Students Modal */}
+      <Modal
+        isOpen={showViewStudentsModal}
+        onClose={() => setShowViewStudentsModal(false)}
+        title="Danh sách Sinh viên trong lớp"
+        size="lg"
+      >
+        {viewStudentsCourse && (
+          <div className="space-y-4">
+            <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100/60">
+              <p className="text-sm text-gray-600">
+                Lớp: <span className="font-bold text-gray-900">{viewStudentsCourse.code} — {viewStudentsCourse.name}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">{viewStudentsList.length} sinh viên đang enrolled</p>
+            </div>
+            {viewStudentsList.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">Chưa có sinh viên nào trong lớp.</p>
+            ) : (
+              <div className="max-h-[360px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
+                {viewStudentsList.map((stu) => (
+                  <div key={stu.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50/30 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      {stu.name?.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
+                      <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
+                    </div>
+                    <button
+                      onClick={() => handleKickStudent(stu.enrollmentId, stu.name)}
+                      className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                    >
+                      Đuổi
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-end pt-2">
+              <Button variant="outline" onClick={() => setShowViewStudentsModal(false)} className="rounded-xl border-gray-200">Đóng</Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -360,6 +360,46 @@ class MockDB {
         { id: 'srs2', projectId: 'proj1', version: '1.1', status: 'DRAFT', submittedByStudentId: 'stu001', submittedAt: '2026-01-25T15:30:00Z', fileName: 'SRS_Ecommerce_v1.1_draft.pdf' },
         { id: 's3', projectId: 'proj2', version: '1.0', status: 'REVIEW', submittedByStudentId: 'stu002', submittedAt: '2026-01-24T09:15:00Z', fileName: 'SRS_TaskManagement_v1.0.pdf' },
       ],
+
+      // Team Invitations: Lời mời tham gia nhóm
+      teamInvitations: [
+        {
+          id: 'inv001',
+          groupId: 'grp-se1821-2',
+          groupName: 'Nhóm 2 — Task Management System',
+          courseId: 'course-se1821',
+          courseName: 'SWD302 - se1821',
+          invitedStudentId: 'stu001',
+          invitedByStudentId: 'stu003',
+          invitedByName: 'Hoàng Văn E',
+          status: 'PENDING',
+          createdAt: '2026-03-04T08:00:00Z',
+        },
+        {
+          id: 'inv002',
+          groupId: 'grp-se1822-1',
+          groupName: 'Nhóm 1 — Healthcare Management System',
+          courseId: 'course-se1822',
+          courseName: 'SWD302 - se1822',
+          invitedStudentId: 'stu001',
+          invitedByStudentId: 'stu009',
+          invitedByName: 'Lý Văn Minh',
+          status: 'PENDING',
+          createdAt: '2026-03-04T10:30:00Z',
+        },
+        {
+          id: 'inv003',
+          groupId: 'grp-se1821-3',
+          groupName: 'Nhóm 3 — Social Media Platform',
+          courseId: 'course-se1821',
+          courseName: 'SWD302 - se1821',
+          invitedStudentId: 'stu002',
+          invitedByStudentId: 'stu005',
+          invitedByName: 'Trần Văn Tùng',
+          status: 'PENDING',
+          createdAt: '2026-03-05T09:00:00Z',
+        },
+      ],
     };
 
     this.save();
@@ -568,6 +608,26 @@ class MockDB {
     }
 
     return this.update('groups', groupId, updates);
+  }
+
+  // Invitation helpers
+  getPendingInvitationsForStudent(studentId) {
+    return this.findMany('teamInvitations', { invitedStudentId: studentId, status: 'PENDING' });
+  }
+
+  acceptInvitation(invitationId, studentId) {
+    const inv = this.findById('teamInvitations', invitationId);
+    if (!inv) return null;
+    // Add student to group
+    const group = this.findById('groups', inv.groupId);
+    if (group && !group.studentIds.includes(studentId)) {
+      this.update('groups', inv.groupId, { studentIds: [...group.studentIds, studentId], updatedAt: new Date().toISOString() });
+    }
+    return this.update('teamInvitations', invitationId, { status: 'ACCEPTED' });
+  }
+
+  declineInvitation(invitationId) {
+    return this.update('teamInvitations', invitationId, { status: 'DECLINED' });
   }
 }
 
