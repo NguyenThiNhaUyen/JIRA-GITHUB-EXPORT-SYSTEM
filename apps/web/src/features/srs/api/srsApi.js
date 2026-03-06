@@ -1,30 +1,82 @@
-import db from "../../../mock/db.js";
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
 
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
-
+/**
+ * Lấy danh sách SRS Reports của một project
+ * GET /api/projects/:projectId/srs
+ *
+ * BE trả về PagedResponse<SrsDocumentResponse>:
+ * { id, projectId, versionNo, status, fileUrl, submittedByUserId, submittedByName, submittedAt, feedback, reviewedAt }
+ */
 export async function getProjectSrs(projectId) {
-    await delay();
-    return db.findMany('srsReports', { projectId }).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    const res = await client.get(`/projects/${projectId}/srs`);
+    const paged = unwrap(res);
+    // Trả về mảng items, map về shape mà UI đang dùng
+    return (paged?.items ?? paged ?? []).map(mapSrs);
 }
 
-export async function submitSrsReport(projectId, studentId, version, fileObj) {
-    await delay();
+/**
+ * Nộp SRS Report mới — gửi multipart/form-data vì BE dùng IFormFile
+ * POST /api/projects/:projectId/srs
+ * Body: FormData { File: <File object> }
+ */
+export async function submitSrsReport(projectId, { file }) {
+    const formData = new FormData();
+    formData.append("File", file);
 
-    // Fake upload file function - Trong thực tế sẽ call FormData tới server 
-    return db.create('srsReports', {
-        projectId,
-        version,
-        status: 'DRAFT', // Default state is draft
-        submittedByStudentId: studentId,
-        submittedAt: new Date().toISOString(),
-        fileName: fileObj ? fileObj.name : `SRS_v${version}.pdf`,
+    const res = await client.post(`/projects/${projectId}/srs`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
     });
+    return mapSrs(unwrap(res));
 }
 
-export async function updateSrsStatus(reportId, newStatus) {
-    await delay();
-    if (!['DRAFT', 'REVIEW', 'FINAL', 'REJECTED'].includes(newStatus)) {
-        throw new Error("Invalid status type");
-    }
-    return db.update('srsReports', reportId, { status: newStatus });
+/**
+ * Cập nhật status SRS (Giảng viên duyệt/từ chối + ghi feedback)
+ * PATCH /api/srs/:id/status
+ * Body: { status: "FINAL"|"DRAFT", feedback? }
+ */
+export async function updateSrsStatus(reportId, newStatus, feedback) {
+    const res = await client.patch(`/srs/${reportId}/status`, {
+        status: newStatus,
+        ...(feedback ? { feedback } : {}),
+    });
+    return mapSrs(unwrap(res));
+}
+
+/**
+ * Gửi feedback cho SRS (Giảng viên)
+ * PATCH /api/srs/:id/feedback
+ * Body: { feedback }
+ */
+export async function provideSrsFeedback(reportId, feedback) {
+    const res = await client.patch(`/srs/${reportId}/feedback`, { feedback });
+    return mapSrs(unwrap(res));
+}
+
+/**
+ * Xóa SRS Report
+ * DELETE /api/srs/:id
+ */
+export async function deleteSrsReport(reportId) {
+    const res = await client.delete(`/srs/${reportId}`);
+    return unwrap(res);
+}
+
+/* ─── mapper: BE → FE shape ─── */
+function mapSrs(s) {
+    if (!s) return s;
+    return {
+        id: s.id,
+        projectId: s.projectId,
+        // BE trả về versionNo (integer), FE dùng version (string)
+        version: String(s.versionNo ?? s.version ?? ""),
+        status: s.status,
+        fileUrl: s.fileUrl,
+        submittedAt: s.submittedAt,
+        submittedByUserId: s.submittedByUserId,
+        submittedByName: s.submittedByName,
+        feedback: s.feedback,
+        reviewedAt: s.reviewedAt,
+        reviewerName: s.reviewerName,
+    };
 }

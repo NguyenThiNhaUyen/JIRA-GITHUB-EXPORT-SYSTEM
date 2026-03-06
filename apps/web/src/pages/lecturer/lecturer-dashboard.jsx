@@ -1,35 +1,26 @@
-// Lecturer Dashboard — Enterprise SaaS (logic unchanged, UI overhauled)
-import { useEffect, useState } from "react";
+// Lecturer Dashboard — Enterprise SaaS (Real API)
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
 import { GroupRadarChart } from "../../components/charts/radar-chart.jsx";
 import {
   LayoutList, GitBranch, BookOpen, AlertTriangle,
   Users, Eye, Bell, Settings2, Filter, ChevronRight,
-  TrendingUp, Clock, CheckCircle, Activity, Radar
+  TrendingUp, Clock, CheckCircle, Activity, FileText
 } from "lucide-react";
 
-/* ─── Derived mock alerts from groups ─────────────── */
-function buildAlerts(groups) {
-  return groups
-    .filter(g => g.githubStatus !== "APPROVED" || g.jiraStatus !== "APPROVED")
-    .slice(0, 5)
-    .map(g => ({
-      id: g.id,
-      name: g.name,
-      msg: [
-        g.githubStatus !== "APPROVED" && "GitHub chưa được duyệt",
-        g.jiraStatus !== "APPROVED" && "Jira chưa được duyệt",
-      ].filter(Boolean).join(" · "),
-      severity: "warning",
-    }));
-}
+// Feature Hooks
+import { useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import { useGetCourses, useGetCourseById } from "../../features/courses/hooks/useCourses.js";
+import { useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
+import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 
-/* ─── Derived mock recent activity ────────────────── */
+// Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
+
+
+/* ─── Derived mock recent activity (keep for UI) ────────────────── */
 const MOCK_ACTIVITY = [
   { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
   { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
@@ -37,57 +28,26 @@ const MOCK_ACTIVITY = [
   { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm D: GitHub đã được phê duyệt", time: "Hôm qua" },
 ];
 
-import { FileText } from "lucide-react";
-
 export default function LecturerDashboard() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { success, error } = useToast();
 
-  const [loading, setLoading] = useState(false);
-  const [subjects, setSubjects] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [groups, setGroups] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => { loadSubjects(); }, []);
-  useEffect(() => {
-    if (selectedSubject) loadCoursesForSubject(selectedSubject);
-    else { setCourses([]); setSelectedCourse(""); }
-  }, [selectedSubject]);
-  useEffect(() => {
-    if (selectedCourse) loadGroupsForCourse(selectedCourse);
-    else setGroups([]);
-  }, [selectedCourse, filter]);
+  const { data: subjectsData = { items: [] } } = useGetSubjects();
+  const { data: coursesData = { items: [] } } = useGetCourses();
+  const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
+  const { data: alertsData } = useGetAlerts({ pageSize: 5 });
 
-  const loadSubjects = () => {
-    try { setSubjects(db.findMany("subjects")); }
-    catch { error("Không thể tải môn học"); }
-  };
+  const approveIntMutation = useApproveIntegration();
+  const rejectIntMutation = useRejectIntegration();
+  const resolveAlertMutation = useResolveAlert();
 
-  const loadCoursesForSubject = (subjectId) => {
-    try {
-      setLoading(true);
-      const all = db.findMany("courses", { subjectId });
-      const mine = all.filter(c => db.findMany("courseLecturers", { courseId: c.id, lecturerId: user?.id }).length > 0);
-      setCourses(mine);
-      if (mine.length > 0 && !selectedCourse) setSelectedCourse(mine[0].id);
-    } catch { error("Không thể tải lớp học"); }
-    finally { setLoading(false); }
-  };
-
-  const loadGroupsForCourse = (courseId) => {
-    try {
-      setLoading(true);
-      let g = db.getCourseGroups(courseId);
-      if (filter === "inactive-students") g = g.filter(x => x.githubStatus === "PENDING");
-      else if (filter === "inactive-groups") g = g.filter(x => x.githubStatus !== "APPROVED" || x.jiraStatus !== "APPROVED");
-      setGroups(g);
-    } catch { error("Không thể tải nhóm"); }
-    finally { setLoading(false); }
-  };
+  const subjects = subjectsData.items || [];
+  const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
+  const groups = course?.groups || [];
 
   const handleManageGroups = () => {
     if (!selectedCourse) { error("Vui lòng chọn lớp học"); return; }
@@ -96,63 +56,68 @@ export default function LecturerDashboard() {
 
   const handleSendWarning = (group) => success(`Đã gửi cảnh báo đến nhóm "${group.name}"`);
 
-  const handleApprovePending = (groupId, type) => {
+  const handleApprovePending = async (groupId, type) => {
     try {
-      db.approveGroupLink(groupId, type, user.id);
-      success(`Đã duyệt link ${type}`);
-      loadGroupsForCourse(selectedCourse);
-    } catch {
-      error(`Lỗi khi duyệt link ${type}`);
+      await approveIntMutation.mutateAsync(groupId);
+      success(`Đã duyệt tích hợp cho nhóm`);
+    } catch (err) {
+      error(err.message || `Lỗi khi duyệt tích hợp`);
     }
   };
 
-  const handleRejectPending = (groupId, type) => {
+  const handleRejectPending = async (groupId, type) => {
+    const reason = prompt("Nhập lý do từ chối học kỳ/tích hợp:");
+    if (reason === null) return;
     try {
-      db.rejectGroupLink(groupId, type, user.id);
-      success(`Đã từ chối link ${type}`);
-      loadGroupsForCourse(selectedCourse);
-    } catch {
-      error(`Lỗi khi từ chối link ${type}`);
+      await rejectIntMutation.mutateAsync({ projectId: groupId, reason });
+      success(`Đã từ chối tích hợp`);
+    } catch (err) {
+      error(err.message || `Lỗi khi từ chối tích hợp`);
+    }
+  };
+
+  const handleResolveAlert = async (alertId) => {
+    try {
+      await resolveAlertMutation.mutateAsync(alertId);
+      success("Đã đánh dấu cảnh báo là đã xử lý");
+    } catch (err) {
+      error(err.message || "Không thể xử lý cảnh báo");
     }
   };
 
   // Derived stats
-  const allCourseGroups = selectedCourse ? db.getCourseGroups(selectedCourse) : [];
   const stats = {
-    total: allCourseGroups.length,
-    github: allCourseGroups.filter(g => g.githubStatus === "APPROVED").length,
-    jira: allCourseGroups.filter(g => g.jiraStatus === "APPROVED").length,
-    alerts: allCourseGroups.filter(g => g.githubStatus !== "APPROVED" || g.jiraStatus !== "APPROVED").length,
+    total: groups.length,
+    github: groups.filter(g => g.integration?.githubStatus === "APPROVED").length,
+    jira: groups.filter(g => g.integration?.jiraStatus === "APPROVED").length,
+    alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
   };
-  const alerts = buildAlerts(allCourseGroups);
-  const currentSubject = subjects.find(s => s.id === selectedSubject);
-  const currentCourse = courses.find(c => c.id === selectedCourse);
+  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
+    id: a.id,
+    name: a.groupName,
+    msg: a.message,
+    severity: a.severity.toLowerCase() === "high" ? "error" : "warning"
+  }));
+  const currentSubject = subjects.find(s => s.id === parseInt(selectedSubject));
+  const currentCourse = courses.find(c => c.id === parseInt(selectedCourse));
 
-  const pendingIntegrations = allCourseGroups.filter(
-    g => g.githubStatus === "PENDING" || g.jiraStatus === "PENDING"
+  const pendingIntegrations = groups.filter(
+    g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
   // Build RadarChart data from groups
-  const radarData = allCourseGroups.map(group => {
-    const commits = db.getProjectCommits ? [] : [];
-    const groupStudents = db.getGroupStudents(group.id);
-    // Count SRS: check via projects linked to course
-    const courseProjects = db.findMany('projects', { courseId: selectedCourse });
-    const srsCount = courseProjects.reduce((acc, proj) => {
-      return acc + db.findMany('srsReports', { projectId: proj.id }).length;
-    }, 0);
+  const radarData = groups.map(group => {
+    const teamSize = group.team?.length || 0;
     return {
       groupName: group.name,
-      commits: db.data?.commits?.filter(c => {
-        const proj = courseProjects.find(p => p.id === c.projectId);
-        return proj && group.studentIds.includes(c.authorStudentId);
-      }).length || Math.floor(Math.random() * 20) + 1,
-      srsDone: db.findMany('srsReports').filter(s => courseProjects.some(p => p.id === s.projectId)).length || Math.floor(Math.random() * 3),
-      teamSize: groupStudents.length,
-      githubLinked: group.githubStatus === 'APPROVED' ? 1 : 0,
-      jiraLinked: group.jiraStatus === 'APPROVED' ? 1 : 0,
+      commits: Math.floor(Math.random() * 20) + 1, // Mock commits for now
+      srsDone: Math.floor(Math.random() * 3), // Mock SRS for now
+      teamSize,
+      githubLinked: group.integration?.githubStatus === 'APPROVED' ? 1 : 0,
+      jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 1 : 0,
     };
   });
+
 
   return (
     <div className="space-y-7">
@@ -223,24 +188,33 @@ export default function LecturerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {alerts.length === 0 ? (
+            {alertsList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
                 <CheckCircle size={28} className="text-green-400" />
                 <p className="text-sm text-gray-400">Không có cảnh báo nào</p>
               </div>
-            ) : alerts.map(a => (
-              <div key={a.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+            ) : alertsList.map(a => (
+              <div key={a.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0 group">
                 <div className="w-1.5 h-1.5 mt-2 rounded-full bg-orange-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800 truncate">{a.name}</p>
                   <p className="text-xs text-orange-600 mt-0.5">{a.msg}</p>
                 </div>
-                <button
-                  onClick={() => handleSendWarning({ name: a.name })}
-                  className="shrink-0 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-100 px-2.5 py-1 rounded-lg transition-colors"
-                >
-                  <Bell size={11} className="inline mr-1" />Nhắc
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleResolveAlert(a.id)}
+                    className="shrink-0 text-gray-400 hover:text-green-600 transition-colors p-1"
+                    title="Đánh dấu đã xử lý"
+                  >
+                    <CheckCircle size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleSendWarning({ name: a.name })}
+                    className="shrink-0 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-100 px-2.5 py-1 rounded-lg transition-colors"
+                  >
+                    <Bell size={11} className="inline mr-1" />Nhắc
+                  </button>
+                </div>
               </div>
             ))}
             <div className="px-5 py-3 border-t border-gray-50">
@@ -279,8 +253,6 @@ export default function LecturerDashboard() {
         </Card>
       </div>
 
-
-
       {/* ── D. Group Overview ────────────────── */}
       {selectedCourse && (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
@@ -300,25 +272,24 @@ export default function LecturerDashboard() {
             <div className="col-span-4">Nhóm / Đề tài</div>
             <div className="col-span-3 hidden md:block text-center">Thành viên</div>
             <div className="col-span-3 hidden md:block text-center">Trạng thái</div>
-            <div className="col-span-5 md:col-span-2 text-right">Thao tác</div>
+            <div className="col-span-12 md:col-span-2 text-right">Thao tác</div>
           </div>
 
           <CardContent className="p-0">
-            {loading ? (
+            {loadingCourse ? (
               <LoadingRows />
             ) : groups.length === 0 ? (
               <EmptyGroups onAction={handleManageGroups} />
             ) : (
               <div className="divide-y divide-gray-50">
                 {groups.map(group => {
-                  const students = db.getGroupStudents(group.id);
-                  const githubOk = group.githubStatus === "APPROVED";
-                  const jiraOk = group.jiraStatus === "APPROVED";
+                  const githubOk = group.integration?.githubStatus === "APPROVED";
+                  const jiraOk = group.integration?.jiraStatus === "APPROVED";
                   return (
                     <GroupRow
                       key={group.id}
                       group={group}
-                      students={students}
+                      students={group.team || []}
                       githubOk={githubOk}
                       jiraOk={jiraOk}
                       onDetail={() => navigate(`/lecturer/group/${group.id}`)}
@@ -332,7 +303,7 @@ export default function LecturerDashboard() {
         </Card>
       )}
 
-      {/* ── Duyệt Tích hợp của Lớp (Pending Integrations) ──────── */}
+      {/* Duyệt Tích hợp của Lớp (Pending Integrations) ──────── */}
       {selectedCourse && pendingIntegrations.length > 0 && (
         <Card className="border border-amber-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="border-b border-amber-50 pb-4 bg-amber-50/30">
@@ -361,12 +332,12 @@ export default function LecturerDashboard() {
                   </div>
 
                   {/* GitHub Pending */}
-                  {group.githubStatus === "PENDING" && (
+                  {group.integration?.githubStatus === "PENDING" && (
                     <div className="flex items-center justify-between bg-gray-50/80 p-3 rounded-xl border border-gray-100 mb-2">
                       <div className="flex items-center gap-2 overflow-hidden mr-4">
                         <GitBranch size={14} className="text-gray-600 shrink-0" />
-                        <a href={group.githubRepoUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
-                          {group.githubRepoUrl}
+                        <a href={group.integration?.githubUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
+                          {group.integration?.githubUrl}
                         </a>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -377,12 +348,12 @@ export default function LecturerDashboard() {
                   )}
 
                   {/* Jira Pending */}
-                  {group.jiraStatus === "PENDING" && (
+                  {group.integration?.jiraStatus === "PENDING" && (
                     <div className="flex items-center justify-between bg-gray-50/80 p-3 rounded-xl border border-gray-100">
                       <div className="flex items-center gap-2 overflow-hidden mr-4">
                         <BookOpen size={14} className="text-gray-600 shrink-0" />
-                        <a href={group.jiraProjectUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
-                          {group.jiraProjectUrl}
+                        <a href={group.integration?.jiraUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate">
+                          {group.integration?.jiraUrl}
                         </a>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -397,6 +368,7 @@ export default function LecturerDashboard() {
           </CardContent>
         </Card>
       )}
+
 
       {/* ── E. RadarChart — So sánh Nhóm ──────── */}
       {selectedCourse && radarData.length > 0 && (

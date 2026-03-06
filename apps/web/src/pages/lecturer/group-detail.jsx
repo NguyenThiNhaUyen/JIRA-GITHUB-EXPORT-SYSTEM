@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
-    useGetGroupById,
-    useApproveLink,
-    useRejectLink,
-    useUpdateStudentScore
-} from "../../features/groups/hooks/useGroups.js";
+    useGetProjectById,
+    useApproveIntegration,
+    useRejectIntegration,
+    useUpdateTeamMember
+} from "../../features/projects/hooks/useProjects.js";
 
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
@@ -24,13 +24,14 @@ export default function GroupDetail() {
     const { user } = useAuth();
     const { success, error } = useToast();
 
-    // 1. Phép thuật fetch dữ liệu "1 dòng" từ React Query
-    const { data: groupData, isLoading, isError } = useGetGroupById(groupId);
+    // 1. Dữ liệu thực từ useGetProjectById (Project thực chất là Group)
+    const { data: group, isLoading, isError } = useGetProjectById(groupId);
+    const students = group?.team || [];
 
     // 2. Khai báo các Mutation thay đổi trạng thái
-    const approveMutation = useApproveLink();
-    const rejectMutation = useRejectLink();
-    const updateScoreMutation = useUpdateStudentScore();
+    const approveMutation = useApproveIntegration();
+    const rejectMutation = useRejectIntegration();
+    const updateMemberMutation = useUpdateTeamMember();
 
     // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
     if (isLoading) {
@@ -44,7 +45,7 @@ export default function GroupDetail() {
         );
     }
 
-    if (isError || !groupData) {
+    if (isError || !group) {
         return (
             <div className="flex h-full items-center justify-center flex-col gap-4">
                 <p className="text-red-500 font-semibold">Cảnh báo: Không thể tải dữ liệu nhóm</p>
@@ -52,25 +53,22 @@ export default function GroupDetail() {
             </div>
         );
     }
-
-    // Tách dữ liệu ra để render UI
-    const { students = [], course, ...group } = groupData;
+    const course = group.course;
 
     // Functions thao tác gọi thẳng mutation
-    const handleApproveLink = (linkType) => {
-        approveMutation.mutate(
-            { groupId, linkType, lecturerId: user.id },
-            {
-                onSuccess: () => success(`Đã duyệt ${linkType === "github" ? "GitHub" : "Jira"} link`)
-            }
-        );
+    const handleApproveLink = () => {
+        approveMutation.mutate(groupId, {
+            onSuccess: () => success(`Đã duyệt tích hợp cho nhóm`)
+        });
     };
 
-    const handleRejectLink = (linkType) => {
+    const handleRejectLink = () => {
+        const reason = prompt("Nhập lý do từ chối:");
+        if (reason === null) return;
         rejectMutation.mutate(
-            { groupId, linkType, lecturerId: user.id },
+            { projectId: groupId, reason },
             {
-                onSuccess: () => success(`Đã từ chối ${linkType === "github" ? "GitHub" : "Jira"} link`)
+                onSuccess: () => success(`Đã từ chối tích hợp cho nhóm`)
             }
         );
     };
@@ -82,8 +80,8 @@ export default function GroupDetail() {
             return;
         }
 
-        updateScoreMutation.mutate(
-            { groupId, studentId, score: numScore },
+        updateMemberMutation.mutate(
+            { projectId: groupId, studentId, updates: { contributionScore: numScore } },
             {
                 onSuccess: () => success(`Đã lưu điểm ${numScore} cho sinh viên`)
             }
@@ -93,18 +91,15 @@ export default function GroupDetail() {
     const handleExport = () => {
         try {
             // 1. Prepare CSV headers
-            const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp", "Email", "Số Điện Thoại"];
+            const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp"];
 
             // 2. Prepare CSV rows from students data
             const rows = students.map(student => {
-                const role = student.id === group.teamLeaderId ? "Leader" : "Member";
                 return [
-                    student.studentId,
-                    student.name,
-                    role,
-                    student.contributionScore || 0,
-                    student.email,
-                    student.phone || "N/A"
+                    student.studentCode,
+                    student.studentName,
+                    student.role,
+                    student.contributionScore || 0
                 ].map(val => `"${val}"`).join(",");
             });
 
@@ -127,9 +122,10 @@ export default function GroupDetail() {
         }
     };
 
-    const githubApproved = group.githubStatus === "APPROVED";
-    const jiraApproved = group.jiraStatus === "APPROVED";
+    const githubApproved = group.integration?.githubStatus === "APPROVED";
+    const jiraApproved = group.integration?.jiraStatus === "APPROVED";
     const fullyApproved = githubApproved && jiraApproved;
+
 
     return (
         <div className="space-y-6">
@@ -199,7 +195,7 @@ export default function GroupDetail() {
                 <QuickStat
                     icon={<Calendar size={15} />}
                     label="Ngày tạo"
-                    value={new Date(group.createdAt).toLocaleDateString("vi-VN")}
+                    value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "N/A"}
                     color="text-gray-600 bg-gray-50 border-gray-100"
                 />
             </div>
@@ -220,8 +216,8 @@ export default function GroupDetail() {
                             <InfoRow
                                 label="Đề tài"
                                 value={
-                                    group.topic
-                                        ? <span className="text-gray-800">{group.topic}</span>
+                                    group.description
+                                        ? <span className="text-gray-800">{group.description}</span>
                                         : <span className="text-gray-400 italic text-sm">Chưa có đề tài</span>
                                 }
                             />
@@ -240,20 +236,20 @@ export default function GroupDetail() {
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3 p-4">
                             {students.map((student) => (
-                                <div key={student.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                                <div key={student.studentId} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
                                     <div className="w-10 h-10 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
-                                        {student.name?.charAt(0)}
+                                        {student.studentName?.charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{student.name}</p>
-                                            {student.id === group.teamLeaderId && (
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{student.studentName}</p>
+                                            {student.role === "LEADER" && (
                                                 <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                     Leader
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400">{student.studentId}</p>
+                                        <p className="text-xs text-gray-400">{student.studentCode}</p>
                                     </div>
                                     <div className="shrink-0 flex items-center gap-2">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm</label>
@@ -264,7 +260,7 @@ export default function GroupDetail() {
                                             defaultValue={student.contributionScore}
                                             onBlur={(e) => {
                                                 if (e.target.value !== "" && e.target.value !== String(student.contributionScore))
-                                                    handleUpdateScore(student.id, e.target.value);
+                                                    handleUpdateScore(student.studentId, e.target.value);
                                             }}
                                             className="w-14 px-2 py-1.5 text-sm text-center font-bold text-teal-700 bg-teal-50/50 border border-teal-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
                                         />
@@ -294,11 +290,10 @@ export default function GroupDetail() {
                             <LinkApprovalSection
                                 icon={<GitBranch size={15} className="text-gray-700" />}
                                 label="GitHub Repository"
-                                url={group.githubRepoUrl}
-                                status={group.githubStatus}
-                                approvedAt={group.approvedAt}
-                                onApprove={() => handleApproveLink("github")}
-                                onReject={() => handleRejectLink("github")}
+                                url={group.integration?.githubUrl}
+                                status={group.integration?.githubStatus}
+                                onApprove={() => handleApproveLink()}
+                                onReject={() => handleRejectLink()}
                             />
 
                             <div className="border-t border-gray-50" />
@@ -307,14 +302,14 @@ export default function GroupDetail() {
                             <LinkApprovalSection
                                 icon={<BookOpen size={15} className="text-gray-700" />}
                                 label="Jira Project"
-                                url={group.jiraProjectUrl}
-                                status={group.jiraStatus}
-                                approvedAt={group.approvedAt}
-                                onApprove={() => handleApproveLink("jira")}
-                                onReject={() => handleRejectLink("jira")}
+                                url={group.integration?.jiraUrl}
+                                status={group.integration?.jiraStatus}
+                                onApprove={() => handleApproveLink()}
+                                onReject={() => handleRejectLink()}
                             />
                         </CardContent>
                     </Card>
+
 
                     {/* Export */}
                     <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">

@@ -1,151 +1,106 @@
-// Manage Groups - Enterprise UI (logic unchanged)
-import { useState, useEffect } from "react";
+// Manage Groups - Enterprise UI (Real API)
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
 import {
     ChevronRight, UserPlus, Users, GitBranch, BookOpen,
     Trash2, Eye, PenLine, ArrowLeft
 } from "lucide-react";
 
+// Feature Hooks
+import { useGetCourseById, useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
+import {
+    useCreateProject,
+    useDeleteProject,
+    useUpdateProject,
+    useAddTeamMember,
+    useRemoveTeamMember
+} from "../../features/projects/hooks/useProjects.js";
+
 export default function ManageGroups() {
     const { courseId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
     const { success, error } = useToast();
 
-    const [course, setCourse] = useState(null);
-    const [students, setStudents] = useState([]);
-    const [groups, setGroups] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [newGroupTopic, setNewGroupTopic] = useState("");
 
     const [showForceAddModal, setShowForceAddModal] = useState(false);
     const [forceAddGroupId, setForceAddGroupId] = useState(null);
-    const [forceAddAvailableStudents, setForceAddAvailableStudents] = useState([]);
     const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
 
-    useEffect(() => { loadCourseData(); }, [courseId]);
+    // Data Fetching
+    const { data: course, isLoading: loadingCourse } = useGetCourseById(courseId);
+    const { data: studentsData = { items: [] }, isLoading: loadingStudents } = useGetEnrolledStudents(courseId);
 
-    const loadCourseData = () => {
-        try {
-            const courseData = db.findById("courses", courseId);
-            setCourse(courseData);
-            const enrollments = db.findMany("courseEnrollments", { courseId });
-            const courseStudents = enrollments
-                .map((e) => db.findById("users.students", e.studentId))
-                .filter(Boolean);
-            setStudents(courseStudents);
-            const courseGroups = db.getCourseGroups(courseId);
-            setGroups(courseGroups);
-        } catch (err) {
-            error("Không thể tải dữ liệu lớp học");
-        }
-    };
+    // Mutations
+    const createProjectMutation = useCreateProject();
+    const deleteProjectMutation = useDeleteProject();
+    const updateProjectMutation = useUpdateProject();
+    const addTeamMemberMutation = useAddTeamMember();
+    const removeTeamMemberMutation = useRemoveTeamMember();
 
-    const handleExport = () => {
-        try {
-            // 1. Prepare CSV headers
-            const headers = ["Nhóm", "Đề Tài", "Số Thành Viên", "Reviewer", "Link GitHub", "Trạng thái GitHub", "Link Jira", "Trạng thái Jira"];
+    const students = studentsData.items || [];
+    const groups = course?.groups || [];
 
-            // 2. Prepare CSV rows from groups data
-            const rows = groups.map(group => {
-                const groupStudents = db.getGroupStudents(group.id);
-                // Reviewer name (lecturers assigned to the course)
-                const courseLecturers = db.findMany("courseLecturers", { courseId: course.id });
-                const reviewers = courseLecturers
-                    .map(cl => db.findById("users.lecturers", cl.lecturerId)?.name)
-                    .filter(Boolean)
-                    .join(" & ");
-
-                return [
-                    group.name,
-                    group.topic || "Chưa có đề tài",
-                    groupStudents.length,
-                    reviewers || "Chưa có",
-                    group.githubRepoUrl || "Chưa có",
-                    group.githubStatus,
-                    group.jiraProjectUrl || "Chưa có",
-                    group.jiraStatus
-                ].map(val => `"${val}"`).join(",");
-            });
-
-            // 3. Combine headers and rows
-            const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
-
-            // 4. Create Blob and trigger download
-            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `DanhSachNhom_${course?.code || courseId}_${new Date().getTime()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            success("Đã xuất danh sách nhóm thành công!");
-        } catch (err) {
-            error("Lỗi khi xuất file");
-        }
-    };
-    const handleCreateGroup = () => {
+    const handleCreateGroup = async () => {
         if (selectedStudents.length === 0) { error("Vui lòng chọn ít nhất 1 học sinh"); return; }
         if (!newGroupTopic.trim()) { error("Vui lòng nhập đề tài cho nhóm"); return; }
+
         try {
-            const newGroup = {
-                courseId,
+            const project = await createProjectMutation.mutateAsync({
+                courseId: parseInt(courseId),
                 name: `Nhóm ${groups.length + 1}`,
-                topic: newGroupTopic,
-                studentIds: selectedStudents,
-                teamLeaderId: selectedStudents[0],
-                githubRepoUrl: null, jiraProjectUrl: null,
-                githubStatus: "PENDING", jiraStatus: "PENDING",
-                approvedByLecturerId: null, approvedAt: null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            db.create("groups", newGroup);
-            success(`Đã tạo nhóm "${newGroup.name}"`);
+                description: newGroupTopic,
+                startDate: new Date().toISOString(),
+                endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // Default 3 months
+            });
+
+            // Add selected members
+            for (const studentId of selectedStudents) {
+                await addTeamMemberMutation.mutateAsync({
+                    projectId: project.id,
+                    studentId,
+                    role: studentId === selectedStudents[0] ? "LEADER" : "MEMBER"
+                });
+            }
+
+            success(`Đã tạo nhóm "${project.name}"`);
             setSelectedStudents([]);
             setNewGroupTopic("");
-            loadCourseData();
         } catch (err) {
-            error("Không thể tạo nhóm");
+            error("Không thể tạo nhóm: " + (err.message || "Lỗi hệ thống"));
         }
     };
 
-    const handleDeleteGroup = (groupId) => {
+    const handleDeleteGroup = async (groupId) => {
         if (!confirm("Bạn có chắc muốn xóa nhóm này?")) return;
         try {
-            db.delete("groups", groupId);
+            await deleteProjectMutation.mutateAsync(groupId);
             success("Đã xóa nhóm");
-            loadCourseData();
         } catch (err) {
             error("Không thể xóa nhóm");
         }
     };
 
-    const handleUpdateGroupTopic = (groupId, newTopic) => {
+    const handleUpdateGroupTopic = async (groupId, newTopic) => {
         try {
-            db.update("groups", groupId, { topic: newTopic, updatedAt: new Date().toISOString() });
+            await updateProjectMutation.mutateAsync({
+                id: groupId,
+                body: { description: newTopic }
+            });
             success("Đã cập nhật đề tài");
-            loadCourseData();
         } catch (err) {
             error("Không thể cập nhật đề tài");
         }
     };
 
-    const handleRemoveStudentFromGroup = (groupId, studentId) => {
+    const handleRemoveStudentFromGroup = async (groupId, studentId) => {
         try {
-            const group = db.findById("groups", groupId);
-            const updatedStudentIds = group.studentIds.filter((id) => id !== studentId);
-            db.update("groups", groupId, { studentIds: updatedStudentIds, updatedAt: new Date().toISOString() });
+            await removeTeamMemberMutation.mutateAsync({ projectId: groupId, studentId });
             success("Đã xóa học sinh khỏi nhóm");
-            loadCourseData();
         } catch (err) {
             error("Không thể xóa học sinh");
         }
@@ -156,12 +111,12 @@ export default function ManageGroups() {
             prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
         );
 
-    const assignedStudentIds = new Set(groups.flatMap((g) => g.studentIds));
+    // Calculate students not in any group
+    const assignedStudentIds = new Set(groups.flatMap((g) => (g.team || []).map(m => m.studentId)));
     const availableStudents = students.filter((s) => !assignedStudentIds.has(s.id));
 
     const handleOpenForceAdd = (groupId) => {
         setForceAddGroupId(groupId);
-        setForceAddAvailableStudents(availableStudents); // only students not in any group yet
         setForceAddSelectedIds([]);
         setShowForceAddModal(true);
     };
@@ -172,22 +127,35 @@ export default function ManageGroups() {
         );
     };
 
-    const handleForceAddSubmit = () => {
+    const handleForceAddSubmit = async () => {
         if (forceAddSelectedIds.length === 0) {
             error("Vui lòng chọn ít nhất 1 học sinh");
             return;
         }
         try {
-            const group = db.findById("groups", forceAddGroupId);
-            const updatedStudentIds = [...new Set([...group.studentIds, ...forceAddSelectedIds])];
-            db.update("groups", forceAddGroupId, { studentIds: updatedStudentIds, updatedAt: new Date().toISOString() });
+            for (const studentId of forceAddSelectedIds) {
+                await addTeamMemberMutation.mutateAsync({
+                    projectId: forceAddGroupId,
+                    studentId,
+                    role: "MEMBER"
+                });
+            }
             success(`Đã thêm ${forceAddSelectedIds.length} học sinh vào nhóm`);
             setShowForceAddModal(false);
-            loadCourseData();
         } catch (err) {
             error("Không thể thêm học sinh");
         }
     };
+
+    if (loadingCourse || loadingStudents) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
+                <p className="text-gray-500 font-medium">Đang tải dữ liệu nhóm...</p>
+            </div>
+        );
+    }
+
 
     return (
         <div className="space-y-6">
@@ -345,7 +313,7 @@ export default function ManageGroups() {
                             ) : (
                                 <div className="divide-y divide-gray-50">
                                     {groups.map((group) => {
-                                        const groupStudents = db.getGroupStudents(group.id);
+                                        const groupStudents = group.team || [];
                                         return (
                                             <div key={group.id} className="p-5 hover:bg-gray-50/50 transition-colors">
                                                 {/* Group header row */}
@@ -353,8 +321,8 @@ export default function ManageGroups() {
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h3 className="font-bold text-gray-900">{group.name}</h3>
-                                                            <StatusBadge status={group.githubStatus} icon={<GitBranch size={9} />} label="GitHub" />
-                                                            <StatusBadge status={group.jiraStatus} icon={<BookOpen size={9} />} label="Jira" />
+                                                            <StatusBadge status={group.integration?.githubStatus} icon={<GitBranch size={9} />} label="GitHub" />
+                                                            <StatusBadge status={group.integration?.jiraStatus} icon={<BookOpen size={9} />} label="Jira" />
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 shrink-0">
@@ -380,9 +348,9 @@ export default function ManageGroups() {
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        defaultValue={group.topic}
+                                                        defaultValue={group.description}
                                                         onBlur={(e) => {
-                                                            if (e.target.value !== group.topic)
+                                                            if (e.target.value !== group.description)
                                                                 handleUpdateGroupTopic(group.id, e.target.value);
                                                         }}
                                                         placeholder="Chưa có đề tài..."
@@ -405,20 +373,20 @@ export default function ManageGroups() {
                                                         </Button>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {groupStudents.map((student) => (
+                                                        {groupStudents.map((member) => (
                                                             <div
-                                                                key={student.id}
+                                                                key={member.studentId}
                                                                 className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
                                                             >
                                                                 <div className="w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold">
-                                                                    {student.name?.charAt(0)}
+                                                                    {member.studentName?.charAt(0)}
                                                                 </div>
-                                                                {student.name}
-                                                                {student.id === group.teamLeaderId && (
+                                                                {member.studentName}
+                                                                {member.role === "LEADER" && (
                                                                     <span className="text-[9px] font-bold text-teal-600 uppercase">★</span>
                                                                 )}
                                                                 <button
-                                                                    onClick={() => handleRemoveStudentFromGroup(group.id, student.id)}
+                                                                    onClick={() => handleRemoveStudentFromGroup(group.id, member.studentId)}
                                                                     className="text-gray-300 hover:text-red-500 transition-colors ml-0.5 font-bold"
                                                                 >
                                                                     ×
@@ -452,12 +420,12 @@ export default function ManageGroups() {
                         </div>
 
                         <div className="overflow-y-auto flex-1 min-h-0 border border-gray-100 rounded-xl divide-y divide-gray-50 mb-5">
-                            {forceAddAvailableStudents.length === 0 ? (
+                            {availableStudents.length === 0 ? (
                                 <div className="px-4 py-8 text-center bg-gray-50/50">
                                     <p className="text-sm text-gray-500">Tất cả sinh viên trong lớp đã có nhóm.</p>
                                 </div>
                             ) : (
-                                forceAddAvailableStudents.map((student) => (
+                                availableStudents.map((student) => (
                                     <label
                                         key={student.id}
                                         className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
@@ -473,7 +441,7 @@ export default function ManageGroups() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
-                                            <p className="text-xs text-gray-400">{student.studentId}</p>
+                                            <p className="text-xs text-gray-400">{student.studentCode || student.studentId}</p>
                                         </div>
                                     </label>
                                 ))
@@ -495,6 +463,7 @@ export default function ManageGroups() {
         </div>
     );
 }
+
 
 /* ─── Sub-components ─────────────────────────────────────── */
 function MiniStat({ label, value, color }) {

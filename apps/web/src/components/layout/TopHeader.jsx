@@ -1,37 +1,36 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Bell, Settings, LogOut, ChevronDown, Users, Check, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
-import db from "../../mock/db.js";
+import { useGetMyPendingInvitations, useAcceptInvitation, useRejectInvitation } from "../../features/projects/hooks/useInvitations.js";
+import { useToast } from "../../components/ui/toast.jsx";
 
 export function TopHeader() {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
-    const [invitations, setInvitations] = useState([]);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const { success, error: showError } = useToast();
 
-    // Load pending invitations for STUDENT users
-    useEffect(() => {
-        if (user?.role === "STUDENT" && user?.id) {
-            loadInvitations();
-        }
-    }, [user]);
+    // Load pending invitations for STUDENT users real API
+    const isStudent = user?.role === "STUDENT";
+    const { data: invitations = [] } = useGetMyPendingInvitations();
+    const { mutate: acceptMutate } = useAcceptInvitation();
+    const { mutate: rejectMutate } = useRejectInvitation();
 
-    const loadInvitations = () => {
-        const pending = db.getPendingInvitationsForStudent(user.id);
-        setInvitations(pending);
+    const handleAccept = (invId) => {
+        acceptMutate(invId, {
+            onSuccess: () => success("Đã chấp nhận lời mời nhóm!"),
+            onError: (err) => showError(err.message || "Không thể chấp nhận lời mời"),
+        });
     };
 
-    const handleAccept = (inv) => {
-        db.acceptInvitation(inv.id, user.id);
-        loadInvitations();
-    };
-
-    const handleDecline = (inv) => {
-        db.declineInvitation(inv.id);
-        loadInvitations();
+    const handleDecline = (invId) => {
+        rejectMutate(invId, {
+            onSuccess: () => success("Đã từ chối lời mời nhóm"),
+            onError: (err) => showError(err.message || "Không thể từ chối lời mời"),
+        });
     };
 
     const handleLogout = () => {
@@ -59,7 +58,6 @@ export function TopHeader() {
     const isRootPath = location.pathname === "/admin" || location.pathname === "/lecturer";
     const backPath = location.pathname.startsWith("/admin") ? "/admin" : location.pathname.startsWith("/lecturer") ? "/lecturer" : "/";
 
-    const isStudent = user?.role === "STUDENT";
     const pendingCount = isStudent ? invitations.length : 0;
 
     const formatTime = (dateStr) => {
@@ -148,20 +146,20 @@ export function TopHeader() {
                                                     <Users size={16} className="text-teal-600" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-800 leading-snug">{inv.groupName}</p>
+                                                    <p className="text-sm font-semibold text-gray-800 leading-snug">{inv.projectName}</p>
                                                     <p className="text-xs text-gray-500 mt-0.5">
                                                         <span className="text-teal-600 font-medium">{inv.invitedByName}</span> đã mời bạn tham gia
                                                     </p>
-                                                    <p className="text-[10px] text-gray-400 mt-0.5">{inv.courseName} · {formatTime(inv.createdAt)}</p>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">{formatTime(inv.createdAt)}</p>
                                                     <div className="flex gap-2 mt-2">
                                                         <button
-                                                            onClick={() => handleAccept(inv)}
+                                                            onClick={() => handleAccept(inv.id)}
                                                             className="flex items-center gap-1 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-1.5 transition-colors"
                                                         >
                                                             <Check size={11} /> Đồng ý
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDecline(inv)}
+                                                            onClick={() => handleDecline(inv.id)}
                                                             className="flex items-center gap-1 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-1.5 transition-colors"
                                                         >
                                                             <X size={11} /> Từ chối

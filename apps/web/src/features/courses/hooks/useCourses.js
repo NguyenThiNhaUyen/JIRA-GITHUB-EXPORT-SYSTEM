@@ -6,7 +6,10 @@ import {
     updateCourse,
     deleteCourse,
     assignLecturer,
-    enrollStudents
+    enrollStudents,
+    removeLecturer,
+    unenrollStudent,
+    getEnrolledStudents
 } from '../api/courseApi.js';
 
 export const COURSE_KEYS = {
@@ -84,3 +87,33 @@ export const useEnrollStudents = () => {
         },
     });
 };
+export const useRemoveLecturer = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ courseId, lecturerUserId }) => removeLecturer(courseId, lecturerUserId),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.courseId) });
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
+        },
+    });
+};
+
+export const useUnenrollStudent = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ courseId, studentUserId }) => unenrollStudent(courseId, studentUserId),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.courseId) });
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
+        },
+    });
+};
+
+export const useGetEnrolledStudents = (courseId, params) => {
+    return useQuery({
+        queryKey: [...COURSE_KEYS.detail(courseId), 'students', params],
+        queryFn: () => getEnrolledStudents(courseId, params),
+        enabled: !!courseId,
+    });
+};
+

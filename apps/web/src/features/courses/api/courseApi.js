@@ -11,6 +11,7 @@
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapCourse, mapCourseList } from "./mappers/courseMapper.js";
+import { mapUserList } from "../../users/api/mappers/userMapper.js";
 
 /**
  * GET /api/courses
@@ -84,3 +85,25 @@ export async function assignLecturer(courseId, lecturerUserId) {
 export async function enrollStudents(courseId, studentUserIds) {
     return client.post(`/courses/${courseId}/enrollments`, { studentUserIds });
 }
+/**
+ * DELETE /api/courses/:id/lecturers/:lecturerId  [ADMIN only]
+ */
+export async function removeLecturer(courseId, lecturerUserId) {
+    return client.delete(`/courses/${courseId}/lecturers/${lecturerUserId}`);
+}
+
+/**
+ * DELETE /api/courses/:id/enrollments/:studentId  [ADMIN only]
+ */
+export async function unenrollStudent(courseId, studentUserId) {
+    return client.delete(`/courses/${courseId}/enrollments/${studentUserId}`);
+}
+
+/**
+ * GET /api/courses/:id/students
+ */
+export async function getEnrolledStudents(courseId, params = {}) {
+    const res = await client.get(`/courses/${courseId}/students`, { params });
+    return mapUserList(unwrap(res));
+}
+

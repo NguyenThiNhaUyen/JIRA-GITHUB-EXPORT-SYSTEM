@@ -1,23 +1,34 @@
 // Lecturer Assignment — Admin Module
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
 import {
     ChevronRight, UserCog, Search, Plus, X, Users,
     BookOpen, CalendarDays, CheckCircle
 } from "lucide-react";
 
+// Feature Hooks
+import { useGetCourses, useAssignLecturer, useRemoveLecturer } from "../../features/courses/hooks/useCourses.js";
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+
 export default function LecturerAssignment() {
     const navigate = useNavigate();
-    const { success, error } = useToast();
+    const { success, error: showError } = useToast();
 
-    const [courses, setCourses] = useState([]);
-    const [lecturers, setLecturers] = useState([]);
-    const [semesters, setSemesters] = useState([]);
-    const [subjects, setSubjects] = useState([]);
+    // Data Fetching
+    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
+    const courses = coursesData.items || [];
+
+    const { data: lecturers = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+    const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
+    const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
+
+    const assignMutation = useAssignLecturer();
+    const removeMutation = useRemoveLecturer();
+
     const [search, setSearch] = useState("");
     const [filterSem, setFilterSem] = useState("");
 
@@ -26,60 +37,47 @@ export default function LecturerAssignment() {
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [selectedLecturer, setSelectedLecturer] = useState("");
 
-    useEffect(() => { loadData(); }, []);
-
-    const loadData = () => {
+    const handleAssign = async () => {
+        if (!selectedLecturer || !selectedCourse) {
+            showError("Vui lòng chọn giảng viên");
+            return;
+        }
         try {
-            setCourses(db.findMany("courses"));
-            setLecturers(db.findMany("users.lecturers"));
-            setSemesters(db.findMany("semesters"));
-            setSubjects(db.findMany("subjects"));
-        } catch { error("Không thể tải dữ liệu"); }
-    };
-
-    const getAssignedLecturers = (courseId) => {
-        const assignments = db.findMany("courseLecturers", { courseId });
-        return assignments.map(a => lecturers.find(l => l.id === a.lecturerId)).filter(Boolean);
-    };
-
-    const handleAssign = () => {
-        if (!selectedLecturer || !selectedCourse) { error("Vui lòng chọn giảng viên"); return; }
-        try {
-            const existing = db.findMany("courseLecturers", { courseId: selectedCourse.id, lecturerId: selectedLecturer });
-            if (existing.length > 0) { error("Giảng viên đã được phân công lớp này"); return; }
-            db.create("courseLecturers", {
+            await assignMutation.mutateAsync({
                 courseId: selectedCourse.id,
-                lecturerId: selectedLecturer,
-                assignedAt: new Date().toISOString(),
+                lecturerUserId: selectedLecturer,
             });
             success("Đã phân công giảng viên thành công");
             setModalOpen(false);
             setSelectedLecturer("");
-            loadData();
-        } catch { error("Không thể phân công giảng viên"); }
+        } catch (err) {
+            showError(err.message || "Không thể phân công giảng viên");
+        }
     };
 
-    const handleRemove = (courseId, lecturerId, lecturerName) => {
+    const handleRemove = async (courseId, lecturerId, lecturerName) => {
         if (!confirm(`Xóa phân công GV. ${lecturerName} khỏi lớp này?`)) return;
         try {
-            const assignments = db.findMany("courseLecturers", { courseId, lecturerId });
-            if (assignments.length > 0) db.delete("courseLecturers", assignments[0].id);
+            await removeMutation.mutateAsync({
+                courseId,
+                lecturerUserId: lecturerId,
+            });
             success("Đã xóa phân công");
-            loadData();
-        } catch { error("Không thể xóa phân công"); }
+        } catch (err) {
+            showError(err.message || "Không thể xóa phân công");
+        }
     };
 
-    const subjectMap = Object.fromEntries(subjects.map(s => [s.id, s]));
-    const semesterMap = Object.fromEntries(semesters.map(s => [s.id, s]));
+    const isLoading = loadingCourses || loadingLects || loadingSems || loadingSubs;
 
     const filtered = courses.filter(c => {
         const matchSearch = !search || c.code.toLowerCase().includes(search.toLowerCase()) || c.name?.toLowerCase().includes(search.toLowerCase());
-        const matchSem = !filterSem || c.semesterId === filterSem;
+        const matchSem = !filterSem || String(c.semesterId) === String(filterSem);
         return matchSearch && matchSem;
     });
 
-    const totalAssigned = courses.reduce((acc, c) => acc + getAssignedLecturers(c.id).length, 0);
-    const unassigned = courses.filter(c => getAssignedLecturers(c.id).length === 0).length;
+    const totalAssignedCount = courses.reduce((acc, c) => acc + (c.lecturers?.length || 0), 0);
+    const unassignedCount = courses.filter(c => (c.lecturers?.length || 0) === 0).length;
 
     return (
         <div className="space-y-6">
@@ -103,11 +101,11 @@ export default function LecturerAssignment() {
                 </div>
                 <div className="rounded-2xl px-4 py-3 border border-green-100 bg-green-50 flex items-center justify-between text-green-700">
                     <span className="text-xs font-semibold">Đã phân công</span>
-                    <span className="text-xl font-bold">{totalAssigned}</span>
+                    <span className="text-xl font-bold">{totalAssignedCount}</span>
                 </div>
                 <div className="rounded-2xl px-4 py-3 border border-orange-100 bg-orange-50 flex items-center justify-between text-orange-600">
                     <span className="text-xs font-semibold">Chưa phân công</span>
-                    <span className="text-xl font-bold">{unassigned}</span>
+                    <span className="text-xl font-bold">{unassignedCount}</span>
                 </div>
             </div>
 
@@ -145,7 +143,9 @@ export default function LecturerAssignment() {
                     <div className="col-span-2 text-right">Thao tác</div>
                 </div>
                 <CardContent className="p-0">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                        <div className="py-20 text-center text-gray-400 font-medium">Đang tải dữ liệu...</div>
+                    ) : filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 gap-2">
                             <BookOpen size={28} className="text-gray-300" />
                             <p className="text-sm text-gray-400">Không tìm thấy lớp học</p>
@@ -153,7 +153,7 @@ export default function LecturerAssignment() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {filtered.map(course => {
-                                const assigned = getAssignedLecturers(course.id);
+                                const assigned = course.lecturers || [];
                                 return (
                                     <div key={course.id} className="grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
                                         <div className="col-span-4">
@@ -161,8 +161,12 @@ export default function LecturerAssignment() {
                                             <p className="text-xs text-gray-400 truncate">{course.name}</p>
                                         </div>
                                         <div className="col-span-2 text-center hidden md:block">
-                                            <p className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md inline-block">{subjectMap[course.subjectId]?.code}</p>
-                                            <p className="text-[11px] text-gray-400 mt-0.5">{semesterMap[course.semesterId]?.code}</p>
+                                            <p className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md inline-block">
+                                                {subjects.find(s => String(s.id) === String(course.subjectId))?.code}
+                                            </p>
+                                            <p className="text-[11px] text-gray-400 mt-0.5">
+                                                {semesters.find(s => String(s.id) === String(course.semesterId))?.name}
+                                            </p>
                                         </div>
                                         <div className="col-span-4 flex flex-wrap gap-2 items-center">
                                             {assigned.length === 0 ? (
