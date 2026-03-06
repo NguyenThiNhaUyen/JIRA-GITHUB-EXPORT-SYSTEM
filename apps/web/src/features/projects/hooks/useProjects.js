@@ -7,8 +7,13 @@ import {
     deleteProject,
     addTeamMember,
     removeTeamMember,
-    updateTeamMember
+    updateTeamMember,
+    linkIntegration,
+    approveIntegration,
+    rejectIntegration,
+    getProjectMetrics
 } from '../api/projectApi.js';
+
 
 export const PROJECT_KEYS = {
     all: ['projects'],
@@ -71,7 +76,9 @@ export const useAddTeamMember = () => {
         mutationFn: ({ projectId, studentId, role, responsibility }) =>
             addTeamMember(projectId, studentId, role, responsibility),
         onSuccess: (_, variables) => {
+            // Invalidate cả detail và lists để dashboard cập nhật số thành viên
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
     });
 };
@@ -92,6 +99,47 @@ export const useUpdateTeamMember = () => {
         mutationFn: ({ projectId, studentId, updates }) => updateTeamMember(projectId, studentId, updates),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+        },
+    });
+};
+export const useLinkIntegration = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ projectId, body }) => linkIntegration(projectId, body),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+        },
+    });
+};
+
+export const useGetProjectMetrics = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'metrics'],
+        queryFn: () => getProjectMetrics(projectId),
+        enabled: !!projectId,
+        refetchInterval: 60000, // Tự reload sau mỗi 1 phút
+    });
+};
+
+export const useApproveIntegration = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (projectId) => approveIntegration(projectId),
+        onSuccess: (_, projectId) => {
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+        },
+    });
+};
+
+export const useRejectIntegration = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ projectId, reason }) => rejectIntegration(projectId, reason),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
     });
 };

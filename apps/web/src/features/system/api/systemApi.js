@@ -1,45 +1,45 @@
-import db from "../../../mock/db.js";
-
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
+import { mapSemester, mapSemesterList, mapSubject, mapSubjectList } from "./mappers/systemMapper.js";
 
 export async function getSemesters() {
-    await delay();
-    return db.findMany('semesters').sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    const res = await client.get("/semesters", { params: { pageSize: 100 } });
+    const payload = unwrap(res);
+    return mapSemesterList(payload);
 }
 
 export async function createSemester(data) {
-    await delay();
-    if (data.status === 'ACTIVE') {
-        const existingActive = db.findMany('semesters', { status: 'ACTIVE' });
-        existingActive.forEach(sem => db.update('semesters', sem.id, { status: 'UPCOMING' }));
-    }
-    return db.create('semesters', { ...data, status: data.status || 'UPCOMING' });
+    const res = await client.post("/semesters", data);
+    return mapSemester(unwrap(res));
 }
 
 export async function updateSemester(id, updates) {
-    await delay();
-    if (updates.status === 'ACTIVE') {
-        const existingActive = db.findMany('semesters', { status: 'ACTIVE' });
-        existingActive.forEach(sem => {
-            if (sem.id !== id) db.update('semesters', sem.id, { status: 'COMPLETED' });
-        });
-    }
-    return db.update('semesters', id, updates);
+    const res = await client.put(`/semesters/${id}`, updates);
+    return mapSemester(unwrap(res));
+}
+
+export async function deleteSemester(id) {
+    const res = await client.delete(`/semesters/${id}`);
+    return unwrap(res);
 }
 
 export async function getSubjects() {
-    await delay();
-    return db.findMany('subjects').sort((a, b) => a.code.localeCompare(b.code));
+    const res = await client.get("/subjects", { params: { pageSize: 100 } });
+    const payload = unwrap(res);
+    return mapSubjectList(payload);
 }
 
 export async function createSubject(data) {
-    await delay();
-    const existing = db.findMany('subjects', { code: data.code });
-    if (existing.length > 0) throw new Error('Subject code already exists');
-    return db.create('subjects', { ...data, createdAt: new Date().toISOString() });
+    const res = await client.post("/subjects", data);
+    return mapSubject(unwrap(res));
 }
 
 export async function updateSubject(id, updates) {
-    await delay();
-    return db.update('subjects', id, updates);
+    const res = await client.put(`/subjects/${id}`, updates);
+    return mapSubject(unwrap(res));
+}
+
+export async function deleteSubject(id) {
+    const res = await client.delete(`/subjects/${id}`);
+    return unwrap(res);
 }

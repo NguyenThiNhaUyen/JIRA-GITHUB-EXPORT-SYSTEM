@@ -1,17 +1,20 @@
 // Admin Dashboard — Enterprise SaaS Governance
-// Courses section: REAL API | Stats: mock (pending BE endpoints)
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
-import { getCourses } from "../../features/courses/api/courseApi.js";
 import {
   BookOpen, Library, CalendarDays, Users, GraduationCap,
   FolderKanban, TrendingUp, UserCog, Plus, ChevronRight,
   Activity, CheckCircle, AlertCircle, Clock, WifiOff
 } from "lucide-react";
+
+// Feature Hooks
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 
 // Mock recent system activity (static — không cần API)
 const SYSTEM_ACTIVITY = [
@@ -24,92 +27,43 @@ const SYSTEM_ACTIVITY = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { error: showError } = useToast();
 
-  const [loading, setLoading] = useState(false);
-  const [courseError, setCourseError] = useState(null);
-  const [stats, setStats] = useState({ semesters: 0, subjects: 0, courses: 0, lecturers: 0, students: 0, projects: 0 });
-  const [recentCourses, setRecentCourses] = useState([]);
+  // Data Fetching
+  const { data: coursesData, isLoading: loadingCourses, error: courseError } = useGetCourses({ page: 1, pageSize: 6 });
+  const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
+  const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
+  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ pageSize: 1 });
 
-  // Helper cho stats từ mock (học kỳ, môn học, giảng viên, sinh viên)
-  // TODO: thay bằng real API khi BE có endpoint GET /api/admin/stats
-  const [semesters, setSemesters] = useState([]);
-  const [subjects, setSubjects] = useState([]);
 
-  useEffect(() => { loadData(); }, []);
+  // For counts, we could have a stats API, but for now fetch summaries
+  const { data: lecturersRaw = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+  const { data: studentsRaw = [], isLoading: loadingStus } = useGetUsers("STUDENT");
 
-  const loadData = async () => {
-    setLoading(true);
-    setCourseError(null);
+  const recentCourses = coursesData?.items || [];
+  const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus || loadingProjects;
 
-    // ── 1. Stats từ mock (học kỳ / môn học / GV / SV) ────────────
-    // TODO: Replace with real API when /api/admin/stats endpoint exists
-    const semestersData = db.findMany("semesters");
-    const subjectsData = db.findMany("subjects");
-    const lecturersData = db.findMany("users.lecturers");
-    const studentsData = db.findMany("users.students");
-    const groups = db.findMany("groups");
-    setSemesters(semestersData);
-    setSubjects(subjectsData);
-
-    // ── 2. Courses từ REAL API ─────────────────────────────────────
-    let apiCourses = [];
-    try {
-      const result = await getCourses({ page: 1, pageSize: 6 });
-      // result = { items: FECourse[], totalCount, page, pageSize }
-      apiCourses = result.items ?? [];
-      setRecentCourses(apiCourses);
-      setStats({
-        semesters: semestersData.length,
-        subjects: subjectsData.length,
-        courses: result.totalCount ?? apiCourses.length,  // dùng totalCount từ API
-        lecturers: lecturersData.length,
-        students: studentsData.length,
-        projects: groups.length,
-      });
-    } catch (err) {
-      console.warn("[AdminDashboard] getCourses failed:", err);
-      // Fallback về mock nếu API lỗi (BE cold start, network...)
-      const mockCourses = db.findMany("courses");
-      apiCourses = mockCourses;
-      setRecentCourses(mockCourses.slice(0, 6));
-      setStats({
-        semesters: semestersData.length,
-        subjects: subjectsData.length,
-        courses: mockCourses.length,
-        lecturers: lecturersData.length,
-        students: studentsData.length,
-        projects: groups.length,
-      });
-      // Chỉ hiện lỗi khi không phải cold start timeout
-      const msg = err?.message ?? "";
-      if (!msg.includes("503") && !msg.includes("timeout")) {
-        setCourseError("Không thể tải dữ liệu lớp học từ server");
-        showError("Không thể tải dữ liệu lớp học");
-      } else {
-        setCourseError("server_cold"); // Render đang cold start
-      }
-    }
-
-    setLoading(false);
+  const stats = {
+    semesters: semesters.length,
+    subjects: subjects.length,
+    courses: coursesData?.totalCount || recentCourses.length,
+    lecturers: lecturersRaw.length,
+    students: studentsRaw.length,
+    projects: projectsData?.totalCount || 0,
   };
 
+  const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;
+
   const getSemesterName = (id) => {
-    // Thử từ data semester đã có (có thể là object từ API hoặc mock)
     if (!id) return "N/A";
     const found = semesters.find(s => String(s.id) === String(id));
-    return found?.code ?? found?.name ?? "N/A";
+    return found?.name || "N/A";
   };
 
   const getSubjectName = (id) => {
     if (!id) return "N/A";
-    // Nếu course từ API đã có subject object, hiển thị trực tiếp
-    // Helper này dùng cho course mock fallback
     const found = subjects.find(s => String(s.id) === String(id));
-    return found?.code ?? found?.name ?? "N/A";
+    return found?.code || "N/A";
   };
-
-  const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;
 
   return (
     <div className="space-y-7">
@@ -200,14 +154,13 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-base font-semibold text-gray-800">Lớp học phần gần đây</CardTitle>
-              {/* Badge cho biết nguồn dữ liệu */}
-              {courseError === "server_cold" ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 font-medium flex items-center gap-1">
-                  <WifiOff size={9} /> Mock data
-                </span>
-              ) : !courseError ? (
+              {!isLoading && !courseError ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100 font-medium">
                   Live API
+                </span>
+              ) : courseError ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-medium flex items-center gap-1">
+                  <WifiOff size={9} /> Kết nối lỗi
                 </span>
               ) : null}
             </div>
@@ -230,7 +183,7 @@ export default function AdminDashboard() {
         </div>
 
         <CardContent className="p-0">
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-teal-600" />
             </div>
