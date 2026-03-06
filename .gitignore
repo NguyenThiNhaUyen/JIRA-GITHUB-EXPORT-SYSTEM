@@ -41,6 +41,12 @@ artifacts/
 
 # Mac
 .DS_Store
+
+# Test and coverage results
+TestResults/
+coveragereport/
+
+# Node
 node_modules
 
 # Flutter generated

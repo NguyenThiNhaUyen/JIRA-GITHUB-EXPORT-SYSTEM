@@ -17,6 +17,10 @@ public partial class course
 
     public long created_by_user_id { get; set; }
 
+    public int? max_students { get; set; }
+
+    public string status { get; set; } = "ACTIVE"; // ACTIVE | INACTIVE
+
     public DateTime created_at { get; set; }
 
     public DateTime updated_at { get; set; }

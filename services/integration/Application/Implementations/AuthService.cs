@@ -201,6 +201,37 @@ public class AuthService : IAuthService
             throw new BusinessException("An error occurred during Google authentication");
         }
     }
+
+    public async Task<string> ForgotPasswordAsync(string email)
+    {
+        // Silently ignore unknown emails for security
+        var user = await _context.users.FirstOrDefaultAsync(u => u.email == email.ToLower());
+        if (user == null) return "If this email exists, a reset link has been sent.";
+
+        var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("=", "").Replace("/", "").Replace("+", "");
+        user.password_reset_token = token;
+        user.password_reset_token_expires_at = DateTime.UtcNow.AddHours(1);
+        user.updated_at = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        // In production: send email. In dev mode: return token directly.
+        _logger.LogInformation("Password reset token for {Email}: {Token}", email, token);
+        return token;
+    }
+
+    public async Task ResetPasswordAsync(string token, string newPassword)
+    {
+        var user = await _context.users.FirstOrDefaultAsync(u =>
+            u.password_reset_token == token &&
+            u.password_reset_token_expires_at > DateTime.UtcNow)
+            ?? throw new BusinessException("Invalid or expired reset token.");
+
+        user.password = _passwordHasher.HashPassword(newPassword);
+        user.password_reset_token = null;
+        user.password_reset_token_expires_at = null;
+        user.updated_at = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
 }
 
 

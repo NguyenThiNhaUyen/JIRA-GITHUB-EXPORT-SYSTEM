@@ -10,6 +10,8 @@ public class CourseDetailResponse
     public int EnrolledStudentsCount { get; set; }
     public int ProjectsCount { get; set; }
     public List<LecturerInfo> Lecturers { get; set; } = new();
+    public int? MaxStudents { get; set; }
+    public string Status { get; set; } = "ACTIVE";
 }
 
 public class SubjectInfo
@@ -23,6 +25,7 @@ public class SemesterInfo
 {
     public long Id { get; set; }
     public string Name { get; set; } = null!;
+    public string? Code { get; set; } // alias for Name, used by FE
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 }

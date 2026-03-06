@@ -76,4 +76,16 @@ public class ProjectTeamService : IProjectTeamService
 
         _logger.LogInformation("Student {StudentId} removed from project {ProjectId}", studentUserId, projectId);
     }
+
+    public async Task UpdateContributionScoreAsync(long projectId, long memberStudentUserId, decimal? score)
+    {
+        var teamMember = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
+            tm.project_id == projectId && tm.student_user_id == memberStudentUserId && tm.participation_status == "ACTIVE");
+
+        if (teamMember == null) throw new NotFoundException("Team member not found");
+
+        teamMember.contribution_score = score;
+        _unitOfWork.TeamMembers.Update(teamMember);
+        await _unitOfWork.SaveChangesAsync();
+    }
 }

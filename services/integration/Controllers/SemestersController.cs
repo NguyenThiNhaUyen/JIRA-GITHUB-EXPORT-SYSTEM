@@ -13,12 +13,10 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 public class SemestersController : ControllerBase
 {
     private readonly ISemesterService _semesterService;
-    private readonly ILogger<SemestersController> _logger;
 
-    public SemestersController(ISemesterService semesterService, ILogger<SemestersController> logger)
+    public SemestersController(ISemesterService semesterService)
     {
         _semesterService = semesterService;
-        _logger = logger;
     }
 
     /// <summary>

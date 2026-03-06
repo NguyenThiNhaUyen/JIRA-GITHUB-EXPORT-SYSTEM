@@ -17,6 +17,8 @@ public partial class team_member
 
     public string participation_status { get; set; } = null!;
 
+    public decimal? contribution_score { get; set; } // Lecturer-assigned score 0-100
+
     public DateTime joined_at { get; set; }
 
     public DateTime? left_at { get; set; }

@@ -1,0 +1,42 @@
+name: .NET CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "feature/Backend" ]
+  pull_request:
+    branches: [ "main", "feature/Backend" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          9.0.x
+
+    - name: Restore dependencies (Shared Package)
+      run: dotnet restore packages/shared/Shared.csproj
+
+    - name: Restore dependencies (Microservices)
+      run: |
+        dotnet restore services/integration/IntegrationService.csproj
+        dotnet restore services/jira-service/JiraService.csproj
+        dotnet restore services/github-service/GithubService.csproj
+
+    - name: Restore dependencies (Test Projects)
+      run: |
+        dotnet restore tests/IntegrationService.Tests/IntegrationService.Tests.csproj
+        dotnet restore tests/Shared.Tests/Shared.Tests.csproj
+
+    - name: Build Solution
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Run Unit Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal /p:CollectCoverage=true

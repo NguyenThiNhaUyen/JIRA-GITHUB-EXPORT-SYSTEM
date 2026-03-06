@@ -8,8 +8,8 @@
  *   unwrap()              → lấy payload T từ ApiResponse.data
  *   mapCourseList/mapCourse → convert BE DTO → FE shape
  */
-import client from "./client.js";
-import { unwrap } from "./unwrap.js";
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
 import { mapCourse, mapCourseList } from "./mappers/courseMapper.js";
 
 /**

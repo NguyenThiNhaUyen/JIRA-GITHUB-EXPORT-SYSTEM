@@ -21,7 +21,7 @@
  * NOTE: client.js interceptor bóc ApiResponse wrapper,
  *       nên hàm này nhận thẳng LoginResponse object.
  */
-import client from "./client.js";
+import client from "../../../api/client.js";
 
 /**
  * Login bằng email + password
