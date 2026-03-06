@@ -84,13 +84,21 @@ export default function SemesterManagement() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const code = formData.name.toUpperCase().replace(/\s+/g, '');
+        
+        // ASP.NET Core DateTime format check - append T00:00:00Z if it's just YYYY-MM-DD
+        const formattedPayload = {
+            ...formData,
+            code,
+            startDate: formData.startDate.includes('T') ? formData.startDate : `${formData.startDate}T00:00:00Z`,
+            endDate: formData.endDate.includes('T') ? formData.endDate : `${formData.endDate}T23:59:59Z`,
+        };
 
         try {
             if (editingSemester) {
-                await updateMutation.mutateAsync({ id: editingSemester.id, updates: { ...formData, code } });
+                await updateMutation.mutateAsync({ id: editingSemester.id, updates: formattedPayload });
                 success("Cập nhật học kỳ thành công!");
             } else {
-                await createMutation.mutateAsync({ ...formData, code });
+                await createMutation.mutateAsync(formattedPayload);
                 success("Tạo học kỳ thành công!");
             }
             setShowModal(false);
@@ -184,8 +192,12 @@ export default function SemesterManagement() {
                                                     <span className="font-semibold text-gray-800 text-sm">{semester.name}</span>
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
-                                                    <div className="text-sm text-gray-600 font-medium">{semester.startDate}</div>
-                                                    <div className="text-xs text-gray-400 mt-0.5">{semester.endDate}</div>
+                                                    <div className="text-sm text-gray-600 font-medium">
+                                                        {new Date(semester.startDate).toLocaleDateString('vi-VN')}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 mt-0.5">
+                                                        {new Date(semester.endDate).toLocaleDateString('vi-VN')}
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
                                                     <div className="flex flex-wrap justify-center gap-1">
@@ -273,7 +285,7 @@ export default function SemesterManagement() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Ngày bắt đầu *

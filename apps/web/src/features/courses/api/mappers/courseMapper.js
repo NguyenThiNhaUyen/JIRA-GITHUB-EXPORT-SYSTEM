@@ -45,41 +45,40 @@ export function mapCourse(beCourse) {
     return {
         // ── Core identity ──────────────────────────────────────────
         id: String(beCourse.id ?? beCourse.Id),
-        code: beCourse.courseCode ?? beCourse.CourseCode ?? "",
-        name: beCourse.courseName ?? beCourse.CourseName ?? "",
+        code: beCourse.course_code ?? beCourse.courseCode ?? beCourse.CourseCode ?? "",
+        name: beCourse.course_name ?? beCourse.courseName ?? beCourse.CourseName ?? "",
 
         // ── Subject (nested, FE vẫn có thể dùng subjectId để lookup) ──
-        subjectId: String(subj.id ?? subj.Id ?? ""),
+        subjectId: String(subj.id ?? subj.Id ?? beCourse.subject_id ?? ""),
         subject: {
-            id: String(subj.id ?? subj.Id ?? ""),
-            code: subj.subjectCode ?? subj.SubjectCode ?? "",
-            name: subj.subjectName ?? subj.SubjectName ?? "",
+            id: String(subj.id ?? subj.Id ?? beCourse.subject_id ?? ""),
+            code: subj.subject_code ?? subj.subjectCode ?? subj.SubjectCode ?? beCourse.subject_code ?? "",
+            name: subj.subject_name ?? subj.subjectName ?? subj.SubjectName ?? "",
         },
 
         // ── Semester ───────────────────────────────────────────────
-        semesterId: String(sem.id ?? sem.Id ?? ""),
+        semesterId: String(sem.id ?? sem.Id ?? beCourse.semester_id ?? ""),
         semester: {
-            id: String(sem.id ?? sem.Id ?? ""),
-            name: sem.name ?? sem.Name ?? "",
-            code: sem.name ?? sem.Name ?? "",   // mock dùng .code, BE chỉ có .name
-            startDate: sem.startDate ?? sem.StartDate ?? null,
-            endDate: sem.endDate ?? sem.EndDate ?? null,
+            id: String(sem.id ?? sem.Id ?? beCourse.semester_id ?? ""),
+            name: sem.name ?? sem.Name ?? beCourse.semester_name ?? "",
+            code: sem.name ?? sem.Name ?? beCourse.semester_name ?? "",   // mock dùng .code, BE chỉ có .name
+            startDate: sem.start_date ?? sem.startDate ?? sem.StartDate ?? null,
+            endDate: sem.end_date ?? sem.endDate ?? sem.EndDate ?? null,
         },
 
         // ── Students & capacity ────────────────────────────────────
-        currentStudents: beCourse.enrolledStudentsCount ?? beCourse.EnrolledStudentsCount ?? 0,
-        maxStudents: 40,  // TODO: BE chưa trả về — cần bổ sung vào CourseDetailResponse
+        currentStudents: beCourse.enrollments?.length ?? beCourse.enrolledStudentsCount ?? beCourse.EnrolledStudentsCount ?? 0,
+        maxStudents: beCourse.max_students ?? 40,  // Đã có trong DB
 
         // ── Status ────────────────────────────────────────────────
-        // TODO: BE chưa trả về status trực tiếp — hardcode ACTIVE tạm thời
-        status: "ACTIVE",
+        status: beCourse.status ?? beCourse.Status ?? "ACTIVE",
 
         // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({
-            id: String(l.userId ?? l.UserId ?? ""),
-            name: l.fullName ?? l.FullName ?? "",
-            code: l.lecturerCode ?? l.LecturerCode ?? "",
-            email: l.officeEmail ?? l.OfficeEmail ?? "",
+            id: String(l.user_id ?? l.userId ?? l.UserId ?? ""),
+            name: l.full_name ?? l.fullName ?? l.FullName ?? "",
+            code: l.lecturer_code ?? l.lecturerCode ?? l.LecturerCode ?? "",
+            email: l.email ?? l.officeEmail ?? l.OfficeEmail ?? "",
         })),
 
         // ── Projects count ─────────────────────────────────────────

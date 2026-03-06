@@ -31,7 +31,7 @@ export default function Alerts() {
 
     const remind = (alert) => {
         setRemindedIds((prev) => new Set([...prev, alert.id]));
-        success(`Đã gửi nhắc nhở đến ${alert.groupName || 'nhóm'}`);
+        success(`Đã gửi nhắc nhở đến ${alert.groupName || alert.project_name || 'nhóm'}`);
     };
 
     const refresh = () => {

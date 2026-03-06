@@ -12,14 +12,14 @@ export function mapUser(beUser) {
     else if (roles.includes("LECTURER")) role = "LECTURER";
 
     return {
-        id: String(beUser.id || beUser.Id),
-        name: beUser.fullName || beUser.FullName || "",
+        id: String(beUser.user_id || beUser.id || beUser.Id),
+        name: beUser.full_name || beUser.fullName || beUser.FullName || "",
         email: beUser.email || beUser.Email || "",
         role: role,
         status: (beUser.enabled ?? beUser.Enabled) ? "ACTIVE" : "DISABLED",
-        studentId: beUser.studentCode || beUser.StudentCode || null,
-        lecturerCode: beUser.lecturerCode || beUser.LecturerCode || null,
-        createdAt: beUser.createdAt || beUser.CreatedAt
+        studentId: beUser.student_code || beUser.studentCode || beUser.StudentCode || null,
+        lecturerCode: beUser.lecturer_code || beUser.lecturerCode || beUser.LecturerCode || null,
+        createdAt: beUser.created_at || beUser.createdAt || beUser.CreatedAt
     };
 }
 

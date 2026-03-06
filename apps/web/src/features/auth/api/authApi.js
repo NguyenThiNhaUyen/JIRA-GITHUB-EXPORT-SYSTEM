@@ -30,9 +30,9 @@ import client from "../../../api/client.js";
  * @returns {Promise<LoginResponse>}
  */
 export async function loginWithCredentials(email, password) {
-    // BE dùng PascalCase trong DTO, nhưng ASP.NET Core mặc định
-    // serialize/deserialize camelCase (System.Text.Json). Gửi camelCase là đúng.
-    return client.post("/sessions", { email, password });
+    // Thử gửi PascalCase { Email, Password } đề phòng Backend C# bị lỗi Null Reference và trả ra 500
+    // do không Bind được biến camelCase
+    return client.post("/sessions", { Email: email, Password: password });
 }
 
 /**
