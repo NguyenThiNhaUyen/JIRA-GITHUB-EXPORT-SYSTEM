@@ -1,0 +1,341 @@
+// SRS Reports — Lecturer
+import { useState, useEffect } from "react";
+import { ChevronRight, FileText, Eye, CheckCircle, MessageSquare, ExternalLink } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
+import { Button } from "../../components/ui/button.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { SRS_STATUS as STATUS } from "../../shared/permissions.js";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
+import {
+    useGetProjectSrs,
+    useUpdateSrsStatus,
+    useProvideSrsFeedback
+} from "../../features/srs/hooks/useSrs.js";
+import { getProjectSrs } from "../../features/srs/api/srsApi.js";
+
+
+export default function SrsReports() {
+    const { success } = useToast();
+    const { user } = useAuth();
+    const [selected, setSelected] = useState(null);
+    const [filter, setFilter] = useState("all");
+    const [srsList, setSrsList] = useState([]);
+    const [feedbackText, setFeedbackText] = useState("");
+
+    const { data: coursesData } = useGetCourses({ pageSize: 100 });
+    const { data: projectsData } = useGetProjects({ pageSize: 100 });
+
+    useEffect(() => {
+        if (coursesData?.items && projectsData?.items) {
+            loadAllSrsData(projectsData.items, coursesData.items);
+        }
+    }, [coursesData, projectsData]);
+
+    useEffect(() => {
+        if (selected) {
+            const s = srsList.find(s => s.id === selected);
+            if (s) setFeedbackText(s.feedback || "");
+        }
+    }, [selected, srsList]);
+
+    const loadAllSrsData = async (projects, courses) => {
+        if (!user) return;
+        try {
+            // Lấy toàn bộ SRS cho các projects của lecturer (parallel requests)
+            const srsPromises = projects.map(p => getProjectSrs(p.id));
+            const results = await Promise.all(srsPromises);
+
+            const lecturerSrs = [];
+
+            // Map the data
+            for (let i = 0; i < projects.length; i++) {
+                const project = projects[i];
+                const course = courses.find(c => c.id === project.courseId);
+                const srsOfProject = results[i]; // already mapped by getProjectSrs
+
+                for (const srs of srsOfProject) {
+                    lecturerSrs.push({
+                        id: srs.id,
+                        group: project.name, // Project name is usually group name in this system
+                        project: course?.code || `C-${project.courseId}`,
+                        version: srs.version,
+                        status: srs.status,
+                        date: srs.submittedAt,
+                        reviewer: srs.reviewerName || '—',
+                        feedback: srs.feedback || '',
+                        fileUrl: srs.fileUrl,
+                        rawSrs: srs // hold full original object
+                    });
+                }
+            }
+
+            // sort by submitted at desc
+            lecturerSrs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setSrsList(lecturerSrs);
+        } catch (err) {
+            console.error("Failed to fetch SRS", err);
+        }
+    };
+
+
+    const updateStatusMutation = useUpdateSrsStatus();
+    const feedbackMutation = useProvideSrsFeedback();
+
+    const handleStatusUpdate = async (srsId, newStatus) => {
+        try {
+            await updateStatusMutation.mutateAsync({
+                reportId: srsId,
+                newStatus,
+                feedback: feedbackText
+            });
+            success(`Đã chuyển trạng thái SRS sang ${newStatus}`);
+            loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleFeedback = async (srsId) => {
+        try {
+            await feedbackMutation.mutateAsync({
+                reportId: srsId,
+                feedback: feedbackText
+            });
+            success("Đã ghi nhận nhận xét");
+            loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const isUpdating = updateStatusMutation.isPending || feedbackMutation.isPending;
+
+    const filtered = filter === "all" ? srsList : srsList.filter(s => s.status === filter);
+    const selectedSrs = srsList.find(s => s.id === selected);
+
+    return (
+        <div className="space-y-6">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                <span className="text-teal-700 font-semibold">Giảng viên</span>
+                <ChevronRight size={12} />
+                <span className="text-gray-800 font-semibold">SRS Reports</span>
+            </nav>
+
+            <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-800">SRS Reports</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">Tài liệu đặc tả yêu cầu phần mềm theo nhóm / project</p>
+                </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: "Final", count: srsList.filter(s => s.status === "FINAL").length, color: "text-green-700 bg-green-50 border-green-100" },
+                    { label: "Review", count: srsList.filter(s => s.status === "REVIEW").length, color: "text-blue-700 bg-blue-50 border-blue-100" },
+                    { label: "Draft", count: srsList.filter(s => s.status === "DRAFT").length, color: "text-gray-500 bg-gray-100 border-gray-200" },
+                ].map(({ label, count, color }) => (
+                    <div key={label} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${color}`}>
+                        <span className="text-xs font-semibold">{label}</span>
+                        <span className="text-xl font-bold">{count}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Filter chips */}
+            <div className="flex items-center gap-2">
+                {["all", "FINAL", "REVIEW", "DRAFT"].map(f => (
+                    <button
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${filter === f ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
+                            }`}
+                    >
+                        {f === "all" ? "Tất cả" : f}
+                    </button>
+                ))}
+            </div>
+
+            {/* 2-column: list + preview */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* List */}
+                <div className="lg:col-span-3">
+                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                        <div className="grid grid-cols-12 gap-2 px-5 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <div className="col-span-4">Nhóm / Lớp</div>
+                            <div className="col-span-2 text-center">Version</div>
+                            <div className="col-span-2 text-center">Trạng thái</div>
+                            <div className="col-span-4 text-right">Thao tác</div>
+                        </div>
+                        <CardContent className="p-0">
+                            {filtered.map((srs) => {
+                                const s = STATUS[srs.status];
+                                return (
+                                    <div
+                                        key={srs.id}
+                                        onClick={() => setSelected(srs.id === selected ? null : srs.id)}
+                                        className={`grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/60 transition-colors last:border-0 cursor-pointer ${selected === srs.id ? "bg-teal-50/40" : ""}`}
+                                    >
+                                        <div className="col-span-4">
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{srs.group}</p>
+                                            <p className="text-[11px] text-gray-400 truncate">{srs.project}</p>
+                                        </div>
+                                        <div className="col-span-2 text-center">
+                                            <span className="text-xs font-mono text-gray-600">{srs.version}</span>
+                                        </div>
+                                        <div className="col-span-2 text-center">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${s.cls}`}>
+                                                {s.label}
+                                            </span>
+                                        </div>
+                                        <div className="col-span-4 flex items-center justify-end gap-1 flex-wrap">
+                                            <button
+                                                onClick={e => { e.stopPropagation(); setSelected(srs.id); }}
+                                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-2 py-1.5 border border-teal-100 transition-colors whitespace-nowrap"
+                                            >
+                                                <Eye size={11} />View
+                                            </button>
+                                            {srs.status === "REVIEW" && (
+                                                <button
+                                                    disabled={isUpdating}
+                                                    onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'FINAL'); }}
+                                                    className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg px-2 py-1.5 border border-green-100 transition-colors whitespace-nowrap disabled:opacity-50"
+                                                >
+                                                    <CheckCircle size={11} />Approve
+                                                </button>
+                                            )}
+                                            {srs.status === "REVIEW" && (
+                                                <button
+                                                    disabled={isUpdating}
+                                                    onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'DRAFT'); }}
+                                                    className="flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-lg px-2 py-1.5 border border-red-100 transition-colors whitespace-nowrap disabled:opacity-50"
+                                                >
+                                                    Reject
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Preview panel */}
+                <div className="lg:col-span-2">
+                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white sticky top-4">
+                        <CardHeader className="border-b border-gray-50 pb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                    <FileText size={15} className="text-indigo-600" />
+                                </div>
+                                <CardTitle className="text-base font-semibold text-gray-800">Chi tiết SRS</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-5">
+                            {!selectedSrs ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+                                    <FileText size={32} className="text-gray-300" />
+                                    <p className="text-sm text-gray-400">Chọn một SRS để xem chi tiết</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nhóm</label>
+                                        <p className="text-sm font-semibold text-gray-800 mt-0.5">{selectedSrs.group}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Project</label>
+                                        <p className="text-sm text-gray-700 mt-0.5">{selectedSrs.project}</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phiên bản</label>
+                                            <p className="text-sm font-mono text-gray-700 mt-0.5">{selectedSrs.version}</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Trạng thái</label>
+                                            <div className="mt-0.5">
+                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider ${STATUS[selectedSrs.status].cls}`}>
+                                                    {selectedSrs.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Người review</label>
+                                        <p className="text-sm text-gray-700 mt-0.5">{selectedSrs.reviewer}</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">File đính kèm</label>
+                                        {selectedSrs.fileUrl ? (
+                                            <a href={selectedSrs.fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700 mt-0.5">
+                                                <ExternalLink size={14} /> Tải xuống / Xem file
+                                            </a>
+                                        ) : (
+                                            <p className="text-sm text-gray-400 mt-0.5">Không có link file</p>
+                                        )}
+                                    </div>
+                                    {/* Grading Form Section */}
+                                    <div className="pt-4 border-t border-gray-100 bg-gray-50/50 -mx-6 px-6 pb-6 rounded-b-[24px]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-6 h-6 rounded-lg bg-teal-100 flex items-center justify-center">
+                                                <CheckCircle size={14} className="text-teal-600" />
+                                            </div>
+                                            <h4 className="text-sm font-bold text-gray-800">Chấm bài & Nhận xét</h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                                                    Nhận xét của Giảng viên
+                                                </label>
+                                                <textarea
+                                                    rows={4}
+                                                    value={feedbackText}
+                                                    onChange={(e) => setFeedbackText(e.target.value)}
+                                                    placeholder="Nhập nội dung phản hồi cho nhóm..."
+                                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none transition-all shadow-sm"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    disabled={isUpdating}
+                                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-10 text-xs font-bold border-0 shadow-sm"
+                                                    onClick={() => handleStatusUpdate(selectedSrs.id, 'FINAL')}
+                                                >
+                                                    <CheckCircle size={14} className="mr-1" /> Duyệt Final
+                                                </Button>
+                                                <Button
+                                                    disabled={isUpdating}
+                                                    variant="outline"
+                                                    className="flex-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl h-10 text-xs font-bold shadow-sm"
+                                                    onClick={() => handleStatusUpdate(selectedSrs.id, 'DRAFT')}
+                                                >
+                                                    Từ chối (Reject)
+                                                </Button>
+                                            </div>
+
+                                            <Button
+                                                variant="ghost"
+                                                disabled={isUpdating || !feedbackText}
+                                                className="w-full text-[11px] text-gray-500 hover:text-teal-600 hover:bg-teal-50 h-8 font-medium rounded-lg"
+                                                onClick={() => handleFeedback(selectedSrs.id)}
+                                            >
+                                                <MessageSquare size={12} className="mr-1" /> Chỉ lưu nhận xét
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </div>
+    );
+}

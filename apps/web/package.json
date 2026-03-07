@@ -14,6 +14,10 @@
     "@tanstack/react-query": "^5.90.17",
     "@tanstack/react-table": "^8.21.3",
     "@types/node": "^25.0.8",
+<<<<<<< HEAD
+=======
+    "axios": "^1.13.6",
+>>>>>>> recover-local-code
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "esbuild": "0.27.2",
