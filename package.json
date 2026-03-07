@@ -1,0 +1,12 @@
+{
+  "name": "jira-github-export-system",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev"
+  }
+}
