@@ -33,8 +33,8 @@ public class SemesterService : ISemesterService
         var semester = new semester
         {
             name = request.Name,
-            start_date = DateOnly.FromDateTime(request.StartDate),
-            end_date = DateOnly.FromDateTime(request.EndDate),
+            start_date = request.StartDate,
+            end_date = request.EndDate,
             created_at = DateTime.UtcNow
         };
 
@@ -50,8 +50,8 @@ public class SemesterService : ISemesterService
         if (semester == null) throw new NotFoundException("Semester not found");
 
         semester.name = request.Name;
-        semester.start_date = DateOnly.FromDateTime(request.StartDate);
-        semester.end_date = DateOnly.FromDateTime(request.EndDate);
+        semester.start_date = request.StartDate;
+        semester.end_date = request.EndDate;
 
         _unitOfWork.Semesters.Update(semester);
         await _unitOfWork.SaveChangesAsync();
