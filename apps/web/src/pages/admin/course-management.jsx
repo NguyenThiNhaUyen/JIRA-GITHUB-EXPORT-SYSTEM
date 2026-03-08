@@ -496,16 +496,25 @@ export default function CourseManagement() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Mã lớp *
             </label>
-            <input
-              type="text"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+            <select
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm uppercase"
               value={formData.code}
               onChange={(e) =>
-                setFormData({ ...formData, code: e.target.value.toLowerCase() })
+                setFormData({ ...formData, code: e.target.value })
               }
               required
-            />
-            <p className="text-xs text-gray-500 mt-1">Ví dụ: se1821, exe1822, prn1823</p>
+            >
+              <option value="">-- Chọn mã lớp --</option>
+              <option value="SE1811">SE1811</option>
+              <option value="SE1812">SE1812</option>
+              <option value="SE1813">SE1813</option>
+              <option value="SE1821">SE1821</option>
+              <option value="SE1822">SE1822</option>
+              <option value="SE1823">SE1823</option>
+              <option value="IA1801">IA1801</option>
+              <option value="AI1802">AI1802</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Chọn mã lớp từ danh sách chuẩn của trường</p>
           </div>
 
           <div>

@@ -61,11 +61,18 @@ export default function SemesterManagement() {
 
     const handleEdit = (semester) => {
         setEditingSemester(semester);
+        
+        // Ensure format is YYYY-MM-DD for HTML input[type="date"]
+        const formatForInput = (dateStr) => {
+            if (!dateStr || dateStr.startsWith('0001')) return "";
+            return dateStr.split('T')[0];
+        };
+
         setFormData({
-            name: semester.name,
-            startDate: semester.startDate,
-            endDate: semester.endDate,
-            status: semester.status,
+            name: semester.name || "",
+            startDate: formatForInput(semester.startDate),
+            endDate: formatForInput(semester.endDate),
+            status: semester.status || "ACTIVE",
         });
         setShowModal(true);
     };
@@ -83,14 +90,26 @@ export default function SemesterManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const code = formData.name.toUpperCase().replace(/\s+/g, '');
+        // And use all formats since C# might be strict on Data Transfer Object
+        const finalStartDate = formData.startDate.includes('T') ? formData.startDate : `${formData.startDate}T00:00:00Z`;
+        const finalEndDate = formData.endDate.includes('T') ? formData.endDate : `${formData.endDate}T23:59:59Z`;
         
-        // ASP.NET Core DateTime format check - append T00:00:00Z if it's just YYYY-MM-DD
         const formattedPayload = {
-            ...formData,
-            code,
-            startDate: formData.startDate.includes('T') ? formData.startDate : `${formData.startDate}T00:00:00Z`,
-            endDate: formData.endDate.includes('T') ? formData.endDate : `${formData.endDate}T23:59:59Z`,
+            id: editingSemester ? editingSemester.id : undefined,
+            Id: editingSemester ? editingSemester.id : undefined,
+            name: formData.name,
+            Name: formData.name,
+            code: code,
+            Code: code,
+            semester_code: code,
+            startDate: finalStartDate,
+            StartDate: finalStartDate,
+            start_date: finalStartDate,
+            endDate: finalEndDate,
+            EndDate: finalEndDate,
+            end_date: finalEndDate,
+            status: formData.status,
+            Status: formData.status
         };
 
         try {
@@ -193,10 +212,10 @@ export default function SemesterManagement() {
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
                                                     <div className="text-sm text-gray-600 font-medium">
-                                                        {new Date(semester.startDate).toLocaleDateString('vi-VN')}
+                                                        {(!semester.startDate || semester.startDate.startsWith('0001')) ? "Chưa xác định" : new Date(semester.startDate).toLocaleDateString('vi-VN')}
                                                     </div>
                                                     <div className="text-xs text-gray-400 mt-0.5">
-                                                        {new Date(semester.endDate).toLocaleDateString('vi-VN')}
+                                                        {(!semester.endDate || semester.endDate.startsWith('0001')) ? "Chưa xác định" : new Date(semester.endDate).toLocaleDateString('vi-VN')}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
