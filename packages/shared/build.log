@@ -1,1 +1,0 @@
-D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Contracts\Requests\Courses\UpdateSemesterRequest.cs(5,14): error CS0101: The namespace 'JiraGithubExport.Shared.Contracts.Requests.Courses' already contains a definition for 'UpdateSemesterRequest' [D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\Shared.csproj]

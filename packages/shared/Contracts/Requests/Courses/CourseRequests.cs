@@ -8,10 +8,10 @@ public class CreateSemesterRequest
     public string Name { get; set; } = null!;
 
     [Required]
-    public DateOnly StartDate { get; set; }
+    public DateTime StartDate { get; set; }
 
     [Required]
-    public DateOnly EndDate { get; set; }
+    public DateTime EndDate { get; set; }
 }
 
 public class CreateSubjectRequest
