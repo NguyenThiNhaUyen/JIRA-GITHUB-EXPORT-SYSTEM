@@ -3,13 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
-<<<<<<< HEAD
-import Login from "./pages/login.jsx";
-import Unauthorized from "./pages/unauthorized.jsx";
-import NotFound from "./pages/not-found.jsx";
-import TestUI from "./pages/test-ui.jsx";
-
-=======
 import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
@@ -19,31 +12,10 @@ import TestUI from "./pages/test-ui.jsx";
 // Admin Layout
 import AdminLayout from "./layouts/AdminLayout.jsx";
 
->>>>>>> recover-local-code
 // Admin pages
 import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
 import AdminReports from "./pages/admin/admin-reports.jsx";
 import CourseManagement from "./pages/admin/course-management.jsx";
-<<<<<<< HEAD
-import UserManagement from "./pages/admin/user-management.jsx";
-
-// Lecturer pages
-import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
-import ProjectsOverview from "./pages/lecturer/projects-overview.jsx";
-import ProjectDetail from "./pages/lecturer/project-detail.jsx";
-
-// Student pages
-import StudentDashboard from "./pages/student/student-dashboard.jsx";
-import StudentProject from "./pages/student/student-project.jsx";
-
-// Legacy pages
-import Home from "./pages/home.jsx";
-import Dashboard from "./pages/dashboard.jsx";
-import Tasks from "./pages/tasks.jsx";
-import Commits from "./pages/commits.jsx";
-import Deadlines from "./pages/deadlines.jsx";
-import Performance from "./pages/performance.jsx";
-=======
 import SemesterManagement from "./pages/admin/semester-management.jsx";
 import SubjectManagement from "./pages/admin/subject-management.jsx";
 import LecturerAssignment from "./pages/admin/lecturer-assignment.jsx";
@@ -73,7 +45,6 @@ import StudentCoursesPage, {
 } from "./pages/student/student-placeholders.jsx";
 
 
->>>>>>> recover-local-code
 
 import { useAuth } from "./context/AuthContext.jsx";
 
@@ -97,10 +68,7 @@ export default function App() {
       {/* Public routes */}
       <Route path="/test-ui" element={<TestUI />} />
       <Route path="/login" element={<Login />} />
-<<<<<<< HEAD
-=======
       <Route path="/forgot-password" element={<ForgotPassword />} />
->>>>>>> recover-local-code
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />
 
@@ -110,13 +78,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-<<<<<<< HEAD
-              <AdminDashboard />
-=======
               <AdminLayout>
                 <AdminDashboard />
               </AdminLayout>
->>>>>>> recover-local-code
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -126,13 +90,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-<<<<<<< HEAD
-              <AdminReports />
-=======
               <AdminLayout>
                 <AdminReports />
               </AdminLayout>
->>>>>>> recover-local-code
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -142,13 +102,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-<<<<<<< HEAD
-              <CourseManagement />
-=======
               <AdminLayout>
                 <CourseManagement />
               </AdminLayout>
->>>>>>> recover-local-code
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -158,25 +114,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-<<<<<<< HEAD
-              <CourseManagement />
-=======
               <AdminLayout>
                 <CourseManagement />
               </AdminLayout>
->>>>>>> recover-local-code
             </RoleGuard>
           </ProtectedRoute>
         }
       />
       <Route
-<<<<<<< HEAD
-        path="/admin/users"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="ADMIN">
-              <UserManagement />
-=======
         path="/admin/semesters"
         element={
           <ProtectedRoute>
@@ -184,67 +129,10 @@ export default function App() {
               <AdminLayout>
                 <SemesterManagement />
               </AdminLayout>
->>>>>>> recover-local-code
             </RoleGuard>
           </ProtectedRoute>
         }
       />
-<<<<<<< HEAD
-
-      {/* Lecturer routes */}
-      <Route
-        path="/lecturer"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerDashboard />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/course/:courseId/projects"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <ProjectsOverview />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/project/:projectId"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <ProjectDetail />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Student routes */}
-      <Route
-        path="/student"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="STUDENT">
-              <StudentDashboard />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/student/project/:projectId"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="STUDENT">
-              <StudentProject />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-=======
       <Route
         path="/admin/subjects"
         element={
@@ -280,7 +168,6 @@ export default function App() {
       <Route path="/student/alerts" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentAlertsPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
       <Route path="/student/srs" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentSrsPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
       <Route path="/student/project/:projectId" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentProject /></StudentLayout></RoleGuard></ProtectedRoute>} />
->>>>>>> recover-local-code
 
       {/* Legacy protected routes */}
       <Route
@@ -289,15 +176,6 @@ export default function App() {
           <ProtectedRoute>
             <MainLayout>
               <Routes>
-<<<<<<< HEAD
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/commits" element={<Commits />} />
-                <Route path="/deadlines" element={<Deadlines />} />
-                <Route path="/performance" element={<Performance />} />
-=======
->>>>>>> recover-local-code
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-// Login page - Updated with theme consistency
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
-import { Button } from "../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.jsx";
-import { Alert } from "../components/ui/interactive.jsx";
-=======
 // Login page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -14,7 +5,6 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { Button } from "../components/ui/button.jsx";
 import { Alert } from "../components/ui/interactive.jsx";
 import { BookOpen, Shield, GraduationCap } from "lucide-react";
->>>>>>> recover-local-code
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -34,11 +24,6 @@ export default function Login() {
     }
   };
 
-<<<<<<< HEAD
-  const quickLogin = async (roleEmail) => {
-    setError("");
-    const result = await login(roleEmail, "123456");
-=======
   const quickLogin = async (role) => {
     setError("");
     // Tài khoản mặc định BE seed — xem Program.cs
@@ -49,7 +34,6 @@ export default function Login() {
     };
     const creds = QUICK_CREDS[role];
     const result = await login(creds.email, creds.password);
->>>>>>> recover-local-code
     if (result.success) {
       navigate(result.redirectPath);
     } else {
@@ -58,23 +42,6 @@ export default function Login() {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Project-Based Learning</h1>
-          <p className="text-gray-600">Hệ thống quản lý học tập dự án</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Đăng nhập</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-=======
     <div className="h-screen w-screen flex items-center justify-center bg-[#f0fdfa] p-4 sm:p-6 lg:p-8 relative overflow-hidden">
 
       {/* Blurred background spots for glow - Light Teal/Cyan */}
@@ -107,62 +74,36 @@ export default function Login() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
                 </label>
->>>>>>> recover-local-code
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-<<<<<<< HEAD
-                  placeholder="Nhập email"
-                  required
-                  disabled={loading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-=======
                   placeholder="Nhập email của bạn"
                   required
                   disabled={loading}
                   className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
->>>>>>> recover-local-code
                 />
               </div>
 
               <div>
-<<<<<<< HEAD
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-=======
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
->>>>>>> recover-local-code
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-<<<<<<< HEAD
-                  placeholder="Nhập password"
-                  required
-                  disabled={loading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-=======
                   placeholder="Nhập mật khẩu của bạn"
                   required
                   disabled={loading}
                   className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
->>>>>>> recover-local-code
                 />
               </div>
 
               {error && (
-<<<<<<< HEAD
-                <Alert variant="error">
-=======
                 <Alert variant="error" className="py-2 px-4 rounded-xl text-sm bg-red-50 border-red-200 text-red-600">
->>>>>>> recover-local-code
                   {error}
                 </Alert>
               )}
 
-<<<<<<< HEAD
-              <Button type="submit" disabled={loading} className="w-full">
-=======
               <div className="flex items-center justify-between px-2 pt-1 pb-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0" />
@@ -181,64 +122,10 @@ export default function Login() {
                 disabled={loading}
                 className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-full shadow-[0_4px_15px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.4)] transition-all duration-300 text-sm"
               >
->>>>>>> recover-local-code
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </form>
 
-<<<<<<< HEAD
-            <div className="mt-6 space-y-3">
-              <div className="text-center text-sm text-gray-600 font-medium">
-                Đăng nhập nhanh:
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin("admin@gmail.com")}
-                  disabled={loading}
-                  className="text-xs"
-                >
-                  Admin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin("lecturer@gmail.com")}
-                  disabled={loading}
-                  className="text-xs"
-                >
-                  Lecturer
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin("student@gmail.com")}
-                  disabled={loading}
-                  className="text-xs"
-                >
-                  Student
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center space-y-2">
-              <div className="text-xs text-gray-600">
-                <strong>Tài khoản mẫu:</strong><br/>
-                admin@gmail.com / 123456<br/>
-                lecturer@gmail.com / 123456<br/>
-                student@gmail.com / 123456
-              </div>
-              <a href="#" className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
-                Quên mật khẩu?
-              </a>
-            </div>
-          </CardContent>
-        </Card>
-=======
             <div className="mt-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px bg-teal-100 flex-1"></div>
@@ -332,12 +219,7 @@ export default function Login() {
             </div>
           </div>
         </div>
->>>>>>> recover-local-code
       </div>
     </div>
   );
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> recover-local-code
