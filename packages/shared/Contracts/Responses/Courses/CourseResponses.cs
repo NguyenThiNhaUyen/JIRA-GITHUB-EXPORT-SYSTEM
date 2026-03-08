@@ -26,8 +26,19 @@ public class SemesterInfo
     public long Id { get; set; }
     public string Name { get; set; } = null!;
     public string? Code { get; set; } // alias for Name, used by FE
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
+    
+    public string Status 
+    {
+        get 
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            if (today < StartDate) return "UPCOMING";
+            if (today > EndDate) return "COMPLETED";
+            return "ACTIVE";
+        }
+    }
 }
 
 public class LecturerInfo
