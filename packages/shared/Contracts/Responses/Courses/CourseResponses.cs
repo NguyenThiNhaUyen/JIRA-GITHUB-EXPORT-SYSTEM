@@ -28,6 +28,17 @@ public class SemesterInfo
     public string? Code { get; set; } // alias for Name, used by FE
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    
+    public string Status 
+    {
+        get 
+        {
+            var today = DateTime.UtcNow.Date;
+            if (today < StartDate.Date) return "UPCOMING";
+            if (today > EndDate.Date) return "COMPLETED";
+            return "ACTIVE";
+        }
+    }
 }
 
 public class LecturerInfo

@@ -27,7 +27,9 @@ public class MappingProfile : Profile
         // ============================================
 
         CreateMap<semester, SemesterInfo>()
-            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name));
+            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name))
+            .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.start_date.HasValue ? src.start_date.Value.ToDateTime(TimeOnly.MinValue) : DateTime.MinValue))
+            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date.HasValue ? src.end_date.Value.ToDateTime(TimeOnly.MinValue) : DateTime.MinValue));
 
         CreateMap<subject, SubjectInfo>();
 
