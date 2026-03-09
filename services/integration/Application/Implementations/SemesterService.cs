@@ -44,6 +44,45 @@ public class SemesterService : ISemesterService
         return _mapper.Map<SemesterInfo>(semester);
     }
 
+    public async Task<List<SemesterInfo>> GenerateSemestersAsync(GenerateSemestersRequest request)
+    {
+        int year = request.Year;
+
+        var semestersToCreate = new List<(string Name, DateOnly Start, DateOnly End)>
+        {
+            ($"Spring {year}", new DateOnly(year, 1, 1), new DateOnly(year, 4, 30)),
+            ($"Summer {year}", new DateOnly(year, 5, 1), new DateOnly(year, 8, 31)),
+            ($"Fall {year}", new DateOnly(year, 9, 1), new DateOnly(year, 12, 31))
+        };
+
+        var createdSemesters = new List<semester>();
+
+        foreach (var s in semestersToCreate)
+        {
+            var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(x => x.name == s.Name);
+            if (existing == null)
+            {
+                var semester = new semester
+                {
+                    name = s.Name,
+                    start_date = s.Start,
+                    end_date = s.End,
+                    created_at = DateTime.UtcNow
+                };
+                _unitOfWork.Semesters.Add(semester);
+                createdSemesters.Add(semester);
+            }
+            else
+            {
+                createdSemesters.Add(existing); // Include even if already exists
+            }
+        }
+
+        await _unitOfWork.SaveChangesAsync(); // All in one transaction
+
+        return _mapper.Map<List<SemesterInfo>>(createdSemesters);
+    }
+
     public async Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request)
     {
         var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
