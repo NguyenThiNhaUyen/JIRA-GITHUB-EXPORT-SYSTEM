@@ -91,7 +91,6 @@ public class SemesterService : ISemesterService
         var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name && s.id != semesterId);
         if (existing != null) throw new BusinessException("Semester with this name already exists");
 
-
         semester.name = request.Name;
         semester.start_date = DateOnly.FromDateTime(request.StartDate);
         semester.end_date = DateOnly.FromDateTime(request.EndDate);
@@ -103,8 +102,16 @@ public class SemesterService : ISemesterService
 
     public async Task DeleteSemesterAsync(long semesterId)
     {
-        var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
+        var semester = await _unitOfWork.Semesters.Query()
+            .Include(s => s.courses)
+            .FirstOrDefaultAsync(s => s.id == semesterId);
+            
         if (semester == null) throw new NotFoundException("Semester not found");
+
+        if (semester.courses != null && semester.courses.Any())
+        {
+            throw new BusinessException("Không thể xóa học kỳ vì đã có lớp học (Course) đang diễn ra trong học kỳ này. Vui lòng xóa các lớp học trước.");
+        }
 
         _unitOfWork.Semesters.Remove(semester);
         await _unitOfWork.SaveChangesAsync();
