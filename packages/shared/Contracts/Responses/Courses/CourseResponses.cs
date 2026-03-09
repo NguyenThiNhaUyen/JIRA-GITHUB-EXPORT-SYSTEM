@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
@@ -16,14 +18,31 @@ public class CourseDetailResponse
 
 public class SubjectInfo
 {
+    [JsonPropertyName("id")]
     public long Id { get; set; }
+    
+    [JsonPropertyName("subject_code")]
     public string SubjectCode { get; set; } = null!;
+    
+    [JsonPropertyName("subject_name")]
     public string SubjectName { get; set; } = null!;
+    
+    [JsonPropertyName("department")]
     public string Department { get; set; } = null!;
+    
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
+    
+    [JsonPropertyName("credits")]
     public int Credits { get; set; }
+    
+    [JsonPropertyName("max_students")]
     public int MaxStudents { get; set; }
+    
+    [JsonPropertyName("status")]
     public string Status { get; set; } = null!;
+    
+    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; set; }
 }
 
