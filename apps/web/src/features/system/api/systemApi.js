@@ -13,6 +13,11 @@ export async function createSemester(data) {
     return mapSemester(unwrap(res));
 }
 
+export async function generateSemesters(data) {
+    const res = await client.post("/semesters/generate", data);
+    return unwrap(res);
+}
+
 export async function updateSemester(id, updates) {
     const res = await client.put(`/semesters/${id}`, updates);
     return mapSemester(unwrap(res));

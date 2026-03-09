@@ -17,12 +17,14 @@ export function mapSemester(beSem) {
 export function mapSubject(beSub) {
     if (!beSub) return null;
     return {
-        id: String(beSub.id || beSub.Id),
-        code: beSub.subject_code || beSub.subjectCode || beSub.SubjectCode || "",
-        name: beSub.subject_name || beSub.subjectName || beSub.SubjectName || "",
+        id: String(beSub.id || beSub.Id || ""),
+        subject_code: beSub.subject_code || beSub.subjectCode || beSub.SubjectCode || beSub.code || "",
+        subject_name: beSub.subject_name || beSub.subjectName || beSub.SubjectName || beSub.name || "",
+        department: beSub.department || beSub.Department || "",
+        description: beSub.description || beSub.Description || "",
         credits: beSub.credits || beSub.Credits || 3,
-        status: beSub.status || beSub.Status || "ACTIVE",
-        description: beSub.description || beSub.Description || ""
+        maxStudents: beSub.max_students || beSub.maxStudents || beSub.MaxStudents || 40,
+        status: beSub.status || beSub.Status || "ACTIVE"
     };
 }
 
