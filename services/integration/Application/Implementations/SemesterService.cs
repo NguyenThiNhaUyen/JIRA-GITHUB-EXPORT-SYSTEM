@@ -88,6 +88,10 @@ public class SemesterService : ISemesterService
         var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
         if (semester == null) throw new NotFoundException("Semester not found");
 
+        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name && s.id != semesterId);
+        if (existing != null) throw new BusinessException("Semester with this name already exists");
+
+
         semester.name = request.Name;
         semester.start_date = DateOnly.FromDateTime(request.StartDate);
         semester.end_date = DateOnly.FromDateTime(request.EndDate);
