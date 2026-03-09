@@ -47,9 +47,19 @@ using Microsoft.OpenApi.Models;
 
             var connectionString = builder.Configuration.GetConnectionString("Default");
             
-            builder.Services.AddDbContext<JiraGithubToolDbContext>(options =>
+            // Fix for Supabase MaxClientsInSessionMode: Enforce strict connection pooling limits
+            if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("Max Pool Size", StringComparison.OrdinalIgnoreCase))
             {
-                options.UseNpgsql(connectionString);
+                connectionString = $"{connectionString.TrimEnd(';')};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=5;Connection Idle Lifetime=20;";
+            }
+
+            // Fix connection exhaustion by pooling DbContext instances
+            builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
+            {
+                options.UseNpgsql(connectionString, o => 
+                {
+                    o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
+                });
 
                 if (builder.Environment.IsDevelopment())
                 {
