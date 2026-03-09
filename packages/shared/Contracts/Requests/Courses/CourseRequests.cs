@@ -44,6 +44,20 @@ public class CreateSubjectRequest
 
     [Required]
     public string SubjectName { get; set; } = null!;
+
+    [Required]
+    public string Department { get; set; } = null!;
+    
+    public string? Description { get; set; }
+    
+    [Required]
+    public int Credits { get; set; } = 3;
+    
+    [Required]
+    public int MaxStudents { get; set; } = 40;
+    
+    [Required]
+    public string Status { get; set; } = "ACTIVE";
 }
 
 public class CreateCourseRequest
