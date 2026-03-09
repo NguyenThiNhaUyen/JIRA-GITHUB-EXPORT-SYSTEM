@@ -19,6 +19,12 @@ public class SubjectInfo
     public long Id { get; set; }
     public string SubjectCode { get; set; } = null!;
     public string SubjectName { get; set; } = null!;
+    public string Department { get; set; } = null!;
+    public string? Description { get; set; }
+    public int Credits { get; set; }
+    public int MaxStudents { get; set; }
+    public string Status { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
 }
 
 public class SemesterInfo

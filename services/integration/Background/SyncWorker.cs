@@ -107,15 +107,20 @@ public class SyncWorker : BackgroundService
         var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
         var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
 
-        // Get all active integration project
+        // Fetch data and release DB connection IMMEDIATELY
         var integrations = await unitOfWork.ProjectIntegrations.Query()
             .Include(pi => pi.github_repo)
             .Include(pi => pi.jira_project)
             .Include(pi => pi.project)
             .Where(pi => pi.project.status == "ACTIVE")
+            .AsNoTracking() // Optimize Memory
             .ToListAsync(stoppingToken);
+            
+        // Explicitly dispose of the DB Context attached to the current Scope
+        // so we don't hold the connection open while making slow REST API calls to Github/Jira
+        unitOfWork.Dispose();
 
-        _logger.LogInformation("Found {Count} active integrations to sync", integrations.Count);
+        _logger.LogInformation("Found {Count} active integrations to sync. DB Connection released to pool.", integrations.Count);
 
         foreach (var integration in integrations)
         {
@@ -142,8 +147,6 @@ public class SyncWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to sync integration for project {ProjectId}. Will retry in next cycle.", integration.project_id);
-                // Continue to next integration instead of stopping
-                continue;
             }
         }
         

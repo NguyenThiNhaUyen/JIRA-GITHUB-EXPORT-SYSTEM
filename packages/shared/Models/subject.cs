@@ -11,6 +11,16 @@ public partial class subject
 
     public string subject_name { get; set; } = null!;
 
+    public string department { get; set; } = null!;
+
+    public string? description { get; set; }
+
+    public int credits { get; set; } = 3;
+
+    public int max_students { get; set; } = 40;
+
+    public string status { get; set; } = "ACTIVE";
+
     public DateTime created_at { get; set; }
 
     public virtual ICollection<course> courses { get; set; } = new List<course>();

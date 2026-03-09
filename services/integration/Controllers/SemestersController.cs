@@ -43,6 +43,18 @@ public class SemestersController : ControllerBase
     }
 
     /// <summary>
+    /// Auto-generate Spring, Summer, and Fall semesters for a given year (Admin only)
+    /// </summary>
+    [HttpPost("generate")]
+    [Authorize(Roles = "ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<SemesterInfo>>), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Generate([FromBody] GenerateSemestersRequest request)
+    {
+        var result = await _semesterService.GenerateSemestersAsync(request);
+        return Ok(ApiResponse<List<SemesterInfo>>.SuccessResponse(result, $"Semesters for {request.Year} generated successfully"));
+    }
+
+    /// <summary>
     /// Update a semester (Admin only)
     /// </summary>
     [HttpPut("{id}")]
