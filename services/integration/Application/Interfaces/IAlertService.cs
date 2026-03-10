@@ -1,6 +1,7 @@
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
@@ -12,17 +13,33 @@ public interface IAlertService
 
 public class AlertResponse
 {
+    [JsonPropertyName("id")]
     public long Id { get; set; }
+
+    [JsonPropertyName("alert_type")]
     public string AlertType { get; set; } = null!;
+
+    [JsonPropertyName("target_entity_type")]
     public string TargetEntityType { get; set; } = null!;
+
+    [JsonPropertyName("target_entity_id")]
     public long TargetEntityId { get; set; }
+
+    [JsonPropertyName("project_id")]
     public long? ProjectId { get; set; }
+
+    [JsonPropertyName("project_name")]
     public string? ProjectName { get; set; }
+
+    [JsonPropertyName("severity")]
     public string Severity { get; set; } = null!;
+
+    [JsonPropertyName("message")]
     public string Message { get; set; } = null!;
-    public int ThresholdDays { get; set; }
-    public DateTime? LastActivityAt { get; set; }
+
+    [JsonPropertyName("is_resolved")]
     public bool IsResolved { get; set; }
-    public DateTime? ResolvedAt { get; set; }
+
+    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; set; }
 }

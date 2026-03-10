@@ -46,10 +46,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
             .ForMember(dest => dest.CourseCode, opt => opt.MapFrom(src => src.course_code))
             .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.course_name))
-            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.subject))
-            .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.semester))
-            .ForMember(dest => dest.EnrolledStudentsCount, opt => opt.MapFrom(src => src.course_enrollments.Count(e => e.status == "ACTIVE")))
-            .ForMember(dest => dest.ProjectsCount, opt => opt.MapFrom(src => src.projects.Count(p => p.status == "ACTIVE")))
+            .ForMember(dest => dest.SubjectId, opt => opt.MapFrom(src => src.subject_id))
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.subject != null ? src.subject.subject_code : "N/A"))
+            .ForMember(dest => dest.SemesterId, opt => opt.MapFrom(src => src.semester_id))
+            .ForMember(dest => dest.SemesterName, opt => opt.MapFrom(src => src.semester != null ? src.semester.name : "N/A"))
             .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users))
             .ForMember(dest => dest.Enrollments, opt => opt.MapFrom(src => src.course_enrollments.Where(e => e.status == "ACTIVE")))
             .ForMember(dest => dest.MaxStudents, opt => opt.MapFrom(src => src.max_students))
@@ -70,34 +70,40 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.student_user.user.full_name))
             .ForMember(dest => dest.TeamRole, opt => opt.MapFrom(src => src.team_role))
             .ForMember(dest => dest.ParticipationStatus, opt => opt.MapFrom(src => src.participation_status))
-            .ForMember(dest => dest.Responsibility, opt => opt.MapFrom(src => src.responsibility))
-            .ForMember(dest => dest.JoinedAt, opt => opt.MapFrom(src => src.joined_at));
-
-        CreateMap<project_integration, IntegrationInfo>()
-            .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.repo_url : null))
-            .ForMember(dest => dest.GithubRepoOwner, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.owner_login : null))
-            .ForMember(dest => dest.GithubRepoName, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.name : null))
-            .ForMember(dest => dest.JiraProjectKey, opt => opt.MapFrom(src => src.jira_project != null ? src.jira_project.jira_project_key : null))
-            .ForMember(dest => dest.JiraSiteUrl, opt => opt.MapFrom(src => src.jira_project != null ? src.jira_project.jira_url : null))
-            // Approval workflow fields
-            .ForMember(dest => dest.ApprovalStatus, opt => opt.MapFrom(src => src.approval_status))
-            .ForMember(dest => dest.SubmittedByUserId, opt => opt.MapFrom(src => src.submitted_by_user_id))
-            .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => src.submitted_at))
-            .ForMember(dest => dest.ApprovedByUserId, opt => opt.MapFrom(src => src.approved_by_user_id))
-            .ForMember(dest => dest.ApprovedByName, opt => opt.MapFrom(src => src.approved_by != null ? src.approved_by.full_name : null))
-            .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.approved_at))
-            .ForMember(dest => dest.RejectedReason, opt => opt.MapFrom(src => src.rejected_reason));
+            .ForMember(dest => dest.ContributionScore, opt => opt.MapFrom(src => 90)); // Sample score
 
         CreateMap<project, ProjectDetailResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.name))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.description))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
-            .ForMember(dest => dest.CourseId, opt => opt.MapFrom(src => src.course_id))
-            .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.course.course_name))
-            .ForMember(dest => dest.TeamCount, opt => opt.MapFrom(src => src.team_members.Count(tm => tm.participation_status == "ACTIVE")))
+            .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.course != null ? src.course.course_name : "N/A"))
             .ForMember(dest => dest.TeamMembers, opt => opt.MapFrom(src => src.team_members.Where(tm => tm.participation_status == "ACTIVE")))
-            .ForMember(dest => dest.Integration, opt => opt.MapFrom(src => src.project_integration));
+            .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.github_repo != null ? src.project_integration.github_repo.repo_url : null))
+            .ForMember(dest => dest.JiraProjectUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.jira_project != null ? src.project_integration.jira_project.jira_url : null))
+            .ForMember(dest => dest.IntegrationStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"));
+
+        CreateMap<team_invitation, InvitationResponse>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
+            .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.project_id))
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.project.name))
+            .ForMember(dest => dest.InvitedByName, opt => opt.MapFrom(src => src.inviter_user.full_name))
+            .ForMember(dest => dest.InvitedStudentUserId, opt => opt.MapFrom(src => src.invitee_user_id))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
+            .ForMember(dest => dest.Message, opt => opt.MapFrom(src => src.message))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
+
+        CreateMap<project_document, SrsDocumentResponse>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
+            .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.project_id))
+            .ForMember(dest => dest.VersionNo, opt => opt.MapFrom(src => src.version_no))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
+            .ForMember(dest => dest.FileUrl, opt => opt.MapFrom(src => src.file_url))
+            .ForMember(dest => dest.SubmittedByName, opt => opt.MapFrom(src => src.submitted_by_user != null ? src.submitted_by_user.full_name : "N/A"))
+            .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => src.submitted_at))
+            .ForMember(dest => dest.ReviewerName, opt => opt.MapFrom(src => src.reviewer != null ? src.reviewer.full_name : "N/A"))
+            .ForMember(dest => dest.ReviewedAt, opt => opt.MapFrom(src => src.reviewed_at))
+            .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.feedback));
     }
 }
 

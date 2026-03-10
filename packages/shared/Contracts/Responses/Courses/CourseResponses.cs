@@ -13,29 +13,29 @@ public class CourseDetailResponse
     [JsonPropertyName("course_name")]
     public string CourseName { get; set; } = null!;
 
-    [JsonPropertyName("subject")]
-    public SubjectInfo Subject { get; set; } = null!;
+    [JsonPropertyName("subject_id")]
+    public long SubjectId { get; set; }
 
-    [JsonPropertyName("semester")]
-    public SemesterInfo Semester { get; set; } = null!;
+    [JsonPropertyName("subject_code")]
+    public string SubjectCode { get; set; } = null!;
 
-    [JsonPropertyName("enrolled_students_count")]
-    public int EnrolledStudentsCount { get; set; }
+    [JsonPropertyName("semester_id")]
+    public long SemesterId { get; set; }
 
-    [JsonPropertyName("projects_count")]
-    public int ProjectsCount { get; set; }
+    [JsonPropertyName("semester_name")]
+    public string SemesterName { get; set; } = null!;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = "ACTIVE";
+
+    [JsonPropertyName("max_students")]
+    public int? MaxStudents { get; set; }
 
     [JsonPropertyName("lecturers")]
     public List<LecturerInfo> Lecturers { get; set; } = new();
 
     [JsonPropertyName("enrollments")]
     public List<EnrollmentInfo> Enrollments { get; set; } = new();
-
-    [JsonPropertyName("max_students")]
-    public int? MaxStudents { get; set; }
-
-    [JsonPropertyName("status")]
-    public string Status { get; set; } = "ACTIVE";
 }
 
 public class SubjectInfo
@@ -76,7 +76,7 @@ public class SemesterInfo
     [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
 
-    [JsonPropertyName("code")]
+    [JsonPropertyName("semester_code")]
     public string? Code { get; set; } // alias for Name, used by FE
 
     [JsonPropertyName("start_date")]
@@ -100,7 +100,7 @@ public class SemesterInfo
 
 public class LecturerInfo
 {
-    [JsonPropertyName("id")]
+    [JsonPropertyName("user_id")]
     public long UserId { get; set; }
 
     [JsonPropertyName("full_name")]
