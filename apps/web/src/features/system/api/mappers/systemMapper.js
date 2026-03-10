@@ -20,7 +20,10 @@ export function mapSubject(beSub) {
         id: String(beSub.id || beSub.Id),
         code: beSub.subjectCode || beSub.SubjectCode || "",
         name: beSub.subjectName || beSub.SubjectName || "",
+        department: beSub.department || beSub.Department || "",
+        description: beSub.description || beSub.Description || "",
         credits: beSub.credits || beSub.Credits || 3,
+        maxStudents: beSub.maxStudents || beSub.MaxStudents || 40,
         status: beSub.status || beSub.Status || "ACTIVE"
     };
 }

@@ -46,6 +46,12 @@ export default function QuanLyHocKy() {
   const updateMutation = useUpdateSemester();
   const deleteMutation = useDeleteSemester();
 
+  const isCreating = createMutation.isPending;
+const isUpdating = updateMutation.isPending;
+const isDeleting = deleteMutation.isPending;
+
+  
+
   const [showModal, setShowModal] = useState(false);
   const [editingSemester, setEditingSemester] = useState(null);
 
@@ -83,6 +89,10 @@ export default function QuanLyHocKy() {
 
     return result;
   }, [semesters, filter, search, sortYear]);
+
+const semesterExists = (name) => {
+  return semesters.some((s) => s.name === name);
+};
 
   const getCoursesForSemester = (semesterId) =>
     allCourses.filter((c) => c.semesterId === semesterId);
@@ -127,17 +137,31 @@ export default function QuanLyHocKy() {
       { type: "Fall", start: `${year}-09-01`, end: `${year}-12-31` },
     ];
 
-    for (const s of semestersToCreate) {
-      const name = `${s.type} ${year}`;
+    try {
 
-      await createMutation.mutateAsync({
-        name,
-        code: name.toUpperCase().replace(/\s+/g, ""),
-        startDate: s.start,
-        endDate: s.end,
-        status: tinhTrangThai(s.start, s.end),
-      });
-    }
+  for (const s of semestersToCreate) {
+
+    const name = `${s.type} ${year}`;
+
+    if (semesterExists(name)) continue;
+
+    await createMutation.mutateAsync({
+      name,
+      code: name.toUpperCase().replace(/\s+/g, ""),
+      startDate: s.start,
+      endDate: s.end,
+      status: tinhTrangThai(s.start, s.end),
+    });
+
+  }
+
+  success("Đã tạo học kỳ cho năm " + year);
+
+} catch {
+
+  showError("Auto generate thất bại");
+
+}
 
     success("Đã tạo 3 học kỳ cho năm " + year);
   };
@@ -158,8 +182,9 @@ export default function QuanLyHocKy() {
   const handleEdit = (semester) => {
     setEditingSemester(semester);
 
-    const [type, year] = semester.name.split(" ");
-
+    const parts = semester.name?.split(" ") || [];
+const type = parts[0] || "Spring";
+const year = parts[1] || new Date().getFullYear();
     setFormData({
       type,
       year,
@@ -198,6 +223,11 @@ export default function QuanLyHocKy() {
 
     const name = taoTenHocKy();
 
+if (!editingSemester && semesterExists(name)) {
+  showError("Học kỳ này đã tồn tại");
+  return;
+}
+
     const status = tinhTrangThai(formData.startDate, formData.endDate);
 
     const payload = {
@@ -221,6 +251,13 @@ export default function QuanLyHocKy() {
       }
 
       setShowModal(false);
+
+setFormData({
+  type: "Spring",
+  year: new Date().getFullYear(),
+  startDate: "",
+  endDate: "",
+});
     } catch {
       showError("Thao tác thất bại");
     }
@@ -441,10 +478,11 @@ export default function QuanLyHocKy() {
                         </Button>
 
                         <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(semester.id)}
-                        >
+  size="sm"
+  variant="destructive"
+  disabled={isDeleting}
+  onClick={() => handleDelete(semester.id)}
+>
                           Xóa
                         </Button>
 
@@ -522,7 +560,7 @@ export default function QuanLyHocKy() {
               Hủy
             </Button>
 
-            <Button type="submit">
+            <Button type="submit" disabled={isCreating || isUpdating}>
               {editingSemester ? "Cập nhật" : "Tạo"}
             </Button>
 

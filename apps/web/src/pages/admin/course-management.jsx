@@ -58,16 +58,20 @@ export default function CourseManagement() {
   const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
-
-  const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    description: "",
-    subjectId: "",
-    semesterId: "",
-    maxStudents: 40,
-    status: "ACTIVE",
-  });
+const [formData, setFormData] = useState({
+  code: "",
+  name: "",
+  description: "",
+  subjectId: "",
+  semesterId: "",
+  lecturerId: "",
+  room: "",
+  startDate: "",
+  endDate: "",
+  minStudents: 10,
+  maxStudents: 40,
+  status: "ACTIVE",
+});
   const [assignForm, setAssignForm] = useState({
     lecturerId: "",
   });
@@ -75,68 +79,83 @@ export default function CourseManagement() {
   const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus;
 
   const handleExport = () => {
-    try {
-      // 1. Prepare CSV headers
-      const headers = ["Mã Lớp", "Môn Học", "Học Kỳ", "Sinh Viên", "Tối Đa", "Giảng Viên"];
+  try {
 
-      // 2. Prepare CSV rows from courses data
-      const rows = courses.map(course => {
-        const subjectCode = getSubjectCode(course.subjectId);
-        const semesterName = getSemesterName(course.semesterId);
-        const lecturerName = getCourseLecturer(course.id) || "Chưa có GV";
-        return [
-          course.code,
-          subjectCode,
-          semesterName,
-          course.currentStudents || 0,
-          course.maxStudents || 0,
-          lecturerName
-        ].map(val => `"${val}"`).join(","); // wrap in quotes to handle commas in data
-      });
+    const headers = [
+      "Mã Lớp",
+      "Môn Học",
+      "Học Kỳ",
+      "Sinh Viên",
+      "Tối Đa",
+      "Giảng Viên"
+    ];
 
-      // 3. Combine headers and rows
-      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n"); // \uFEFF for UTF-8 BOM
+    const rows = courses.map(course => {
 
-      // 4. Create a Blob and trigger download
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `DanhSachLopHoc_${new Date().getTime()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const subjectCode = getSubjectCode(course.subjectId);
+      const semesterName = getSemesterName(course.semesterId);
+      const lecturerName = getCourseLecturerName(course) || "Chưa có GV";
 
-      success("Đã xuất danh sách lớp học thành công!");
-    } catch (err) {
-      error("Lỗi khi xuất file Excel/CSV");
-    }
-  };
-  const handleCreate = () => {
-    setEditingCourse(null);
-    setFormData({
-      code: "",
-      name: "",
-      description: "",
-      subjectId: "",
-      semesterId: "",
-      maxStudents: 40,
-      status: "ACTIVE",
+      return [
+        course.code,
+        subjectCode,
+        semesterName,
+        course.currentStudents ?? 0,
+        course.maxStudents ?? 0,
+        lecturerName
+      ]
+        .map(v => `"${v}"`)
+        .join(",");
+
     });
-    setShowModal(true);
-  };
+
+    const csvContent =
+      "\uFEFF" + [headers.join(","), ...rows].join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      { type: "text/csv;charset=utf-8;" }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `DanhSachLopHoc_${Date.now()}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    success("Đã xuất danh sách lớp học thành công!");
+
+  } catch {
+    showError("Lỗi khi xuất file CSV");
+  }
+};
+  
 
   const handleEdit = (course) => {
     setEditingCourse(course);
     setFormData({
-      code: course.code,
-      name: course.name,
-      description: course.description || "",
-      subjectId: course.subjectId,
-      semesterId: course.semesterId,
-      maxStudents: course.maxStudents,
-      status: course.status,
-    });
+  code: course.code,
+  name: course.name,
+  description: course.description || "",
+  subjectId: course.subjectId,
+  semesterId: course.semesterId,
+  lecturerId: course.lecturers?.[0]?.id || "",
+  room: course.room || "",
+  startDate: course.startDate || "",
+  endDate: course.endDate || "",
+  minStudents: course.minStudents || 10,
+  maxStudents: course.maxStudents,
+  status: course.status,
+});
     setShowModal(true);
   };
 
@@ -152,20 +171,49 @@ export default function CourseManagement() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingCourse) {
-        await updateMutation.mutateAsync({ id: editingCourse.id, body: formData });
-        success("Cập nhật lớp học thành công!");
-      } else {
-        await createMutation.mutateAsync(formData);
-        success("Tạo lớp học thành công!");
-      }
-      setShowModal(false);
-    } catch (err) {
-      showError(err.message || "Thao tác thất bại");
+
+  e.preventDefault();
+
+  if (formData.minStudents > formData.maxStudents) {
+    showError("Sĩ số tối thiểu không được lớn hơn sĩ số tối đa");
+    return;
+  }
+
+  if (formData.startDate && formData.endDate) {
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      showError("Ngày bắt đầu phải trước ngày kết thúc");
+      return;
     }
-  };
+  }
+
+  try {
+
+    if (editingCourse) {
+
+      await updateMutation.mutateAsync({
+        id: editingCourse.id,
+        body: formData
+      });
+
+      success("Cập nhật lớp học thành công!");
+
+    } else {
+
+      await createMutation.mutateAsync(formData);
+
+      success("Tạo lớp học thành công!");
+
+    }
+
+    setShowModal(false);
+
+  } catch (err) {
+
+    showError(err.message || "Thao tác thất bại");
+
+  }
+
+};
 
   const handleAssignLecturer = (course) => {
     setSelectedCourse(course);
@@ -227,36 +275,61 @@ export default function CourseManagement() {
     // For now, if CourseDetailResponse has students, use it. 
     // Otherwise, we might need useGetCourseStudents(course.id) hook.
     setViewStudentsCourse(course);
-    setViewStudentsList([]); // TODO: Fetch from somewhere
+    setViewStudentsList(course.students || []);
     setShowViewStudentsModal(true);
   };
 
-  const handleKickStudent = (enrollmentId, studentName) => {
-    if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
-    // remove enrollment
-    const enrollments = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id });
-    const target = enrollments.find(e => {
-      const s = db.findById("users.students", e.studentId);
-      return s?.name === studentName;
-    });
-    if (target) db.delete("courseEnrollments", target.id);
-    // update count
-    const remaining = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id }).length;
-    db.update("courses", viewStudentsCourse.id, { currentStudents: remaining });
-    success(`Đã đuổi ${studentName} khỏi lớp`);
-    // refresh modal list
-    handleOpenViewStudents(viewStudentsCourse);
-    loadData();
-  };
+  
+ const handleKickStudent = (enrollmentId, studentName) => {
 
+  if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
+
+  const updatedStudents = viewStudentsList.filter(
+    s => s.enrollmentId !== enrollmentId
+  );
+
+  setViewStudentsList(updatedStudents);
+
+  success(`Đã đuổi ${studentName} khỏi lớp`);
+
+};
   // Import SV helpers
   const handleOpenImport = (course) => {
-    setImportCourse(course);
-    setImportSelectedIds([]);
-    setShowImportModal(true);
-  };
 
-  const importAvailableStudents = allStudents; // Optimization: filter out already enrolled if possible
+  setImportCourse(course);
+
+  setImportSelectedIds([]);
+
+  setShowImportModal(true);
+
+};
+
+const handleCreate = () => {
+
+  setEditingCourse(null);
+
+  setFormData({
+    code: "",
+    name: "",
+    description: "",
+    subjectId: "",
+    semesterId: "",
+    lecturerId: "",
+    room: "",
+    startDate: "",
+    endDate: "",
+    minStudents: 10,
+    maxStudents: 40,
+    status: "ACTIVE",
+  });
+
+  setShowModal(true);
+
+};
+
+  const importAvailableStudents = allStudents.filter(
+  s => !viewStudentsList.some(v => v.id === s.id)
+);
 
   const toggleImportStudent = (id) => {
     setImportSelectedIds(prev =>
@@ -265,21 +338,45 @@ export default function CourseManagement() {
   };
 
   const handleImportSubmit = async () => {
-    if (importSelectedIds.length === 0) {
-      showError("Vui lòng chọn ít nhất 1 sinh viên!");
-      return;
-    }
-    try {
-      await enrollMutation.mutateAsync({
-        courseId: importCourse.id,
-        studentUserIds: importSelectedIds.map(id => Number(id)),
-      });
-      success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`);
-      setShowImportModal(false);
-    } catch (err) {
-      showError(err.message || "Import thất bại");
-    }
-  };
+
+  if (!importCourse) return;
+
+  if (importSelectedIds.length === 0) {
+    showError("Vui lòng chọn ít nhất 1 sinh viên!");
+    return;
+  }
+
+  const currentStudents = importCourse.currentStudents ?? 0;
+
+  if (
+    importSelectedIds.length + currentStudents >
+    importCourse.maxStudents
+  ) {
+    showError("Lớp đã vượt quá sĩ số tối đa");
+    return;
+  }
+
+  try {
+
+    await enrollMutation.mutateAsync({
+      courseId: importCourse.id,
+      studentUserIds: importSelectedIds.map(Number)
+    });
+
+    success(
+      `Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`
+    );
+
+    setShowImportModal(false);
+    setImportSelectedIds([]);
+
+  } catch (err) {
+
+    showError(err.message || "Import thất bại");
+
+  }
+
+};
 
   return (
     <div className="space-y-6">
@@ -337,6 +434,61 @@ export default function CourseManagement() {
                 onChange={(e) => setFilterSemester(e.target.value)}
               >
                 <option value="">Tất cả học kỳ</option>
+                <div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Giảng viên phụ trách
+</label>
+
+<select
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.lecturerId}
+onChange={(e)=>setFormData({...formData, lecturerId:e.target.value})}
+>
+
+<option value="">-- Chọn giảng viên --</option>
+
+{lecturers.map(l=>(
+<option key={l.id} value={l.id}>
+{l.name} - {l.email}
+</option>
+))}
+
+</select>
+</div>
+<div className="grid grid-cols-2 gap-4">
+
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Ngày bắt đầu
+</label>
+
+<input
+type="date"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.startDate}
+onChange={(e)=>setFormData({...formData,startDate:e.target.value})}
+/>
+
+</div>
+
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Ngày kết thúc
+</label>
+
+<input
+type="date"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.endDate}
+onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
+/>
+
+</div>
+
+</div>
+
                 {semesters.map(sem => (
                   <option key={sem.id} value={sem.id}>{sem.name}</option>
                 ))}
@@ -492,150 +644,275 @@ export default function CourseManagement() {
         size="lg" // Tăng kích thước modal
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mã lớp *
-            </label>
-            <input
-              type="text"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-              value={formData.code}
-              onChange={(e) =>
-                setFormData({ ...formData, code: e.target.value.toLowerCase() })
-              }
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">Ví dụ: se1821, exe1822, prn1823</p>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên lớp *
-            </label>
-            <input
-              type="text"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              required
-            />
-          </div>
+{/* CODE */}
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Mã lớp *
+</label>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Môn học *
-              </label>
-              <select
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                value={formData.subjectId}
-                onChange={(e) =>
-                  setFormData({ ...formData, subjectId: e.target.value })
-                }
-                required
-              >
-                <option value="">-- Chọn môn học --</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.code} - {subject.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+<input
+type="text"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.code}
+onChange={(e)=>setFormData({...formData,code:e.target.value.toLowerCase()})}
+required
+/>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Học kỳ *
-              </label>
-              <select
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                value={formData.semesterId}
-                onChange={(e) =>
-                  setFormData({ ...formData, semesterId: e.target.value })
-                }
-                required
-              >
-                <option value="">-- Chọn học kỳ --</option>
-                {semesters.map((semester) => (
-                  <option key={semester.id} value={semester.id}>
-                    {semester.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+<p className="text-xs text-gray-500 mt-1">
+Ví dụ: se1821, exe1822
+</p>
+</div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mô tả
-            </label>
-            <textarea
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-              rows="2"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sĩ số tối đa *
-              </label>
-              <input
-                type="number"
-                min="1"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                value={formData.maxStudents}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxStudents: parseInt(e.target.value),
-                  })
-                }
-                required
-              />
-            </div>
+{/* NAME */}
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Tên lớp *
+</label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Trạng thái
-              </label>
-              <select
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
-              >
-                <option value="ACTIVE">Đang mở (ACTIVE)</option>
-                <option value="UPCOMING">Sắp mở (UPCOMING)</option>
-                <option value="COMPLETED">Đã đóng (COMPLETED)</option>
-              </select>
-            </div>
-          </div>
+<input
+type="text"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.name}
+onChange={(e)=>setFormData({...formData,name:e.target.value})}
+required
+/>
+</div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowModal(false)}
-              className="rounded-xl border-gray-200"
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm"
-            >
-              {editingCourse ? "Cập nhật" : "Tạo mới"}
-            </Button>
-          </div>
-        </form>
+
+{/* SUBJECT + SEMESTER */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Môn học *
+</label>
+
+<select
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.subjectId}
+onChange={(e)=>setFormData({...formData,subjectId:e.target.value})}
+required
+>
+
+<option value="">-- Chọn môn học --</option>
+
+{subjects.map(sub=>(
+<option key={sub.id} value={sub.id}>
+{sub.code} - {sub.name}
+</option>
+))}
+
+</select>
+</div>
+
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Học kỳ *
+</label>
+
+<select
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.semesterId}
+onChange={(e)=>setFormData({...formData,semesterId:e.target.value})}
+required
+>
+
+<option value="">-- Chọn học kỳ --</option>
+
+{semesters.map(sem=>(
+<option key={sem.id} value={sem.id}>
+{sem.name}
+</option>
+))}
+
+</select>
+</div>
+
+</div>
+
+
+{/* LECTURER */}
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Giảng viên phụ trách
+</label>
+
+<select
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.lecturerId}
+onChange={(e)=>setFormData({...formData,lecturerId:e.target.value})}
+>
+
+<option value="">-- Chọn giảng viên --</option>
+
+{lecturers.map(l=>(
+<option key={l.id} value={l.id}>
+{l.name} - {l.email}
+</option>
+))}
+
+</select>
+
+</div>
+
+
+{/* ROOM */}
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Phòng học
+</label>
+
+<input
+type="text"
+placeholder="Ví dụ: BE101 / Online"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.room}
+onChange={(e)=>setFormData({...formData,room:e.target.value})}
+/>
+
+</div>
+
+
+{/* START / END DATE */}
+<div className="grid grid-cols-2 gap-4">
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Ngày bắt đầu
+</label>
+
+<input
+type="date"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.startDate}
+onChange={(e)=>setFormData({...formData,startDate:e.target.value})}
+/>
+</div>
+
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Ngày kết thúc
+</label>
+
+<input
+type="date"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.endDate}
+onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
+/>
+</div>
+
+</div>
+
+
+{/* DESCRIPTION */}
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Mô tả
+</label>
+
+<textarea
+rows="2"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.description}
+onChange={(e)=>setFormData({...formData,description:e.target.value})}
+/>
+
+</div>
+
+
+{/* MIN / MAX STUDENTS */}
+<div className="grid grid-cols-2 gap-4">
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Sĩ số tối thiểu
+</label>
+
+<input
+type="number"
+min="1"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.minStudents}
+onChange={(e)=>setFormData({
+...formData,
+minStudents:parseInt(e.target.value)
+})}
+/>
+</div>
+
+
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Sĩ số tối đa *
+</label>
+
+<input
+type="number"
+min="1"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.maxStudents}
+onChange={(e)=>setFormData({
+...formData,
+maxStudents:parseInt(e.target.value)
+})}
+required
+/>
+</div>
+
+</div>
+
+
+{/* STATUS */}
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Trạng thái
+</label>
+
+<select
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.status}
+onChange={(e)=>setFormData({...formData,status:e.target.value})}
+>
+
+<option value="ACTIVE">Đang mở (ACTIVE)</option>
+<option value="UPCOMING">Sắp mở (UPCOMING)</option>
+<option value="COMPLETED">Đã đóng (COMPLETED)</option>
+
+</select>
+
+</div>
+
+
+{/* BUTTON */}
+<div className="flex justify-end gap-3 pt-6 border-t">
+
+<Button
+type="button"
+variant="outline"
+onClick={()=>setShowModal(false)}
+>
+Hủy
+</Button>
+
+<Button
+type="submit"
+className="bg-blue-600 text-white"
+>
+{editingCourse ? "Cập nhật" : "Tạo mới"}
+</Button>
+
+</div>
+
+</form>
       </Modal>
 
       {/* Assign Lecturer Modal */}
@@ -660,6 +937,49 @@ export default function CourseManagement() {
               </p>
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-4">
+
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Sĩ số tối thiểu
+</label>
+
+<input
+type="number"
+min="1"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.minStudents}
+onChange={(e)=>setFormData({
+...formData,
+minStudents:parseInt(e.target.value)
+})}
+/>
+
+</div>
+
+<div>
+
+<label className="block text-sm font-medium text-gray-700 mb-2">
+Sĩ số tối đa *
+</label>
+
+<input
+type="number"
+min="1"
+className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+value={formData.maxStudents}
+onChange={(e)=>setFormData({
+...formData,
+maxStudents:parseInt(e.target.value)
+})}
+required
+/>
+
+</div>
+
+</div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

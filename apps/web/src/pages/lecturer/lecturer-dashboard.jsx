@@ -1,5 +1,17 @@
+import CalendarHeatmap from "react-calendar-heatmap";
+import "react-calendar-heatmap/dist/styles.css";
+import { subDays } from "date-fns";
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 // Lecturer Dashboard — Enterprise SaaS (Real API)
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
@@ -21,6 +33,10 @@ import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAl
 
 
 /* ─── Derived mock recent activity (keep for UI) ────────────────── */
+const [semesterFilter, setSemesterFilter] = useState("all");
+const [courseFilter, setCourseFilter] = useState("all");
+const [groupFilter, setGroupFilter] = useState("all");
+
 const MOCK_ACTIVITY = [
   { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
   { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
@@ -31,23 +47,126 @@ const MOCK_ACTIVITY = [
 export default function LecturerDashboard() {
   const navigate = useNavigate();
   const { success, error } = useToast();
+const [selectedSubject, setSelectedSubject] = useState("");
+const [selectedCourse, setSelectedCourse] = useState("");
+const [filter, setFilter] = useState("all");
 
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [filter, setFilter] = useState("all");
+const { data: subjectsData = { items: [] } } = useGetSubjects();
+const { data: coursesData = { items: [] } } = useGetCourses();
+const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
+const { data: alertsData } = useGetAlerts({ pageSize: 5 });
 
-  const { data: subjectsData = { items: [] } } = useGetSubjects();
-  const { data: coursesData = { items: [] } } = useGetCourses();
-  const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
-  const { data: alertsData } = useGetAlerts({ pageSize: 5 });
+/* ───── Demo fallback data (when API empty) ───── */
+
+const demoSubjects = [
+  { id: 1, code: "SWD392", name: "Software Architecture" }
+];
+
+const demoCourses = [
+  { id: 1, code: "SWD392-SE1831", subjectId: 1 }
+];
+
+/* ───── Merge API + demo ───── */
+
+const subjects = subjectsData.items.length
+  ? subjectsData.items
+  : demoSubjects;
+
+const coursesRaw = coursesData.items.length
+  ? coursesData.items
+  : demoCourses;
+
+/* ───── Auto select subject ───── */
+
+useEffect(() => {
+  if (!selectedSubject && subjects.length) {
+    setSelectedSubject(subjects[0].id);
+  }
+}, [subjects]);
+
+/* ───── Filter course by subject ───── */
+
+const courses = coursesRaw.filter(
+  c => !selectedSubject || c.subjectId === parseInt(selectedSubject)
+);
+
+/* ───── Auto select course ───── */
+
+useEffect(() => {
+  if (!selectedCourse && courses.length) {
+    setSelectedCourse(courses[0].id);
+  }
+}, [courses]);
 
   const approveIntMutation = useApproveIntegration();
   const rejectIntMutation = useRejectIntegration();
   const resolveAlertMutation = useResolveAlert();
 
-  const subjects = subjectsData.items || [];
-  const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
-  const groups = course?.groups || [];
+const MOCK_HEATMAP = [
+  { date: "2026-03-01", count: 3 },
+  { date: "2026-03-02", count: 6 },
+  { date: "2026-03-03", count: 2 },
+  { date: "2026-03-04", count: 8 },
+  { date: "2026-03-05", count: 4 }
+];
+
+const MOCK_COMMITS = [
+  { day: "Mon", commits: 5 },
+  { day: "Tue", commits: 7 },
+  { day: "Wed", commits: 3 },
+  { day: "Thu", commits: 9 },
+  { day: "Fri", commits: 12 }
+];
+
+  //const subjects = subjectsData.items || [];
+  //const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
+
+  const demoGroups = [
+  {
+    id: 1,
+    name: "Team Alpha",
+    topic: "AI Interview System",
+    team: [
+      { id: 1, name: "An" },
+      { id: 2, name: "Binh" },
+      { id: 3, name: "Chi" }
+    ],
+    integration: {
+      githubStatus: "APPROVED",
+      jiraStatus: "APPROVED"
+    }
+  },
+  {
+    id: 2,
+    name: "Team Beta",
+    topic: "Job Matching Platform",
+    team: [
+      { id: 4, name: "Dung" },
+      { id: 5, name: "Huy" }
+    ],
+    integration: {
+      githubStatus: "PENDING",
+      jiraStatus: "APPROVED"
+    }
+  },
+  {
+    id: 3,
+    name: "Team Gamma",
+    topic: "Smart Resume Analyzer",
+    team: [
+      { id: 6, name: "Lan" },
+      { id: 7, name: "Minh" }
+    ],
+    integration: {
+      githubStatus: "APPROVED",
+      jiraStatus: "PENDING"
+    }
+  }
+];
+
+
+   const groups = course?.groups?.length ? course.groups : demoGroups;
+
 
   const handleManageGroups = () => {
     if (!selectedCourse) { error("Vui lòng chọn lớp học"); return; }
@@ -371,6 +490,83 @@ export default function LecturerDashboard() {
 
 
       {/* ── E. RadarChart — So sánh Nhóm ──────── */}
+
+      {/* ── F. Contribution Heatmap ───────────── */}
+{selectedCourse && (
+<Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+
+<CardHeader className="border-b border-gray-50 pb-4">
+<CardTitle className="text-base font-semibold text-gray-800">
+Contribution Activity
+</CardTitle>
+</CardHeader>
+
+<CardContent className="pt-5 pb-6">
+
+<CalendarHeatmap
+startDate={subDays(new Date(), 90)}
+endDate={new Date()}
+values={MOCK_HEATMAP}
+/>
+
+</CardContent>
+
+</Card>
+)}
+
+{/* ── G. Commit Trend ───────────────────── */}
+{selectedCourse && (
+<Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+
+<CardHeader className="border-b border-gray-50 pb-4">
+<CardTitle className="text-base font-semibold text-gray-800">
+Commit Trend
+</CardTitle>
+</CardHeader>
+
+<CardContent>
+
+<div className="h-64">
+
+<ResponsiveContainer width="100%" height="100%">
+
+<LineChart data={MOCK_COMMITS}>
+
+<XAxis dataKey="day" />
+<YAxis />
+<Tooltip />
+
+<Line
+type="monotone"
+dataKey="commits"
+stroke="#14b8a6"
+strokeWidth={3}
+/>
+
+</LineChart>
+
+</ResponsiveContainer>
+
+</div>
+
+</CardContent>
+
+</Card>
+)}
+
+{/* ── H. Team Insights ──────────────────── */}
+
+{selectedCourse && (
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+<TopTeams groups={groups} />
+
+<RiskTeams groups={groups} />
+
+</div>
+)}
+
+
       {selectedCourse && radarData.length > 0 && (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 pb-4">
@@ -412,6 +608,100 @@ export default function LecturerDashboard() {
 }
 
 /* ─── Sub-components ───────────────────────────────── */
+
+function TopTeams({ groups }) {
+
+const ranked = [...groups]
+.map(g => ({
+  name: g.name,
+  commits: Math.floor(Math.random()*50)+5
+}))
+.sort((a,b)=>b.commits-a.commits)
+.slice(0,5)
+
+return (
+
+<Card className="border border-gray-100 shadow-sm rounded-[24px]">
+
+<CardHeader>
+<CardTitle className="text-base font-semibold">
+Top Active Teams
+</CardTitle>
+</CardHeader>
+
+<CardContent>
+
+{ranked.map((t,i)=>(
+
+<div
+key={i}
+className="flex justify-between py-2 border-b text-sm"
+>
+
+<span>{i+1}. {t.name}</span>
+
+<span className="font-semibold text-teal-600">
+{t.commits} commits
+</span>
+
+</div>
+
+))}
+
+</CardContent>
+
+</Card>
+
+)
+}
+
+function RiskTeams({ groups }) {
+
+const risky = groups.filter(
+g => g.integration?.githubStatus !== "APPROVED"
+)
+
+return (
+
+<Card className="border border-gray-100 shadow-sm rounded-[24px]">
+
+<CardHeader>
+<CardTitle className="text-base font-semibold">
+Teams At Risk
+</CardTitle>
+</CardHeader>
+
+<CardContent>
+
+{risky.length===0 ? (
+
+<p className="text-sm text-gray-400">
+No risk teams
+</p>
+
+) : risky.map(g=>(
+
+<div
+key={g.id}
+className="flex justify-between py-2 border-b text-sm"
+>
+
+<span>{g.name}</span>
+
+<span className="text-red-500">
+Repo missing
+</span>
+
+</div>
+
+))}
+
+</CardContent>
+
+</Card>
+
+)
+}
 
 function StatCard({ icon, color, label, value }) {
   return (
