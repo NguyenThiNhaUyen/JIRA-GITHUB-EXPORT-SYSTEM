@@ -28,6 +28,8 @@ public class ProjectRepository : GenericRepository<project>, IProjectRepository
 
         var totalItems = await query.CountAsync();
         var items = await query
+            .Include(p => p.project_integration)
+            .Include(p => p.team_members)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

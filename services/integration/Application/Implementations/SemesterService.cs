@@ -117,6 +117,12 @@ public class SemesterService : ISemesterService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<List<SemesterInfo>> GetAllSemestersAsync()
+    {
+        var semesters = await _unitOfWork.Semesters.GetAllAsync();
+        return _mapper.Map<List<SemesterInfo>>(semesters);
+    }
+
     public async Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request)
     {
         var (items, totalItems) = await _unitOfWork.Semesters.GetPagedAsync(

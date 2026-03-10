@@ -4,15 +4,37 @@ namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
 {
+    [JsonPropertyName("id")]
     public long Id { get; set; }
+
+    [JsonPropertyName("course_code")]
     public string CourseCode { get; set; } = null!;
+
+    [JsonPropertyName("course_name")]
     public string CourseName { get; set; } = null!;
+
+    [JsonPropertyName("subject")]
     public SubjectInfo Subject { get; set; } = null!;
+
+    [JsonPropertyName("semester")]
     public SemesterInfo Semester { get; set; } = null!;
+
+    [JsonPropertyName("enrolled_students_count")]
     public int EnrolledStudentsCount { get; set; }
+
+    [JsonPropertyName("projects_count")]
     public int ProjectsCount { get; set; }
+
+    [JsonPropertyName("lecturers")]
     public List<LecturerInfo> Lecturers { get; set; } = new();
+
+    [JsonPropertyName("enrollments")]
+    public List<EnrollmentInfo> Enrollments { get; set; } = new();
+
+    [JsonPropertyName("max_students")]
     public int? MaxStudents { get; set; }
+
+    [JsonPropertyName("status")]
     public string Status { get; set; } = "ACTIVE";
 }
 
@@ -48,12 +70,22 @@ public class SubjectInfo
 
 public class SemesterInfo
 {
+    [JsonPropertyName("id")]
     public long Id { get; set; }
+
+    [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
+
+    [JsonPropertyName("code")]
     public string? Code { get; set; } // alias for Name, used by FE
+
+    [JsonPropertyName("start_date")]
     public DateOnly StartDate { get; set; }
+
+    [JsonPropertyName("end_date")]
     public DateOnly EndDate { get; set; }
     
+    [JsonPropertyName("status")]
     public string Status 
     {
         get 
@@ -68,10 +100,29 @@ public class SemesterInfo
 
 public class LecturerInfo
 {
+    [JsonPropertyName("id")]
     public long UserId { get; set; }
+
+    [JsonPropertyName("full_name")]
     public string FullName { get; set; } = null!;
+
+    [JsonPropertyName("lecturer_code")]
     public string LecturerCode { get; set; } = null!;
+
+    [JsonPropertyName("email")]
     public string? OfficeEmail { get; set; }
+}
+
+public class EnrollmentInfo
+{
+    [JsonPropertyName("user_id")]
+    public long UserId { get; set; }
+
+    [JsonPropertyName("full_name")]
+    public string FullName { get; set; } = null!;
+
+    [JsonPropertyName("student_code")]
+    public string StudentCode { get; set; } = null!;
 }
 
 public class EnrollmentResult
