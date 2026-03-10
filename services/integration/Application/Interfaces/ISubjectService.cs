@@ -10,4 +10,5 @@ public interface ISubjectService
     Task<SubjectInfo> UpdateSubjectAsync(long subjectId, UpdateSubjectRequest request);
     Task DeleteSubjectAsync(long subjectId);
     Task<PagedResponse<SubjectInfo>> GetAllSubjectsAsync(PagedRequest request);
+    Task<List<SubjectInfo>> GetAllSubjectsAsync();
 }
