@@ -1,7 +1,8 @@
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
 import { subDays } from "date-fns";
-
+import { useGetSemesters } from "../../features/system/hooks/useSystem.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 import {
   LineChart,
   Line,
@@ -33,10 +34,7 @@ import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAl
 
 
 /* ─── Derived mock recent activity (keep for UI) ────────────────── */
-const [semesterFilter, setSemesterFilter] = useState("all");
-const [courseFilter, setCourseFilter] = useState("all");
-const [groupFilter, setGroupFilter] = useState("all");
-
+// hoặc useGetGroups nếu có
 const MOCK_ACTIVITY = [
   { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
   { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
@@ -45,8 +43,20 @@ const MOCK_ACTIVITY = [
 ];
 
 export default function LecturerDashboard() {
+
+  
   const navigate = useNavigate();
   const { success, error } = useToast();
+
+const [semesterFilter, setSemesterFilter] = useState("all");
+const [courseFilter, setCourseFilter] = useState("all");
+const [groupFilter, setGroupFilter] = useState("all");
+
+const { data: semesters = [] } = useGetSemesters();
+const { data: coursesApi  = [] } = useGetCourses();
+const { data: projects  = [] } = useGetProjects(); 
+
+
 const [selectedSubject, setSelectedSubject] = useState("");
 const [selectedCourse, setSelectedCourse] = useState("");
 const [filter, setFilter] = useState("all");
@@ -74,7 +84,9 @@ const subjects = subjectsData.items.length
 
 const coursesRaw = coursesData.items.length
   ? coursesData.items
-  : demoCourses;
+  : coursesApi.length
+    ? coursesApi
+    : demoCourses;
 
 /* ───── Auto select subject ───── */
 
@@ -492,6 +504,8 @@ const MOCK_COMMITS = [
       {/* ── E. RadarChart — So sánh Nhóm ──────── */}
 
       {/* ── F. Contribution Heatmap ───────────── */}
+{/* ── F. Contribution Heatmap ───────────── */}
+{/* ── F. Contribution Heatmap ───────────── */}
 {selectedCourse && (
 <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
 
@@ -503,11 +517,67 @@ Contribution Activity
 
 <CardContent className="pt-5 pb-6">
 
+{/* ─── Heatmap Filters ─── */}
+
+<div className="flex gap-3 mb-4">
+
+<select
+value={semesterFilter}
+onChange={(e)=>setSemesterFilter(e.target.value)}
+className="border rounded-lg px-3 py-2 text-sm"
+>
+<option value="all">Semester</option>
+{semesters.map(s=>(
+<option key={s.id} value={s.id}>
+{s.name}
+</option>
+))}
+</select>
+
+<select
+value={courseFilter}
+onChange={(e)=>setCourseFilter(e.target.value)}
+className="border rounded-lg px-3 py-2 text-sm"
+>
+<option value="all">Course</option>
+{courses.map(c=>(
+<option key={c.id} value={c.id}>
+{c.code}
+</option>
+))}
+</select>
+
+<select
+value={groupFilter}
+onChange={(e)=>setGroupFilter(e.target.value)}
+className="border rounded-lg px-3 py-2 text-sm"
+>
+<option value="all">Group</option>
+{groups.map(g=>(
+<option key={g.id} value={g.id}>
+{g.name}
+</option>
+))}
+</select>
+
+</div>
+
 <CalendarHeatmap
 startDate={subDays(new Date(), 90)}
 endDate={new Date()}
 values={MOCK_HEATMAP}
 />
+
+{/* Legend */}
+
+<div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+Less
+<div className="w-3 h-3 bg-gray-200 rounded-sm"/>
+<div className="w-3 h-3 bg-green-200 rounded-sm"/>
+<div className="w-3 h-3 bg-green-400 rounded-sm"/>
+<div className="w-3 h-3 bg-green-600 rounded-sm"/>
+More
+</div>
 
 </CardContent>
 
@@ -763,6 +833,14 @@ function GroupRow({ group, students, githubOk, jiraOk, onDetail, onWarn }) {
           <Bell size={12} />
         </button>
       </div>
+      <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+Less
+<div className="w-3 h-3 bg-gray-200 rounded-sm"/>
+<div className="w-3 h-3 bg-green-200 rounded-sm"/>
+<div className="w-3 h-3 bg-green-400 rounded-sm"/>
+<div className="w-3 h-3 bg-green-600 rounded-sm"/>
+More
+</div>
     </div>
   );
 }
