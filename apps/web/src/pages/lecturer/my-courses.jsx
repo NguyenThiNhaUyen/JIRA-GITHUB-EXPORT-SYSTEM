@@ -1,6 +1,6 @@
 // My Courses — Lecturer "Lớp của tôi"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { Card, CardContent } from "../../components/ui/card.jsx"
@@ -55,21 +55,71 @@ const [search,setSearch] = useState("")
 const { data:coursesData={items:[]}, isLoading }
 = useGetCourses({pageSize:100})
 
-const courses = coursesData.items || []
+// const courses = coursesData?.items || []
+const MOCK_COURSES = [
+{
+id:1,
+code:"SWD392-SE1831",
+name:"Software Architecture",
+subjectCode:"SWD392",
+semester:"Fall 2025",
+currentStudents:32,
+lastCommit:"2 hours ago",
+projects:[
+{ id:1, repoConnected:true, jiraConnected:true },
+{ id:2, repoConnected:true, jiraConnected:true },
+{ id:3, repoConnected:true, jiraConnected:false },
+{ id:4, repoConnected:false, jiraConnected:false },
+{ id:5, repoConnected:true, jiraConnected:true },
+{ id:6, repoConnected:true, jiraConnected:true },
+{ id:7, repoConnected:false, jiraConnected:false },
+{ id:8, repoConnected:true, jiraConnected:true }
+]
+},
+{
+id:2,
+code:"SWD392-SE1832",
+name:"Software Architecture",
+subjectCode:"SWD392",
+semester:"Fall 2025",
+currentStudents:28,
+lastCommit:"1 day ago",
+projects:[
+{ id:1, repoConnected:true, jiraConnected:true },
+{ id:2, repoConnected:true, jiraConnected:true },
+{ id:3, repoConnected:true, jiraConnected:true },
+{ id:4, repoConnected:true, jiraConnected:true },
+{ id:5, repoConnected:false, jiraConnected:false },
+{ id:6, repoConnected:false, jiraConnected:false },
+{ id:7, repoConnected:true, jiraConnected:true }
+]
+}
+]
+
+const courses =
+coursesData?.items?.length
+? coursesData.items
+: MOCK_COURSES
 
 
 
 /* ---------------- FILTER ---------------- */
 
-const filtered = courses.filter(c=>
+const filtered = useMemo(()=>{
 
-c.code?.toLowerCase().includes(search.toLowerCase()) ||
+return courses.filter(c=>{
 
-c.name?.toLowerCase().includes(search.toLowerCase()) ||
+const keyword = search.toLowerCase()
 
-c.subjectName?.toLowerCase().includes(search.toLowerCase())
-
+return (
+c.code?.toLowerCase().includes(keyword) ||
+c.name?.toLowerCase().includes(keyword) ||
+c.subjectName?.toLowerCase().includes(keyword)
 )
+
+})
+
+},[courses,search])
 
 
 
@@ -176,9 +226,7 @@ color="text-indigo-700 bg-indigo-50 border-indigo-100"
 {isLoading ? (
 
 <div className="flex justify-center py-20">
-
 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"/>
-
 </div>
 
 ) : filtered.length===0 ? (
@@ -227,11 +275,17 @@ course.projects?.filter(p=>p.repoConnected)?.length || 0
 const jiraConnected =
 course.projects?.filter(p=>p.jiraConnected)?.length || 0
 
-const lastCommit =
-course.lastCommit || "No activity"
+const inactiveTeams = groupCount - activeTeams
 
-const inactiveTeams =
-groupCount - activeTeams
+const alerts = course.alertsCount || inactiveTeams
+
+const semester = course.semester || "Fall 2025"
+
+const progress = Math.min(100,
+Math.round((activeTeams / (groupCount || 1)) * 100)
+)
+
+const lastCommit = course.lastCommit || "No activity"
 
 
 
@@ -240,13 +294,14 @@ groupCount - activeTeams
 let status = "ACTIVE"
 
 if(activeTeams===0){
-
 status = "NO REPO"
-
-}else if(activeTeams < groupCount/2){
-
+}
+else if(activeTeams < groupCount/2){
 status = "LOW"
+}
 
+if(course.archived){
+status="ARCHIVED"
 }
 
 
@@ -257,8 +312,6 @@ return(
 
 <div className="h-1.5 bg-gradient-to-r from-teal-500 to-teal-600"/>
 
-
-
 <CardContent className="p-5 space-y-4">
 
 
@@ -268,15 +321,11 @@ return(
 <div className="flex items-start justify-between gap-2">
 
 <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-
 <GraduationCap size={18} className="text-teal-700"/>
-
 </div>
 
 <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-
 {course.subjectCode || "—"}
-
 </span>
 
 </div>
@@ -291,8 +340,12 @@ return(
 {course.code}
 </h3>
 
-<p className="text-sm text-gray-500 mt-0.5 line-clamp-2">
+<p className="text-sm text-gray-500 mt-0.5">
 {course.name || course.subjectName}
+</p>
+
+<p className="text-xs text-gray-400">
+Semester: {semester}
 </p>
 
 </div>
@@ -305,7 +358,7 @@ return(
 
 <span className="flex items-center gap-1">
 <Users size={11}/>
-{course.currentStudents} sinh viên
+{course.currentStudents || 0} sinh viên
 </span>
 
 <span className="flex items-center gap-1">
@@ -323,22 +376,37 @@ return(
 
 
 
+{/* Progress */}
+
+<div className="space-y-1">
+
+<div className="flex justify-between text-[11px] text-gray-500">
+<span>Project progress</span>
+<span>{progress}%</span>
+</div>
+
+<div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+<div
+className="h-full bg-teal-500"
+style={{width:`${progress}%`}}
+/>
+</div>
+
+</div>
+
+
+
 {/* Repo + Jira */}
 
 <div className="flex justify-between text-xs text-gray-500">
 
 <span className="flex items-center gap-1">
-
 <GitBranch size={12}/>
-
 Repo: {activeTeams}/{groupCount}
-
 </span>
 
 <span>
-
 Jira: {jiraConnected}/{groupCount}
-
 </span>
 
 </div>
@@ -354,22 +422,21 @@ Active teams: {activeTeams}/{groupCount}
 </span>
 
 <span>
-Last commit: {lastCommit}
+Last activity: {lastCommit}
 </span>
 
 </div>
 
 
 
-{/* Warning */}
+{/* Alerts */}
 
-{inactiveTeams>0 && (
+{alerts>0 && (
 
 <div className="text-xs text-red-500 flex items-center gap-1">
 
 <AlertTriangle size={12}/>
-
-{inactiveTeams} teams inactive
+{alerts} alerts detected
 
 </div>
 
@@ -383,27 +450,29 @@ Last commit: {lastCommit}
 
 {/* Buttons */}
 
-<div className="grid grid-cols-2 gap-2">
+<div className="grid grid-cols-3 gap-2">
 
 <Button
-onClick={()=>navigate(`/lecturer/course/${course.id}/manage-groups`)}
-className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-9 text-sm"
+onClick={()=>navigate(`/lecturer/course/${course.id}/dashboard`)}
+variant="outline"
+className="text-sm h-9 rounded-xl"
 >
-
-<Settings2 size={13}/>
-Manage
-
+Dashboard
 </Button>
 
 <Button
-onClick={()=>navigate(`/lecturer/course/${course.id}/analytics`)}
-variant="outline"
-className="flex items-center justify-center gap-2 text-sm rounded-xl h-9"
+onClick={()=>navigate(`/lecturer/course/${course.id}/manage-groups`)}
+className="bg-teal-600 hover:bg-teal-700 text-white text-sm h-9 rounded-xl"
 >
+Manage
+</Button>
 
-<BarChart3 size={13}/>
-Analytics
-
+<Button
+onClick={()=>navigate(`/lecturer/course/${course.id}/alerts`)}
+variant="outline"
+className="text-sm h-9 rounded-xl"
+>
+Alerts
 </Button>
 
 </div>
@@ -457,7 +526,8 @@ function StatusBadge({status}){
 const map={
 ACTIVE:"bg-green-50 text-green-700",
 LOW:"bg-yellow-50 text-yellow-700",
-"NO REPO":"bg-red-50 text-red-600"
+"NO REPO":"bg-red-50 text-red-600",
+ARCHIVED:"bg-gray-100 text-gray-600"
 }
 
 return(
@@ -509,9 +579,7 @@ return(
 <div className="flex flex-col items-center justify-center py-20 gap-3">
 
 <div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center">
-
 <GraduationCap size={28} className="text-gray-400"/>
-
 </div>
 
 <p className="text-sm text-gray-500">
