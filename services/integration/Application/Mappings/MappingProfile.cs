@@ -31,7 +31,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.start_date ?? DateOnly.MinValue))
             .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date ?? DateOnly.MinValue));
 
-        CreateMap<subject, SubjectInfo>();
+        CreateMap<subject, SubjectInfo>()
+            .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.subject_code))
+            .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.subject_name))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
 
         CreateMap<lecturer, LecturerInfo>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.user_id))
