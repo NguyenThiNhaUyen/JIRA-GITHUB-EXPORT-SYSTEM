@@ -39,12 +39,12 @@ public class UserService : IUserService
         var page = request.Page > 0 ? request.Page : 1;
         var pageSize = request.PageSize > 0 ? request.PageSize : 20;
         var items = await query
-            .OrderBy(u => u.id)
+            .OrderByDescending(u => u.created_at)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        var mapped = items.Select(u => MapToResponse(u)).ToList();
+        var mapped = items.Select(MapToResponse).ToList();
 
         return new PagedResponse<UserDetailResponse>
         {

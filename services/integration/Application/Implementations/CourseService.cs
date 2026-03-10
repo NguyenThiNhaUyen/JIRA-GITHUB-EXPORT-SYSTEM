@@ -175,7 +175,10 @@ public class CourseService : ICourseService
 
     public async Task AssignLecturerAsync(long courseId, long lecturerUserId)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        var course = await _unitOfWork.Courses.Query()
+            .Include(c => c.lecturer_users)
+            .FirstOrDefaultAsync(c => c.id == courseId);
+
         if (course == null)
         {
             throw new NotFoundException("Course not found");
