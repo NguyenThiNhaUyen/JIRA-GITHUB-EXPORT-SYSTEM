@@ -488,7 +488,6 @@ onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
 </div>
 
 </div>
-
                 {semesters.map(sem => (
                   <option key={sem.id} value={sem.id}>{sem.name}</option>
                 ))}
@@ -644,275 +643,150 @@ onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
         size="lg" // Tăng kích thước modal
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-
-{/* CODE */}
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Mã lớp *
-</label>
-
-<input
-type="text"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.code}
-onChange={(e)=>setFormData({...formData,code:e.target.value.toLowerCase()})}
-required
-/>
-
-<p className="text-xs text-gray-500 mt-1">
-Ví dụ: se1821, exe1822
-</p>
-</div>
-
-
-{/* NAME */}
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Tên lớp *
-</label>
-
-<input
-type="text"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.name}
-onChange={(e)=>setFormData({...formData,name:e.target.value})}
-required
-/>
-</div>
-
-
-{/* SUBJECT + SEMESTER */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Môn học *
-</label>
-
-<select
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.subjectId}
-onChange={(e)=>setFormData({...formData,subjectId:e.target.value})}
-required
->
-
-<option value="">-- Chọn môn học --</option>
-
-{subjects.map(sub=>(
-<option key={sub.id} value={sub.id}>
-{sub.code} - {sub.name}
-</option>
-))}
-
-</select>
-</div>
-
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Học kỳ *
-</label>
-
-<select
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.semesterId}
-onChange={(e)=>setFormData({...formData,semesterId:e.target.value})}
-required
->
-
-<option value="">-- Chọn học kỳ --</option>
-
-{semesters.map(sem=>(
-<option key={sem.id} value={sem.id}>
-{sem.name}
-</option>
-))}
-
-</select>
-</div>
-
-</div>
-
-
-{/* LECTURER */}
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Giảng viên phụ trách
-</label>
-
-<select
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.lecturerId}
-onChange={(e)=>setFormData({...formData,lecturerId:e.target.value})}
->
-
-<option value="">-- Chọn giảng viên --</option>
-
-{lecturers.map(l=>(
-<option key={l.id} value={l.id}>
-{l.name} - {l.email}
-</option>
-))}
-
-</select>
-
-</div>
-
-
-{/* ROOM */}
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Phòng học
-</label>
-
-<input
-type="text"
-placeholder="Ví dụ: BE101 / Online"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.room}
-onChange={(e)=>setFormData({...formData,room:e.target.value})}
-/>
-
-</div>
-
-
-{/* START / END DATE */}
-<div className="grid grid-cols-2 gap-4">
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Ngày bắt đầu
-</label>
-
-<input
-type="date"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.startDate}
-onChange={(e)=>setFormData({...formData,startDate:e.target.value})}
-/>
-</div>
-
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Ngày kết thúc
-</label>
-
-<input
-type="date"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.endDate}
-onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
-/>
-</div>
-
-</div>
-
-
-{/* DESCRIPTION */}
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Mô tả
-</label>
-
-<textarea
-rows="2"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.description}
-onChange={(e)=>setFormData({...formData,description:e.target.value})}
-/>
-
-</div>
-
-
-{/* MIN / MAX STUDENTS */}
-<div className="grid grid-cols-2 gap-4">
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Sĩ số tối thiểu
-</label>
-
-<input
-type="number"
-min="1"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.minStudents}
-onChange={(e)=>setFormData({
-...formData,
-minStudents:parseInt(e.target.value)
-})}
-/>
-</div>
-
-
-<div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Sĩ số tối đa *
-</label>
-
-<input
-type="number"
-min="1"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.maxStudents}
-onChange={(e)=>setFormData({
-...formData,
-maxStudents:parseInt(e.target.value)
-})}
-required
-/>
-</div>
-
-</div>
-
-
-{/* STATUS */}
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Trạng thái
-</label>
-
-<select
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.status}
-onChange={(e)=>setFormData({...formData,status:e.target.value})}
->
-
-<option value="ACTIVE">Đang mở (ACTIVE)</option>
-<option value="UPCOMING">Sắp mở (UPCOMING)</option>
-<option value="COMPLETED">Đã đóng (COMPLETED)</option>
-
-</select>
-
-</div>
-
-
-{/* BUTTON */}
-<div className="flex justify-end gap-3 pt-6 border-t">
-
-<Button
-type="button"
-variant="outline"
-onClick={()=>setShowModal(false)}
->
-Hủy
-</Button>
-
-<Button
-type="submit"
-className="bg-blue-600 text-white"
->
-{editingCourse ? "Cập nhật" : "Tạo mới"}
-</Button>
-
-</div>
-
-</form>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mã lớp *
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              value={formData.code}
+              onChange={(e) =>
+                setFormData({ ...formData, code: e.target.value.toLowerCase() })
+              }
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">Ví dụ: se1821, exe1822, prn1823</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tên lớp *
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Môn học *
+              </label>
+              <select
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                value={formData.subjectId}
+                onChange={(e) =>
+                  setFormData({ ...formData, subjectId: e.target.value })
+                }
+                required
+              >
+                <option value="">-- Chọn môn học --</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.code} - {subject.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Học kỳ *
+              </label>
+              <select
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                value={formData.semesterId}
+                onChange={(e) =>
+                  setFormData({ ...formData, semesterId: e.target.value })
+                }
+                required
+              >
+                <option value="">-- Chọn học kỳ --</option>
+                {semesters.map((semester) => (
+                  <option key={semester.id} value={semester.id}>
+                    {semester.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mô tả
+            </label>
+            <textarea
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              rows="2"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sĩ số tối đa *
+              </label>
+              <input
+                type="number"
+                min="1"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                value={formData.maxStudents}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maxStudents: parseInt(e.target.value),
+                  })
+                }
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Trạng thái
+              </label>
+              <select
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+              >
+                <option value="ACTIVE">Đang mở (ACTIVE)</option>
+                <option value="UPCOMING">Sắp mở (UPCOMING)</option>
+                <option value="COMPLETED">Đã đóng (COMPLETED)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowModal(false)}
+              className="rounded-xl border-gray-200"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm"
+            >
+              {editingCourse ? "Cập nhật" : "Tạo mới"}
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* Assign Lecturer Modal */}
@@ -937,49 +811,6 @@ className="bg-blue-600 text-white"
               </p>
             </div>
           )}
-
-          <div className="grid grid-cols-2 gap-4">
-
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Sĩ số tối thiểu
-</label>
-
-<input
-type="number"
-min="1"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.minStudents}
-onChange={(e)=>setFormData({
-...formData,
-minStudents:parseInt(e.target.value)
-})}
-/>
-
-</div>
-
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Sĩ số tối đa *
-</label>
-
-<input
-type="number"
-min="1"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.maxStudents}
-onChange={(e)=>setFormData({
-...formData,
-maxStudents:parseInt(e.target.value)
-})}
-required
-/>
-
-</div>
-
-</div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
