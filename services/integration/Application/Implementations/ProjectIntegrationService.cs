@@ -232,16 +232,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
         {
             ApprovalStatus = integration.approval_status,
             GithubRepoUrl = integration.github_repo?.repo_url,
-            GithubRepoOwner = integration.github_repo?.owner_login,
-            GithubRepoName = integration.github_repo?.name,
-            JiraProjectKey = integration.jira_project?.jira_project_key,
-            JiraSiteUrl = integration.jira_project?.jira_url,
-            SubmittedByUserId = integration.submitted_by_user_id,
-            SubmittedAt = integration.submitted_at,
-            ApprovedByUserId = integration.approved_by_user_id,
-            ApprovedByName = integration.approved_by?.full_name,
-            ApprovedAt = integration.approved_at,
-            RejectedReason = integration.rejected_reason
+            JiraSiteUrl = integration.jira_project?.jira_url
         };
     }
 

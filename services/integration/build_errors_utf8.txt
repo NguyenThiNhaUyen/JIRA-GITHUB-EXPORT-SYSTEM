@@ -1,0 +1,8 @@
+﻿D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectIntegrationService.cs(235,13): error CS0117: 'IntegrationInfo' does not contain a definition for 'JiraProjectUrl' [D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Mappings\MappingProfile.cs(81,37): error CS1061: 'ProjectDetailResponse' does not contain a definition for 'Members' and no accessible extension method 'Members' accepting a first argument of type 'ProjectDetailResponse' could be found (are you missing a using directive or an assembly reference?) [D:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+
+Build FAILED.
+    6 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:05.89

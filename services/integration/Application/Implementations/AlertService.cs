@@ -63,10 +63,7 @@ public class AlertService : IAlertService
             ProjectName = a.project?.name,
             Severity = a.severity,
             Message = a.message,
-            ThresholdDays = a.threshold_days,
-            LastActivityAt = a.last_activity_at,
             IsResolved = a.is_resolved,
-            ResolvedAt = a.resolved_at,
             CreatedAt = a.created_at
         }).ToList();
 

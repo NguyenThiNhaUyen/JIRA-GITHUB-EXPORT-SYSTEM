@@ -87,8 +87,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
             .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.project_id))
             .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.project.name))
-            .ForMember(dest => dest.InvitedByName, opt => opt.MapFrom(src => src.inviter_user.full_name))
-            .ForMember(dest => dest.InvitedStudentUserId, opt => opt.MapFrom(src => src.invitee_user_id))
+            .ForMember(dest => dest.InvitedByName, opt => opt.MapFrom(src => src.invited_by_user.full_name))
+            .ForMember(dest => dest.InvitedStudentUserId, opt => opt.MapFrom(src => src.invited_student_user_id))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
             .ForMember(dest => dest.Message, opt => opt.MapFrom(src => src.message))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
@@ -101,7 +101,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.FileUrl, opt => opt.MapFrom(src => src.file_url))
             .ForMember(dest => dest.SubmittedByName, opt => opt.MapFrom(src => src.submitted_by_user != null ? src.submitted_by_user.full_name : "N/A"))
             .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => src.submitted_at))
-            .ForMember(dest => dest.ReviewerName, opt => opt.MapFrom(src => src.reviewer != null ? src.reviewer.full_name : "N/A"))
+            .ForMember(dest => dest.ReviewerName, opt => opt.MapFrom(src => src.reviewer_user != null ? src.reviewer_user.full_name : "N/A"))
             .ForMember(dest => dest.ReviewedAt, opt => opt.MapFrom(src => src.reviewed_at))
             .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.feedback));
     }

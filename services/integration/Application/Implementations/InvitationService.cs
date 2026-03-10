@@ -184,14 +184,11 @@ public class InvitationService : IInvitationService
             Id = i.id,
             ProjectId = i.project_id,
             ProjectName = i.project?.name ?? "",
-            InvitedByUserId = i.invited_by_user_id,
             InvitedByName = i.invited_by_user?.full_name ?? "",
             InvitedStudentUserId = i.invited_student_user_id,
-            InvitedStudentName = i.invited_student_user?.user?.full_name ?? "",
             Status = i.status,
             Message = i.message,
-            CreatedAt = i.created_at,
-            RespondedAt = i.responded_at
+            CreatedAt = i.created_at
         };
     }
 }
