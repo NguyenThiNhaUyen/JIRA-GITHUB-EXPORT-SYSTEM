@@ -277,83 +277,14 @@ using Microsoft.OpenApi.Models;
             // ============================================
             // DATABASE SEEDING
             // ============================================
-            await SeedDatabaseAsync(app);
+            await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
 
             // ============================================
             // RUN APPLICATION
             // ============================================
             await app.RunAsync();
 
-            // Local function for seeding
-            async Task SeedDatabaseAsync(WebApplication host)
-            {
-                using var seedScope = host.Services.CreateScope();
-                var services = seedScope.ServiceProvider;
-                var dbContext = services.GetRequiredService<JiraGithubToolDbContext>();
-                var hasher = services.GetRequiredService<IPasswordHasher>();
-                var seedLogger = services.GetRequiredService<ILogger<Program>>();
 
-                try
-                {
-                    seedLogger.LogInformation("Applying database migrations...");
-                    await dbContext.Database.MigrateAsync();
-
-                    // 1. Roles
-                    var roles = new[] { "ADMIN", "LECTURER", "STUDENT" };
-                    foreach (var roleName in roles)
-                    {
-                        if (!await dbContext.roles.AnyAsync(r => r.role_name == roleName))
-                        {
-                            dbContext.roles.Add(new role { role_name = roleName });
-                        }
-                    }
-                    await dbContext.SaveChangesAsync();
-
-                    // 2. Admin
-                    string adminEmail = "admin@truonghoc.com";
-                    if (!await dbContext.users.AnyAsync(u => u.email == adminEmail))
-                    {
-                        var adminRole = await dbContext.roles.FirstAsync(r => r.role_name == "ADMIN");
-                        var adminUser = new user { email = adminEmail, password = hasher.HashPassword("Admin@123"), full_name = "Super Admin", enabled = true };
-                        adminUser.roles.Add(adminRole);
-                        dbContext.users.Add(adminUser);
-                        await dbContext.SaveChangesAsync();
-                        seedLogger.LogWarning("🚀 [SEED] Admin seeded: {Email}", adminEmail);
-                    }
-
-                    // 3. Lecturer
-                    string lectEmail = "gv@fpt.edu.vn";
-                    if (!await dbContext.users.AnyAsync(u => u.email == lectEmail))
-                    {
-                        var role = await dbContext.roles.FirstAsync(r => r.role_name == "LECTURER");
-                        var u = new user { email = lectEmail, password = hasher.HashPassword("Lecturer@123"), full_name = "Nguyễn Văn A", enabled = true };
-                        u.roles.Add(role);
-                        dbContext.users.Add(u);
-                        await dbContext.SaveChangesAsync();
-                        dbContext.lecturers.Add(new lecturer { user_id = u.id, lecturer_code = "GV001", office_email = lectEmail, department = "SE" });
-                        await dbContext.SaveChangesAsync();
-                        seedLogger.LogWarning("🚀 [SEED] Lecturer seeded: {Email}", lectEmail);
-                    }
-
-                    // 4. Student
-                    string studEmail = "sv@fpt.edu.vn";
-                    if (!await dbContext.users.AnyAsync(u => u.email == studEmail))
-                    {
-                        var role = await dbContext.roles.FirstAsync(r => r.role_name == "STUDENT");
-                        var u = new user { email = studEmail, password = hasher.HashPassword("Student@123"), full_name = "Trần Thị B", enabled = true };
-                        u.roles.Add(role);
-                        dbContext.users.Add(u);
-                        await dbContext.SaveChangesAsync();
-                        dbContext.students.Add(new student { user_id = u.id, student_code = "SE123456", major = "SE", department = "IT" });
-                        await dbContext.SaveChangesAsync();
-                        seedLogger.LogWarning("🚀 [SEED] Student seeded: {Email}", studEmail);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    seedLogger.LogError(ex, "❌ Database seeding failed.");
-                }
-            }
 
 
 
