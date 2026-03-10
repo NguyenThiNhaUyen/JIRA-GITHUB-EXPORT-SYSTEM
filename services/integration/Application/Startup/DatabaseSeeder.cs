@@ -85,6 +85,36 @@ public static class DatabaseSeeder
                 await dbContext.SaveChangesAsync();
                 seedLogger.LogWarning("🚀 [SEED] Fixed missing full_name for {Count} older users", namelessUsers.Count);
             }
+
+            // 6. Backfill missing lecturer records
+            var lecturerUsers = await dbContext.users
+                .Include(u => u.roles)
+                .Include(u => u.lecturer)
+                .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+                .ToListAsync();
+
+            var newLecturersCount = 0;
+            foreach (var lu in lecturerUsers)
+            {
+                if (lu.lecturer == null)
+                {
+                    string uniqueCode = (lu.full_name?.Substring(0, Math.Min(3, lu.full_name.Length)) ?? "GV").ToUpper() + lu.id.ToString();
+                    dbContext.lecturers.Add(new lecturer 
+                    { 
+                        user_id = lu.id, 
+                        lecturer_code = uniqueCode, 
+                        office_email = lu.email, 
+                        department = "SE" 
+                    });
+                    newLecturersCount++;
+                }
+            }
+
+            if (newLecturersCount > 0)
+            {
+                await dbContext.SaveChangesAsync();
+                seedLogger.LogWarning("🚀 [SEED] Fixed missing lecturer records for {Count} users", newLecturersCount);
+            }
         }
         catch (Exception ex)
         {
