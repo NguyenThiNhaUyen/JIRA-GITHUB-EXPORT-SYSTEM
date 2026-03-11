@@ -117,11 +117,8 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Lecturer assigned successfully"));
     }
 
-    /// <summary>
-    /// Enroll students to course (Admin only)
-    /// </summary>
     [HttpPost("{id}/enrollments")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> EnrollStudents(long id, [FromBody] EnrollStudentsRequest request)
     {
@@ -129,11 +126,8 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Enrollment completed"));
     }
 
-    /// <summary>
-    /// Import students to course from Excel (Admin only)
-    /// </summary>
     [HttpPost("{id}/enrollments/import")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ImportEnrollments(long id, IFormFile file)
