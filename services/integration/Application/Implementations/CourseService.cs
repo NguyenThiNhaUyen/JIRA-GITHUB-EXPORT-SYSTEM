@@ -407,13 +407,14 @@ public class CourseService : ICourseService
         var studentRole = await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT")
             ?? throw new NotFoundException("Role 'STUDENT' not found in system");
 
-        var studentUserIds = new List<long>();
+        var isModified = false;
 
         foreach (var info in studentInfos)
         {
             // 1. Check/Create User
             var user = await _unitOfWork.Users.Query()
                 .Include(u => u.roles)
+                .Include(u => u.student)
                 .FirstOrDefaultAsync(u => u.email.ToLower() == info.Email.ToLower());
 
             if (user == null)
@@ -421,42 +422,64 @@ public class CourseService : ICourseService
                 user = new user
                 {
                     email = info.Email,
-                    password = _passwordHasher.HashPassword("Student@123"), // Mật khẩu mặc định
+                    password = _passwordHasher.HashPassword("Student@123"),
                     full_name = info.Name,
                     enabled = true,
                     created_at = DateTime.UtcNow,
                     updated_at = DateTime.UtcNow
                 };
                 user.roles.Add(studentRole);
-                _unitOfWork.Users.Add(user);
-                await _unitOfWork.SaveChangesAsync();
-            }
-            else if (!user.roles.Any(r => r.role_name == "STUDENT"))
-            {
-                user.roles.Add(studentRole);
-                _unitOfWork.Users.Update(user);
-                await _unitOfWork.SaveChangesAsync();
-            }
-
-            // 2. Check/Create Student record
-            var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == user.id);
-            if (student == null)
-            {
-                student = new student
+                
+                // Create Student record link
+                user.student = new student
                 {
-                    user_id = user.id,
                     student_code = info.Code,
                     created_at = DateTime.UtcNow,
                     updated_at = DateTime.UtcNow
                 };
-                _unitOfWork.Students.Add(student);
-                await _unitOfWork.SaveChangesAsync();
-            }
 
-            studentUserIds.Add(user.id);
+                _unitOfWork.Users.Add(user);
+                isModified = true;
+            }
+            else 
+            {
+                // Ensure role
+                if (!user.roles.Any(r => r.role_name == "STUDENT"))
+                {
+                    user.roles.Add(studentRole);
+                    _unitOfWork.Users.Update(user);
+                    isModified = true;
+                }
+
+                // Ensure student record
+                if (user.student == null)
+                {
+                    var studentObj = new student
+                    {
+                        user_id = user.id,
+                        student_code = info.Code,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    _unitOfWork.Students.Add(studentObj);
+                    isModified = true;
+                }
+            }
         }
 
-        return await EnrollStudentsAsync(courseId, studentUserIds);
+        if (isModified)
+        {
+            _logger.LogInformation("Import: Saving changes for students...");
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        // Re-fetch or use tracked entities to get IDs
+        var finalStudentUserIds = await _unitOfWork.Users.Query()
+            .Where(u => studentInfos.Select(i => i.Email.ToLower()).Contains(u.email.ToLower()))
+            .Select(u => u.id)
+            .ToListAsync();
+
+        return await EnrollStudentsAsync(courseId, finalStudentUserIds);
     }
 }
 
