@@ -1,100 +1,53 @@
-// Alerts — Lecturer Cảnh báo (Advanced: Inactive Detection Logic)
-import { useState, useEffect } from "react";
-import { ChevronRight, AlertTriangle, Bell, CheckCircle, Clock, Filter, RefreshCw } from "lucide-react";
+// Alerts — Lecturer Cảnh báo (Real API Integration)
+import { useState } from "react";
+import { ChevronRight, Bell, CheckCircle, Clock, Filter, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
-import db from "../../mock/db.js";
-import { INACTIVITY_RULES, ALERT_SEVERITY as SEV } from "../../shared/permissions.js";
+import { ALERT_SEVERITY as SEV } from "../../shared/permissions.js";
 
-// shorthand
-const RULES = INACTIVITY_RULES;
+// Feature Hooks
+import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 
+// Xóa buildAlertsFromData cũ vì giờ đã có API trả về trực tiếp
 
-function buildAlertsFromDB(lecturerId) {
-    const assignments = db.findMany("courseLecturers", { lecturerId });
-    const courseIds = assignments.map((a) => a.courseId);
-
-    const alerts = [];
-    let alertId = 1;
-
-    for (const courseId of courseIds) {
-        const course = db.findById("courses", courseId);
-        const groups = db.getCourseGroups(courseId);
-
-        for (const group of groups) {
-            const project = db.findMany("projects", { courseId })[0];
-            const commits = project ? db.findMany("commits", { projectId: project.id }) : [];
-
-            for (const rule of RULES) {
-                if (rule.check(group, commits)) {
-                    alerts.push({
-                        id: `${alertId++}`,
-                        groupId: group.id,
-                        group: `${group.name} — ${course?.code || courseId}`,
-                        courseId,
-                        rule: rule.label,
-                        ruleId: rule.id,
-                        severity: rule.severity,
-                        resolved: false,
-                        since: group.createdAt || new Date().toISOString(),
-                    });
-                }
-            }
-        }
-    }
-
-    return alerts;
-}
 
 export default function Alerts() {
-    const { success } = useToast();
-    const { user } = useAuth();
-    const [alerts, setAlerts] = useState([]);
+    const { success, error: showError } = useToast();
     const [filter, setFilter] = useState("all");
-    const [resolvedIds, setResolvedIds] = useState(new Set());
     const [remindedIds, setRemindedIds] = useState(new Set());
 
-    useEffect(() => {
-        if (user?.id) {
-            const generated = buildAlertsFromDB(user.id);
-            setAlerts(generated);
-        }
-    }, [user]);
+    const { data: alertsData, isLoading, refetch } = useGetAlerts({ pageSize: 100 });
+    const { mutate: resolveMutate } = useResolveAlert();
+
+    const alertsList = alertsData?.items || [];
 
     const resolve = (id) => {
-        setResolvedIds((prev) => new Set([...prev, id]));
-        success("Đã đánh dấu là đã giải quyết");
+        resolveMutate(id, {
+            onSuccess: () => success("Đã đánh dấu là đã giải quyết"),
+            onError: (err) => showError(err.message || "Không thể giải quyết cảnh báo")
+        });
     };
 
     const remind = (alert) => {
         setRemindedIds((prev) => new Set([...prev, alert.id]));
-        // TODO: Call email/notification API with alert.groupId, alert.rule, alert.courseId
-        success(`Đã gửi nhắc nhở đến ${alert.group.split("—")[0].trim()}`);
+        success(`Đã gửi nhắc nhở đến ${alert.groupName || alert.project_name || 'nhóm'}`);
     };
 
     const refresh = () => {
-        if (user?.id) {
-            const generated = buildAlertsFromDB(user.id);
-            setAlerts(generated);
-            setResolvedIds(new Set());
-            setRemindedIds(new Set());
-            success("Đã làm mới danh sách cảnh báo");
-        }
+        refetch();
+        success("Đã làm mới danh sách cảnh báo");
     };
 
-    const enriched = alerts.map((a) => ({ ...a, resolved: resolvedIds.has(a.id) }));
-
-    const filtered = enriched.filter((a) => {
-        if (filter === "resolved") return a.resolved;
-        if (filter === "all") return !a.resolved;
-        return !a.resolved && a.severity === filter;
+    const filtered = alertsList.filter((a) => {
+        if (filter === "resolved") return a.status === "RESOLVED";
+        if (filter === "all") return a.status === "OPEN";
+        return a.status === "OPEN" && a.severity.toLowerCase() === filter.toLowerCase();
     });
 
-    const openCount = enriched.filter((a) => !a.resolved).length;
-    const highCount = enriched.filter((a) => !a.resolved && a.severity === "high").length;
-    const resolvedCount = enriched.filter((a) => a.resolved).length;
+    const openCount = alertsList.filter((a) => a.status === "OPEN").length;
+    const highCount = alertsList.filter((a) => a.status === "OPEN" && a.severity.toLowerCase() === "high").length;
+    const resolvedCount = alertsList.filter((a) => a.status === "RESOLVED").length;
 
     return (
         <div className="space-y-6">
@@ -116,8 +69,9 @@ export default function Alerts() {
                     onClick={refresh}
                     variant="outline"
                     className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm"
+                    disabled={isLoading}
                 >
-                    <RefreshCw size={14} />
+                    <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
                     Làm mới
                 </Button>
             </div>
@@ -137,30 +91,6 @@ export default function Alerts() {
                     <span className="text-xl font-bold">{resolvedCount}</span>
                 </div>
             </div>
-
-            {/* Inactivity Rules Legend */}
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                <CardHeader className="border-b border-gray-50 pb-3">
-                    <div className="flex items-center gap-2">
-                        <AlertTriangle size={14} className="text-orange-500" />
-                        <CardTitle className="text-sm font-semibold text-gray-700">
-                            Quy tắc cảnh báo đang áp dụng
-                        </CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent className="py-3 px-5">
-                    <div className="flex flex-wrap gap-2">
-                        {RULES.map((r) => (
-                            <span
-                                key={r.id}
-                                className={`text-xs font-medium px-2.5 py-1 rounded-full border ${SEV[r.severity].badge}`}
-                            >
-                                {r.label}
-                            </span>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Filter chips */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -182,7 +112,12 @@ export default function Alerts() {
             {/* Alerts list */}
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                 <CardContent className="p-0">
-                    {filtered.length === 0 ? (
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-3">
+                            <RefreshCw size={32} className="text-teal-600 animate-spin" />
+                            <p className="text-sm text-gray-400">Đang quét hệ thống...</p>
+                        </div>
+                    ) : filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <div className="w-16 h-16 rounded-3xl bg-green-50 flex items-center justify-center">
                                 <CheckCircle size={32} className="text-green-400" />
@@ -199,41 +134,40 @@ export default function Alerts() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {filtered.map((a) => {
-                                const sev = SEV[a.severity];
+                                const sev = SEV[a.severity] || SEV.medium;
                                 const reminded = remindedIds.has(a.id);
                                 return (
                                     <div
                                         key={a.id}
-                                        className={`px-5 py-4 hover:bg-gray-50/50 transition-colors flex items-start gap-4 ${a.resolved ? "opacity-60" : ""
+                                        className={`px-5 py-4 hover:bg-gray-50/50 transition-colors flex items-start gap-4 ${a.status === "RESOLVED" ? "opacity-60" : ""
                                             }`}
                                     >
-                                        <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${sev.dot}`} />
+                                        <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${sev[a.severity.toLowerCase()]?.dot || sev.medium.dot}`} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                <p className="text-sm font-semibold text-gray-800">{a.group}</p>
+                                                <p className="text-sm font-semibold text-gray-800">{a.groupName} · {a.courseCode}</p>
                                                 <span
-                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${sev.cls}`}
+                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${sev[a.severity.toLowerCase()]?.cls || sev.medium.cls}`}
                                                 >
-                                                    {sev.label}
+                                                    {a.severity}
                                                 </span>
-                                                {a.resolved && (
+                                                {a.status === "RESOLVED" && (
                                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-green-50 text-green-700 border-green-100 uppercase tracking-wider">
                                                         Đã xử lý
                                                     </span>
                                                 )}
-                                                {reminded && !a.resolved && (
+                                                {reminded && a.status === "OPEN" && (
                                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-100 uppercase tracking-wider">
                                                         Đã nhắc
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-500">{a.rule}</p>
+                                            <p className="text-xs text-gray-500">{a.message}</p>
                                             <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                                                <Clock size={9} /> Từ{" "}
-                                                {new Date(a.since).toLocaleDateString("vi-VN")}
+                                                <Clock size={9} /> {new Date(a.createdAt).toLocaleString("vi-VN")}
                                             </p>
                                         </div>
-                                        {!a.resolved && (
+                                        {a.status === "OPEN" && (
                                             <div className="flex items-center gap-2 shrink-0">
                                                 <button
                                                     onClick={() => remind(a)}

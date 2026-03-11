@@ -1,74 +1,59 @@
-// Contributions Analytics — Lecturer (Advanced: DB-connected, per-group/student)
+// Feature Hooks
 import { useState, useEffect } from "react";
-import { ChevronRight, BarChart3, GitBranch, CheckSquare, TrendingUp, Users, Activity, Filter } from "lucide-react";
+import { ChevronRight, BarChart3, GitBranch, TrendingUp, Users, Activity, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
-import db from "../../mock/db.js";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+
 
 const WEEKS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
 
-function buildWeeklyData(commits) {
-    // Map commits to 12 week buckets relative to the earliest commit
-    const counts = new Array(12).fill(0);
-    if (commits.length === 0) return counts;
-    const sorted = [...commits].sort((a, b) => new Date(a.committedAt) - new Date(b.committedAt));
-    const firstDate = new Date(sorted[0].committedAt);
-    for (const c of commits) {
-        const weekIndex = Math.min(
-            Math.floor((new Date(c.committedAt) - firstDate) / (7 * 24 * 60 * 60 * 1000)),
-            11
-        );
-        if (weekIndex >= 0) counts[weekIndex]++;
-    }
-    return counts;
-}
-
 export default function Contributions() {
-    const { user } = useAuth();
     const [selectedCourse, setSelectedCourse] = useState("");
-    const [courses, setCourses] = useState([]);
-    const [groups, setGroups] = useState([]);
-    const [students, setStudents] = useState([]);
     const [commitsByStudent, setCommitsByStudent] = useState({});
     const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0));
 
-    useEffect(() => {
-        if (!user?.id) return;
-        const assignments = db.findMany("courseLecturers", { lecturerId: user.id });
-        const courseIds = assignments.map((a) => a.courseId);
-        const mine = courseIds.map((id) => db.findById("courses", id)).filter(Boolean);
-        setCourses(mine);
-        if (mine.length > 0 && !selectedCourse) setSelectedCourse(mine[0].id);
-    }, [user]);
+    const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+    const courses = coursesData.items || [];
 
     useEffect(() => {
-        if (!selectedCourse) return;
+        if (courses.length > 0 && !selectedCourse) {
+            setSelectedCourse(String(courses[0].id));
+        }
+    }, [courses]);
 
-        const courseGroups = db.getCourseGroups(selectedCourse);
-        setGroups(courseGroups);
+    const currentCourse = courses.find(c => String(c.id) === selectedCourse);
+    const groups = currentCourse?.groups || [];
 
-        // Collect all students in this course
-        const enrollments = db.findMany("courseEnrollments", { courseId: selectedCourse });
-        const allStudents = enrollments
-            .map((e) => db.findById("users.students", e.studentId))
-            .filter(Boolean);
-        setStudents(allStudents);
+    useEffect(() => {
+        if (!currentCourse) return;
 
-        // Collect commits per student via projects
-        const projects = db.findMany("projects", { courseId: selectedCourse });
-        const allCommits = projects.flatMap((p) => db.findMany("commits", { projectId: p.id }));
+        // Collect all students in this course from groups
+        const allStudents = [];
+        groups.forEach(g => {
+            (g.team || []).forEach(m => {
+                if (!allStudents.find(s => s.studentId === m.studentId)) {
+                    allStudents.push(m);
+                }
+            });
+        });
 
+        // Mock commits per student (since no real API yet)
         const byStudent = {};
         for (const s of allStudents) {
-            byStudent[s.id] = {
-                name: s.name,
-                studentId: s.studentId,
-                commits: allCommits.filter((c) => c.authorStudentId === s.id).length,
+            const mockCommits = Math.floor(Math.random() * 15);
+            byStudent[s.studentId] = {
+                name: s.studentName,
+                studentCode: s.studentCode,
+                commits: mockCommits,
             };
         }
         setCommitsByStudent(byStudent);
-        setWeeklyCommits(buildWeeklyData(allCommits));
-    }, [selectedCourse]);
+
+        // Mock weekly data
+        const mockWeekly = new Array(12).fill(0).map(() => Math.floor(Math.random() * 20));
+        setWeeklyCommits(mockWeekly);
+    }, [selectedCourse, currentCourse, groups]);
+
 
     const maxWeekly = Math.max(...weeklyCommits, 1);
 
@@ -232,17 +217,18 @@ export default function Contributions() {
                         <p className="text-sm text-gray-400 text-center py-10">Không có dữ liệu đóng góp</p>
                     ) : (
                         sortedStudents.map((s, i) => (
-                            <div key={s.studentId} className="grid grid-cols-12 gap-3 px-6 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                            <div key={s.studentCode} className="grid grid-cols-12 gap-3 px-6 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
                                 <div className="col-span-1 text-sm font-bold text-gray-400">#{i + 1}</div>
                                 <div className="col-span-5 flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-xs font-bold text-teal-700">
-                                        {s.name.charAt(0)}
+                                        {s.name?.charAt(0)}
                                     </div>
                                     <span className="text-sm font-medium text-gray-700 truncate">{s.name}</span>
                                 </div>
                                 <div className="col-span-2 text-right">
-                                    <span className="text-xs font-mono text-gray-500">{s.studentId}</span>
+                                    <span className="text-xs font-mono text-gray-500">{s.studentCode}</span>
                                 </div>
+
                                 <div className="col-span-2 text-right">
                                     <span className="text-sm font-semibold text-gray-700">{s.commits}</span>
                                 </div>

@@ -1,10 +1,9 @@
 // User Management — Admin Module
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Button } from "../../components/ui/button.jsx";
+import { Card, CardContent } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-import db from "../../mock/db.js";
+import { useGetUsers, useUpdateUserRole, useUpdateUserStatus, useResetUserPassword } from "../../features/users/hooks/useUsers.js";
 import {
     ChevronRight, Users, Search, Filter, MoreHorizontal,
     Shield, UserX, Key, CheckCircle, XCircle
@@ -18,39 +17,59 @@ const ROLE_CFG = {
 
 export default function UserManagement() {
     const navigate = useNavigate();
-    const { success, error } = useToast();
+    const { success } = useToast();
 
     const [search, setSearch] = useState("");
     const [filterRole, setFilterRole] = useState("all");
     const [users, setUsers] = useState([]);
-    const [actionMenu, setActionMenu] = useState(null); // userId
+    const [actionMenu, setActionMenu] = useState(null);
 
-    useEffect(() => { loadUsers(); }, []);
+    const { data: adminsRaw = [], isLoading: load1 } = useGetUsers("ADMIN");
+    const { data: lectsRaw = [], isLoading: load2 } = useGetUsers("LECTURER");
+    const { data: studentsRaw = [], isLoading: load3 } = useGetUsers("STUDENT");
 
-    const loadUsers = () => {
-        try {
-            const admins = db.findMany("users.admins").map(u => ({ ...u, role: "ADMIN", status: "ACTIVE" }));
-            const lects = db.findMany("users.lecturers").map(u => ({ ...u, role: "LECTURER", status: "ACTIVE" }));
-            const students = db.findMany("users.students").map(u => ({ ...u, role: "STUDENT", status: "ACTIVE" }));
+    const roleMutation = useUpdateUserRole();
+    const statusMutation = useUpdateUserStatus();
+    const passMutation = useResetUserPassword();
+
+    useEffect(() => {
+        if (!load1 && !load2 && !load3) {
+            const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN", status: "ACTIVE" }));
+            const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER", status: "ACTIVE" }));
+            const students = studentsRaw.map(u => ({ ...u, role: "STUDENT", status: "ACTIVE" }));
             setUsers([...admins, ...lects, ...students]);
-        } catch { error("Không thể tải danh sách người dùng"); }
+        }
+    }, [adminsRaw, lectsRaw, studentsRaw, load1, load2, load3]);
+
+    const handleChangeRole = async (userId, newRole) => {
+        try {
+            await roleMutation.mutateAsync({ id: userId, role: newRole });
+            success(`Đã cập nhật quyền thành ${ROLE_CFG[newRole]?.label}`);
+            setActionMenu(null);
+        } catch (err) {
+            error(err.message || "Cập nhật quyền thất bại");
+        }
     };
 
-    const handleChangeRole = (userId, newRole) => {
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-        success(`Đã cập nhật quyền thành ${ROLE_CFG[newRole]?.label}`);
-        setActionMenu(null);
+    const handleDisable = async (userId, currentStatus) => {
+        try {
+            const newEnabled = currentStatus === "DISABLED";
+            await statusMutation.mutateAsync({ id: userId, enabled: newEnabled });
+            success("Đã cập nhật trạng thái tài khoản");
+            setActionMenu(null);
+        } catch (err) {
+            error(err.message || "Cập nhật trạng thái thất bại");
+        }
     };
 
-    const handleDisable = (userId) => {
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: u.status === "ACTIVE" ? "DISABLED" : "ACTIVE" } : u));
-        success("Đã cập nhật trạng thái tài khoản");
-        setActionMenu(null);
-    };
-
-    const handleResetPassword = (name) => {
-        success(`Đã gửi email đặt lại mật khẩu đến ${name}`);
-        setActionMenu(null);
+    const handleResetPassword = async (userId, name) => {
+        try {
+            await passMutation.mutateAsync({ id: userId });
+            success(`Đã gửi email đặt lại mật khẩu đến ${name}`);
+            setActionMenu(null);
+        } catch (err) {
+            error(err.message || "Đặt lại mật khẩu thất bại");
+        }
     };
 
     const filtered = users.filter(u => {
@@ -116,8 +135,8 @@ export default function UserManagement() {
                                 key={r}
                                 onClick={() => setFilterRole(r)}
                                 className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${filterRole === r
-                                        ? "bg-teal-600 text-white border-teal-600"
-                                        : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
+                                    ? "bg-teal-600 text-white border-teal-600"
+                                    : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
                                     }`}
                             >
                                 {r === "all" ? "Tất cả" : ROLE_CFG[r]?.label}
@@ -155,8 +174,8 @@ export default function UserManagement() {
                                         {/* Name */}
                                         <div className="col-span-4 flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${u.role === "ADMIN" ? "bg-purple-100 text-purple-700" :
-                                                    u.role === "LECTURER" ? "bg-teal-100 text-teal-700" :
-                                                        "bg-blue-100 text-blue-700"
+                                                u.role === "LECTURER" ? "bg-teal-100 text-teal-700" :
+                                                    "bg-blue-100 text-blue-700"
                                                 }`}>
                                                 {u.name?.charAt(0)}
                                             </div>
@@ -181,8 +200,8 @@ export default function UserManagement() {
                                         {/* Status */}
                                         <div className="col-span-2 text-center">
                                             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${isActive
-                                                    ? "bg-green-50 text-green-700"
-                                                    : "bg-gray-100 text-gray-500"
+                                                ? "bg-green-50 text-green-700"
+                                                : "bg-gray-100 text-gray-500"
                                                 }`}>
                                                 {isActive ? <CheckCircle size={9} /> : <XCircle size={9} />}
                                                 {isActive ? "Hoạt động" : "Vô hiệu hóa"}
@@ -220,14 +239,14 @@ export default function UserManagement() {
                                                         ))}
                                                     <div className="border-t border-gray-50 my-1" />
                                                     <button
-                                                        onClick={() => handleDisable(u.id)}
+                                                        onClick={() => handleDisable(u.id, u.status)}
                                                         className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
                                                     >
                                                         <UserX size={13} className="text-gray-400" />
                                                         {isActive ? "Vô hiệu hóa TK" : "Kích hoạt TK"}
                                                     </button>
                                                     <button
-                                                        onClick={() => handleResetPassword(u.name)}
+                                                        onClick={() => handleResetPassword(u.id, u.name)}
                                                         className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
                                                     >
                                                         <Key size={13} className="text-gray-400" />

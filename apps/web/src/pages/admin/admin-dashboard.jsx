@@ -1,17 +1,22 @@
-// Admin Dashboard — Enterprise SaaS Governance (logic unchanged, UI overhauled)
-import { useState, useEffect } from "react";
+// Admin Dashboard — Enterprise SaaS Governance
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import db from "../../mock/db.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
   BookOpen, Library, CalendarDays, Users, GraduationCap,
   FolderKanban, TrendingUp, UserCog, Plus, ChevronRight,
-  Activity, CheckCircle, AlertCircle, Clock
+  Activity, CheckCircle, AlertCircle, Clock, WifiOff
 } from "lucide-react";
 
-// Mock recent system activity
+// Feature Hooks
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+
+// Mock recent system activity (static — không cần API)
 const SYSTEM_ACTIVITY = [
   { icon: Users, color: "text-blue-600 bg-blue-50", msg: "Sinh viên mới đăng ký lớp SE001", time: "5 phút trước" },
   { icon: UserCog, color: "text-teal-600 bg-teal-50", msg: "GV. Nguyễn được phân công SE002", time: "30 phút trước" },
@@ -22,44 +27,43 @@ const SYSTEM_ACTIVITY = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { error } = useToast();
 
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ semesters: 0, subjects: 0, courses: 0, lecturers: 0, students: 0, projects: 0 });
-  const [recentCourses, setRecentCourses] = useState([]);
-  const [semesters, setSemesters] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  // Data Fetching
+  const { data: coursesData, isLoading: loadingCourses, error: courseError } = useGetCourses({ page: 1, pageSize: 6 });
+  const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
+  const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
+  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ pageSize: 1 });
 
-  useEffect(() => { loadData(); }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const semestersData = db.findMany("semesters");
-      const subjectsData = db.findMany("subjects");
-      const coursesData = db.findMany("courses");
-      const lecturersData = db.findMany("users.lecturers");
-      const studentsData = db.findMany("users.students");
-      const groups = db.findMany("groups");
+  // For counts, we could have a stats API, but for now fetch summaries
+  const { data: lecturersRaw = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+  const { data: studentsRaw = [], isLoading: loadingStus } = useGetUsers("STUDENT");
 
-      setSemesters(semestersData);
-      setSubjects(subjectsData);
-      setRecentCourses(coursesData.slice(0, 6));
-      setStats({
-        semesters: semestersData.length,
-        subjects: subjectsData.length,
-        courses: coursesData.length,
-        lecturers: lecturersData.length,
-        students: studentsData.length,
-        projects: groups.length,
-      });
-    } catch { error("Không thể tải dữ liệu dashboard"); }
-    finally { setLoading(false); }
+  const recentCourses = coursesData?.items || [];
+  const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus || loadingProjects;
+
+  const stats = {
+    semesters: semesters.length,
+    subjects: subjects.length,
+    courses: coursesData?.totalCount || recentCourses.length,
+    lecturers: lecturersRaw.length,
+    students: studentsRaw.length,
+    projects: projectsData?.totalCount || 0,
   };
 
-  const getSemesterName = (id) => semesters.find(s => s.id === id)?.code || "N/A";
-  const getSubjectName = (id) => subjects.find(s => s.id === id)?.code || "N/A";
   const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;
+
+  const getSemesterName = (id) => {
+    if (!id) return "N/A";
+    const found = semesters.find(s => String(s.id) === String(id));
+    return found?.name || "N/A";
+  };
+
+  const getSubjectName = (id) => {
+    if (!id) return "N/A";
+    const found = subjects.find(s => String(s.id) === String(id));
+    return found?.code || "N/A";
+  };
 
   return (
     <div className="space-y-7">
@@ -144,14 +148,24 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* ── D. Recent Courses Table ───────── */}
+      {/* ── D. Recent Courses Table (REAL API) ── */}
       <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
         <CardHeader className="border-b border-gray-50 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold text-gray-800">Lớp học phần gần đây</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold text-gray-800">Lớp học phần gần đây</CardTitle>
+              {!isLoading && !courseError ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100 font-medium">
+                  Live API
+                </span>
+              ) : courseError ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 font-medium flex items-center gap-1">
+                  <WifiOff size={9} /> Kết nối lỗi
+                </span>
+              ) : null}
+            </div>
             <Button
-              variant="outline"
-              size="sm"
+              variant="outline" size="sm"
               onClick={() => navigate("/admin/courses")}
               className="rounded-full text-xs h-8 px-4 border-gray-200 text-gray-600 hover:bg-gray-50"
             >
@@ -169,36 +183,47 @@ export default function AdminDashboard() {
         </div>
 
         <CardContent className="p-0">
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-teal-600" />
             </div>
+          ) : recentCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+              <BookOpen size={28} className="opacity-30" />
+              <p className="text-sm">Chưa có lớp học phần nào</p>
+            </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {recentCourses.map((course, i) => (
-                <div key={course.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
-                  <div className="col-span-4 flex items-center gap-3">
-                    <span className="text-xs text-gray-400 font-medium w-5 shrink-0">{i + 1}</span>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-800">{course.code}</p>
-                      <p className="text-xs text-gray-400 truncate max-w-[140px]">{course.name}</p>
+              {recentCourses.map((course, i) => {
+                // Course từ API đã có subject/semester object — dùng trực tiếp
+                const subjectCode = course.subject?.code ?? getSubjectName(course.subjectId);
+                const semesterName = course.semester?.name ?? getSemesterName(course.semesterId);
+
+                return (
+                  <div key={course.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
+                    <div className="col-span-4 flex items-center gap-3">
+                      <span className="text-xs text-gray-400 font-medium w-5 shrink-0">{i + 1}</span>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-800">{course.code}</p>
+                        <p className="text-xs text-gray-400 truncate max-w-[140px]">{course.name}</p>
+                      </div>
+                    </div>
+                    <div className="col-span-3 hidden md:flex flex-col items-center gap-1">
+                      <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                        {subjectCode}
+                      </span>
+                      <span className="text-[11px] text-gray-500">{semesterName}</span>
+                    </div>
+                    <div className="col-span-2 text-center text-sm font-semibold text-gray-700">
+                      {course.currentStudents}
+                      <span className="text-gray-400 text-xs font-normal">/{course.maxStudents}</span>
+                    </div>
+                    <div className="col-span-3 flex items-center justify-center">
+                      <CourseStatusBadge status={course.status} />
                     </div>
                   </div>
-                  <div className="col-span-3 hidden md:flex flex-col items-center gap-1">
-                    <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                      {getSubjectName(course.subjectId)}
-                    </span>
-                    <span className="text-[11px] text-gray-500">{getSemesterName(course.semesterId)}</span>
-                  </div>
-                  <div className="col-span-2 text-center text-sm font-semibold text-gray-700">
-                    {course.currentStudents}
-                    <span className="text-gray-400 text-xs font-normal">/{course.maxStudents}</span>
-                  </div>
-                  <div className="col-span-3 flex items-center justify-center">
-                    <CourseStatusBadge status={course.status} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -228,12 +253,13 @@ function CourseStatusBadge({ status }) {
   const map = {
     ACTIVE: "bg-green-50 text-green-700",
     UPCOMING: "bg-blue-50 text-blue-700",
+    COMPLETED: "bg-gray-100 text-gray-500",
     CLOSED: "bg-gray-100 text-gray-500",
   };
-  const label = { ACTIVE: "Đang mở", UPCOMING: "Sắp mở", CLOSED: "Đã đóng" };
+  const label = { ACTIVE: "Đang mở", UPCOMING: "Sắp mở", COMPLETED: "Đã kết thúc", CLOSED: "Đã đóng" };
   return (
-    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${map[status] || map.CLOSED}`}>
-      {label[status] || status}
+    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${map[status] ?? map.CLOSED}`}>
+      {label[status] ?? status ?? "—"}
     </span>
   );
 }
