@@ -15,12 +15,18 @@ public class CourseService : ICourseService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CourseService> _logger;
+    private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
 
-    public CourseService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<CourseService> logger)
+    public CourseService(
+        IUnitOfWork unitOfWork, 
+        IMapper mapper, 
+        ILogger<CourseService> logger,
+        JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _passwordHasher = passwordHasher;
     }
 
 
@@ -369,7 +375,10 @@ public class CourseService : ICourseService
         if (file == null || file.Length == 0)
             throw new BusinessException("No file uploaded");
 
-        var studentCodes = new List<string>();
+        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        if (course == null) throw new NotFoundException("Course not found");
+
+        var studentInfos = new List<(string Code, string Name, string Email)>();
 
         using (var stream = file.OpenReadStream())
         {
@@ -381,25 +390,71 @@ public class CourseService : ICourseService
                 foreach (var row in rows)
                 {
                     var code = row.Cell(1).GetString()?.Trim();
-                    if (!string.IsNullOrEmpty(code))
+                    var name = row.Cell(2).GetString()?.Trim();
+                    var email = row.Cell(3).GetString()?.Trim();
+
+                    if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(email))
                     {
-                        studentCodes.Add(code);
+                        studentInfos.Add((code, name ?? "Sinh viên mới", email));
                     }
                 }
             }
         }
 
-        if (!studentCodes.Any())
-            throw new BusinessException("No student codes found in Excel file");
+        if (!studentInfos.Any())
+            throw new BusinessException("No student data (Code & Email) found in Excel file. Row format: [StudentCode, FullName, Email]");
 
-        // Find student user IDs by student codes
-        var studentUserIds = await _unitOfWork.Students.Query()
-            .Where(s => studentCodes.Contains(s.student_code))
-            .Select(s => s.user_id)
-            .ToListAsync();
+        var studentRole = await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT")
+            ?? throw new NotFoundException("Role 'STUDENT' not found in system");
 
-        if (!studentUserIds.Any())
-            throw new BusinessException("None of the student codes in the Excel file exist in the system");
+        var studentUserIds = new List<long>();
+
+        foreach (var info in studentInfos)
+        {
+            // 1. Check/Create User
+            var user = await _unitOfWork.Users.Query()
+                .Include(u => u.roles)
+                .FirstOrDefaultAsync(u => u.email.ToLower() == info.Email.ToLower());
+
+            if (user == null)
+            {
+                user = new user
+                {
+                    email = info.Email,
+                    password = _passwordHasher.HashPassword("Student@123"), // Mật khẩu mặc định
+                    full_name = info.Name,
+                    enabled = true,
+                    created_at = DateTime.UtcNow,
+                    updated_at = DateTime.UtcNow
+                };
+                user.roles.Add(studentRole);
+                _unitOfWork.Users.Add(user);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            else if (!user.roles.Any(r => r.role_name == "STUDENT"))
+            {
+                user.roles.Add(studentRole);
+                _unitOfWork.Users.Update(user);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            // 2. Check/Create Student record
+            var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == user.id);
+            if (student == null)
+            {
+                student = new student
+                {
+                    user_id = user.id,
+                    student_code = info.Code,
+                    created_at = DateTime.UtcNow,
+                    updated_at = DateTime.UtcNow
+                };
+                _unitOfWork.Students.Add(student);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            studentUserIds.Add(user.id);
+        }
 
         return await EnrollStudentsAsync(courseId, studentUserIds);
     }
