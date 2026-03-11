@@ -82,6 +82,7 @@ public class CreateCourseRequest
 public class AssignLecturerRequest
 {
     [Required]
+    [Range(1, long.MaxValue, ErrorMessage = "Vui lòng chọn giảng viên hợp lệ.")]
     public long LecturerUserId { get; set; }
 }
 
