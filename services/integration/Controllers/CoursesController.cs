@@ -141,8 +141,9 @@ public class CoursesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message}", id, ex.Message);
-            return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message, inner = ex.InnerException?.Message });
+            var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message} | Inner: {InnerMessage}", id, ex.Message, errorMessage);
+            return StatusCode(500, new { error = ex.GetType().Name, message = errorMessage, detail = ex.StackTrace });
         }
     }
 
