@@ -378,117 +378,112 @@ public class CourseService : ICourseService
         var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
         if (course == null) throw new NotFoundException("Course not found");
 
+        // ─── BƯỚC 1: ĐỌC FILE EXCEL ─────────────────────────────────────────
         var studentInfos = new List<(string Code, string Name, string Email)>();
-
         using (var stream = file.OpenReadStream())
+        using (var workbook = new ClosedXML.Excel.XLWorkbook(stream))
         {
-            using (var workbook = new ClosedXML.Excel.XLWorkbook(stream))
+            var worksheet = workbook.Worksheet(1);
+            foreach (var row in worksheet.RangeUsed().RowsUsed().Skip(1))
             {
-                var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Skip header
-
-                foreach (var row in rows)
-                {
-                    var code = row.Cell(1).GetString()?.Trim();
-                    var name = row.Cell(2).GetString()?.Trim();
-                    var email = row.Cell(3).GetString()?.Trim();
-
-                    if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(email))
-                    {
-                        studentInfos.Add((code, name ?? "Sinh viên mới", email));
-                    }
-                }
+                var code  = row.Cell(1).GetString()?.Trim();
+                var name  = row.Cell(2).GetString()?.Trim();
+                var email = row.Cell(3).GetString()?.Trim();
+                if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(email))
+                    studentInfos.Add((code, name ?? "Sinh viên mới", email));
             }
         }
 
         if (!studentInfos.Any())
-            throw new BusinessException("No student data (Code & Email) found in Excel file. Row format: [StudentCode, FullName, Email]");
+            throw new BusinessException("No valid student rows found. Excel must have columns: [StudentCode, FullName, Email]");
 
-        // Lấy ID của role STUDENT (dùng ID thay vì object để tránh EF Core tracking conflict)
-        var studentRole = await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT")
-            ?? throw new NotFoundException("Role 'STUDENT' not found in system");
-        var studentRoleId = studentRole.id;
+        var studentRoleId = (await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT")
+            ?? throw new NotFoundException("Role 'STUDENT' not found")).id;
 
-        // Lấy toàn bộ email cần xử lý
         var emailsLower = studentInfos.Select(i => i.Email.ToLower()).ToList();
 
-        // Lấy danh sách user đã tồn tại
+        // ─── BƯỚC 2: XÁC ĐỊNH USER CẦN TẠO MỚI ────────────────────────────
         var existingUsers = await _unitOfWork.Users.Query()
-            .Include(u => u.roles)
             .Include(u => u.student)
             .Where(u => emailsLower.Contains(u.email.ToLower()))
             .ToListAsync();
 
-        var existingEmailMap = existingUsers.ToDictionary(u => u.email.ToLower(), u => u);
-        var isModified = false;
+        var existingEmailToId = existingUsers.ToDictionary(u => u.email.ToLower(), u => u.id);
+        var newUsersToCreate  = studentInfos.Where(i => !existingEmailToId.ContainsKey(i.Email.ToLower())).ToList();
 
-        foreach (var info in studentInfos)
+        // ─── BƯỚC 3: TẠO USER MỚI (không gán role, không gán student) ───────
+        //   ValueGeneratedNever() trên student.user_id nên phải lấy id user trước
+        if (newUsersToCreate.Any())
         {
-            var emailKey = info.Email.ToLower();
-
-            if (!existingEmailMap.TryGetValue(emailKey, out var user))
+            foreach (var info in newUsersToCreate)
             {
-                // Tạo user mới
-                user = new user
+                var newUser = new user
                 {
-                    email = info.Email,
-                    password = _passwordHasher.HashPassword("Student@123"),
-                    full_name = info.Name,
-                    enabled = true,
+                    email      = info.Email,
+                    password   = _passwordHasher.HashPassword("Student@123"),
+                    full_name  = info.Name,
+                    enabled    = true,
                     created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow,
-                    roles = new List<role> { studentRole },
-                    student = new student
-                    {
-                        student_code = info.Code,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
-                    }
+                    updated_at = DateTime.UtcNow
                 };
-
-                _unitOfWork.Users.Add(user);
-                existingEmailMap[emailKey] = user;
-                isModified = true;
+                _unitOfWork.Users.Add(newUser);
             }
-            else
+
+            await _unitOfWork.SaveChangesAsync(); // → users.id được sinh ra
+
+            // Lấy lại id của user vừa tạo
+            var newlyCreatedUsers = await _unitOfWork.Users.Query()
+                .Where(u => newUsersToCreate.Select(i => i.Email.ToLower()).Contains(u.email.ToLower()))
+                .ToListAsync();
+
+            foreach (var createdUser in newlyCreatedUsers)
             {
-                // Đảm bảo có role STUDENT
-                if (!user.roles.Any(r => r.id == studentRoleId))
-                {
-                    user.roles.Add(studentRole);
-                    _unitOfWork.Users.Update(user);
-                    isModified = true;
-                }
+                // Gán role qua navigation property (user đã có id → an toàn)
+                var roleEntity = await _unitOfWork.Roles.GetByIdAsync(studentRoleId);
+                if (roleEntity != null) createdUser.roles.Add(roleEntity);
 
-                // Đảm bảo có bản ghi student
-                if (user.student == null)
+                // Tạo student record với user_id tường minh
+                var info = newUsersToCreate.First(i => i.Email.ToLower() == createdUser.email.ToLower());
+                _unitOfWork.Students.Add(new student
                 {
-                    var studentObj = new student
-                    {
-                        user_id = user.id,
-                        student_code = info.Code,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
-                    };
-                    _unitOfWork.Students.Add(studentObj);
-                    isModified = true;
-                }
+                    user_id      = createdUser.id,
+                    student_code = info.Code,
+                    created_at   = DateTime.UtcNow,
+                    updated_at   = DateTime.UtcNow
+                });
+
+                existingEmailToId[createdUser.email.ToLower()] = createdUser.id;
+            }
+
+            await _unitOfWork.SaveChangesAsync(); // → lưu roles + students
+        }
+
+        // ─── BƯỚC 4: ĐẢM BẢO USER CŨ CỦA CÓ STUDENT RECORD ────────────────
+        foreach (var existing in existingUsers.Where(u => u.student == null))
+        {
+            var info = studentInfos.FirstOrDefault(i => i.Email.ToLower() == existing.email.ToLower());
+            if (info != default)
+            {
+                _unitOfWork.Students.Add(new student
+                {
+                    user_id      = existing.id,
+                    student_code = info.Code,
+                    created_at   = DateTime.UtcNow,
+                    updated_at   = DateTime.UtcNow
+                });
             }
         }
-
-        if (isModified)
-        {
-            _logger.LogInformation("Import: Saving {NewCount} new/updated users...", existingEmailMap.Count);
+        if (existingUsers.Any(u => u.student == null))
             await _unitOfWork.SaveChangesAsync();
-        }
 
-        // Lấy IDs sau khi lưu (bao gồm cả ID được DB sinh ra cho user mới)
-        var finalUserIds = await _unitOfWork.Users.Query()
-            .Where(u => emailsLower.Contains(u.email.ToLower()))
-            .Select(u => u.id)
-            .ToListAsync();
+        // ─── BƯỚC 5: GHI DANH VÀO LỚP ──────────────────────────────────────
+        var finalUserIds = emailsLower
+            .Where(e => existingEmailToId.ContainsKey(e))
+            .Select(e => existingEmailToId[e])
+            .Distinct()
+            .ToList();
 
-        _logger.LogInformation("Import: Enrolling {Count} students to course {CourseId}", finalUserIds.Count, courseId);
+        _logger.LogInformation("[Import] Enrolling {Count} students to course {CourseId}", finalUserIds.Count, courseId);
         return await EnrollStudentsAsync(courseId, finalUserIds);
     }
 }

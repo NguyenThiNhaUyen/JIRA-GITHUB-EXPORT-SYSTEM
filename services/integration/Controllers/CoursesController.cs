@@ -132,8 +132,19 @@ public class CoursesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ImportEnrollments(long id, IFormFile file)
     {
-        var result = await _courseService.ImportEnrollmentsFromExcelAsync(id, file);
-        return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Excel import completed"));
+        try
+        {
+            _logger.LogInformation("[Import] Starting import for course {CourseId}, file: {FileName}, size: {Size}",
+                id, file?.FileName, file?.Length);
+            var result = await _courseService.ImportEnrollmentsFromExcelAsync(id, file);
+            _logger.LogInformation("[Import] Success: {Enrolled} enrolled", result.EnrolledCount);
+            return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Excel import completed"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message}", id, ex.Message);
+            return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     /// <summary>
