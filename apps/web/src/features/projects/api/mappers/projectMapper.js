@@ -1,39 +1,54 @@
 export const mapProject = (project) => {
     if (!project) return null;
     return {
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        status: project.status,
-        courseId: project.courseId,
-        courseName: project.courseName,
-        team: (project.teamMembers || []).map(member => ({
-            studentId: member.studentUserId,
-            studentName: member.studentName,
-            studentCode: member.studentCode,
-            role: member.role,
-            contributionScore: member.contributionScore
+        id: String(project.id || ""),
+        name: project.name || "",
+        description: project.description || "",
+        status: project.status || "ACTIVE",
+        courseName: project.course_name || "",
+        team: (project.members || []).map(member => ({
+            studentId: String(member.user_id || ""),
+            studentName: member.full_name || "",
+            studentCode: member.student_code || "",
+            role: member.team_role || "MEMBER",
+            participationStatus: member.participation_status || "ACTIVE",
+            contributionScore: member.contribution_score || 0
         })),
-        integration: project.integration ? {
-            githubUrl: project.integration.githubUrl,
-            jiraUrl: project.integration.jiraUrl,
-            githubStatus: project.integration.githubStatus,
-            jiraStatus: project.integration.jiraStatus,
-            lastSyncAt: project.integration.lastSyncAt
-        } : null,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt
+        integration: {
+            githubUrl: project.github_repo_url || "",
+            jiraUrl: project.jira_project_url || "",
+            status: project.integration_status || "PENDING",
+            lastSyncAt: project.integration?.last_sync_at || null
+        },
+        createdAt: project.created_at || null,
+        updatedAt: project.updated_at || null
     };
 };
 
-export const mapProjectList = (pagedResponse) => {
-    if (!pagedResponse) return { items: [], totalCount: 0 };
-    return {
-        items: (pagedResponse.items || []).map(mapProject),
-        totalCount: pagedResponse.totalCount,
-        page: pagedResponse.page,
-        pageSize: pagedResponse.pageSize
-    };
+export const mapProjectList = (beData) => {
+    if (!beData) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+
+    // PagedResponse shape: { results: [] or items: [], totalCount, page, pageSize }
+    if (beData.results !== undefined || beData.Results !== undefined || beData.items !== undefined || beData.Items !== undefined) {
+        const results = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
+        return {
+            items: results.map(mapProject),
+            totalCount: beData.totalCount ?? beData.TotalCount ?? results.length,
+            page: beData.page ?? beData.Page ?? 1,
+            pageSize: beData.pageSize ?? beData.PageSize ?? results.length,
+        };
+    }
+
+    if (Array.isArray(beData)) {
+        return {
+            items: beData.map(mapProject),
+            totalCount: beData.length,
+            page: 1,
+            pageSize: beData.length,
+        };
+    }
+
+    return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 };
 
 export const mapProjectMetrics = (metrics) => {

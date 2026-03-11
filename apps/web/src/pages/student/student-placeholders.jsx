@@ -241,7 +241,7 @@ export function StudentSrsPage() {
                 {["FINAL", "REVIEW", "DRAFT"].map(s => (
                     <div key={s} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${SRS_STATUS_CLS[s]}`}>
                         <span className="text-xs font-semibold">{s}</span>
-                        <span className="text-xl font-bold">{srsList.filter(x => x.status === s).length}</span>
+                        <span className="text-xl font-bold">-</span>
                     </div>
                 ))}
             </div>

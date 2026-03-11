@@ -146,11 +146,11 @@ export function TopHeader() {
                                                     <Users size={16} className="text-teal-600" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-800 leading-snug">{inv.projectName}</p>
+                                                    <p className="text-sm font-semibold text-gray-800 leading-snug">{inv.projectName || inv.project_name}</p>
                                                     <p className="text-xs text-gray-500 mt-0.5">
-                                                        <span className="text-teal-600 font-medium">{inv.invitedByName}</span> đã mời bạn tham gia
+                                                        <span className="text-teal-600 font-medium">{inv.invitedByName || inv.inviterName || inv.inviter_name}</span> đã mời bạn tham gia
                                                     </p>
-                                                    <p className="text-[10px] text-gray-400 mt-0.5">{formatTime(inv.createdAt)}</p>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">{formatTime(inv.createdAt || inv.created_at)}</p>
                                                     <div className="flex gap-2 mt-2">
                                                         <button
                                                             onClick={() => handleAccept(inv.id)}

@@ -74,7 +74,7 @@ export async function deleteCourse(id) {
  * @param {number} lecturerUserId
  */
 export async function assignLecturer(courseId, lecturerUserId) {
-    return client.post(`/courses/${courseId}/lecturers`, { lecturerUserId });
+    return client.post(`/courses/${courseId}/lecturers`, { lecturerUserId: Number(lecturerUserId) });
 }
 
 /**
@@ -105,5 +105,23 @@ export async function unenrollStudent(courseId, studentUserId) {
 export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
     return mapUserList(unwrap(res));
+}
+
+/**
+ * POST /api/courses/:id/enrollments/import  [ADMIN & LECTURER]
+ * Uploads an Excel file (.xlsx) for bulk student enrollment.
+ * BE will auto-create accounts for new emails, hash password as Student@123, role STUDENT.
+ * @param {number|string} courseId
+ * @param {File} file - Excel file with columns: StudentCode, FullName, Email
+ */
+export async function importStudentsExcel(courseId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    // NOTE: Do NOT set Content-Type manually — browser/axios auto-adds boundary
+    const res = await client.post(
+        `/courses/${courseId}/enrollments/import`,
+        formData
+    );
+    return unwrap(res);
 }
 

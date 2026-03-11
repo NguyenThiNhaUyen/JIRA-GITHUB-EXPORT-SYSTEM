@@ -3,7 +3,7 @@ import { unwrap } from "../../../api/unwrap.js";
 import { mapSemester, mapSemesterList, mapSubject, mapSubjectList } from "./mappers/systemMapper.js";
 
 export async function getSemesters() {
-    const res = await client.get("/semesters", { params: { pageSize: 100 } });
+    const res = await client.get("/semesters/all");
     const payload = unwrap(res);
     return mapSemesterList(payload);
 }
@@ -11,6 +11,11 @@ export async function getSemesters() {
 export async function createSemester(data) {
     const res = await client.post("/semesters", data);
     return mapSemester(unwrap(res));
+}
+
+export async function generateSemesters(data) {
+    const res = await client.post("/semesters/generate", data);
+    return unwrap(res);
 }
 
 export async function updateSemester(id, updates) {
@@ -24,7 +29,7 @@ export async function deleteSemester(id) {
 }
 
 export async function getSubjects() {
-    const res = await client.get("/subjects", { params: { pageSize: 100 } });
+    const res = await client.get("/subjects/all");
     const payload = unwrap(res);
     return mapSubjectList(payload);
 }

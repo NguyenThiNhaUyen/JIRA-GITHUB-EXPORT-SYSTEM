@@ -5,32 +5,35 @@
 export function mapSemester(beSem) {
     if (!beSem) return null;
     return {
-        id: String(beSem.id || beSem.Id),
-        name: beSem.name || beSem.Name || "",
-        code: beSem.code || beSem.Code || beSem.name || beSem.Name || "",
-        startDate: beSem.startDate || beSem.StartDate,
-        endDate: beSem.endDate || beSem.EndDate,
-        status: beSem.status || beSem.Status || "ACTIVE" // Fallback fallback
+        id: String(beSem.id || ""),
+        name: beSem.name || "",
+        code: beSem.semester_code || "",
+        startDate: beSem.start_date || null,
+        endDate: beSem.end_date || null,
+        status: beSem.status || "ACTIVE"
     };
 }
 
 export function mapSubject(beSub) {
     if (!beSub) return null;
     return {
-        id: String(beSub.id || beSub.Id),
-        code: beSub.subjectCode || beSub.SubjectCode || "",
-        name: beSub.subjectName || beSub.SubjectName || "",
-        credits: beSub.credits || beSub.Credits || 3,
-        status: beSub.status || beSub.Status || "ACTIVE"
+        id: String(beSub.id || ""),
+        subject_code: beSub.subject_code || "",
+        subject_name: beSub.subject_name || "",
+        department: beSub.department || "",
+        description: beSub.description || "",
+        credits: beSub.credits || 3,
+        maxStudents: beSub.max_students || 40,
+        status: beSub.status || "ACTIVE"
     };
 }
 
 export function mapSemesterList(beData) {
-    const results = beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
+    const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSemester);
 }
 
 export function mapSubjectList(beData) {
-    const results = beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
+    const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSubject);
 }
