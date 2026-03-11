@@ -187,7 +187,7 @@ public class CourseService : ICourseService
         var lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
         if (lecturer == null)
         {
-            throw new NotFoundException("Lecturer not found");
+            throw new NotFoundException($"Lecturer with UserID {lecturerUserId} not found in lecturers table");
         }
 
         // Check if already assigned

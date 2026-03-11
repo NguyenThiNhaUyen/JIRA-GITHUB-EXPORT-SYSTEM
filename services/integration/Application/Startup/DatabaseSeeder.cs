@@ -79,6 +79,7 @@ public static class DatabaseSeeder
                 {
                     if (x.email == "dunghv@fpt.edu.vn") x.full_name = "Hồ Văn Dũng";
                     else if (x.email == "thanhnb@fpt.edu.vn") x.full_name = "Nguyễn Bá Thành";
+                    else if (x.email == "gv@fpt.edu.vn") x.full_name = "Nguyễn Văn A";
                     else if (x.email == "lecturer@truonghoc.com") x.full_name = "Giảng viên Demo";
                     else x.full_name = "Người dùng " + x.id;
                 }
@@ -90,14 +91,17 @@ public static class DatabaseSeeder
             var lecturerUsers = await dbContext.users
                 .Include(u => u.roles)
                 .Include(u => u.lecturer)
-                .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+                .Where(u => u.roles.Any(r => r.role_name.ToUpper() == "LECTURER"))
                 .ToListAsync();
+
+            seedLogger.LogInformation("🔍 Found {Count} users with LECTURER role for checking", lecturerUsers.Count);
 
             var newLecturersCount = 0;
             foreach (var lu in lecturerUsers)
             {
                 if (lu.lecturer == null)
                 {
+                    seedLogger.LogWarning("⚠️ User {Email} (ID: {Id}) is missing lecturer record. Creating one...", lu.email, lu.id);
                     string uniqueCode = (lu.full_name?.Substring(0, Math.Min(3, lu.full_name.Length)) ?? "GV").ToUpper() + lu.id.ToString();
                     dbContext.lecturers.Add(new lecturer 
                     { 
@@ -108,12 +112,45 @@ public static class DatabaseSeeder
                     });
                     newLecturersCount++;
                 }
+                else 
+                {
+                    seedLogger.LogInformation("✅ User {Email} already has lecturer record (Code: {Code})", lu.email, lu.lecturer.lecturer_code);
+                }
             }
 
-            if (newLecturersCount > 0)
+            // 7. Backfill missing student records
+            var studentUsers = await dbContext.users
+                .Include(u => u.roles)
+                .Include(u => u.student)
+                .Where(u => u.roles.Any(r => r.role_name.ToUpper() == "STUDENT"))
+                .ToListAsync();
+
+            var newStudentsCount = 0;
+            foreach (var su in studentUsers)
+            {
+                if (su.student == null)
+                {
+                    seedLogger.LogWarning("⚠️ User {Email} (ID: {Id}) is missing student record. Creating one...", su.email, su.id);
+                    string uniqueCode = "SE" + su.id.ToString().PadLeft(6, '0');
+                    dbContext.students.Add(new student 
+                    { 
+                        user_id = su.id, 
+                        student_code = uniqueCode, 
+                        major = "SE", 
+                        department = "IT" 
+                    });
+                    newStudentsCount++;
+                }
+            }
+
+            if (newLecturersCount > 0 || newStudentsCount > 0)
             {
                 await dbContext.SaveChangesAsync();
-                seedLogger.LogWarning("🚀 [SEED] Fixed missing lecturer records for {Count} users", newLecturersCount);
+                seedLogger.LogWarning("🚀 [SEED] Successfully fixed missing records (Lecturers: {LCount}, Students: {SCount})", newLecturersCount, newStudentsCount);
+            }
+            else 
+            {
+                seedLogger.LogInformation("✨ All user role records (Lecturer/Student) are already up to date.");
             }
         }
         catch (Exception ex)
