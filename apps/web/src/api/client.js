@@ -14,9 +14,8 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-sys
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
     timeout: 60_000,
-    headers: {
-        "Content-Type": "application/json",
-    },
+    // NOTE: Không set Content-Type mặc định ở đây.
+    // Axios tự detect: JSON → application/json, FormData → multipart/form-data; boundary=...
 });
 
 /* ── Request Interceptor: Tự đính kèm JWT từ localStorage ── */

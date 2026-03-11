@@ -5,26 +5,26 @@
 export function mapSemester(beSem) {
     if (!beSem) return null;
     return {
-        id: String(beSem.id || beSem.Id),
-        name: beSem.name || beSem.Name || "",
-        code: beSem.semester_code || beSem.code || beSem.Code || beSem.name || beSem.Name || "",
-        startDate: beSem.start_date || beSem.startDate || beSem.StartDate,
-        endDate: beSem.end_date || beSem.endDate || beSem.EndDate,
-        status: beSem.status || beSem.Status || "ACTIVE" // Fallback fallback
+        id: String(beSem.id || ""),
+        name: beSem.name || "",
+        code: beSem.semester_code || "",
+        startDate: beSem.start_date || null,
+        endDate: beSem.end_date || null,
+        status: beSem.status || "ACTIVE"
     };
 }
 
 export function mapSubject(beSub) {
     if (!beSub) return null;
     return {
-        id: String(beSub.id || beSub.Id || ""),
-        subject_code: beSub.subject_code || beSub.subjectCode || beSub.SubjectCode || beSub.code || "",
-        subject_name: beSub.subject_name || beSub.subjectName || beSub.SubjectName || beSub.name || "",
-        department: beSub.department || beSub.Department || "",
-        description: beSub.description || beSub.Description || "",
-        credits: beSub.credits || beSub.Credits || 3,
-        maxStudents: beSub.max_students || beSub.maxStudents || beSub.MaxStudents || 40,
-        status: beSub.status || beSub.Status || "ACTIVE"
+        id: String(beSub.id || ""),
+        subject_code: beSub.subject_code || "",
+        subject_name: beSub.subject_name || "",
+        department: beSub.department || "",
+        description: beSub.description || "",
+        credits: beSub.credits || 3,
+        maxStudents: beSub.max_students || 40,
+        status: beSub.status || "ACTIVE"
     };
 }
 
