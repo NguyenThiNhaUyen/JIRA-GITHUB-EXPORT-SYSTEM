@@ -22,9 +22,12 @@ import {
   Upload,
   RefreshCw,
   FolderKanban,
+  BarChart3,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
 
 /* ----------------------------- MOCK DATA ----------------------------- */
 
@@ -247,7 +250,7 @@ function getHeatColor(value) {
   return "bg-slate-100";
 }
 
-function StatCard({ title, value, hint, icon: Icon, tone = "green" }) {
+function StatCard({ title, value, hint, icon: Icon, tone = "green", onClick }) {
   const toneMap = {
     green: "from-emerald-50 to-white border-emerald-200 text-emerald-700",
     blue: "from-blue-50 to-white border-blue-200 text-blue-700",
@@ -256,8 +259,10 @@ function StatCard({ title, value, hint, icon: Icon, tone = "green" }) {
   };
 
   return (
-    <div
-      className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-2xl border bg-gradient-to-br p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${toneMap[tone]}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -265,11 +270,11 @@ function StatCard({ title, value, hint, icon: Icon, tone = "green" }) {
           <div className="mt-2 text-3xl font-bold text-slate-900">{value}</div>
           <div className="mt-1 text-sm text-slate-500">{hint}</div>
         </div>
-        <div className="rounded-xl bg-white p-3 shadow-sm border border-slate-100">
+        <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
           <Icon className="h-5 w-5 text-slate-700" />
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -279,7 +284,7 @@ function SectionCard({ title, subtitle, actions, children }) {
       <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          {subtitle ? <p className="text-sm text-slate-500 mt-1">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p> : null}
         </div>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
@@ -291,8 +296,9 @@ function SectionCard({ title, subtitle, actions, children }) {
 /* ----------------------------- COMPONENT ----------------------------- */
 
 export default function StudentDashboard() {
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { success } = useToast();
+  const navigate = useNavigate();
   const [selectedCourseId, setSelectedCourseId] = useState(COURSES[0]?.id || "all");
 
   const handleLogout = () => {
@@ -313,8 +319,19 @@ export default function StudentDashboard() {
   );
 
   const currentMainProject = filteredProjects[0] || PROJECTS[0];
-
   const maxCommits = Math.max(...WEEKLY_ACTIVITY.map((item) => item.commits), 1);
+
+  const handleSyncProject = (project) => {
+    success?.(`Đã đồng bộ mock commits cho project ${project.title}`);
+  };
+
+  const handleUploadSrs = (project) => {
+    success?.(`Mở mock upload SRS cho project ${project.title}`);
+  };
+
+  const handleExport = () => {
+    success?.("Đã export mock báo cáo cá nhân thành công");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">
@@ -328,30 +345,30 @@ export default function StudentDashboard() {
                 Student Dashboard
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+              <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
                 Chào mừng, {user?.name || "Student"}!
               </h1>
 
-              <p className="mt-2 max-w-3xl text-sm md:text-base text-slate-600">
+              <p className="mt-2 max-w-3xl text-sm text-slate-600 md:text-base">
                 Theo dõi contribution GitHub, task Jira, deadline quan trọng, cảnh báo từ lecturer
                 và tiến độ nhóm của bạn tại một nơi.
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                <div className="rounded-full bg-white px-3 py-1 border border-slate-200">
+                <div className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   Vai trò: <span className="font-semibold text-slate-900">{user?.role || "STUDENT"}</span>
                 </div>
-                <div className="rounded-full bg-white px-3 py-1 border border-slate-200">
+                <div className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   Email: <span className="font-semibold text-slate-900">{user?.email || "student@fpt.edu.vn"}</span>
                 </div>
-                <div className="rounded-full bg-white px-3 py-1 border border-slate-200">
+                <div className="rounded-full border border-slate-200 bg-white px-3 py-1">
                   User ID: <span className="font-semibold text-slate-900">{user?.id || "SE123456"}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleExport}>
                 <Download className="h-4 w-4" />
                 Export báo cáo cá nhân
               </Button>
@@ -367,32 +384,96 @@ export default function StudentDashboard() {
           <StatCard
             title="Tổng Commits"
             value={totalCommits}
-            hint="Toàn bộ project đang tham gia"
+            hint="Xem trang contribution"
             icon={Github}
             tone="green"
+            onClick={() => navigate("/student/contribution")}
           />
           <StatCard
             title="Issues hoàn thành"
             value={totalIssuesDone}
-            hint="Số task Jira đã xử lý"
+            hint="Xem project của tôi"
             icon={CheckSquare}
             tone="blue"
+            onClick={() => navigate("/student/my-project")}
           />
           <StatCard
             title="PRs Merged"
             value={totalPrsMerged}
-            hint="Pull request đã merge"
+            hint="Xem chi tiết project"
             icon={GitBranch}
             tone="violet"
+            onClick={() => navigate(`/student/project/${currentMainProject?.id || "P1"}`)}
           />
           <StatCard
             title="Contribution Score"
             value={`${avgContribution}%`}
-            hint="Điểm đóng góp trung bình"
+            hint="Phân tích đóng góp cá nhân"
             icon={Target}
             tone="amber"
+            onClick={() => navigate("/student/contribution")}
           />
         </div>
+
+        {/* Quick navigation */}
+        <SectionCard
+          title="Truy cập nhanh"
+          subtitle="Đi đến các trang student đã hoàn thiện"
+        >
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              {
+                label: "Lớp của tôi",
+                icon: BookOpen,
+                path: "/student/courses",
+                desc: "Danh sách lớp học",
+              },
+              {
+                label: "Nhóm của tôi",
+                icon: FolderKanban,
+                path: "/student/my-project",
+                desc: "Project đang tham gia",
+              },
+              {
+                label: "Contribution",
+                icon: BarChart3,
+                path: "/student/contribution",
+                desc: "Đóng góp cá nhân",
+              },
+              {
+                label: "Cảnh báo",
+                icon: Bell,
+                path: "/student/alerts",
+                desc: "Nhắc nhở từ hệ thống",
+              },
+              {
+                label: "SRS Reports",
+                icon: FileText,
+                path: "/student/srs",
+                desc: "Tài liệu và nhận xét",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50/50"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <Icon className="h-5 w-5 text-slate-700" />
+                    </div>
+                    <ExternalLink className="mt-1 h-4 w-4 text-slate-400" />
+                  </div>
+                  <div className="mt-4 font-semibold text-slate-900">{item.label}</div>
+                  <div className="mt-1 text-sm text-slate-500">{item.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
 
         {/* Top content */}
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -401,6 +482,12 @@ export default function StudentDashboard() {
             <SectionCard
               title="Khóa học của tôi"
               subtitle="Chọn khóa học để lọc project và dữ liệu phía dưới"
+              actions={
+                <Button variant="outline" className="gap-2" onClick={() => navigate("/student/courses")}>
+                  <BookOpen className="h-4 w-4" />
+                  Xem tất cả lớp
+                </Button>
+              }
             >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {COURSES.map((course) => {
@@ -419,7 +506,7 @@ export default function StudentDashboard() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="font-bold text-slate-900">{course.code}</div>
-                          <div className="text-sm text-slate-600 mt-1">{course.name}</div>
+                          <div className="mt-1 text-sm text-slate-600">{course.name}</div>
                         </div>
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
@@ -453,11 +540,7 @@ export default function StudentDashboard() {
               </div>
 
               <div className="mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedCourseId("all")}
-                  className="gap-2"
-                >
+                <Button variant="outline" onClick={() => setSelectedCourseId("all")} className="gap-2">
                   Xem tất cả khóa học
                 </Button>
               </div>
@@ -467,7 +550,7 @@ export default function StudentDashboard() {
               title="Project của tôi"
               subtitle="Tổng hợp project theo course đã chọn"
               actions={
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => navigate("/student/my-project")}>
                   <Eye className="h-4 w-4" />
                   Xem tất cả
                 </Button>
@@ -564,18 +647,25 @@ export default function StudentDashboard() {
 
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Button
-  variant="outline"
-  className="gap-2"
-  onClick={() => navigate(`/student/project/${project.id}`)}
->
-  <Eye className="h-4 w-4" />
-  Xem chi tiết
-</Button>
-                      <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => navigate(`/student/project/${project.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Xem chi tiết
+                      </Button>
+                      <Button
+                        className="gap-2 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleSyncProject(project)}
+                      >
                         <RefreshCw className="h-4 w-4" />
                         Sync commits
                       </Button>
-                      <Button variant="outline" className="gap-2">
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => handleUploadSrs(project)}
+                      >
                         <Upload className="h-4 w-4" />
                         Upload SRS
                       </Button>
@@ -588,9 +678,14 @@ export default function StudentDashboard() {
             <SectionCard
               title="Phân tích hoạt động tuần này"
               subtitle="Tổng hợp commit và Jira issues đã hoàn thành trong 7 ngày gần nhất"
+              actions={
+                <Button variant="outline" className="gap-2" onClick={() => navigate("/student/contribution")}>
+                  <BarChart3 className="h-4 w-4" />
+                  Xem trang contribution
+                </Button>
+              }
             >
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Weekly bar chart */}
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <div className="mb-4 flex items-center gap-2">
                     <Flame className="h-4 w-4 text-orange-500" />
@@ -615,7 +710,6 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                {/* Heatmap */}
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <div className="mb-4 flex items-center gap-2">
                     <Github className="h-4 w-4 text-slate-700" />
@@ -636,10 +730,7 @@ export default function StudentDashboard() {
                     <span>Ít hoạt động</span>
                     <div className="flex items-center gap-1">
                       {[0, 1, 2, 3, 4].map((level) => (
-                        <div
-                          key={level}
-                          className={`h-3 w-3 rounded-sm ${getHeatColor(level)}`}
-                        />
+                        <div key={level} className={`h-3 w-3 rounded-sm ${getHeatColor(level)}`} />
                       ))}
                     </div>
                     <span>Nhiều hoạt động</span>
@@ -652,9 +743,9 @@ export default function StudentDashboard() {
               title="Task cá nhân"
               subtitle="Task Jira được giao trực tiếp cho bạn"
               actions={
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => navigate("/student/my-project")}>
                   <FolderKanban className="h-4 w-4" />
-                  Mở Jira board
+                  Mở trang project
                 </Button>
               }
             >
@@ -684,7 +775,12 @@ export default function StudentDashboard() {
                         <Clock3 className="h-4 w-4" />
                         {task.due}
                       </div>
-                      <Button variant="outline" size="sm" className="gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => navigate("/student/my-project")}
+                      >
                         Xem
                         <ChevronRight className="h-4 w-4" />
                       </Button>
@@ -700,12 +796,22 @@ export default function StudentDashboard() {
             <SectionCard
               title="Upcoming Deadlines"
               subtitle="Việc cần ưu tiên ngay"
+              actions={
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/student/srs")}>
+                  <CalendarClock className="h-4 w-4" />
+                  Xem SRS
+                </Button>
+              }
             >
               <div className="space-y-3">
                 {UPCOMING_DEADLINES.map((item) => (
-                  <div
+                  <button
                     key={item.id}
-                    className={`rounded-2xl border p-4 ${getSeverityClass(item.severity)}`}
+                    type="button"
+                    onClick={() => navigate("/student/srs")}
+                    className={`w-full rounded-2xl border p-4 text-left transition hover:shadow-sm ${getSeverityClass(
+                      item.severity
+                    )}`}
                   >
                     <div className="flex items-start gap-3">
                       <CalendarClock className="mt-0.5 h-5 w-5" />
@@ -715,7 +821,7 @@ export default function StudentDashboard() {
                         <div className="mt-2 text-sm font-medium">{item.due}</div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </SectionCard>
@@ -723,12 +829,20 @@ export default function StudentDashboard() {
             <SectionCard
               title="Alerts & Cảnh báo"
               subtitle="Thông báo từ hệ thống và lecturer"
+              actions={
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/student/alerts")}>
+                  <Bell className="h-4 w-4" />
+                  Xem tất cả
+                </Button>
+              }
             >
               <div className="space-y-3">
                 {ALERTS.map((alert) => (
-                  <div
+                  <button
                     key={alert.id}
-                    className={`rounded-2xl border p-4 ${
+                    type="button"
+                    onClick={() => navigate("/student/alerts")}
+                    className={`w-full rounded-2xl border p-4 text-left transition hover:shadow-sm ${
                       alert.type === "warning"
                         ? "border-amber-200 bg-amber-50"
                         : "border-blue-200 bg-blue-50"
@@ -747,7 +861,7 @@ export default function StudentDashboard() {
                         <div className="mt-2 text-xs text-slate-500">{alert.time}</div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </SectionCard>
@@ -755,6 +869,17 @@ export default function StudentDashboard() {
             <SectionCard
               title="Team Progress"
               subtitle={`Tiến độ nhóm - ${currentMainProject?.title || "Project"}`}
+              actions={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => navigate(`/student/project/${currentMainProject?.id || "P1"}`)}
+                >
+                  <Eye className="h-4 w-4" />
+                  Mở project
+                </Button>
+              }
             >
               <div className="space-y-4">
                 <div className="rounded-2xl bg-slate-50 p-4">
@@ -792,6 +917,17 @@ export default function StudentDashboard() {
             <SectionCard
               title="Leaderboard nhóm"
               subtitle="So sánh đóng góp trong team hiện tại"
+              actions={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => navigate(`/student/project/${currentMainProject?.id || "P1"}`)}
+                >
+                  <Users className="h-4 w-4" />
+                  Xem team
+                </Button>
+              }
             >
               <div className="space-y-3">
                 {TEAM_MEMBERS.map((member, index) => (
@@ -839,36 +975,50 @@ export default function StudentDashboard() {
                   {
                     icon: CheckCircle2,
                     text: "Xem task cá nhân và tình trạng xử lý trên Jira",
+                    path: "/student/my-project",
                   },
                   {
                     icon: Github,
                     text: "Theo dõi contribution GitHub và commit activity",
+                    path: "/student/contribution",
                   },
                   {
                     icon: FileText,
                     text: "Upload / theo dõi phiên bản SRS của project",
+                    path: "/student/srs",
                   },
                   {
                     icon: Download,
                     text: "Export báo cáo cá nhân phục vụ review và demo",
+                    onClick: handleExport,
                   },
                   {
                     icon: ShieldAlert,
                     text: "Nhận cảnh báo từ lecturer khi tiến độ hoặc contribution thấp",
+                    path: "/student/alerts",
                   },
                   {
                     icon: Users,
                     text: "Theo dõi tiến độ chung của team và sprint completion",
+                    path: "/student/my-project",
                   },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <li key={item.text} className="flex items-start gap-3">
+                    <button
+                      key={item.text}
+                      type="button"
+                      onClick={() => {
+                        if (item.onClick) item.onClick();
+                        else if (item.path) navigate(item.path);
+                      }}
+                      className="flex w-full items-start gap-3 rounded-xl p-1 text-left transition hover:bg-slate-50"
+                    >
                       <div className="mt-0.5 rounded-lg bg-emerald-50 p-2">
                         <Icon className="h-4 w-4 text-emerald-700" />
                       </div>
                       <span>{item.text}</span>
-                    </li>
+                    </button>
                   );
                 })}
               </ul>
@@ -880,22 +1030,27 @@ export default function StudentDashboard() {
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Gợi ý ưu tiên hôm nay
-              </h3>
+              <h3 className="text-lg font-bold text-slate-900">Gợi ý ưu tiên hôm nay</h3>
               <p className="mt-1 text-sm text-slate-600">
                 Hoàn thiện task dashboard Student, xử lý các open issues blocker và cập nhật SRS trước deadline gần nhất.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                onClick={() => navigate(`/student/project/${currentMainProject?.id || "P1"}`)}
+              >
                 <ArrowUpRight className="h-4 w-4" />
                 Mở project chính
               </Button>
-              <Button variant="outline" className="gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => navigate("/student/srs")}
+              >
                 <Clock3 className="h-4 w-4" />
-                Xem deadlines
+                Xem deadlines / SRS
               </Button>
             </div>
           </div>
