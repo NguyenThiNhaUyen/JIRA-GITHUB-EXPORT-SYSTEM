@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   BarChart3,
@@ -12,7 +13,6 @@ import {
   Clock3,
   Search,
   LayoutGrid,
-  BellRing,
   UserRound,
   GitPullRequest,
   CheckCircle2,
@@ -23,6 +23,7 @@ import {
   X,
   TriangleAlert,
 } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -457,7 +458,11 @@ function buildMockContribution(courseId, groups) {
       const v =
         student.commits === 0
           ? 0
-          : seededNumber(`${courseId}-${student.studentId}-jira-week-${weekIndex}`, 0, 4);
+          : seededNumber(
+              `${courseId}-${student.studentId}-jira-week-${weekIndex}`,
+              0,
+              4
+            );
       return sum + v;
     }, 0);
   });
@@ -494,14 +499,22 @@ function getRiskLevel(group) {
       level: 0,
     };
   }
-  if (group.zeroCommitMembers >= 2 || group.balancePercent < 35 || group.totalCommits < 8) {
+  if (
+    group.zeroCommitMembers >= 2 ||
+    group.balancePercent < 35 ||
+    group.totalCommits < 8
+  ) {
     return {
       label: "Rủi ro cao",
       className: "bg-red-50 text-red-600 border border-red-100",
       level: 3,
     };
   }
-  if (group.zeroCommitMembers >= 1 || group.balancePercent < 55 || group.totalCommits < 15) {
+  if (
+    group.zeroCommitMembers >= 1 ||
+    group.balancePercent < 55 ||
+    group.totalCommits < 15
+  ) {
     return {
       label: "Cần theo dõi",
       className: "bg-amber-50 text-amber-700 border border-amber-100",
@@ -524,17 +537,6 @@ function getHeatColor(value) {
   return "bg-emerald-500";
 }
 
-function getAlertSeverityClass(severity) {
-  switch (severity) {
-    case "critical":
-      return "bg-red-50 border-red-100 text-red-700";
-    case "warning":
-      return "bg-amber-50 border-amber-100 text-amber-700";
-    default:
-      return "bg-blue-50 border-blue-100 text-blue-700";
-  }
-}
-
 function shouldWarnStudent(student) {
   return (
     student.commits === 0 ||
@@ -549,7 +551,8 @@ function getWarningReason(student) {
   if (student.commits === 0) return "no_commit";
   if (student.overdueTasks >= 2) return "overdue_tasks";
   if (student.lastActiveDaysAgo > 7) return "inactive";
-  if (student.score < 40 || student.status === "Cần chú ý") return "low_contribution";
+  if (student.score < 40 || student.status === "Cần chú ý")
+    return "low_contribution";
   return "general";
 }
 
@@ -592,7 +595,6 @@ function Tabs({ activeTab, onChange }) {
     { key: "overview", label: "Tổng quan", icon: LayoutGrid },
     { key: "groups", label: "Nhóm", icon: Users },
     { key: "students", label: "Sinh viên", icon: UserRound },
-    { key: "alerts", label: "Cảnh báo", icon: BellRing },
   ];
 
   return (
@@ -626,10 +628,14 @@ function StatCard({ icon: Icon, color, label, value, note }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-gray-500 font-medium">{label}</p>
-          <h3 className="text-2xl font-bold text-gray-800 leading-none mt-1">{value}</h3>
+          <h3 className="text-2xl font-bold text-gray-800 leading-none mt-1">
+            {value}
+          </h3>
           <p className="text-[11px] text-gray-400 mt-2">{note}</p>
         </div>
-        <div className={`w-11 h-11 rounded-2xl ${color} text-white flex items-center justify-center shrink-0 shadow-sm`}>
+        <div
+          className={`w-11 h-11 rounded-2xl ${color} text-white flex items-center justify-center shrink-0 shadow-sm`}
+        >
           <Icon size={19} />
         </div>
       </div>
@@ -656,13 +662,17 @@ function MiniLineChart({ commits = [], jira = [] }) {
           <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
             <TrendingUp size={15} className="text-blue-600" />
           </div>
-          <CardTitle className="text-base font-semibold text-gray-800">GitHub vs Jira theo tuần</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-800">
+            GitHub vs Jira theo tuần
+          </CardTitle>
         </div>
       </CardHeader>
 
       <CardContent className="pt-5">
         <div className="flex items-center justify-between gap-3 mb-3">
-          <p className="text-xs text-gray-400">So sánh nhịp commit và task đã hoàn thành</p>
+          <p className="text-xs text-gray-400">
+            So sánh nhịp commit và task đã hoàn thành
+          </p>
           <div className="flex items-center gap-3 text-[11px] text-gray-500">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
@@ -676,7 +686,11 @@ function MiniLineChart({ commits = [], jira = [] }) {
         </div>
 
         <div className="relative h-44 rounded-2xl bg-gradient-to-b from-gray-50 to-white border border-gray-100 p-3">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="w-full h-full overflow-visible"
+          >
             {[20, 40, 60, 80].map((v) => (
               <line
                 key={v}
@@ -736,7 +750,10 @@ function MiniLineChart({ commits = [], jira = [] }) {
 
 function HeatmapCard({ students = [] }) {
   const merged = Array.from({ length: HEATMAP_DAYS }).map((_, dayIndex) => {
-    const total = students.reduce((sum, s) => sum + (s.dailyActivity?.[dayIndex] || 0), 0);
+    const total = students.reduce(
+      (sum, s) => sum + (s.dailyActivity?.[dayIndex] || 0),
+      0
+    );
     if (total === 0) return 0;
     if (total <= 2) return 1;
     if (total <= 5) return 2;
@@ -757,7 +774,9 @@ function HeatmapCard({ students = [] }) {
           <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
             <Activity size={15} className="text-emerald-600" />
           </div>
-          <CardTitle className="text-base font-semibold text-gray-800">Heatmap hoạt động</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-800">
+            Heatmap hoạt động
+          </CardTitle>
         </div>
       </CardHeader>
 
@@ -766,7 +785,10 @@ function HeatmapCard({ students = [] }) {
           <div className="min-w-[700px]">
             <div className="flex gap-1.5 mb-2 pl-8">
               {WEEKS.map((w) => (
-                <div key={w} className="w-[44px] text-center text-[10px] text-gray-400 font-medium">
+                <div
+                  key={w}
+                  className="w-[44px] text-center text-[10px] text-gray-400 font-medium"
+                >
                   {w}
                 </div>
               ))}
@@ -785,7 +807,10 @@ function HeatmapCard({ students = [] }) {
                     {week.map((value, dayIndex) => (
                       <div
                         key={`${weekIndex}-${dayIndex}`}
-                        className={cx("w-4 h-4 rounded-[4px] border border-white/70", getHeatColor(value))}
+                        className={cx(
+                          "w-4 h-4 rounded-[4px] border border-white/70",
+                          getHeatColor(value)
+                        )}
                         title={`Tuần ${weekIndex + 1} - ngày ${dayIndex + 1}: mức ${value}`}
                       />
                     ))}
@@ -814,7 +839,13 @@ function HeatmapCard({ students = [] }) {
   );
 }
 
-function StudentActionButtons({ student, onWarning, onEmail, compact = false, sentMap }) {
+function StudentActionButtons({
+  student,
+  onWarning,
+  onEmail,
+  compact = false,
+  sentMap,
+}) {
   const warned = sentMap?.[student.studentId]?.warningCount > 0;
   const emailed = sentMap?.[student.studentId]?.emailCount > 0;
   const canWarn = shouldWarnStudent(student);
@@ -894,13 +925,7 @@ function StudentActionButtons({ student, onWarning, onEmail, compact = false, se
   );
 }
 
-function ActionModal({
-  open,
-  onClose,
-  actionType,
-  targetStudent,
-  onConfirm,
-}) {
+function ActionModal({ open, onClose, actionType, targetStudent, onConfirm }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -921,7 +946,8 @@ function ActionModal({
               {isEmail ? "Gửi email cảnh báo" : "Gửi cảnh báo"}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              {targetStudent.name} • {targetStudent.studentCode} • {targetStudent.groupName}
+              {targetStudent.name} • {targetStudent.studentCode} •{" "}
+              {targetStudent.groupName}
             </p>
           </div>
 
@@ -938,19 +964,27 @@ function ActionModal({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
               <p className="text-[11px] text-gray-400">Commit</p>
-              <p className="text-lg font-bold text-gray-800">{targetStudent.commits}</p>
+              <p className="text-lg font-bold text-gray-800">
+                {targetStudent.commits}
+              </p>
             </div>
             <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
               <p className="text-[11px] text-gray-400">Jira</p>
-              <p className="text-lg font-bold text-gray-800">{targetStudent.jiraDone}</p>
+              <p className="text-lg font-bold text-gray-800">
+                {targetStudent.jiraDone}
+              </p>
             </div>
             <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
               <p className="text-[11px] text-gray-400">Score</p>
-              <p className="text-lg font-bold text-gray-800">{targetStudent.score}</p>
+              <p className="text-lg font-bold text-gray-800">
+                {targetStudent.score}
+              </p>
             </div>
             <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
               <p className="text-[11px] text-gray-400">Email</p>
-              <p className="text-sm font-semibold text-gray-800 truncate">{targetStudent.email}</p>
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {targetStudent.email}
+              </p>
             </div>
           </div>
 
@@ -1002,6 +1036,7 @@ function ActionModal({
 /* ----------------------------- MAIN COMPONENT ----------------------------- */
 
 export default function Contributions() {
+    const navigate = useNavigate();
   const [selectedCourse, setSelectedCourse] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -1089,6 +1124,7 @@ export default function Contributions() {
 
       const matchStatus =
         statusFilter === "all" || student.status === statusFilter;
+
       return matchKeyword && matchStatus;
     });
   }, [sortedStudents, searchKeyword, statusFilter]);
@@ -1110,7 +1146,10 @@ export default function Contributions() {
       const balancePercent =
         maxMemberCommits === 0
           ? 0
-          : Math.max(0, Math.min(100, Math.round((avgCommits / maxMemberCommits) * 100)));
+          : Math.max(
+              0,
+              Math.min(100, Math.round((avgCommits / maxMemberCommits) * 100))
+            );
 
       const risk = getRiskLevel({
         memberCount,
@@ -1143,8 +1182,6 @@ export default function Contributions() {
           severity: "critical",
           title: `${student.name} chưa có commit`,
           description: `${student.groupName} • ${student.studentCode} • không có hoạt động code trong giai đoạn theo dõi`,
-          tag: "Sinh viên",
-          student,
         });
       } else if (student.status === "Cần chú ý") {
         result.push({
@@ -1152,8 +1189,6 @@ export default function Contributions() {
           severity: "warning",
           title: `${student.name} có mức đóng góp thấp`,
           description: `${student.groupName} • score ${student.score}/100 • cần giảng viên kiểm tra tiến độ`,
-          tag: "Sinh viên",
-          student,
         });
       } else if (student.overdueTasks >= 2) {
         result.push({
@@ -1161,8 +1196,6 @@ export default function Contributions() {
           severity: "info",
           title: `${student.name} có task quá hạn`,
           description: `${student.overdueTasks} task overdue • ${student.groupName}`,
-          tag: "Jira",
-          student,
         });
       }
     });
@@ -1174,8 +1207,6 @@ export default function Contributions() {
           severity: "critical",
           title: `${group.name} rủi ro cao`,
           description: `${group.zeroCommitMembers} thành viên chưa commit • balance ${group.balancePercent}% • ${group.totalCommits} commits`,
-          tag: "Nhóm",
-          group,
         });
       } else if (group.risk.level === 2) {
         result.push({
@@ -1183,8 +1214,6 @@ export default function Contributions() {
           severity: "warning",
           title: `${group.name} cần theo dõi`,
           description: `Hoạt động chưa đều • balance ${group.balancePercent}% • ${group.memberCount} thành viên`,
-          tag: "Nhóm",
-          group,
         });
       }
     });
@@ -1202,15 +1231,21 @@ export default function Contributions() {
   const totalReviews = sortedStudents.reduce((sum, student) => sum + student.reviews, 0);
   const activeStudents = sortedStudents.filter((student) => student.commits > 0).length;
   const inactiveStudents = sortedStudents.filter((student) => student.commits === 0).length;
+
   const avgScore =
     totalStudents > 0
-      ? Math.round(sortedStudents.reduce((sum, student) => sum + student.score, 0) / totalStudents)
+      ? Math.round(
+          sortedStudents.reduce((sum, student) => sum + student.score, 0) /
+            totalStudents
+        )
       : 0;
 
   const riskGroups = groupStats.filter(
     (group) =>
       group.risk.label === "Rủi ro cao" || group.risk.label === "Cần theo dõi"
   );
+
+  const previewRiskGroups = riskGroups.slice(0, 3);
 
   const highRiskStudents = useMemo(
     () => sortedStudents.filter((student) => shouldWarnStudent(student)),
@@ -1304,7 +1339,9 @@ export default function Contributions() {
         </nav>
 
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-800">Theo dõi đóng góp</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
+            Theo dõi đóng góp
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">Đang tải dữ liệu lớp học...</p>
         </div>
 
@@ -1347,7 +1384,9 @@ export default function Contributions() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-800">Theo dõi đóng góp</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
+            Theo dõi đóng góp
+          </h2>
           <p className="text-sm text-gray-500 mt-0.5">
             Commit, hiệu suất nhóm và mức độ tham gia của từng sinh viên
           </p>
@@ -1356,7 +1395,7 @@ export default function Contributions() {
         <div className="flex flex-wrap items-center gap-2">
           {usingMockData && (
             <span className="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-100 text-amber-700">
-              Mock data preview
+              Dữ liệu mô phỏng
             </span>
           )}
 
@@ -1388,16 +1427,20 @@ export default function Contributions() {
                 {currentCourse?.name || currentCourse?.code || "Lớp học hiện tại"}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                {groups.length} nhóm • {totalStudents} sinh viên • theo dõi cảnh báo trực tiếp từ lecturer
+                {groups.length} nhóm • {totalStudents} sinh viên • theo dõi hiệu suất và mức độ tham gia
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                Điểm đóng góp được ước tính từ commit, Jira hoàn thành, pull request, review,
+                số ngày hoạt động và task quá hạn.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-teal-100 text-teal-700">
-                Avg score: {avgScore}/100
+                Điểm TB: {avgScore}/100
               </span>
               <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-blue-100 text-blue-700">
-                Jira done: {totalJiraDone}
+                Jira hoàn thành: {totalJiraDone}
               </span>
               <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-amber-100 text-amber-700">
                 Nhóm cần theo dõi: {riskGroups.length}
@@ -1427,12 +1470,12 @@ export default function Contributions() {
           color="bg-indigo-500"
           label="Điểm trung bình"
           value={avgScore}
-          note="Contribution score / 100"
+          note="Điểm đóng góp / 100"
         />
         <StatCard
           icon={GitPullRequest}
           color="bg-blue-500"
-          label="Pull requests"
+          label="Pull request"
           value={totalPRs}
           note={`Reviews: ${totalReviews}`}
         />
@@ -1531,7 +1574,10 @@ export default function Contributions() {
                   <>
                     <div className="flex items-end gap-1.5 h-40">
                       {weeklyCommits.map((value, index) => (
-                        <div key={index} className="flex-1 flex flex-col items-center gap-1 group">
+                        <div
+                          key={index}
+                          className="flex-1 flex flex-col items-center gap-1 group"
+                        >
                           <span className="text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                             {value}
                           </span>
@@ -1549,7 +1595,10 @@ export default function Contributions() {
 
                     <div className="flex justify-between mt-2">
                       {WEEKS.map((week) => (
-                        <span key={week} className="text-[9px] text-gray-400 flex-1 text-center">
+                        <span
+                          key={week}
+                          className="text-[9px] text-gray-400 flex-1 text-center"
+                        >
                           {week}
                         </span>
                       ))}
@@ -1557,29 +1606,37 @@ export default function Contributions() {
 
                     <div className="mt-4 grid grid-cols-3 gap-3">
                       <div className="rounded-2xl bg-teal-50 border border-teal-100 px-4 py-3">
-                        <p className="text-[11px] text-teal-700 font-medium">Đỉnh hoạt động</p>
+                        <p className="text-[11px] text-teal-700 font-medium">
+                          Đỉnh hoạt động
+                        </p>
                         <p className="text-lg font-bold text-teal-800">
                           {Math.max(...weeklyCommits)} commits
                         </p>
                       </div>
                       <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
-                        <p className="text-[11px] text-blue-700 font-medium">Tổng 12 tuần</p>
+                        <p className="text-[11px] text-blue-700 font-medium">
+                          Tổng 12 tuần
+                        </p>
                         <p className="text-lg font-bold text-blue-800">
                           {weeklyCommits.reduce((sum, value) => sum + value, 0)}
                         </p>
                       </div>
                       <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3">
-                        <p className="text-[11px] text-amber-700 font-medium">TB / tuần</p>
+                        <p className="text-[11px] text-amber-700 font-medium">
+                          TB / tuần
+                        </p>
                         <p className="text-lg font-bold text-amber-800">
                           {Math.round(
-                            weeklyCommits.reduce((sum, value) => sum + value, 0) / weeklyCommits.length
+                            weeklyCommits.reduce((sum, value) => sum + value, 0) /
+                              weeklyCommits.length
                           )}
                         </p>
                       </div>
                     </div>
 
                     <p className="text-[10px] text-gray-400 mt-4">
-                      * Dữ liệu đang dùng mock analytics ổn định theo course. Khi tích hợp backend/GitHub API có thể thay bằng dữ liệu thật mà không cần đổi UI.
+                      * Dữ liệu đang dùng mock analytics ổn định theo course. Khi tích hợp
+                      backend/GitHub API có thể thay bằng dữ liệu thật mà không cần đổi UI.
                     </p>
                   </>
                 )}
@@ -1621,12 +1678,17 @@ export default function Contributions() {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                           <div>
-                            <p className="text-sm font-semibold text-gray-800">{group.name}</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {group.name}
+                            </p>
                             <p className="text-[11px] text-gray-500 mt-0.5">
-                              {group.memberCount} thành viên • {group.zeroCommitMembers} chưa commit
+                              {group.memberCount} thành viên • {group.zeroCommitMembers} chưa
+                              commit
                             </p>
                           </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}>
+                          <span
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
+                          >
                             {group.risk.label}
                           </span>
                         </div>
@@ -1641,19 +1703,27 @@ export default function Contributions() {
                         <div className="mt-3 grid grid-cols-4 gap-3 text-xs">
                           <div>
                             <p className="text-gray-400">Commits</p>
-                            <p className="font-semibold text-gray-700">{group.totalCommits}</p>
+                            <p className="font-semibold text-gray-700">
+                              {group.totalCommits}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400">Jira</p>
-                            <p className="font-semibold text-gray-700">{group.totalJira}</p>
+                            <p className="font-semibold text-gray-700">
+                              {group.totalJira}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400">Balance</p>
-                            <p className="font-semibold text-gray-700">{group.balancePercent}%</p>
+                            <p className="font-semibold text-gray-700">
+                              {group.balancePercent}%
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400">Score nhóm</p>
-                            <p className="font-semibold text-gray-700">{group.totalScore}</p>
+                            <p className="font-semibold text-gray-700">
+                              {group.totalScore}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1669,23 +1739,30 @@ export default function Contributions() {
                   <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
                     <Clock3 size={15} className="text-indigo-600" />
                   </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">Insight nhanh</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-800">
+                    Insight nhanh
+                  </CardTitle>
                 </div>
               </CardHeader>
 
               <CardContent className="pt-5 space-y-3">
                 <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Top contributor</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                    Sinh viên nổi bật
+                  </p>
                   <p className="text-sm font-semibold text-gray-800 mt-1">
                     {sortedStudents[0]?.name || "Chưa có dữ liệu"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {sortedStudents[0]?.commits || 0} commits • score {sortedStudents[0]?.score || 0}
+                    {sortedStudents[0]?.commits || 0} commits • score{" "}
+                    {sortedStudents[0]?.score || 0}
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Nhóm mạnh nhất</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                    Nhóm mạnh nhất
+                  </p>
                   <p className="text-sm font-semibold text-gray-800 mt-1">
                     {strongestGroup?.name || "Chưa có dữ liệu"}
                   </p>
@@ -1695,9 +1772,14 @@ export default function Contributions() {
                 </div>
 
                 <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Tỷ lệ active</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                    Tỷ lệ active
+                  </p>
                   <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0}%
+                    {totalStudents > 0
+                      ? Math.round((activeStudents / totalStudents) * 100)
+                      : 0}
+                    %
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {activeStudents}/{totalStudents} sinh viên có hoạt động
@@ -1705,8 +1787,12 @@ export default function Contributions() {
                 </div>
 
                 <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Đã nhắc sinh viên</p>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">{sentLogs.length}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                    Đã nhắc sinh viên
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800 mt-1">
+                    {sentLogs.length}
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">
                     Gồm email và cảnh báo từ lecturer
                   </p>
@@ -1724,16 +1810,22 @@ export default function Contributions() {
               <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Users size={15} className="text-blue-600" />
               </div>
-              <CardTitle className="text-base font-semibold text-gray-800">Phân tích theo nhóm</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-800">
+                Phân tích theo nhóm
+              </CardTitle>
             </div>
           </CardHeader>
 
           <CardContent className="pt-5 space-y-4">
             {groupStats.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-10">Chưa có dữ liệu nhóm</p>
+              <p className="text-sm text-gray-400 text-center py-10">
+                Chưa có dữ liệu nhóm
+              </p>
             ) : (
               groupStats.map((group) => {
-                const topMember = [...group.members].sort((a, b) => b.commits - a.commits)[0];
+                const topMember = [...group.members].sort(
+                  (a, b) => b.commits - a.commits
+                )[0];
 
                 return (
                   <div
@@ -1744,17 +1836,24 @@ export default function Contributions() {
                       <div>
                         <h4 className="text-lg font-bold text-gray-800">{group.name}</h4>
                         <p className="text-sm text-gray-500 mt-1">
-                          {group.memberCount} thành viên • {group.totalCommits} commits • {group.totalJira} jira done
+                          {group.memberCount} thành viên • {group.totalCommits} commits •{" "}
+                          {group.totalJira} jira done
                         </p>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
+                        >
                           {group.risk.label}
                         </span>
                         <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
                           Balance {group.balancePercent}%
                         </span>
+                        <Button variant="outline" className="rounded-xl h-8 px-3 text-xs">
+                          <Eye size={13} className="mr-1.5" />
+                          Xem chi tiết
+                        </Button>
                       </div>
                     </div>
 
@@ -1764,19 +1863,23 @@ export default function Contributions() {
                         <p className="text-lg font-bold text-gray-800">{group.totalScore}</p>
                       </div>
                       <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">Top member</p>
+                        <p className="text-[11px] text-gray-400">Thành viên nổi bật</p>
                         <p className="text-sm font-semibold text-gray-800 truncate">
                           {topMember?.name || "N/A"}
                         </p>
                       </div>
                       <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
                         <p className="text-[11px] text-gray-400">Chưa commit</p>
-                        <p className="text-lg font-bold text-gray-800">{group.zeroCommitMembers}</p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {group.zeroCommitMembers}
+                        </p>
                       </div>
                       <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">Avg commits/member</p>
+                        <p className="text-[11px] text-gray-400">TB commit / thành viên</p>
                         <p className="text-lg font-bold text-gray-800">
-                          {group.memberCount ? Math.round(group.totalCommits / group.memberCount) : 0}
+                          {group.memberCount
+                            ? Math.round(group.totalCommits / group.memberCount)
+                            : 0}
                         </p>
                       </div>
                     </div>
@@ -1786,19 +1889,28 @@ export default function Contributions() {
                         .sort((a, b) => b.score - a.score)
                         .map((member) => {
                           const percent = topMember?.commits
-                            ? Math.max(6, Math.round((member.commits / topMember.commits) * 100))
+                            ? Math.max(
+                                6,
+                                Math.round((member.commits / topMember.commits) * 100)
+                              )
                             : 0;
 
                           return (
                             <div key={member.studentId}>
                               <div className="flex justify-between items-center mb-1.5">
                                 <div className="min-w-0">
-                                  <p className="text-sm font-medium text-gray-700 truncate">{member.name}</p>
+                                  <p className="text-sm font-medium text-gray-700 truncate">
+                                    {member.name}
+                                  </p>
                                   <p className="text-[11px] text-gray-400">
                                     {member.studentCode} • score {member.score}
                                   </p>
                                 </div>
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(member.status)}`}>
+                                <span
+                                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(
+                                    member.status
+                                  )}`}
+                                >
                                   {member.status}
                                 </span>
                               </div>
@@ -1849,7 +1961,9 @@ export default function Contributions() {
 
           <CardContent className="p-0">
             {filteredStudents.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-10">Không có sinh viên phù hợp bộ lọc</p>
+              <p className="text-sm text-gray-400 text-center py-10">
+                Không có sinh viên phù hợp bộ lọc
+              </p>
             ) : (
               filteredStudents.map((student, index) => (
                 <div
@@ -1857,21 +1971,34 @@ export default function Contributions() {
                   className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
                 >
                   <div className="hidden xl:grid grid-cols-14 gap-3 px-6 py-4 items-center">
-                    <div className="col-span-1 text-sm font-bold text-gray-400">#{index + 1}</div>
+                    <div className="col-span-1 text-sm font-bold text-gray-400">
+                      #{index + 1}
+                    </div>
 
                     <div className="col-span-3 flex items-center gap-2.5 min-w-0">
                       <div className="w-9 h-9 rounded-full bg-teal-100 flex items-center justify-center text-xs font-bold text-teal-700 shrink-0">
                         {student.name?.charAt(0)?.toUpperCase() || "S"}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {student.name}
+                        </p>
                         <div className="flex items-center flex-wrap gap-2 mt-0.5">
                           <p className="text-xs text-gray-400">
-                            {student.activeDays} ngày hoạt động • last active {student.lastActiveDaysAgo} ngày trước
+                            {student.activeDays} ngày hoạt động • hoạt động gần nhất{" "}
+                            {student.lastActiveDaysAgo} ngày trước
                           </p>
                           {sentMap?.[student.studentId] && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
-                              Đã nhắc {sentMap[student.studentId].warningCount + sentMap[student.studentId].emailCount} lần
+                              Đã nhắc{" "}
+                              {sentMap[student.studentId].warningCount +
+                                sentMap[student.studentId].emailCount}{" "}
+                              lần
+                            </span>
+                          )}
+                          {shouldWarnStudent(student) && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                              Cần theo dõi
                             </span>
                           )}
                         </div>
@@ -1883,31 +2010,47 @@ export default function Contributions() {
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-xs font-mono text-gray-500">{student.studentCode}</span>
+                      <span className="text-xs font-mono text-gray-500">
+                        {student.studentCode}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-800">{student.commits}</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {student.commits}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">{student.jiraDone}</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {student.jiraDone}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">{student.prs}</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {student.prs}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">{student.reviews}</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {student.reviews}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className="text-sm font-bold text-indigo-700">{student.score}</span>
+                      <span className="text-sm font-bold text-indigo-700">
+                        {student.score}
+                      </span>
                     </div>
 
                     <div className="col-span-1 text-right">
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(student.status)}`}>
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(
+                          student.status
+                        )}`}
+                      >
                         {student.status}
                       </span>
                     </div>
@@ -1938,7 +2081,11 @@ export default function Contributions() {
                               {student.studentCode} • {student.groupName}
                             </p>
                           </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusBadgeClass(student.status)}`}>
+                          <span
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusBadgeClass(
+                              student.status
+                            )}`}
+                          >
                             {student.status}
                           </span>
                         </div>
@@ -1946,19 +2093,27 @@ export default function Contributions() {
                         <div className="grid grid-cols-4 gap-2 mt-3 text-xs">
                           <div className="rounded-xl bg-gray-50 px-3 py-2">
                             <p className="text-gray-400">Commits</p>
-                            <p className="font-semibold text-gray-700">{student.commits}</p>
+                            <p className="font-semibold text-gray-700">
+                              {student.commits}
+                            </p>
                           </div>
                           <div className="rounded-xl bg-gray-50 px-3 py-2">
                             <p className="text-gray-400">Jira</p>
-                            <p className="font-semibold text-gray-700">{student.jiraDone}</p>
+                            <p className="font-semibold text-gray-700">
+                              {student.jiraDone}
+                            </p>
                           </div>
                           <div className="rounded-xl bg-gray-50 px-3 py-2">
                             <p className="text-gray-400">PR</p>
-                            <p className="font-semibold text-gray-700">{student.prs}</p>
+                            <p className="font-semibold text-gray-700">
+                              {student.prs}
+                            </p>
                           </div>
                           <div className="rounded-xl bg-gray-50 px-3 py-2">
                             <p className="text-gray-400">Score</p>
-                            <p className="font-semibold text-gray-700">{student.score}</p>
+                            <p className="font-semibold text-gray-700">
+                              {student.score}
+                            </p>
                           </div>
                         </div>
 
@@ -1979,196 +2134,60 @@ export default function Contributions() {
         </Card>
       )}
 
-      {activeTab === "alerts" && (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="xl:col-span-2 border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
-                  <BellRing size={15} className="text-red-600" />
-                </div>
-                <CardTitle className="text-base font-semibold text-gray-800">Trung tâm cảnh báo</CardTitle>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-5 space-y-3">
-              {alerts.length === 0 ? (
-                <div className="rounded-2xl bg-green-50 border border-green-100 px-4 py-8 text-center">
-                  <p className="text-sm font-semibold text-green-700">Không có cảnh báo</p>
-                  <p className="text-xs text-green-600 mt-1">
-                    Dữ liệu hiện tại chưa phát hiện nhóm hoặc sinh viên cần chú ý.
-                  </p>
-                </div>
-              ) : (
-                alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className={cx(
-                      "rounded-2xl border px-4 py-4",
-                      getAlertSeverityClass(alert.severity)
-                    )}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold">{alert.title}</p>
-                        <p className="text-xs mt-1 opacity-90">{alert.description}</p>
-
-                        {alert.student && (
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            <button
-                              type="button"
-                              onClick={() => openActionModal("warning", alert.student)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-amber-100 bg-white text-amber-700 hover:bg-amber-50"
-                            >
-                              <TriangleAlert size={13} />
-                              Gửi cảnh báo
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => openActionModal("email", alert.student)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-blue-100 bg-white text-blue-700 hover:bg-blue-50"
-                            >
-                              <Mail size={13} />
-                              Gửi mail
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/70 border border-white/60">
-                        {alert.tag}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <AlertTriangle size={15} className="text-amber-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">Tóm tắt cảnh báo</CardTitle>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-5 space-y-3">
-                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3">
-                  <p className="text-[11px] text-red-700 font-medium">Critical</p>
-                  <p className="text-xl font-bold text-red-800 mt-1">
-                    {alerts.filter((a) => a.severity === "critical").length}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-                  <p className="text-[11px] text-amber-700 font-medium">Warning</p>
-                  <p className="text-xl font-bold text-amber-800 mt-1">
-                    {alerts.filter((a) => a.severity === "warning").length}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
-                  <p className="text-[11px] text-blue-700 font-medium">Info</p>
-                  <p className="text-xl font-bold text-blue-800 mt-1">
-                    {alerts.filter((a) => a.severity === "info").length}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">Gợi ý xử lý</p>
-                  <div className="mt-2 space-y-2 text-xs text-gray-600">
-                    <p>• Ưu tiên kiểm tra sinh viên chưa commit</p>
-                    <p>• Xem các nhóm balance thấp dưới 55%</p>
-                    <p>• Đối chiếu Jira overdue với commit thấp</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center">
-                    <Send size={15} className="text-purple-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">Lịch sử đã gửi</CardTitle>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-5 space-y-3">
-                {sentLogs.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-6">Chưa gửi cảnh báo nào</p>
-                ) : (
-                  sentLogs.slice(0, 6).map((log) => (
-                    <div key={log.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">
-                            {log.studentName}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {log.type === "email" ? "Email" : "Cảnh báo"} • {log.groupName}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">{log.time}</p>
-                        </div>
-                        <span className={cx(
-                          "text-[10px] font-bold px-2.5 py-1 rounded-full border",
-                          log.type === "email"
-                            ? "bg-blue-50 text-blue-700 border-blue-100"
-                            : "bg-amber-50 text-amber-700 border-amber-100"
-                        )}>
-                          {log.type === "email" ? "Mail" : "Warning"}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <Card className="xl:col-span-2 border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
             <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
-                  <AlertTriangle size={15} className="text-red-600" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
+                    <AlertTriangle size={15} className="text-red-600" />
+                  </div>
+                  <CardTitle className="text-base font-semibold text-gray-800">
+                    Nhóm cần chú ý
+                  </CardTitle>
                 </div>
-                <CardTitle className="text-base font-semibold text-gray-800">Nhóm cần chú ý</CardTitle>
+
+                <Button
+  variant="outline"
+  className="rounded-xl"
+  onClick={() => navigate("/lecturer/alerts")}
+>
+  Xem tất cả cảnh báo
+</Button>
               </div>
             </CardHeader>
 
             <CardContent className="pt-5">
-              {riskGroups.length === 0 ? (
+              {previewRiskGroups.length === 0 ? (
                 <div className="rounded-2xl bg-green-50 border border-green-100 px-4 py-8 text-center">
-                  <p className="text-sm font-semibold text-green-700">Không có nhóm rủi ro</p>
+                  <p className="text-sm font-semibold text-green-700">
+                    Không có nhóm rủi ro
+                  </p>
                   <p className="text-xs text-green-600 mt-1">
                     Dữ liệu hiện tại cho thấy các nhóm đang duy trì mức đóng góp khá ổn định.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {riskGroups.map((group) => (
+                  {previewRiskGroups.map((group) => (
                     <div
                       key={group.id}
                       className="rounded-2xl border border-red-100 bg-red-50/60 p-4"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{group.name}</p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            {group.name}
+                          </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {group.memberCount} thành viên • {group.totalCommits} commits • balance {group.balancePercent}%
+                            {group.memberCount} thành viên • {group.totalCommits} commits •
+                            balance {group.balancePercent}%
                           </p>
                         </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
+                        >
                           {group.risk.label}
                         </span>
                       </div>
@@ -2203,33 +2222,47 @@ export default function Contributions() {
                 <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center">
                   <CheckCircle2 size={15} className="text-green-600" />
                 </div>
-                <CardTitle className="text-base font-semibold text-gray-800">Tóm tắt nhanh</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-800">
+                  Tóm tắt nhanh
+                </CardTitle>
               </div>
             </CardHeader>
 
             <CardContent className="pt-5 space-y-3">
               <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Top student</p>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                  Sinh viên đứng đầu
+                </p>
                 <p className="text-sm font-semibold text-gray-800 mt-1">
                   {sortedStudents[0]?.name || "Chưa có dữ liệu"}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Nhóm mạnh nhất</p>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                  Nhóm mạnh nhất
+                </p>
                 <p className="text-sm font-semibold text-gray-800 mt-1">
                   {strongestGroup?.name || "Chưa có dữ liệu"}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Chưa commit</p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">{inactiveStudents}</p>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                  Chưa commit
+                </p>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {inactiveStudents}
+                </p>
               </div>
 
               <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">Tổng cảnh báo</p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">{alerts.length}</p>
+                <p className="text-[11px] uppercase tracking-wide text-gray-400">
+                  Tổng cảnh báo
+                </p>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {alerts.length}
+                </p>
               </div>
             </CardContent>
           </Card>
