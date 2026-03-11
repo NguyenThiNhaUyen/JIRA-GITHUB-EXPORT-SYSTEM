@@ -113,6 +113,8 @@ public class UserService : IUserService
         Roles = u.roles.Select(r => r.role_name).ToList(),
         StudentCode = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
+        Department = u.lecturer?.department ?? u.student?.department,
+        AssignedCourses = u.lecturer?.courses.Select(c => c.course_code).ToList() ?? new List<string>(),
         CreatedAt = u.created_at
     };
 }

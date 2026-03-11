@@ -111,6 +111,12 @@ public class LecturerInfo
 
     [JsonPropertyName("email")]
     public string? OfficeEmail { get; set; }
+
+    [JsonPropertyName("department")]
+    public string? Department { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTime CreatedAt { get; set; }
 }
 
 public class EnrollmentInfo

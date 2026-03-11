@@ -5,6 +5,7 @@ using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Auth;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
+using JiraGithubExport.Shared.Contracts.Responses.Users;
 using JiraGithubExport.Shared.Models;
 
 namespace JiraGithubExport.IntegrationService.Application.Mappings;
@@ -17,7 +18,14 @@ public class MappingProfile : Profile
         // USER MAPPINGS
         // ============================================
 
-        CreateMap<user, UserInfo>()
+        CreateMap<user, UserDetailResponse>() // FE likely uses UserDetailResponse for details
+            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.roles.Select(r => r.role_name).ToList()))
+            .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
+            .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null))
+            .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.department : (src.student != null ? src.student.department : null)))
+            .ForMember(dest => dest.AssignedCourses, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.courses.Select(c => c.course_code).ToList() : new List<string>()));
+
+        CreateMap<user, UserInfo>() // Generic Info
             .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.roles.Select(r => r.role_name).ToList()))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null));
@@ -40,7 +48,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.user_id))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.user != null ? src.user.full_name : "N/A"))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer_code))
-            .ForMember(dest => dest.OfficeEmail, opt => opt.MapFrom(src => src.office_email));
+            .ForMember(dest => dest.OfficeEmail, opt => opt.MapFrom(src => src.office_email))
+            .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.department))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
 
         CreateMap<course, CourseDetailResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))

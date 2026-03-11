@@ -130,6 +130,19 @@ public class CoursesController : ControllerBase
     }
 
     /// <summary>
+    /// Import students to course from Excel (Admin only)
+    /// </summary>
+    [HttpPost("{id}/enrollments/import")]
+    [Authorize(Roles = "ADMIN")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ImportEnrollments(long id, IFormFile file)
+    {
+        var result = await _courseService.ImportEnrollmentsFromExcelAsync(id, file);
+        return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Excel import completed"));
+    }
+
+    /// <summary>
     /// Get all projects pending integration approval for a course (Lecturer/Admin)
     /// </summary>
     [HttpGet("{id}/pending-integrations")]

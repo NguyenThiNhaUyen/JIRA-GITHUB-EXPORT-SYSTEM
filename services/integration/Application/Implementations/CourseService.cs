@@ -363,6 +363,46 @@ public class CourseService : ICourseService
 
         return pendingProjects;
     }
+
+    public async Task<EnrollmentResult> ImportEnrollmentsFromExcelAsync(long courseId, Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            throw new BusinessException("No file uploaded");
+
+        var studentCodes = new List<string>();
+
+        using (var stream = file.OpenReadStream())
+        {
+            using (var workbook = new ClosedXML.Excel.XLWorkbook(stream))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Skip header
+
+                foreach (var row in rows)
+                {
+                    var code = row.Cell(1).GetString()?.Trim();
+                    if (!string.IsNullOrEmpty(code))
+                    {
+                        studentCodes.Add(code);
+                    }
+                }
+            }
+        }
+
+        if (!studentCodes.Any())
+            throw new BusinessException("No student codes found in Excel file");
+
+        // Find student user IDs by student codes
+        var studentUserIds = await _unitOfWork.Students.Query()
+            .Where(s => studentCodes.Contains(s.student_code))
+            .Select(s => s.user_id)
+            .ToListAsync();
+
+        if (!studentUserIds.Any())
+            throw new BusinessException("None of the student codes in the Excel file exist in the system");
+
+        return await EnrollStudentsAsync(courseId, studentUserIds);
+    }
 }
 
 
