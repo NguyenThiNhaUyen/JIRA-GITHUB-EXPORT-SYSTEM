@@ -42,7 +42,7 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpGet("my-pending")]
-    [Authorize(Roles = "STUDENT")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<InvitationResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyPendingInvitations([FromQuery] PagedRequest request)
     {
