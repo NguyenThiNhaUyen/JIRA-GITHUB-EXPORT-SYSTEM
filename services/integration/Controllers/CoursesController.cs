@@ -128,7 +128,6 @@ public class CoursesController : ControllerBase
 
     [HttpPost("{id}/enrollments/import")]
     [Authorize(Roles = "LECTURER,ADMIN")]
-    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ImportEnrollments(long id, IFormFile file)
     {
