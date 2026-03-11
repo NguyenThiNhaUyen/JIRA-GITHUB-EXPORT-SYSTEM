@@ -275,130 +275,16 @@ using Microsoft.OpenApi.Models;
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
             // ============================================
-            // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)
+            // DATABASE SEEDING
             // ============================================
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<JiraGithubToolDbContext>();
-                    var passwordHasher = services.GetRequiredService<IPasswordHasher>();
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-
-                    // 0. Auto-migrate database on startup
-                    try
-                    {
-                        logger.LogInformation("Applying database migrations...");
-                        await context.Database.MigrateAsync();
-                        logger.LogInformation("Database migrated successfully.");
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogCritical(ex, "❌ Database migration failed! Deployment halted.");
-                        throw; // Rethrow so deployment fails fast
-                    }
-
-                    // 1. Create Default Roles if not exist
-                    var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
-                    bool rolesAdded = false;
-                    foreach (var roleName in defaultRoles)
-                    {
-                        if (!await context.roles.AnyAsync(r => r.role_name == roleName))
-                        {
-                            context.roles.Add(new role { role_name = roleName });
-                            rolesAdded = true;
-                        }
-                    }
-                    if (rolesAdded) await context.SaveChangesAsync();
-
-                    // 2. Create Super Admin Account if not exist
-                    string adminEmail = "admin@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == adminEmail))
-                    {
-                        var adminRole = await context.roles.FirstAsync(r => r.role_name == "ADMIN");
-                        var adminUser = new user
-                        {
-                            email = adminEmail,
-                            password = passwordHasher.HashPassword("Admin@123"), // Password mặc định
-                            full_name = "Super Admin",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow
-                        };
-                        adminUser.roles.Add(adminRole);
-                        context.users.Add(adminUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
-                    }
-
-                    // 3. Create Sample Lecturer Account if not exist
-                    string lecturerEmail = "lecturer@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == lecturerEmail))
-                    {
-                        var lecturerRole = await context.roles.FirstAsync(r => r.role_name == "LECTURER");
-                        var lecturerUser = new user
-                        {
-                            email = lecturerEmail,
-                            password = passwordHasher.HashPassword("Admin@123"),
-                            full_name = "Sample Lecturer",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow,
-                            lecturer = new lecturer
-                            {
-                                lecturer_code = "LEC001",
-                                created_at = DateTime.UtcNow,
-                                updated_at = DateTime.UtcNow
-                            }
-                        };
-                        lecturerUser.roles.Add(lecturerRole);
-                        context.users.Add(lecturerUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Lecturer Account -> Email: {Email} | Pass: Admin@123", lecturerEmail);
-                    }
-
-                    // 4. Create Sample Student Account if not exist
-                    string studentEmail = "student@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == studentEmail))
-                    {
-                        var studentRole = await context.roles.FirstAsync(r => r.role_name == "STUDENT");
-                        var studentUser = new user
-                        {
-                            email = studentEmail,
-                            password = passwordHasher.HashPassword("Admin@123"),
-                            full_name = "Sample Student",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow,
-                            student = new student
-                            {
-                                student_code = "STU001",
-                                created_at = DateTime.UtcNow,
-                                updated_at = DateTime.UtcNow
-                            }
-                        };
-                        studentUser.roles.Add(studentRole);
-                        context.users.Add(studentUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Student Account -> Email: {Email} | Pass: Admin@123", studentEmail);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "❌ An error occurred while seeding the database.");
-                }
-            }
+            await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
 
             // ============================================
             // RUN APPLICATION
             // ============================================
-
             await app.RunAsync();
+
+
 
 
 

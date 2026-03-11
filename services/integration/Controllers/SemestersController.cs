@@ -31,6 +31,17 @@ public class SemestersController : ControllerBase
     }
 
     /// <summary>
+    /// Get all semesters (unpaged)
+    /// </summary>
+    [HttpGet("all")]
+    [ProducesResponseType(typeof(ApiResponse<List<SemesterInfo>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllUnpaged()
+    {
+        var result = await _semesterService.GetAllSemestersAsync();
+        return Ok(ApiResponse<List<SemesterInfo>>.SuccessResponse(result));
+    }
+
+    /// <summary>
     /// Create a new semester (Admin only)
     /// </summary>
     [HttpPost]

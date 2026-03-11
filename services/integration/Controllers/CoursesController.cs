@@ -117,16 +117,34 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Lecturer assigned successfully"));
     }
 
-    /// <summary>
-    /// Enroll students to course (Admin only)
-    /// </summary>
     [HttpPost("{id}/enrollments")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> EnrollStudents(long id, [FromBody] EnrollStudentsRequest request)
     {
         var result = await _courseService.EnrollStudentsAsync(id, request.StudentUserIds);
         return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Enrollment completed"));
+    }
+
+    [HttpPost("{id}/enrollments/import")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ImportEnrollments(long id, IFormFile file)
+    {
+        try
+        {
+            _logger.LogInformation("[Import] Starting import for course {CourseId}, file: {FileName}, size: {Size}",
+                id, file?.FileName, file?.Length);
+            var result = await _courseService.ImportEnrollmentsFromExcelAsync(id, file);
+            _logger.LogInformation("[Import] Success: {Enrolled} enrolled", result.EnrolledCount);
+            return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Excel import completed"));
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message} | Inner: {InnerMessage}", id, ex.Message, errorMessage);
+            return StatusCode(500, new { error = ex.GetType().Name, message = errorMessage, detail = ex.StackTrace });
+        }
     }
 
     /// <summary>

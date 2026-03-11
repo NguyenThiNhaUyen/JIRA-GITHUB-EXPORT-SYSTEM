@@ -11,4 +11,5 @@ public interface ISemesterService
     Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request);
     Task DeleteSemesterAsync(long semesterId);
     Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
+    Task<List<SemesterInfo>> GetAllSemestersAsync();
 }

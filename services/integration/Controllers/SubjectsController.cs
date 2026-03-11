@@ -31,6 +31,17 @@ public class SubjectsController : ControllerBase
     }
 
     /// <summary>
+    /// Get all subjects for select list (unpaged)
+    /// </summary>
+    [HttpGet("all")]
+    [ProducesResponseType(typeof(ApiResponse<List<SubjectInfo>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllUnpaged()
+    {
+        var result = await _subjectService.GetAllSubjectsAsync();
+        return Ok(ApiResponse<List<SubjectInfo>>.SuccessResponse(result));
+    }
+
+    /// <summary>
     /// Create a new subject (Admin only)
     /// </summary>
     [HttpPost]

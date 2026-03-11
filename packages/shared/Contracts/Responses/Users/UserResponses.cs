@@ -9,5 +9,7 @@ public class UserDetailResponse
     public List<string> Roles { get; set; } = new();
     public string? StudentCode { get; set; }
     public string? LecturerCode { get; set; }
+    public string? Department { get; set; }
+    public List<string> AssignedCourses { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 }

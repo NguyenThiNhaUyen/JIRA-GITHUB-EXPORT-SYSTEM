@@ -1,44 +1,68 @@
+using System.Text.Json.Serialization;
+
 namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class ProjectDetailResponse
 {
+    [JsonPropertyName("id")]
     public long Id { get; set; }
+
+    [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
+
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
+
+    [JsonPropertyName("status")]
     public string Status { get; set; } = null!;
-    public long CourseId { get; set; }
+
+    [JsonPropertyName("course_name")]
     public string CourseName { get; set; } = null!;
-    public int TeamCount { get; set; }
+
+    [JsonPropertyName("github_repo_url")]
+    public string? GithubRepoUrl { get; set; }
+
+    [JsonPropertyName("jira_project_url")]
+    public string? JiraProjectUrl { get; set; }
+
+    [JsonPropertyName("integration_status")]
+    public string? IntegrationStatus { get; set; }
+
+    [JsonPropertyName("members")]
     public List<TeamMemberInfo> TeamMembers { get; set; } = new();
-    public IntegrationInfo? Integration { get; set; }
 }
 
 public class TeamMemberInfo
 {
+    [JsonPropertyName("user_id")]
     public long StudentUserId { get; set; }
+
+    [JsonPropertyName("student_code")]
     public string StudentCode { get; set; } = null!;
+
+    [JsonPropertyName("full_name")]
     public string FullName { get; set; } = null!;
+
+    [JsonPropertyName("team_role")]
     public string TeamRole { get; set; } = null!;
+
+    [JsonPropertyName("participation_status")]
     public string ParticipationStatus { get; set; } = null!;
-    public string? Responsibility { get; set; }
-    public DateTime? JoinedAt { get; set; }
+
+    [JsonPropertyName("contribution_score")]
+    public int ContributionScore { get; set; }
 }
 
 public class IntegrationInfo
 {
+    [JsonPropertyName("github_repo_url")]
     public string? GithubRepoUrl { get; set; }
-    public string? GithubRepoOwner { get; set; }
-    public string? GithubRepoName { get; set; }
-    public string? JiraProjectKey { get; set; }
+    
+    [JsonPropertyName("jira_url")]
     public string? JiraSiteUrl { get; set; }
-    // Approval workflow
+    
+    [JsonPropertyName("status")]
     public string ApprovalStatus { get; set; } = "PENDING";
-    public long? SubmittedByUserId { get; set; }
-    public DateTime? SubmittedAt { get; set; }
-    public long? ApprovedByUserId { get; set; }
-    public string? ApprovedByName { get; set; }
-    public DateTime? ApprovedAt { get; set; }
-    public string? RejectedReason { get; set; }
 }
 
 public class ProjectDashboardResponse

@@ -28,6 +28,11 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
 
         var totalItems = await query.CountAsync();
         var items = await query
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+            .Include(c => c.projects)
+            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -52,6 +57,11 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
 
         var totalItems = await query.CountAsync();
         var items = await query
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+            .Include(c => c.projects)
+            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -61,8 +71,6 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
 
     public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesByStudentAsync(long studentUserId, string? keyword, string? sortDir, int page, int pageSize)
     {
-        // Must access via CourseEnrollments if needed, or directly from context map
-        // Given we are inside CourseRepository, we can join with CourseEnrollments
         var query = _context.Set<course_enrollment>()
             .Where(e => e.student_user_id == studentUserId && e.status == "ACTIVE")
             .Select(e => e.course);
@@ -82,6 +90,9 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         var items = await query
             .Include(c => c.subject)
             .Include(c => c.semester)
+            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+            .Include(c => c.projects)
+            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
     /// Get all users (Admin only). Supports ?role=ADMIN|LECTURER|STUDENT filter.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] string? role, [FromQuery] PagedRequest request)
     {
@@ -35,7 +35,7 @@ public class UsersController : ControllerBase
     /// Get user by ID (Admin only)
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<UserDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(long id)
     {

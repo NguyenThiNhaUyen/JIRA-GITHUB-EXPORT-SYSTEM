@@ -96,4 +96,13 @@ public class SubjectService : ISubjectService
 
         return new PagedResponse<SubjectInfo>(_mapper.Map<List<SubjectInfo>>(items), totalItems, request.Page, request.PageSize);
     }
+
+    public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
+    {
+        var items = await _unitOfWork.Subjects.Query()
+            .OrderBy(s => s.subject_name)
+            .ToListAsync();
+
+        return _mapper.Map<List<SubjectInfo>>(items);
+    }
 }

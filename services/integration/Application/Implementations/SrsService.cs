@@ -179,10 +179,8 @@ public class SrsService : ISrsService
             VersionNo = d.version_no,
             Status = d.status,
             FileUrl = d.file_url,
-            SubmittedByUserId = d.submitted_by_user_id,
             SubmittedByName = d.submitted_by_user?.full_name,
             SubmittedAt = d.submitted_at,
-            ReviewerUserId = d.reviewer_user_id,
             ReviewerName = d.reviewer_user?.full_name,
             Feedback = d.feedback,
             ReviewedAt = d.reviewed_at
