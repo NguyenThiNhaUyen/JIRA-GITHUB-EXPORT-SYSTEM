@@ -35,7 +35,7 @@ import Reports from "./pages/lecturer/reports.jsx";
 
 // Student pages
 import StudentLayout from "./layouts/StudentLayout.jsx";
-import StudentDashboard from "./pages/student/student-dashboard-new.jsx";
+import StudentDashboard from "./pages/student/student-dashboard.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
 import StudentCoursesPage, {
   StudentMyProjectPage,
