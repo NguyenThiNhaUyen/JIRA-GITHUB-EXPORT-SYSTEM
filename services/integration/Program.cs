@@ -143,6 +143,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IAlertService, AlertService>();
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
