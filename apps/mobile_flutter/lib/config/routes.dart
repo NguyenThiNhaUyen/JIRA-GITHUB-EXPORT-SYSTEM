@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+
 import '../providers/auth_provider.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/student/student_dashboard.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/admin_reports_screen.dart';
+
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
@@ -113,6 +116,10 @@ final GoRouter router = GoRouter(
         ),
       ),
     ),
+    GoRoute(
+  path: '/admin/reports',
+  builder: (context, state) => const AdminReportsScreen(),
+),
     GoRoute(
       path: '/admin/subjects',
       builder: (context, state) => Scaffold(
