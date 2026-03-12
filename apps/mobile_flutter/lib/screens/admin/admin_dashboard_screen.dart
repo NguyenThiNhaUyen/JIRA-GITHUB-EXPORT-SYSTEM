@@ -14,7 +14,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String subject = '';
   String classId = '';
 
-  static const Color bgColor = Color(0xFFF6F8FC);
+  static const Color bgColor = Color(0xFFEFF7F5);
+  static const Color contentBg = Color(0xFFF8FAFC);
   static const Color cardBorder = Color(0xFFE7ECF3);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
@@ -213,107 +214,109 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             if (!isMobile) const _AdminSidebar(),
             Expanded(
-              child: Column(
-                children: [
-                  _buildTopBar(),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.all(isMobile ? 16 : 24),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1400),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildBreadcrumb(),
-                              const SizedBox(height: 18),
-
-                              _buildFilters(),
-                              const SizedBox(height: 18),
-
-                              _buildSystemOverview(stats),
-                              const SizedBox(height: 18),
-
-                              _buildIntegrationOverview(),
-                              const SizedBox(height: 18),
-
-                              isMobile
-                                  ? Column(
-                                      children: [
-                                        _buildCommitChart(),
-                                        const SizedBox(height: 18),
-                                        _buildHeatmap(),
-                                      ],
-                                    )
-                                  : Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(child: _buildCommitChart()),
-                                        const SizedBox(width: 18),
-                                        Expanded(child: _buildHeatmap()),
-                                      ],
-                                    ),
-                              const SizedBox(height: 18),
-
-                              isMobile
-                                  ? Column(
-                                      children: [
-                                        _buildInactiveTeams(),
-                                        const SizedBox(height: 18),
-                                        _buildTopTeams(),
-                                      ],
-                                    )
-                                  : Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(child: _buildInactiveTeams()),
-                                        const SizedBox(width: 18),
-                                        Expanded(child: _buildTopTeams()),
-                                      ],
-                                    ),
-                              const SizedBox(height: 18),
-
-                              _buildTeamActivityTable(),
-                              const SizedBox(height: 18),
-
-                              isMobile
-                                  ? Column(
-                                      children: [
-                                        _buildQuickActions(),
-                                        const SizedBox(height: 18),
-                                        _buildActivityLog(),
-                                      ],
-                                    )
-                                  : Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: _buildActivityLog(),
-                                        ),
-                                        const SizedBox(width: 18),
-                                        Expanded(
-                                          flex: 2,
-                                          child: _buildQuickActions(),
-                                        ),
-                                      ],
-                                    ),
-                              const SizedBox(height: 18),
-
-                              _buildRecentCourses(),
-                              const SizedBox(height: 18),
-
-                              _buildRecentGroups(),
-                            ],
+              child: Container(
+                margin: EdgeInsets.all(isMobile ? 0 : 14),
+                decoration: BoxDecoration(
+                  color: contentBg,
+                  borderRadius:
+                      BorderRadius.circular(isMobile ? 0 : 36),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    _buildTopBar(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(isMobile ? 16 : 24),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1400),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildBreadcrumb(),
+                                const SizedBox(height: 18),
+                                _buildFilters(),
+                                const SizedBox(height: 18),
+                                _buildSystemOverview(stats),
+                                const SizedBox(height: 18),
+                                _buildIntegrationOverview(),
+                                const SizedBox(height: 18),
+                                isMobile
+                                    ? Column(
+                                        children: [
+                                          _buildCommitChart(),
+                                          const SizedBox(height: 18),
+                                          _buildHeatmap(),
+                                        ],
+                                      )
+                                    : Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(child: _buildCommitChart()),
+                                          const SizedBox(width: 18),
+                                          Expanded(child: _buildHeatmap()),
+                                        ],
+                                      ),
+                                const SizedBox(height: 18),
+                                isMobile
+                                    ? Column(
+                                        children: [
+                                          _buildInactiveTeams(),
+                                          const SizedBox(height: 18),
+                                          _buildTopTeams(),
+                                        ],
+                                      )
+                                    : Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: _buildInactiveTeams(),
+                                          ),
+                                          const SizedBox(width: 18),
+                                          Expanded(child: _buildTopTeams()),
+                                        ],
+                                      ),
+                                const SizedBox(height: 18),
+                                _buildTeamActivityTable(),
+                                const SizedBox(height: 18),
+                                isMobile
+                                    ? Column(
+                                        children: [
+                                          _buildQuickActions(),
+                                          const SizedBox(height: 18),
+                                          _buildActivityLog(),
+                                        ],
+                                      )
+                                    : Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 3,
+                                            child: _buildActivityLog(),
+                                          ),
+                                          const SizedBox(width: 18),
+                                          Expanded(
+                                            flex: 2,
+                                            child: _buildQuickActions(),
+                                          ),
+                                        ],
+                                      ),
+                                const SizedBox(height: 18),
+                                _buildRecentCourses(),
+                                const SizedBox(height: 18),
+                                _buildRecentGroups(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -322,118 +325,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-Widget _buildIntegrationOverview() {
-  final items = [
-    {
-      'label': 'Repo Connected',
-      'value': '${integrationStats['repoConnected']}',
-      'icon': Icons.folder_open_outlined,
-      'color': const Color(0xFF10B981),
-    },
-    {
-      'label': 'Missing Repo',
-      'value': '${integrationStats['repoMissing']}',
-      'icon': Icons.error_outline,
-      'color': const Color(0xFFEF4444),
-    },
-    {
-      'label': 'Jira Project',
-      'value': '${integrationStats['jiraConnected']}',
-      'icon': Icons.check_circle_outline,
-      'color': const Color(0xFF3B82F6),
-    },
-    {
-      'label': 'Sync Errors',
-      'value': '${integrationStats['syncErrors']}',
-      'icon': Icons.warning_amber_rounded,
-      'color': const Color(0xFFF59E0B),
-    },
-    {
-      'label': 'Reports Exported',
-      'value': '${integrationStats['reportsExported']}',
-      'icon': Icons.trending_up,
-      'color': const Color(0xFF6366F1),
-    },
-  ];
-
-  final crossAxisCount = isMobile ? 2 : 3;
-  final ratio = isMobile ? 2.0 : 2.4;
-
-  return _SectionCard(
-    title: 'Integration Overview',
-    subtitle: 'Tình trạng kết nối GitHub, Jira và báo cáo hệ thống',
-    child: GridView.builder(
-      itemCount: items.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: ratio,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
-
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: const Color(0xFFFCFDFE),
-            border: Border.all(color: cardBorder),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: (item['color'] as Color).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  item['icon'] as IconData,
-                  color: item['color'] as Color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['value'] as String,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item['label'] as String,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
-
-
   Widget _buildTopBar() {
     return Container(
-      height: 72,
+      height: 78,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -790,7 +684,114 @@ Widget _buildIntegrationOverview() {
     );
   }
 
-  
+  Widget _buildIntegrationOverview() {
+    final items = [
+      {
+        'label': 'Repo Connected',
+        'value': '${integrationStats['repoConnected']}',
+        'icon': Icons.folder_open_outlined,
+        'color': const Color(0xFF10B981),
+      },
+      {
+        'label': 'Missing Repo',
+        'value': '${integrationStats['repoMissing']}',
+        'icon': Icons.error_outline,
+        'color': const Color(0xFFEF4444),
+      },
+      {
+        'label': 'Jira Project',
+        'value': '${integrationStats['jiraConnected']}',
+        'icon': Icons.check_circle_outline,
+        'color': const Color(0xFF3B82F6),
+      },
+      {
+        'label': 'Sync Errors',
+        'value': '${integrationStats['syncErrors']}',
+        'icon': Icons.warning_amber_rounded,
+        'color': const Color(0xFFF59E0B),
+      },
+      {
+        'label': 'Reports Exported',
+        'value': '${integrationStats['reportsExported']}',
+        'icon': Icons.trending_up,
+        'color': const Color(0xFF6366F1),
+      },
+    ];
+
+    final crossAxisCount = isMobile ? 2 : 3;
+    final ratio = isMobile ? 2.0 : 2.4;
+
+    return _SectionCard(
+      title: 'Integration Overview',
+      subtitle: 'Tình trạng kết nối GitHub, Jira và báo cáo hệ thống',
+      child: GridView.builder(
+        itemCount: items.length,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: ratio,
+        ),
+        itemBuilder: (context, index) {
+          final item = items[index];
+
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFFCFDFE),
+              border: Border.all(color: cardBorder),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: (item['color'] as Color).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    item['icon'] as IconData,
+                    color: item['color'] as Color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['value'] as String,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item['label'] as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildCommitChart() {
     final maxCommit = commitData
         .map((e) => e['commits'] as int)
@@ -1481,86 +1482,142 @@ class _AdminSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
+      width: 290,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF0B5D5B),
+            Color(0xFF0A6A6A),
+          ],
+        ),
         border: Border(
-          right: BorderSide(color: _AdminDashboardScreenState.cardBorder),
+          right: BorderSide(
+            color: Color(0x14000000),
+          ),
         ),
       ),
-      child: Column(
-        children: [
-          Container(
-            height: 72,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            alignment: Alignment.centerLeft,
-            child: const Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color(0xFFCCFBF1),
-                  child: Icon(
-                    Icons.dashboard_customize_outlined,
-                    color: _AdminDashboardScreenState.teal,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              height: 76,
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: _AdminDashboardScreenState.teal,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Devora',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                children: const [
+                  _SidebarSectionTitle('TỔNG QUAN'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.grid_view_rounded,
+                    label: 'Dashboard',
+                    route: '/admin',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Phân tích hệ thống',
+                    route: '/admin/reports',
+                  ),
+                  SizedBox(height: 18),
+                  _SidebarSectionTitle('HỌC VỤ'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Học kỳ',
+                    route: '/admin/semesters',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.library_books_outlined,
+                    label: 'Môn học',
+                    route: '/admin/subjects',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.menu_book_outlined,
+                    label: 'Lớp học phần',
+                    route: '/admin/courses',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.account_tree_outlined,
+                    label: 'Phân công giảng viên',
+                    route: '/admin/assignments',
+                  ),
+                  SizedBox(height: 18),
+                  _SidebarSectionTitle('NGƯỜI DÙNG'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.people_outline_rounded,
+                    label: 'Tài khoản',
+                    route: '/admin/accounts',
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.white.withOpacity(0.10),
+                    ),
                   ),
                 ),
-                SizedBox(width: 12),
-                Text(
-                  'Admin Panel',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    color: _AdminDashboardScreenState.textPrimary,
-                  ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.menu_open_rounded,
+                      size: 20,
+                      color: Color(0xFFD7FFFB),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      'Thu gọn menu',
+                      style: TextStyle(
+                        color: Color(0xFFD7FFFB),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(12),
-              children: const [
-                _SidebarItem(
-                  icon: Icons.grid_view_rounded,
-                  label: 'Dashboard',
-                  route: '/admin',
-                  active: true,
-                ),
-                _SidebarItem(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'Semesters',
-                  route: '/admin/semesters',
-                ),
-                _SidebarItem(
-                  icon: Icons.library_books_outlined,
-                  label: 'Subjects',
-                  route: '/admin/subjects',
-                ),
-                _SidebarItem(
-                  icon: Icons.menu_book_outlined,
-                  label: 'Courses',
-                  route: '/admin/courses',
-                ),
-                _SidebarItem(
-                  icon: Icons.group_work_outlined,
-                  label: 'Groups',
-                  route: '/admin/groups',
-                ),
-                _SidebarItem(
-                  icon: Icons.people_outline,
-                  label: 'Import Students',
-                  route: '/admin/import',
-                ),
-                _SidebarItem(
-                  icon: Icons.trending_up,
-                  label: 'Export Reports',
-                  route: '/admin/export',
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1571,62 +1628,116 @@ class _AdminDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Drawer(
+    return Drawer(
+      backgroundColor: const Color(0xFF0B5D5B),
       child: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 12),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Color(0xFFCCFBF1),
-                child: Icon(
-                  Icons.dashboard_customize_outlined,
-                  color: _AdminDashboardScreenState.teal,
-                ),
+            Container(
+              height: 76,
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: _AdminDashboardScreenState.teal,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Devora',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              title: Text(
-                'Admin Panel',
-                style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                children: const [
+                  _SidebarSectionTitle('TỔNG QUAN'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.grid_view_rounded,
+                    label: 'Dashboard',
+                    route: '/admin',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Phân tích hệ thống',
+                    route: '/admin/reports',
+                  ),
+                  SizedBox(height: 18),
+                  _SidebarSectionTitle('HỌC VỤ'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Học kỳ',
+                    route: '/admin/semesters',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.library_books_outlined,
+                    label: 'Môn học',
+                    route: '/admin/subjects',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.menu_book_outlined,
+                    label: 'Lớp học phần',
+                    route: '/admin/courses',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.account_tree_outlined,
+                    label: 'Phân công giảng viên',
+                    route: '/admin/assignments',
+                  ),
+                  SizedBox(height: 18),
+                  _SidebarSectionTitle('NGƯỜI DÙNG'),
+                  SizedBox(height: 8),
+                  _SidebarItem(
+                    icon: Icons.people_outline_rounded,
+                    label: 'Tài khoản',
+                    route: '/admin/accounts',
+                  ),
+                ],
               ),
-            ),
-            Divider(),
-            _SidebarItem(
-              icon: Icons.grid_view_rounded,
-              label: 'Dashboard',
-              route: '/admin',
-              active: true,
-            ),
-            _SidebarItem(
-              icon: Icons.calendar_month_outlined,
-              label: 'Semesters',
-              route: '/admin/semesters',
-            ),
-            _SidebarItem(
-              icon: Icons.library_books_outlined,
-              label: 'Subjects',
-              route: '/admin/subjects',
-            ),
-            _SidebarItem(
-              icon: Icons.menu_book_outlined,
-              label: 'Courses',
-              route: '/admin/courses',
-            ),
-            _SidebarItem(
-              icon: Icons.group_work_outlined,
-              label: 'Groups',
-              route: '/admin/groups',
-            ),
-            _SidebarItem(
-              icon: Icons.people_outline,
-              label: 'Import Students',
-              route: '/admin/import',
-            ),
-            _SidebarItem(
-              icon: Icons.trending_up,
-              label: 'Export Reports',
-              route: '/admin/export',
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarSectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SidebarSectionTitle(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF33D1C6),
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
         ),
       ),
     );
@@ -1637,36 +1748,71 @@ class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String route;
-  final bool active;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.route,
-    this.active = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg = active ? const Color(0xFFECFDF5) : Colors.transparent;
-    final fg = active
-        ? _AdminDashboardScreenState.teal
-        : _AdminDashboardScreenState.textPrimary;
+    final String location = GoRouterState.of(context).uri.toString();
+
+    final bool active =
+        location == route || (route != '/admin' && location.startsWith(route));
+
+    const Color activeBg = Color(0xFF0E746E);
+    const Color activeText = Colors.white;
+    const Color inactiveText = Color(0xFFD7FFFB);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        tileColor: bg,
-        leading: Icon(icon, color: fg),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: fg,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.of(context).maybePop();
+            context.go(route);
+          },
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: active ? activeBg : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: active
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.10),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: active ? activeText : inactiveText,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: active ? activeText : inactiveText,
+                      fontSize: 15,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        onTap: () => context.go(route),
       ),
     );
   }
@@ -1740,87 +1886,6 @@ class _SectionCard extends StatelessWidget {
             const SizedBox(height: 14),
           ],
           child,
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String value;
-  final String? sub;
-
-  const _MetricCard({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-    this.sub,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: _AdminDashboardScreenState.cardBorder),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: _AdminDashboardScreenState.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: _AdminDashboardScreenState.textPrimary,
-                  ),
-                ),
-                if (sub != null)
-                  Text(
-                    sub!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF16A34A),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );
