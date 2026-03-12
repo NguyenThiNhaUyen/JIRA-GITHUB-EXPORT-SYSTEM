@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -22,3 +23,65 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+=======
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Mac
+.DS_Store
+
+# Test and coverage results
+TestResults/
+coveragereport/
+
+# Node
+node_modules
+
+# Flutter generated
+apps/mobile_flutter/windows/
+apps/mobile_flutter/web/
+
+# Web build output
+apps/web/dist/
+
+# Env files — .env is safe to commit (no secrets), .env.local is personal
+apps/web/.env.local
+>>>>>>> recover-local-code

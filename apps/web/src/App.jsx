@@ -1,58 +1,74 @@
-// App: Routing configuration với role-based access cho Project-Based Learning Management
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
-import Login from "./pages/login.jsx";
-import Unauthorized from "./pages/unauthorized.jsx";
-import NotFound from "./pages/not-found.jsx";
+import Login from "./pages/Login.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import Unauthorized from "./pages/Unauthorized.jsx";
+import NotFound from "./pages/NotFound.jsx";
 import TestUI from "./pages/test-ui.jsx";
+import CourseAnalytics from "./pages/lecturer/course-analytics.jsx";
+
+// Admin Layout
+import AdminLayout from "./layouts/AdminLayout.jsx";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
 import AdminReports from "./pages/admin/admin-reports.jsx";
 import CourseManagement from "./pages/admin/course-management.jsx";
-import UserManagement from "./pages/admin/user-management.jsx";
+import SemesterManagement from "./pages/admin/semester-management.jsx";
+import SubjectManagement from "./pages/admin/subject-management.jsx";
+import LecturerAssignment from "./pages/admin/lecturer-assignment.jsx";
+import UserManagement from "./pages/admin/users.jsx";
+import MyReports from "./pages/admin/my-reports.jsx";
 
 // Lecturer pages
+import LecturerLayout from "./layouts/LecturerLayout.jsx";
 import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
-import ProjectsOverview from "./pages/lecturer/projects-overview.jsx";
-import ProjectDetail from "./pages/lecturer/project-detail.jsx";
+import ManageGroups from "./pages/lecturer/manage-groups.jsx";
+import GroupDetail from "./pages/lecturer/group-detail.jsx";
+import MyCourses from "./pages/lecturer/my-courses.jsx";
+import Contributions from "./pages/lecturer/contributions.jsx";
+import Alerts from "./pages/lecturer/alerts.jsx";
+import SrsReports from "./pages/lecturer/srs-reports.jsx";
+import Reports from "./pages/lecturer/reports.jsx";
 
 // Student pages
+import StudentLayout from "./layouts/StudentLayout.jsx";
 import StudentDashboard from "./pages/student/student-dashboard.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
-
-// Legacy pages
-import Home from "./pages/home.jsx";
-import Dashboard from "./pages/dashboard.jsx";
-import Tasks from "./pages/tasks.jsx";
-import Commits from "./pages/commits.jsx";
-import Deadlines from "./pages/deadlines.jsx";
-import Performance from "./pages/performance.jsx";
+import StudentCoursesPage, {
+  StudentMyProjectPage,
+  StudentContributionPage,
+  StudentAlertsPage,
+  StudentSrsPage,
+} from "./pages/student/student-placeholders.jsx";
 
 import { useAuth } from "./context/AuthContext.jsx";
 
 export default function App() {
-  const { isAuthenticated, userRole } = useAuth();
+  const { userRole } = useAuth();
 
-  // Helper function to get redirect path based on role
   const getDefaultRedirect = () => {
     if (!userRole) return "/login";
     switch (userRole) {
-      case "ADMIN": return "/admin";
-      case "LECTURER": return "/lecturer";
-      case "STUDENT": return "/student";
-      default: return "/login";
+      case "ADMIN":
+        return "/admin";
+      case "LECTURER":
+        return "/lecturer";
+      case "STUDENT":
+        return "/student";
+      default:
+        return "/login";
     }
   };
 
-  // Always redirect to login first, let user choose role
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/test-ui" element={<TestUI />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />
 
@@ -62,7 +78,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -72,7 +90,9 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <AdminReports />
+              <AdminLayout>
+                <AdminReports />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -82,17 +102,69 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <CourseManagement />
+              <AdminLayout>
+                <CourseManagement />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
       />
+
+      <Route
+  path="/lecturer/groups"
+  element={
+    <ProtectedRoute>
+      <RoleGuard requiredRole="LECTURER">
+        <Navigate to="/lecturer/my-courses" replace />
+      </RoleGuard>
+    </ProtectedRoute>
+  }
+/>
+
       <Route
         path="/admin/courses/:courseId"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <CourseManagement />
+              <AdminLayout>
+                <CourseManagement />
+              </AdminLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/semesters"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminLayout>
+                <SemesterManagement />
+              </AdminLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/subjects"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminLayout>
+                <SubjectManagement />
+              </AdminLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/lecturer-assignment"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminLayout>
+                <LecturerAssignment />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -102,7 +174,21 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="ADMIN">
-              <UserManagement />
+              <AdminLayout>
+                <UserManagement />
+              </AdminLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/my-reports"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="ADMIN">
+              <AdminLayout>
+                <MyReports />
+              </AdminLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -114,27 +200,117 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <LecturerDashboard />
+              <LecturerLayout>
+                <LecturerDashboard />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/lecturer/course/:courseId/projects"
+        path="/lecturer/my-courses"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <ProjectsOverview />
+              <LecturerLayout>
+                <MyCourses />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/lecturer/project/:projectId"
+        path="/lecturer/groups/:courseId"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
-              <ProjectDetail />
+              <LecturerLayout>
+                <ManageGroups />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/contributions"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Contributions />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/alerts"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Alerts />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/srs"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <SrsReports />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/reports"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Reports />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/course/:courseId/manage-groups"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <ManageGroups />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/group/:groupId"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <GroupDetail />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lecturer/course/:courseId/analytics"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <CourseAnalytics />
+              </LecturerLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -146,7 +322,69 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="STUDENT">
-              <StudentDashboard />
+              <StudentLayout>
+                <StudentDashboard />
+              </StudentLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/courses"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentLayout>
+                <StudentCoursesPage />
+              </StudentLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/my-project"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentLayout>
+                <StudentMyProjectPage />
+              </StudentLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/contribution"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentLayout>
+                <StudentContributionPage />
+              </StudentLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/alerts"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentLayout>
+                <StudentAlertsPage />
+              </StudentLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/srs"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="STUDENT">
+              <StudentLayout>
+                <StudentSrsPage />
+              </StudentLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
@@ -156,28 +394,24 @@ export default function App() {
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="STUDENT">
-              <StudentProject />
+              <StudentLayout>
+                <StudentProject />
+              </StudentLayout>
             </RoleGuard>
           </ProtectedRoute>
         }
       />
 
-      {/* Legacy protected routes */}
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to={getDefaultRedirect()} replace />} />
+
+      {/* Fallback */}
       <Route
-        path="/*"
+        path="*"
         element={
           <ProtectedRoute>
             <MainLayout>
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/commits" element={<Commits />} />
-                <Route path="/deadlines" element={<Deadlines />} />
-                <Route path="/performance" element={<Performance />} />
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <NotFound />
             </MainLayout>
           </ProtectedRoute>
         }

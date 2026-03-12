@@ -1,0 +1,26 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Shared -> d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\packages\shared\bin\Debug\net8.0\Shared.dll
+  JiraService -> d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\jira-service\bin\Debug\net8.0\JiraService.dll
+  GithubService -> d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\github-service\bin\Debug\net8.0\GithubService.dll
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\SubjectsController.cs(68,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\SemestersController.cs(68,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\CoursesController.cs(105,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\ProjectsController.cs(107,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(17,9): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(25,32): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(37,15): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+
+Build FAILED.
+
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\SubjectsController.cs(68,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\SemestersController.cs(68,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\CoursesController.cs(105,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Controllers\ProjectsController.cs(107,55): warning CS8625: Cannot convert null literal to non-nullable reference type. [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(17,9): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(25,32): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\Application\Implementations\ProjectDashboardService.cs(37,15): error CS0103: The name '_cache' does not exist in the current context [d:\PRN222\JiraGithubExportSystem\JIRA-GITHUB-EXPORT-SYSTEM\services\integration\IntegrationService.csproj]
+    4 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:01.36

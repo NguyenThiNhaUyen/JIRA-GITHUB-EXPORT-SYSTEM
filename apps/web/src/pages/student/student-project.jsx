@@ -1,377 +1,550 @@
-// Student Project Detail - STUDENT project detail page
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle2,
+  CheckSquare,
+  Clock3,
+  Download,
+  Eye,
+  FileText,
+  FolderKanban,
+  Github,
+  GitPullRequest,
+  Link2,
+  RefreshCw,
+  ShieldAlert,
+  Target,
+  Upload,
+  Users,
+  AlertTriangle,
+  Bell,
+} from "lucide-react";
 import { Button } from "../../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/table.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import { Modal } from "../../components/ui/interactive.jsx";
-import { 
-  getProjectById, 
-  getCommitsByProject, 
-  getSrsReportsByProject, 
-  getCommitsByStudent,
-  mockUsers,
-  mockJiraProjects 
-} from "../../mock/data.js";
+import { useToast } from "../../components/ui/toast.jsx";
+import {
+  getStudentProjectById,
+  getStudentProjectDetailById,
+} from "../../mock/student.mock.js";
+
+function getStatusBadgeClass(status) {
+  switch (status) {
+    case "ACTIVE":
+      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    case "DONE":
+      return "bg-blue-50 text-blue-700 border border-blue-200";
+    default:
+      return "bg-slate-50 text-slate-700 border border-slate-200";
+  }
+}
+
+function getTaskStatusClass(status) {
+  switch (status) {
+    case "Done":
+      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    case "In Progress":
+      return "bg-blue-50 text-blue-700 border border-blue-200";
+    default:
+      return "bg-slate-50 text-slate-700 border border-slate-200";
+  }
+}
+
+function getSeverityClass(severity) {
+  switch (severity) {
+    case "high":
+      return "bg-red-50 text-red-700 border-red-200";
+    case "medium":
+      return "bg-amber-50 text-amber-700 border-amber-200";
+    default:
+      return "bg-blue-50 text-blue-700 border-blue-200";
+  }
+}
+
+function SectionCard({ title, subtitle, actions, children }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          {subtitle ? <p className="mt-1 text-sm text-slate-500">{subtitle}</p> : null}
+        </div>
+        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, hint }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm text-slate-500">{label}</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900">{value}</div>
+          <div className="mt-1 text-xs text-slate-500">{hint}</div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <Icon className="h-5 w-5 text-slate-700" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function StudentProject() {
   const { projectId } = useParams();
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('commits');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { success, error } = useToast();
+  const [selectedTab, setSelectedTab] = useState("overview");
 
-  const project = getProjectById(projectId);
-  const allCommits = getCommitsByProject(projectId);
-  const myCommits = getCommitsByStudent(user?.id).filter(commit => commit.projectId === projectId);
-  const srsReports = getSrsReportsByProject(projectId);
-  const jiraProject = mockJiraProjects.find(jp => jp.projectId === projectId);
+  const project = getStudentProjectById(projectId);
+  const detail = getStudentProjectDetailById(projectId);
 
-  // Get my role in team
-  const myTeamMember = project?.teamMembers?.find(member => member.studentId === user?.id);
-  const myRole = myTeamMember?.roleInTeam || 'MEMBER';
+  const maxCommit = useMemo(() => {
+    if (!detail?.weeklyCommits?.length) return 1;
+    return Math.max(...detail.weeklyCommits.map((item) => item.value), 1);
+  }, [detail]);
 
-  if (!project) {
+  if (!project || !detail) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Project không tồn tại</h2>
-          <Button onClick={() => window.history.back()}>Quay lại</Button>
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
+          <div className="text-2xl font-bold text-slate-900">Không tìm thấy project</div>
+          <p className="mt-2 text-slate-600">Project này không tồn tại trong mock data.</p>
+          <Button className="mt-4" onClick={() => navigate("/student")}>
+            Quay lại dashboard
+          </Button>
         </div>
       </div>
     );
   }
 
+  const handleSync = () => {
+    success?.(`Đã đồng bộ ${Math.floor(Math.random() * 5) + 2} commits mới từ GitHub`);
+  };
+
   const handleUploadSrs = () => {
-    setIsUploadModalOpen(true);
+    success?.("Upload SRS mock thành công. Phiên bản mới đã được thêm vào danh sách.");
+  };
+
+  const handleExport = () => {
+    success?.("Export báo cáo project thành công");
+  };
+
+  const handleOpenRepo = () => {
+    success?.(`Mở mock repository: ${project.repository}`);
+  };
+
+  const handleOpenJira = () => {
+    success?.(`Mở mock Jira board: ${project.jiraKey}`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-              <p className="text-gray-600">{project.description}</p>
-              <Badge variant={myRole === 'LEADER' ? 'primary' : 'outline'} className="mt-2">
-                {myRole}
-              </Badge>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <button
+                type="button"
+                onClick={() => navigate("/student")}
+                className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Quay lại dashboard
+              </button>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                  {project.role}
+                </span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+                  {project.courseCode}
+                </span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(project.status)}`}>
+                  {project.status}
+                </span>
+              </div>
+
+              <h1 className="mt-4 text-2xl md:text-3xl font-bold text-slate-900">
+                {project.title}
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm md:text-base text-slate-600">
+                {project.description}
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
+                <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+                  Repository: <span className="font-semibold text-slate-900">{project.repository}</span>
+                </div>
+                <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+                  Jira Key: <span className="font-semibold text-slate-900">{project.jiraKey}</span>
+                </div>
+                <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+                  Branch: <span className="font-semibold text-slate-900">{project.branch}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex space-x-3">
-              <Button variant="outline">Export báo cáo</Button>
-              <Button onClick={handleUploadSrs}>Upload SRS</Button>
+
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" className="gap-2" onClick={handleOpenRepo}>
+                <Github className="h-4 w-4" />
+                Repository
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={handleOpenJira}>
+                <FolderKanban className="h-4 w-4" />
+                Jira Board
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={handleExport}>
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Project Info */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm text-gray-500">Jira Project</div>
-              <div className="font-semibold">{project.jiraProjectKey}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm text-gray-500">Repository</div>
-              <div className="font-semibold text-blue-600 hover:underline cursor-pointer">
-                {project.githubRepo?.split('/').pop()}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm text-gray-500">My Commits</div>
-              <div className="font-semibold">{myCommits.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm text-gray-500">Contribution</div>
-              <div className="font-semibold">{myTeamMember?.contributionScore || 0}%</div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard icon={Github} label="Commits" value={project.commits} hint="Tổng commit cá nhân" />
+          <StatCard icon={CheckSquare} label="Issues Done" value={project.issuesDone} hint="Task Jira đã hoàn thành" />
+          <StatCard icon={GitPullRequest} label="PR Merged" value={project.prsMerged} hint="Pull request đã merge" />
+          <StatCard icon={Target} label="Contribution" value={`${project.myContribution}%`} hint="Điểm đóng góp cá nhân" />
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="commits" activeTab={activeTab} setActiveTab={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="commits">My Commits ({myCommits.length})</TabsTrigger>
-            <TabsTrigger value="jira">Jira Tasks</TabsTrigger>
-            <TabsTrigger value="srs">SRS Submissions</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: "overview", label: "Tổng quan" },
+            { id: "tasks", label: "Task cá nhân" },
+            { id: "team", label: "Team" },
+            { id: "srs", label: "SRS" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setSelectedTab(tab.id)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                selectedTab === tab.id
+                  ? "bg-slate-900 text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          <TabsContent value="commits">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lịch sử Commits của tôi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {myCommits.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>SHA</TableHead>
-                        <TableHead>Message</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Changes</TableHead>
-                        <TableHead>Files</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {myCommits.map((commit) => (
-                        <TableRow key={commit.id}>
-                          <TableCell className="font-mono text-sm">
-                            {commit.sha.substring(0, 7)}
-                          </TableCell>
-                          <TableCell className="font-medium">{commit.message}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="text-sm">{new Date(commit.date).toLocaleDateString('vi-VN')}</p>
-                              <p className="text-xs text-gray-500">
-                                {new Date(commit.date).toLocaleTimeString('vi-VN')}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-green-600">+{commit.additions}</span>
-                            <span className="text-red-600 ml-2">-{commit.deletions}</span>
-                          </TableCell>
-                          <TableCell>{commit.files.length} files</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Bạn chưa có commit nào trong project này.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="jira">
-            <Card>
-              <CardHeader>
-                <CardTitle>Jira Tasks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {jiraProject ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{jiraProject.issueCount}</div>
-                        <div className="text-sm text-gray-600">Total Issues</div>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{jiraProject.completedIssues}</div>
-                        <div className="text-sm text-gray-600">Completed</div>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">{jiraProject.sprintCount}</div>
-                        <div className="text-sm text-gray-600">Sprints</div>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-4">
-                      <h4 className="font-semibold mb-2">Current Sprint: {jiraProject.currentSprint}</h4>
-                      <Badge variant={jiraProject.sprintStatus === 'ACTIVE' ? 'success' : 'default'}>
-                        {jiraProject.sprintStatus}
-                      </Badge>
-                    </div>
-
-                    {/* Mock Jira Issues */}
-                    <div className="border-t pt-4">
-                      <h4 className="font-semibold mb-3">My Issues</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Badge variant="primary">TASK</Badge>
-                            <div>
-                              <p className="font-medium">Implement user authentication</p>
-                              <p className="text-sm text-gray-500">Assignee: {user?.name}</p>
-                            </div>
-                          </div>
-                          <Badge variant="success">Done</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Badge variant="warning">BUG</Badge>
-                            <div>
-                              <p className="font-medium">Fix login validation error</p>
-                              <p className="text-sm text-gray-500">Assignee: {user?.name}</p>
-                            </div>
-                          </div>
-                          <Badge variant="warning">In Progress</Badge>
-                        </div>
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Badge variant="primary">STORY</Badge>
-                            <div>
-                              <p className="font-medium">Add payment gateway integration</p>
-                              <p className="text-sm text-gray-500">Assignee: {user?.name}</p>
-                            </div>
-                          </div>
-                          <Badge variant="default">To Do</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Không có dữ liệu Jira cho project này.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="srs">
-            <Card>
-              <CardHeader>
-                <CardTitle>SRS Submissions</CardTitle>
-              </CardHeader>
-              <CardContent>
+        {selectedTab === "overview" && (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="space-y-6 xl:col-span-2">
+              <SectionCard
+                title="Milestones"
+                subtitle="Các mốc chính của project hiện tại"
+                actions={
+                  <Button variant="outline" className="gap-2" onClick={handleSync}>
+                    <RefreshCw className="h-4 w-4" />
+                    Sync commits
+                  </Button>
+                }
+              >
                 <div className="space-y-4">
-                  {srsReports.map((report) => (
-                    <div key={report.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
+                  {detail.milestones.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-slate-200 p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
                         <div>
-                          <h4 className="font-semibold">{report.title}</h4>
-                          <p className="text-sm text-gray-600">Version {report.version}</p>
+                          <div className="font-semibold text-slate-900">{item.title}</div>
+                          <div className="text-xs text-slate-500">{item.status}</div>
                         </div>
-                        <Badge variant={report.status === 'FINAL' ? 'success' : report.status === 'REVIEW' ? 'warning' : 'default'}>
-                          {report.status}
-                        </Badge>
+                        <div className="text-sm font-semibold text-slate-700">{item.progress}%</div>
                       </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
-                        <div>
-                          <span className="text-gray-500">Ngày nộp:</span>
-                          <p className="font-medium">{new Date(report.submittedDate).toLocaleDateString('vi-VN')}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Reviewer:</span>
-                          <p className="font-medium">
-                            {report.reviewedBy ? mockUsers.lecturers.find(l => l.id === report.reviewedBy)?.name : 'Chưa review'}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Ngày review:</span>
-                          <p className="font-medium">
-                            {report.reviewedDate ? new Date(report.reviewedDate).toLocaleDateString('vi-VN') : 'N/A'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {report.comments && (
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-600 italic">"{report.comments}"</p>
-                        </div>
-                      )}
-                      
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          Download
-                        </Button>
-                        {report.status === 'DRAFT' && (
-                          <Button size="sm">
-                            Gửi review
-                          </Button>
-                        )}
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div
+                          className="h-2 rounded-full bg-emerald-500"
+                          style={{ width: `${item.progress}%` }}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
-                
-                {srsReports.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    Chưa có SRS report nào cho project này.
-                    <div className="mt-4">
-                      <Button onClick={handleUploadSrs}>Upload SRS đầu tiên</Button>
+              </SectionCard>
+
+              <SectionCard title="Weekly Commit Activity" subtitle="Phân bổ commit 7 ngày gần nhất">
+                <div className="flex h-56 items-end justify-between gap-3">
+                  {detail.weeklyCommits.map((item) => (
+                    <div key={item.label} className="flex flex-1 flex-col items-center gap-2">
+                      <div className="text-xs font-medium text-slate-500">{item.value}</div>
+                      <div className="flex h-44 items-end">
+                        <div
+                          className="w-8 rounded-t-xl bg-emerald-500"
+                          style={{ height: `${(item.value / maxCommit) * 170 + 10}px` }}
+                        />
+                      </div>
+                      <div className="text-xs text-slate-500">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Hoạt động gần đây" subtitle="Timeline mock cho project">
+                <div className="space-y-3">
+                  {detail.activities.map((activity) => (
+                    <div key={activity.id} className="rounded-2xl border border-slate-200 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-medium text-slate-900">{activity.text}</div>
+                          <div className="mt-1 text-sm text-slate-500">{activity.type.toUpperCase()}</div>
+                        </div>
+                        <div className="text-xs text-slate-500">{activity.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            </div>
+
+            <div className="space-y-6">
+              <SectionCard title="Thông tin project" subtitle="Tóm tắt nhanh">
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <div className="text-slate-500">Sprint completion</div>
+                    <div className="mt-1 text-2xl font-bold text-slate-900">{project.sprintCompletion}%</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <div className="text-slate-500">Open issues</div>
+                      <div className="mt-1 font-bold text-slate-900">{project.openIssues}</div>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <div className="text-slate-500">Team size</div>
+                      <div className="mt-1 font-bold text-slate-900">{project.teamSize}</div>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <div className="text-slate-500">Lines changed</div>
+                      <div className="mt-1 font-bold text-slate-900">{project.linesChanged}</div>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <div className="text-slate-500">SRS versions</div>
+                      <div className="mt-1 font-bold text-slate-900">{project.srsVersions}</div>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <div className="text-slate-500">Tech stack</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {project.techStack.map((tech) => (
+                        <span
+                          key={tech}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
 
-      {/* Upload SRS Modal */}
-      <Modal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        title="Upload SRS Report"
-        size="md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Chọn file SRS
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p className="mt-2 text-sm text-gray-600">
-                Kéo file vào đây hoặc <button className="text-blue-600 hover:underline">chọn file</button>
-              </p>
-              <p className="text-xs text-gray-500">PDF, DOC, DOCX (MAX. 10MB)</p>
+              <SectionCard title="Deadlines" subtitle="Các việc cần ưu tiên">
+                <div className="space-y-3">
+                  {detail.deadlines.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`rounded-2xl border p-4 ${getSeverityClass(item.severity)}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-5 w-5" />
+                        <div>
+                          <div className="font-semibold">{item.title}</div>
+                          <div className="mt-1 text-sm">{item.due}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Quick Actions" subtitle="Hành động demo nhanh">
+                <div className="space-y-2">
+                  <Button className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700" onClick={handleSync}>
+                    <RefreshCw className="h-4 w-4" />
+                    Sync commits
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUploadSrs}>
+                    <Upload className="h-4 w-4" />
+                    Upload SRS
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleExport}>
+                    <Download className="h-4 w-4" />
+                    Export báo cáo
+                  </Button>
+                </div>
+              </SectionCard>
             </div>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phiên bản
-            </label>
-            <input
-              type="text"
-              placeholder="VD: 1.0, 1.1, 2.0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {selectedTab === "tasks" && (
+          <SectionCard
+            title="Task cá nhân"
+            subtitle="Danh sách task Jira được giao"
+            actions={
+              <Button variant="outline" className="gap-2" onClick={handleOpenJira}>
+                <Link2 className="h-4 w-4" />
+                Mở Jira board
+              </Button>
+            }
+          >
+            <div className="space-y-3">
+              {detail.personalTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                        {task.key}
+                      </span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getTaskStatusClass(task.status)}`}>
+                        {task.status}
+                      </span>
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                        {task.priority}
+                      </span>
+                    </div>
+                    <div className="mt-2 font-semibold text-slate-900">{task.title}</div>
+                    <div className="mt-1 text-sm text-slate-500">Assignee: {task.assignee}</div>
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trạng thái
-            </label>
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="DRAFT">Draft</option>
-              <option value="REVIEW">Gửi review</option>
-              <option value="FINAL">Final</option>
-            </select>
-          </div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <div className="flex items-center gap-1">
+                      <Clock3 className="h-4 w-4" />
+                      {task.due}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => success?.(`Đã mở mock task ${task.key}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Xem
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ghi chú
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Nhập ghi chú cho report này..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {selectedTab === "team" && (
+          <SectionCard title="Team Members" subtitle="So sánh đóng góp giữa các thành viên">
+            <div className="space-y-3">
+              {detail.teamMembers.map((member, index) => (
+                <div key={member.id} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                          #{index + 1}
+                        </span>
+                        <div className="font-semibold text-slate-900">{member.name}</div>
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+                          {member.role}
+                        </span>
+                      </div>
+                    </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" onClick={() => setIsUploadModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={() => setIsUploadModalOpen(false)}>
-              Upload
-            </Button>
+                    <div className="grid grid-cols-3 gap-3 md:w-[420px]">
+                      <div className="rounded-xl bg-slate-50 p-3 text-center">
+                        <div className="text-xs text-slate-500">Commits</div>
+                        <div className="mt-1 font-bold text-slate-900">{member.commits}</div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 text-center">
+                        <div className="text-xs text-slate-500">Done Issues</div>
+                        <div className="mt-1 font-bold text-slate-900">{member.issuesDone}</div>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3 text-center">
+                        <div className="text-xs text-slate-500">Score</div>
+                        <div className="mt-1 font-bold text-slate-900">{member.score}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {selectedTab === "srs" && (
+          <SectionCard
+            title="SRS Documents"
+            subtitle="Danh sách phiên bản SRS của project"
+            actions={
+              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={handleUploadSrs}>
+                <Upload className="h-4 w-4" />
+                Upload SRS
+              </Button>
+            }
+          >
+            <div className="space-y-3">
+              {detail.srsFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-blue-50 p-3">
+                      <FileText className="h-5 w-5 text-blue-700" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900">{file.version}</div>
+                      <div className="text-sm text-slate-500">Updated: {file.updatedAt}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+                      {file.status}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => success?.(`Đã mở mock SRS ${file.version}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Xem
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Tóm tắt nhanh</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Project đang ở mức {project.sprintCompletion}% sprint completion, contribution cá nhân {project.myContribution}%,
+                còn {project.openIssues} open issues và {detail.deadlines.length} deadline cần theo dõi.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" className="gap-2" onClick={() => navigate("/student")}>
+                <BookOpen className="h-4 w-4" />
+                Về dashboard
+              </Button>
+              <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={handleSync}>
+                <RefreshCw className="h-4 w-4" />
+                Đồng bộ lần nữa
+              </Button>
+            </div>
           </div>
         </div>
-      </Modal>
+      </div>
     </div>
   );
 }
