@@ -41,7 +41,7 @@ public class CoursesController : ControllerBase
 
         PagedResponse<CourseDetailResponse> result;
 
-        if (userRole == "ADMIN")
+        if (userRole == "ADMIN" || userRole == "SUPER_ADMIN")
         {
             result = await _courseService.GetAllCoursesAsync(request);
         }
@@ -118,7 +118,7 @@ public class CoursesController : ControllerBase
     }
 
     [HttpPost("{id}/enrollments")]
-    [Authorize(Roles = "LECTURER,ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> EnrollStudents(long id, [FromBody] EnrollStudentsRequest request)
     {
@@ -152,7 +152,7 @@ public class CoursesController : ControllerBase
     /// Get all projects pending integration approval for a course (Lecturer/Admin)
     /// </summary>
     [HttpGet("{id}/pending-integrations")]
-    [Authorize(Roles = "LECTURER,ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPendingIntegrations(long id)
     {
