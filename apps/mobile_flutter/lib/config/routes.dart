@@ -10,6 +10,9 @@ import '../screens/auth/forgot_password_screen.dart';
 import '../screens/student/student_dashboard.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/admin/admin_reports_screen.dart';
+import '../screens/admin/admin_semesters_screen.dart';
+import '../screens/admin/course_management_screen.dart';
+import '../screens/admin/admin_subjects_screen.dart';
 
 
 final GoRouter router = GoRouter(
@@ -47,12 +50,24 @@ final GoRouter router = GoRouter(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
+    GoRoute(
+  path: '/admin/semesters',
+  builder: (context, state) => const AdminSemestersScreen(),
+),
 
     // ---------------- STUDENT ----------------
     GoRoute(
       path: '/student',
       builder: (context, state) => const StudentDashboard(),
     ),
+    GoRoute(
+  path: '/admin/subjects',
+  builder: (context, state) => const AdminSubjectsScreen(),
+),
+    GoRoute(
+  path: '/admin/courses',
+  builder: (context, state) => const CourseManagementScreen(),
+),
     GoRoute(
       path: '/student/project',
       builder: (context, state) => Scaffold(
