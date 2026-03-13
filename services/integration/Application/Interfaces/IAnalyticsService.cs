@@ -10,4 +10,5 @@ public interface IAnalyticsService
     Task<ActivityChartResponse> GetActivityChartAsync();
     Task<TeamAnalyticsResponse> GetTeamAnalyticsAsync();
     Task<List<AuditLogResponse>> GetRecentAuditLogsAsync(int count = 10);
+    Task<List<GroupRadarMetricResponse>> GetGroupRadarMetricsAsync(long courseId);
 }

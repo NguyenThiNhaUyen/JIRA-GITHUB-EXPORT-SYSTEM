@@ -64,3 +64,13 @@ public class AuditLogResponse
     public string Message { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
 }
+
+public class GroupRadarMetricResponse
+{
+    public string GroupName { get; set; } = string.Empty;
+    public int Commits { get; set; }
+    public int SrsDone { get; set; }
+    public int TeamSize { get; set; }
+    public int GithubLinked { get; set; }
+    public int JiraLinked { get; set; }
+}

@@ -200,4 +200,79 @@ public class AnalyticsService : IAnalyticsService
             Timestamp = l.timestamp
         }).ToList();
     }
+
+    public async Task<List<GroupRadarMetricResponse>> GetGroupRadarMetricsAsync(long courseId)
+    {
+        // Fetch projects in the specified course
+        var projects = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Where(p => p.course_id == courseId)
+            .Include(p => p.team_members)
+            .Include(p => p.project_integration)
+            .Include(p => p.project_documents)
+            .ToListAsync();
+
+        if (!projects.Any()) return new List<GroupRadarMetricResponse>();
+
+        // Fetch commit counts per repo
+        var repoIds = projects
+            .Where(p => p.project_integration != null && p.project_integration.github_repo_id.HasValue)
+            .Select(p => p.project_integration!.github_repo_id!.Value)
+            .ToList();
+
+        var repoCommitCounts = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => repoIds.Contains(c.repo_id))
+            .GroupBy(c => c.repo_id)
+            .ToDictionaryAsync(g => g.Key, g => g.Count());
+
+        // Find Max Commits to Normalize
+        int maxCommits = repoCommitCounts.Values.DefaultIfEmpty(0).Max();
+
+        var radarData = new List<GroupRadarMetricResponse>();
+
+        foreach (var p in projects)
+        {
+            // 1. Commits (Normalize to 100)
+            int commitCount = 0;
+            if (p.project_integration != null && p.project_integration.github_repo_id.HasValue)
+            {
+                var rId = p.project_integration.github_repo_id.Value;
+                if (repoCommitCounts.ContainsKey(rId))
+                {
+                    commitCount = repoCommitCounts[rId];
+                }
+            }
+            int commitScore = maxCommits > 0 ? (int)Math.Round((double)commitCount * 100 / maxCommits) : 0;
+
+            // 2. SrsDone
+            int srsScore = 0;
+            var srsDoc = p.project_documents.OrderByDescending(d => d.submitted_at).FirstOrDefault();
+            if (srsDoc != null)
+            {
+                if (srsDoc.status == "APPROVED") srsScore = 100;
+                else if (srsDoc.status == "PENDING") srsScore = 50;
+            }
+
+            // 3. TeamSize
+            int memberCount = p.team_members.Count;
+            int teamSizeScore = Math.Min(100, memberCount * 20);
+
+            // 4. GithubLinked & 5. JiraLinked
+            int githubScore = (p.project_integration != null && p.project_integration.github_repo_id.HasValue) ? 100 : 0;
+            int jiraScore = (p.project_integration != null && p.project_integration.jira_project_id.HasValue) ? 100 : 0;
+
+            radarData.Add(new GroupRadarMetricResponse
+            {
+                GroupName = p.name,
+                Commits = commitScore,
+                SrsDone = srsScore,
+                TeamSize = teamSizeScore,
+                GithubLinked = githubScore,
+                JiraLinked = jiraScore
+            });
+        }
+
+        return radarData;
+    }
 }

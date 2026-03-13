@@ -8,7 +8,6 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api/analytics")]
-[Authorize(Roles = "ADMIN")]
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
@@ -19,6 +18,7 @@ public class AnalyticsController : ControllerBase
     }
 
     [HttpGet("integrations")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> GetIntegrationStats()
     {
         var result = await _analyticsService.GetIntegrationStatsAsync();
@@ -26,6 +26,7 @@ public class AnalyticsController : ControllerBase
     }
 
     [HttpGet("activity")]
+    [Authorize(Roles = "ADMIN,LECTURER")]
     public async Task<IActionResult> GetActivityChart()
     {
         var result = await _analyticsService.GetActivityChartAsync();
@@ -33,6 +34,7 @@ public class AnalyticsController : ControllerBase
     }
 
     [HttpGet("teams")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> GetTeamAnalytics()
     {
         var result = await _analyticsService.GetTeamAnalyticsAsync();
@@ -40,9 +42,18 @@ public class AnalyticsController : ControllerBase
     }
 
     [HttpGet("audit-logs/recent")]
+    [Authorize(Roles = "ADMIN,LECTURER")]
     public async Task<IActionResult> GetRecentAuditLogs([FromQuery] int count = 10)
     {
         var result = await _analyticsService.GetRecentAuditLogsAsync(count);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("courses/{courseId}/radar")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    public async Task<IActionResult> GetGroupRadarMetrics([FromRoute] long courseId)
+    {
+        var result = await _analyticsService.GetGroupRadarMetricsAsync(courseId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 }
