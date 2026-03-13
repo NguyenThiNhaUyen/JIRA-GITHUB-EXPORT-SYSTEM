@@ -71,4 +71,18 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetLecturerCoursesStatsAsync(lecturerId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    [HttpGet("notifications")]
+    [Authorize]
+    public async Task<IActionResult> GetNotifications()
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long userId))
+        {
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+        }
+
+        var result = await _analyticsService.GetRecentNotificationsAsync(userId);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }

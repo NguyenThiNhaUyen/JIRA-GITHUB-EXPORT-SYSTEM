@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -14,11 +16,16 @@ public class AnalyticsService : IAnalyticsService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AnalyticsService> _logger;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
 
-    public AnalyticsService(IUnitOfWork unitOfWork, ILogger<AnalyticsService> logger)
+    public AnalyticsService(
+        IUnitOfWork unitOfWork, 
+        ILogger<AnalyticsService> logger,
+        Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task<IntegrationStatsResponse> GetIntegrationStatsAsync()
@@ -278,17 +285,21 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>> GetLecturerCoursesStatsAsync(long lecturerId)
     {
-        // 1. Fetch all courses for the lecturer with basic project info
-        var courses = await _unitOfWork.Courses.Query()
+        // 1. Fetch lecturer with courses directly to ensure n-n mapping is resolved correctly
+        var lecturerWithCourses = await _unitOfWork.Lecturers.Query()
             .AsNoTracking()
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users) // Thêm Include
-            .Include(c => c.projects)
-                .ThenInclude(p => p.project_integration)
-            .Include(c => c.course_enrollments)
-            .Where(c => c.lecturer_users.Any(lu => lu.user_id == lecturerId))
-            .ToListAsync();
+            .Include(l => l.courses)
+                .ThenInclude(c => c.subject)
+            .Include(l => l.courses)
+                .ThenInclude(c => c.semester)
+            .Include(l => l.courses)
+                .ThenInclude(c => c.projects)
+                    .ThenInclude(p => p.project_integration)
+            .Include(l => l.courses)
+                .ThenInclude(c => c.course_enrollments)
+            .FirstOrDefaultAsync(l => l.user_id == lecturerId);
+
+        var courses = lecturerWithCourses?.courses.ToList() ?? new List<course>();
 
         if (!courses.Any()) 
             return new List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>();
@@ -364,5 +375,68 @@ public class AnalyticsService : IAnalyticsService
         }
 
         return result;
+    }
+
+    public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>> GetRecentNotificationsAsync(long userId)
+    {
+        var notifications = new List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>();
+
+        // 1. Get pending invitations for this student (if user is student)
+        var invitations = await _unitOfWork.TeamInvitations.Query()
+            .AsNoTracking()
+            .Include(i => i.project)
+            .Include(i => i.invited_by_user)
+            .Where(i => i.invited_student_user_id == userId && i.status == "PENDING")
+            .OrderByDescending(i => i.created_at)
+            .Take(5)
+            .ToListAsync();
+
+        foreach (var inv in invitations)
+        {
+            notifications.Add(new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
+            {
+                Id = $"INV_{inv.id}",
+                Type = "INVITATION",
+                Message = $"Bạn nhận được lời mời tham gia dự án {inv.project?.name} từ {inv.invited_by_user?.full_name}",
+                Timestamp = inv.created_at,
+                IsRead = false,
+                Metadata = new Dictionary<string, object> { { "projectId", inv.project_id }, { "invitationId", inv.id } }
+            });
+        }
+
+        // 2. Get recent audit logs related to user's activity or courses
+        // For simplicity, we get most recent relevant logs
+        var auditLogs = await _unitOfWork.AuditLogs.Query()
+            .AsNoTracking()
+            .Where(a => a.performed_by_user_id == userId || a.entity_type == "COURSE")
+            .OrderByDescending(a => a.timestamp)
+            .Take(10)
+            .ToListAsync();
+
+        foreach (var log in auditLogs)
+        {
+            notifications.Add(new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
+            {
+                Id = $"AUDIT_{log.id}",
+                Type = "SYSTEM",
+                Message = GetFriendlyMessage(log),
+                Timestamp = log.timestamp,
+                IsRead = true,
+                Metadata = new Dictionary<string, object> { { "entityId", log.entity_id }, { "entityType", log.entity_type } }
+            });
+        }
+
+        return notifications.OrderByDescending(n => n.Timestamp).Take(15).ToList();
+    }
+
+    private string GetFriendlyMessage(audit_log log)
+    {
+        return log.action switch
+        {
+            "CREATE_PROJECT" => $"Dự án mới đã được tạo trong lớp của bạn (ID: {log.entity_id})",
+            "ENROLL_STUDENT" => "Bạn đã được ghi danh vào một lớp học mới",
+            "LINK_GITHUB" => $"Dự án {log.entity_id} đã kết nối GitHub thành công",
+            _ => $"{log.entity_type}: {log.action}"
+        };
     }
 }

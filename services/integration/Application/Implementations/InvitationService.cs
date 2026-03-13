@@ -7,6 +7,7 @@ using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -14,11 +15,16 @@ public class InvitationService : IInvitationService
 {
     private readonly JiraGithubToolDbContext _context;
     private readonly ILogger<InvitationService> _logger;
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
 
-    public InvitationService(JiraGithubToolDbContext context, ILogger<InvitationService> logger)
+    public InvitationService(
+        JiraGithubToolDbContext context, 
+        ILogger<InvitationService> logger,
+        Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task<InvitationResponse> SendInvitationAsync(long projectId, long inviterUserId, CreateInvitationRequest request)
@@ -59,6 +65,22 @@ public class InvitationService : IInvitationService
 
         _context.team_invitations.Add(invitation);
         await _context.SaveChangesAsync();
+
+        // Send real-time notification
+        try
+        {
+            await _hubContext.Clients.User(request.StudentUserId.ToString())
+                .SendAsync("ReceiveNotification", new 
+                { 
+                    type = "INVITATION", 
+                    message = $"Bạn đã nhận được lời mời tham gia dự án {project.name}",
+                    projectId = projectId
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send SignalR notification for invitation {InvitationId}", invitation.id);
+        }
 
         _logger.LogInformation("User {InviterId} sent an invitation to student {StudentId} for project {ProjectId}", inviterUserId, request.StudentUserId, projectId);
 
