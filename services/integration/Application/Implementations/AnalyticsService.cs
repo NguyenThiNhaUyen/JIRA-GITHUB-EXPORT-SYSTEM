@@ -351,10 +351,9 @@ public class AnalyticsService : IAnalyticsService
             }).ToList();
 
             // Alerts logic (Reusing "Missing Repo" and "No Jira" logic as alerts)
-            int alertsCount = course.projects.Count(p => 
-                p.project_integration == null || 
-                !p.project_integration.github_repo_id.HasValue || 
-                !p.project_integration.jira_project_id.HasValue);
+            int alertsCount = (course.projects ?? new List<project>()).Count(p => 
+                p.project_integration?.github_repo_id.HasValue != true || 
+                p.project_integration?.jira_project_id.HasValue != true);
 
             result.Add(new JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse
             {

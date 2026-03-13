@@ -272,11 +272,14 @@ using Microsoft.OpenApi.Models;
                 });
             }
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseHttpsRedirection();
-            }
+            // if (!app.Environment.IsDevelopment())
+            // {
+            //     app.UseHttpsRedirection();
+            // }
 
+            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
             app.UseStaticFiles();
 
             // CORS

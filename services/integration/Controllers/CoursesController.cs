@@ -169,7 +169,7 @@ public class CoursesController : ControllerBase
     public async Task<IActionResult> RemoveLecturer(long id, long lecturerId)
     {
         await _courseService.RemoveLecturerAsync(id, lecturerId);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Lecturer removed from course"));
+        return Ok(ApiResponse<object>.SuccessResponse(new { }, "Lecturer removed from course"));
     }
 
     /// <summary>
@@ -181,6 +181,6 @@ public class CoursesController : ControllerBase
     public async Task<IActionResult> RemoveEnrollment(long id, long studentId)
     {
         await _courseService.RemoveStudentAsync(id, studentId);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Student removed from course"));
+        return Ok(ApiResponse<object>.SuccessResponse(new { }, "Student removed from course"));
     }
 }
