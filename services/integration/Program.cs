@@ -38,8 +38,14 @@ using Microsoft.OpenApi.Models;
             // ============================================
 
             // JWT Settings
-            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            builder.Services.Configure<JwtSettings>(jwtSection);
+            var jwtSettings = jwtSection.Get<JwtSettings>();
+
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
+            }
 
             // ============================================
             // DATABASE
@@ -143,6 +149,8 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IAlertService, AlertService>();
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
@@ -165,12 +173,20 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();
             
-            // Redis Configuration
+            // Redis Configuration (Non-blocking Connect)
             var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
             
-            // Register IConnectionMultiplexer for distributed locks (e.g., SyncWorker)
-            var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
-            builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            try 
+            {
+                var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+                builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
+                // We still register a dummy or handle null in services if needed, 
+                // but at least the app won't crash on startup.
+            }
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
@@ -274,15 +290,26 @@ using Microsoft.OpenApi.Models;
             app.MapControllers();
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
+            // Health Check Endpoint for Render/Deployments
+            app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
+            app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
+
             // ============================================
-            // DATABASE SEEDING
+            // DATABASE SEEDING (Background)
             // ============================================
-            await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+            _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
+                }
+            });
 
             // ============================================
             // RUN APPLICATION
             // ============================================
-            await app.RunAsync();
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            await app.RunAsync($"http://0.0.0.0:{port}");
 
 
 

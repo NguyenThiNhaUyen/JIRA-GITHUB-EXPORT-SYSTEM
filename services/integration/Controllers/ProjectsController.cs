@@ -175,6 +175,7 @@ public class ProjectsController : ControllerBase
     public async Task<IActionResult> GetIntegration(long projectId)
     {
         var result = await _integrationService.GetIntegrationStatusAsync(projectId);
+        if (result == null) return NotFound(ApiResponse<IntegrationInfo>.ErrorResponse("Integration status not found"));
         return Ok(ApiResponse<IntegrationInfo>.SuccessResponse(result));
     }
 

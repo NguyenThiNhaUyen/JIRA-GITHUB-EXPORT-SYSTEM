@@ -78,6 +78,6 @@ public class SrsController : ControllerBase
     {
         var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         await _srsService.DeleteSrsAsync(id, userId);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "SRS deleted successfully"));
+        return Ok(ApiResponse<object>.SuccessResponse(new { }, "SRS deleted successfully"));
     }
 }
