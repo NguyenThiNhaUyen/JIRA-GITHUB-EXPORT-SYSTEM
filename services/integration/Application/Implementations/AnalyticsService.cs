@@ -21,7 +21,7 @@ public class AnalyticsService : IAnalyticsService
     public AnalyticsService(
         IUnitOfWork unitOfWork, 
         ILogger<AnalyticsService> logger,
-        Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
+        IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;

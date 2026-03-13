@@ -261,21 +261,23 @@ using Microsoft.OpenApi.Models;
             // Global exception handler
             app.UseCustomExceptionHandler();
 
-            // Swagger (Development only)
-            if (app.Environment.IsDevelopment())
+
+           if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-                    c.RoutePrefix = "swagger"; // Swagger at /swagger
-                });
-            }
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+                c.RoutePrefix = "swagger"; // Swagger at /swagger
+            });
+          }
 
-            // if (!app.Environment.IsDevelopment())
-            // {
-            //     app.UseHttpsRedirection();
-            // }
+            // Render/Cloud handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-Render environments.
+            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
+            {
+                app.UseHttpsRedirection();
+            }
 
             // Ensure wwwroot exists to avoid StaticFileMiddleware warning
             var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
@@ -311,8 +313,17 @@ using Microsoft.OpenApi.Models;
             // ============================================
             // RUN APPLICATION
             // ============================================
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-            await app.RunAsync($"http://0.0.0.0:{port}");
+            var envPort = Environment.GetEnvironmentVariable("PORT");
+            if (!string.IsNullOrEmpty(envPort))
+            {
+                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
+                await app.RunAsync($"http://0.0.0.0:{envPort}");
+            }
+            else
+            {
+                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                await app.RunAsync();
+            }
 
 
 
