@@ -72,7 +72,7 @@ public class CoursesController : ControllerBase
     /// Create a new course (Admin only)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<CourseDetailResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateCourseRequest request)
     {
@@ -85,7 +85,7 @@ public class CoursesController : ControllerBase
     /// Update a course (Admin only)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<CourseDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateCourseRequest request)
     {
@@ -97,7 +97,7 @@ public class CoursesController : ControllerBase
     /// Delete a course (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {
@@ -109,7 +109,7 @@ public class CoursesController : ControllerBase
     /// Assign lecturer to course (Admin only)
     /// </summary>
     [HttpPost("{id}/lecturers")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AssignLecturer(long id, [FromBody] AssignLecturerRequest request)
     {
@@ -164,7 +164,7 @@ public class CoursesController : ControllerBase
     /// Remove a lecturer from a course (Admin only)
     /// </summary>
     [HttpDelete("{id}/lecturers/{lecturerId}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveLecturer(long id, long lecturerId)
     {
@@ -176,7 +176,7 @@ public class CoursesController : ControllerBase
     /// Remove a student enrollment from a course (Admin only)
     /// </summary>
     [HttpDelete("{id}/enrollments/{studentId}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveEnrollment(long id, long studentId)
     {

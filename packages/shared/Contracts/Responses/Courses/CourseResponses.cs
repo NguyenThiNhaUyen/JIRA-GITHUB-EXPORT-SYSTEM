@@ -159,6 +159,7 @@ public class LecturerCourseStatResponse
     public int AlertsCount { get; set; }
     public bool Archived { get; set; }
     public DateTime? LastCommit { get; set; }
+    public List<EnrollmentInfo> Enrollments { get; set; } = new();
     public List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat> CommitTrend { get; set; } = new();
 }
 

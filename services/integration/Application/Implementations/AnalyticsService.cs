@@ -9,6 +9,7 @@ using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
+using JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -297,6 +298,8 @@ public class AnalyticsService : IAnalyticsService
                     .ThenInclude(p => p.project_integration)
             .Include(l => l.courses)
                 .ThenInclude(c => c.course_enrollments)
+                    .ThenInclude(e => e.student_user)
+                        .ThenInclude(s => s.user)
             .FirstOrDefaultAsync(l => l.user_id == lecturerId);
 
         var courses = lecturerWithCourses?.courses.ToList() ?? new List<course>();
@@ -369,6 +372,14 @@ public class AnalyticsService : IAnalyticsService
                 AlertsCount = alertsCount,
                 Archived = course.status == "CLOSED",
                 LastCommit = courseCommits.Any() ? courseCommits.Max(c => c.committed_at) : null,
+                Enrollments = (course.course_enrollments ?? new List<course_enrollment>())
+                    .Where(e => e.status == "ACTIVE")
+                    .Select(e => new EnrollmentInfo
+                    {
+                        UserId = e.student_user_id,
+                        FullName = e.student_user?.user?.full_name ?? "N/A",
+                        StudentCode = e.student_user?.student_code ?? "N/A"
+                    }).ToList(),
                 CommitTrend = completeChartData
             });
         }
