@@ -295,14 +295,21 @@ using Microsoft.OpenApi.Models;
             app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
 
             // ============================================
-            // DATABASE SEEDING
+            // DATABASE SEEDING (Background)
             // ============================================
-            await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+            _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
+                }
+            });
 
             // ============================================
             // RUN APPLICATION
             // ============================================
-            await app.RunAsync();
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            await app.RunAsync($"http://0.0.0.0:{port}");
 
 
 

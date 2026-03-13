@@ -328,7 +328,7 @@ public class AnalyticsService : IAnalyticsService
 
         foreach (var course in courses)
         {
-            var courseRepoIds = course.projects
+            var courseRepoIds = (course.projects ?? new List<project>())
                 .Where(p => p.project_integration != null && p.project_integration.github_repo_id.HasValue)
                 .Select(p => p.project_integration!.github_repo_id!.Value)
                 .ToList();

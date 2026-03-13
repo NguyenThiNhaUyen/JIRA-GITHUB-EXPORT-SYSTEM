@@ -18,7 +18,8 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+            query = query.Where(c => (c.course_name != null && c.course_name.ToLower().Contains(lowerKeyword)) || 
+                                     (c.course_code != null && c.course_code.ToLower().Contains(lowerKeyword)));
         }
 
         if (sortDir?.ToLower() == "desc")
@@ -47,7 +48,8 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+            query = query.Where(c => (c.course_name != null && c.course_name.ToLower().Contains(lowerKeyword)) || 
+                                     (c.course_code != null && c.course_code.ToLower().Contains(lowerKeyword)));
         }
 
         if (sortDir?.ToLower() == "desc")
@@ -78,7 +80,8 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+            query = query.Where(c => (c.course_name != null && c.course_name.ToLower().Contains(lowerKeyword)) || 
+                                     (c.course_code != null && c.course_code.ToLower().Contains(lowerKeyword)));
         }
 
         if (sortDir?.ToLower() == "desc")

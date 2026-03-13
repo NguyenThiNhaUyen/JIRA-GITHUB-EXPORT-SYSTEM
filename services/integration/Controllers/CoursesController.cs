@@ -135,6 +135,7 @@ public class CoursesController : ControllerBase
         {
             _logger.LogInformation("[Import] Starting import for course {CourseId}, file: {FileName}, size: {Size}",
                 id, file?.FileName, file?.Length);
+            if (file == null) return BadRequest(ApiResponse<EnrollmentResult>.ErrorResponse("No file uploaded"));
             var result = await _courseService.ImportEnrollmentsFromExcelAsync(id, file);
             _logger.LogInformation("[Import] Success: {Enrolled} enrolled", result.EnrolledCount);
             return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Excel import completed"));
