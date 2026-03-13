@@ -7,6 +7,9 @@ using JiraGithubExport.Shared.Contracts.Responses.Courses;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
+using JiraGithubExport.IntegrationService.Hubs;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -16,17 +19,20 @@ public class CourseService : ICourseService
     private readonly IMapper _mapper;
     private readonly ILogger<CourseService> _logger;
     private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
     public CourseService(
         IUnitOfWork unitOfWork, 
         IMapper mapper, 
         ILogger<CourseService> logger,
-        JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher)
+        JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher,
+        IHubContext<NotificationHub> hubContext)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _passwordHasher = passwordHasher;
+        _hubContext = hubContext;
     }
 
 
@@ -203,7 +209,35 @@ public class CourseService : ICourseService
         }
 
         course.lecturer_users.Add(lecturer);
+        
+        // Add Audit Log for notification bell
+        var auditLog = new audit_log
+        {
+            performed_by_user_id = lecturerUserId, // Technically performed by Admin, but we associate with Lecturer to show in their bell
+            entity_type = "COURSE",
+            entity_id = courseId,
+            action = "ASSIGN_LECTURER",
+            timestamp = DateTime.UtcNow
+        };
+        _unitOfWork.AuditLogs.Add(auditLog);
+        
         await _unitOfWork.SaveChangesAsync();
+
+        // Send Real-time notification
+        try
+        {
+            await _hubContext.Clients.User(lecturerUserId.ToString())
+                .SendAsync("ReceiveNotification", new
+                {
+                    type = "SYSTEM",
+                    message = $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
+                    timestamp = DateTime.UtcNow
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send real-time notification to lecturer {LecturerId}", lecturerUserId);
+        }
 
         _logger.LogInformation("Lecturer {LecturerId} assigned to course {CourseId}", lecturerUserId, courseId);
     }

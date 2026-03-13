@@ -436,6 +436,7 @@ public class AnalyticsService : IAnalyticsService
             "CREATE_PROJECT" => $"Dự án mới đã được tạo trong lớp của bạn (ID: {log.entity_id})",
             "ENROLL_STUDENT" => "Bạn đã được ghi danh vào một lớp học mới",
             "LINK_GITHUB" => $"Dự án {log.entity_id} đã kết nối GitHub thành công",
+            "ASSIGN_LECTURER" => "Bạn đã được phân công vào một lớp học mới",
             _ => $"{log.entity_type}: {log.action}"
         };
     }
