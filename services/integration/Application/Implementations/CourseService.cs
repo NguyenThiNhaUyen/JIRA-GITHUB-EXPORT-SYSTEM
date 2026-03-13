@@ -236,9 +236,16 @@ public class CourseService : ICourseService
             await _hubContext.Clients.User(lecturerUserId.ToString())
                 .SendAsync("ReceiveNotification", new
                 {
+                    id = $"AUDIT_{auditLog.id}",
                     type = "SYSTEM",
                     message = $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTime.UtcNow,
+                    isRead = false,
+                    metadata = new Dictionary<string, object> 
+                    { 
+                        { "entityId", courseId }, 
+                        { "entityType", "COURSE" } 
+                    }
                 });
         }
         catch (Exception ex)
