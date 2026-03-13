@@ -56,4 +56,19 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetGroupRadarMetricsAsync(courseId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    [HttpGet("lecturer/courses")]
+    [Authorize(Roles = "LECTURER")]
+    public async Task<IActionResult> GetLecturerCoursesStats()
+    {
+        // Require Claims/HttpContext extraction
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long lecturerId))
+        {
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+        }
+
+        var result = await _analyticsService.GetLecturerCoursesStatsAsync(lecturerId);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }

@@ -275,4 +275,94 @@ public class AnalyticsService : IAnalyticsService
 
         return radarData;
     }
+
+    public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>> GetLecturerCoursesStatsAsync(long lecturerId)
+    {
+        // 1. Fetch all courses for the lecturer with basic project info
+        var courses = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users) // Thêm Include
+            .Include(c => c.projects)
+                .ThenInclude(p => p.project_integration)
+            .Include(c => c.course_enrollments)
+            .Where(c => c.lecturer_users.Any(lu => lu.user_id == lecturerId))
+            .ToListAsync();
+
+        if (!courses.Any()) 
+            return new List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>();
+
+        var result = new List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>();
+        
+        // Prepare global commit query to avoid querying per course
+        var allCourseProjectIds = courses.SelectMany(c => c.projects).Select(p => p.id).ToList();
+        
+        // Need to get repos for commits logic
+        var allRepoIds = courses.SelectMany(c => c.projects)
+            .Where(p => p.project_integration != null && p.project_integration.github_repo_id.HasValue)
+            .Select(p => p.project_integration!.github_repo_id!.Value)
+            .ToList();
+
+        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7).Date;
+        
+        // Fetch recent commits (7 days) for timeline and LastCommit
+        var recentCommits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => allRepoIds.Contains(c.repo_id) && c.committed_at.HasValue && c.committed_at.Value.Date >= sevenDaysAgo)
+            .Select(c => new { c.repo_id, c.committed_at })
+            .ToListAsync();
+
+        var allDays = new List<string> { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+
+        foreach (var course in courses)
+        {
+            var courseRepoIds = course.projects
+                .Where(p => p.project_integration != null && p.project_integration.github_repo_id.HasValue)
+                .Select(p => p.project_integration!.github_repo_id!.Value)
+                .ToList();
+
+            var courseCommits = recentCommits.Where(c => courseRepoIds.Contains(c.repo_id)).ToList();
+            
+            // Generate 7-day sparkline
+            var chartData = courseCommits
+                .GroupBy(c => c.committed_at!.Value.Date.DayOfWeek)
+                .Select(g => new DailyCommitStat
+                {
+                    Day = g.Key.ToString().Substring(0, 3),
+                    Commits = g.Count()
+                }).ToList();
+
+            var completeChartData = allDays.Select(day => new DailyCommitStat
+            {
+                Day = day,
+                Commits = chartData.FirstOrDefault(c => c.Day == day)?.Commits ?? 0
+            }).ToList();
+
+            // Alerts logic (Reusing "Missing Repo" and "No Jira" logic as alerts)
+            int alertsCount = course.projects.Count(p => 
+                p.project_integration == null || 
+                !p.project_integration.github_repo_id.HasValue || 
+                !p.project_integration.jira_project_id.HasValue);
+
+            result.Add(new JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse
+            {
+                Id = course.id,
+                Code = course.course_code,
+                Name = course.subject?.subject_name ?? "Unknown",
+                SubjectCode = course.subject?.subject_code ?? "Unknown",
+                Semester = course.semester?.name ?? "Unknown",
+                CurrentStudents = course.course_enrollments?.Count ?? 0,
+                GroupCount = course.projects?.Count ?? 0,
+                ActiveTeams = course.projects?.Count(p => p.project_integration?.github_repo_id != null) ?? 0,
+                JiraConnected = course.projects?.Count(p => p.project_integration?.jira_project_id != null) ?? 0,
+                AlertsCount = alertsCount,
+                Archived = course.status == "CLOSED",
+                LastCommit = courseCommits.Any() ? courseCommits.Max(c => c.committed_at) : null,
+                CommitTrend = completeChartData
+            });
+        }
+
+        return result;
+    }
 }

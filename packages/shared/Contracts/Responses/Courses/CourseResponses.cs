@@ -57,6 +57,8 @@ public class SubjectInfo
     
     [JsonPropertyName("credits")]
     public int Credits { get; set; }
+
+
     
     [JsonPropertyName("max_students")]
     public int MaxStudents { get; set; }
@@ -141,6 +143,23 @@ public class EnrollmentFailure
 {
     public long StudentUserId { get; set; }
     public string Reason { get; set; } = null!;
+}
+
+public class LecturerCourseStatResponse
+{
+    public long Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string SubjectCode { get; set; } = string.Empty;
+    public string Semester { get; set; } = string.Empty;
+    public int CurrentStudents { get; set; }
+    public int GroupCount { get; set; }
+    public int ActiveTeams { get; set; }
+    public int JiraConnected { get; set; }
+    public int AlertsCount { get; set; }
+    public bool Archived { get; set; }
+    public DateTime? LastCommit { get; set; }
+    public List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat> CommitTrend { get; set; } = new();
 }
 
 

@@ -11,4 +11,5 @@ public interface IAnalyticsService
     Task<TeamAnalyticsResponse> GetTeamAnalyticsAsync();
     Task<List<AuditLogResponse>> GetRecentAuditLogsAsync(int count = 10);
     Task<List<GroupRadarMetricResponse>> GetGroupRadarMetricsAsync(long courseId);
+    Task<List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>> GetLecturerCoursesStatsAsync(long lecturerId);
 }
