@@ -72,9 +72,16 @@ public class InvitationService : IInvitationService
             await _hubContext.Clients.User(request.StudentUserId.ToString())
                 .SendAsync("ReceiveNotification", new 
                 { 
+                    id = $"INV_{invitation.id}",
                     type = "INVITATION", 
                     message = $"Bạn đã nhận được lời mời tham gia dự án {project.name}",
-                    projectId = projectId
+                    timestamp = DateTime.UtcNow,
+                    isRead = false,
+                    metadata = new Dictionary<string, object> 
+                    { 
+                        { "projectId", projectId }, 
+                        { "invitationId", invitation.id } 
+                    }
                 });
         }
         catch (Exception ex)

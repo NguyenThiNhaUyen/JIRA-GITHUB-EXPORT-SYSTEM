@@ -116,7 +116,14 @@ public class CourseService : ICourseService
 
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        var course = await _unitOfWork.Courses.Query()
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+            .Include(c => c.projects)
+            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+            .FirstOrDefaultAsync(c => c.id == courseId);
+
         if (course == null)
         {
             throw new NotFoundException("Course not found");
