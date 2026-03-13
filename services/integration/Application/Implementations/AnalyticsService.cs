@@ -68,7 +68,7 @@ public class AnalyticsService : IAnalyticsService
         // 1. Heatmap (90 days)
         var heatmapData = commits
             .Where(c => c.committed_at.HasValue)
-            .GroupBy(c => c.committed_at.Value.Date)
+            .GroupBy(c => c.committed_at!.Value.Date)
             .Select(g => new HeatmapStat
             {
                 Date = g.Key.ToString("yyyy-MM-dd"),
@@ -82,7 +82,7 @@ public class AnalyticsService : IAnalyticsService
         var recentCommits = commits.Where(c => c.committed_at.HasValue && c.committed_at.Value.Date >= sevenDaysAgo).ToList();
         
         var chartData = recentCommits
-            .GroupBy(c => c.committed_at.Value.Date.DayOfWeek)
+            .GroupBy(c => c.committed_at!.Value.Date.DayOfWeek)
             .Select(g => new DailyCommitStat
             {
                 Day = g.Key.ToString().Substring(0, 3), // Mon, Tue...
@@ -123,7 +123,7 @@ public class AnalyticsService : IAnalyticsService
             .ToListAsync();
 
         // Fetch commit counts per repo to calculate top active teams
-        var repoIds = projects.Where(p => p.HasRepo).Select(p => p.RepoId.Value).ToList();
+        var repoIds = projects.Where(p => p.HasRepo && p.RepoId.HasValue).Select(p => p.RepoId!.Value).ToList();
         
         // Group commits by repo_id
         var repoCommitCounts = await _unitOfWork.GitHubCommits.Query()
