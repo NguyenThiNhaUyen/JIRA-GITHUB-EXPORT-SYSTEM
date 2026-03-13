@@ -211,10 +211,13 @@ public class InvitationService : IInvitationService
         return new InvitationResponse
         {
             Id = i.id,
-            ProjectId = i.project_id,
-            ProjectName = i.project?.name ?? "",
+            GroupId = i.project_id,
+            GroupName = i.project?.name ?? "",
+            CourseId = i.project?.course_id ?? 0,
+            CourseName = i.project?.course?.course_name ?? "N/A",
             InvitedByName = i.invited_by_user?.full_name ?? "",
-            InvitedStudentUserId = i.invited_student_user_id,
+            InvitedByStudentId = i.invited_by_user_id,
+            InvitedStudentId = i.invited_student_user_id,
             Status = i.status,
             Message = i.message,
             CreatedAt = i.created_at

@@ -164,6 +164,7 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
 
 
             // Background Services
@@ -182,7 +183,12 @@ using Microsoft.OpenApi.Models;
             // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
             // ============================================
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();

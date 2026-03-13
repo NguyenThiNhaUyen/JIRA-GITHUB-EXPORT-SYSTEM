@@ -6,7 +6,13 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface IAnalyticsService
 {
+    Task<AdminStatsResponse> GetAdminStatsAsync();
     Task<IntegrationStatsResponse> GetIntegrationStatsAsync();
+    Task<List<DailyCommitStat>> GetCommitTrendsAsync(int days = 7);
+    Task<List<HeatmapStat>> GetHeatmapAsync(int days = 90);
+    Task<List<TeamRankingStat>> GetTeamRankingsAsync(int limit = 4);
+    Task<List<TeamWarningStat>> GetInactiveTeamsAsync();
+    Task<List<DetailedTeamActivityStat>> GetTeamActivitiesAsync();
     Task<ActivityChartResponse> GetActivityChartAsync();
     Task<TeamAnalyticsResponse> GetTeamAnalyticsAsync();
     Task<List<AuditLogResponse>> GetRecentAuditLogsAsync(int count = 10);

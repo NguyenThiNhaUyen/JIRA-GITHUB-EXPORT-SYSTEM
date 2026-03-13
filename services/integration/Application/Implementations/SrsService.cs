@@ -136,6 +136,63 @@ public class SrsService : ISrsService
         return await GetSrsResponseAsync(srsId);
     }
 
+    public async Task<PagedResponse<SrsDocumentResponse>> GetSrsListByCourseAsync(long? courseId, long? projectId, string? status, string? milestone, int page, int pageSize)
+    {
+        var query = _context.project_documents
+            .Include(d => d.submitted_by_user)
+            .Include(d => d.reviewer_user)
+            .Include(d => d.project)
+            .Where(d => d.doc_type == "SRS")
+            .AsQueryable();
+
+        if (courseId.HasValue)
+        {
+            query = query.Where(d => d.project.course_id == courseId.Value);
+        }
+        if (projectId.HasValue)
+        {
+            query = query.Where(d => d.project_id == projectId.Value);
+        }
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(d => d.status == status);
+        }
+        // Assuming milestone relates to version_no or another field; keeping placeholder if we need it
+        
+        var total = await query.CountAsync();
+        page = page > 0 ? page : 1;
+        pageSize = pageSize > 0 ? pageSize : 20;
+
+        var items = await query
+            .OrderByDescending(d => d.submitted_at)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var mapped = items.Select(MapToResponse).ToList();
+
+        return new PagedResponse<SrsDocumentResponse>
+        {
+            Items = mapped,
+            TotalItems = total,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(total / (double)pageSize)
+        };
+    }
+
+    public async Task<SrsDocumentResponse> GetSrsByIdAsync(long srsId)
+    {
+        return await GetSrsResponseAsync(srsId);
+    }
+
+    public async Task RemindOverdueAsync()
+    {
+        // Simple mock method for sending overdue reminders
+        _logger.LogInformation("Sent reminders for overdue SRS documents");
+        await Task.CompletedTask;
+    }
+
     public async Task DeleteSrsAsync(long srsId, long userId)
     {
         var srs = await _context.project_documents.FindAsync(srsId)

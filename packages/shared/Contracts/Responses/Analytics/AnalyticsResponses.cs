@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
 
+public class AdminStatsResponse
+{
+    public int Semesters { get; set; }
+    public int Subjects { get; set; }
+    public int Courses { get; set; }
+    public int Lecturers { get; set; }
+    public int Students { get; set; }
+    public int Projects { get; set; }
+}
+
 public class IntegrationStatsResponse
 {
     public int RepoConnected { get; set; }

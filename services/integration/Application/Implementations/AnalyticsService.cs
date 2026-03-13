@@ -29,6 +29,86 @@ public class AnalyticsService : IAnalyticsService
         _hubContext = hubContext;
     }
 
+    public async Task<AdminStatsResponse> GetAdminStatsAsync()
+    {
+        var semestersCount = await _unitOfWork.Semesters.Query().CountAsync();
+        var subjectsCount = await _unitOfWork.Subjects.Query().CountAsync();
+        var coursesCount = await _unitOfWork.Courses.Query().CountAsync();
+        var projectsCount = await _unitOfWork.Projects.Query().CountAsync();
+
+        var lecturerRoleUsers = await _unitOfWork.Users.Query()
+            .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+            .CountAsync();
+        var studentRoleUsers = await _unitOfWork.Users.Query()
+            .Where(u => u.roles.Any(r => r.role_name == "STUDENT"))
+            .CountAsync();
+
+        return new AdminStatsResponse
+        {
+            Semesters = semestersCount,
+            Subjects = subjectsCount,
+            Courses = coursesCount,
+            Lecturers = lecturerRoleUsers,
+            Students = studentRoleUsers,
+            Projects = projectsCount
+        };
+    }
+
+    public async Task<List<DailyCommitStat>> GetCommitTrendsAsync(int days = 7)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => c.committed_at >= since)
+            .Select(c => new { c.committed_at })
+            .ToListAsync();
+
+        var allDays = Enumerable.Range(0, days)
+            .Select(i => DateTime.UtcNow.AddDays(-days + i + 1).Date)
+            .ToList();
+
+        return allDays.Select(d => new DailyCommitStat
+        {
+            Day = d.ToString("ddd"),
+            Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
+        }).ToList();
+    }
+
+    public async Task<List<HeatmapStat>> GetHeatmapAsync(int days = 90)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => c.committed_at >= since)
+            .Select(c => new { c.committed_at })
+            .ToListAsync();
+
+        return commits
+            .Where(c => c.committed_at.HasValue)
+            .GroupBy(c => c.committed_at!.Value.Date)
+            .Select(g => new HeatmapStat { Date = g.Key.ToString("yyyy-MM-dd"), Count = g.Count() })
+            .OrderBy(h => h.Date)
+            .ToList();
+    }
+
+    public async Task<List<TeamRankingStat>> GetTeamRankingsAsync(int limit = 4)
+    {
+        var analytics = await GetTeamAnalyticsAsync();
+        return analytics.TopRanking.Take(limit).ToList();
+    }
+
+    public async Task<List<TeamWarningStat>> GetInactiveTeamsAsync()
+    {
+        var analytics = await GetTeamAnalyticsAsync();
+        return analytics.InactiveWarning;
+    }
+
+    public async Task<List<DetailedTeamActivityStat>> GetTeamActivitiesAsync()
+    {
+        var analytics = await GetTeamAnalyticsAsync();
+        return analytics.DetailedActivity;
+    }
+
     public async Task<IntegrationStatsResponse> GetIntegrationStatsAsync()
     {
         var totalProjectsTask = _unitOfWork.Projects.Query().CountAsync();

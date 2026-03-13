@@ -27,6 +27,9 @@ public interface ICourseService
 
     // Pending Integrations
     Task<object> GetPendingIntegrationsAsync(long courseId);
+
+    // Students list
+    Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize);
 }
 
 

@@ -11,4 +11,6 @@ public interface IProjectCoreService
     Task DeleteProjectAsync(long projectId);
     Task<ProjectDetailResponse> GetProjectByIdAsync(long projectId);
     Task<PagedResponse<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId, PagedRequest request);
+    Task<List<CommitResponse>> GetProjectCommitsAsync(long projectId, int page = 1, int pageSize = 50);
+    Task<object> SyncProjectCommitsAsync(long projectId);
 }

@@ -8,7 +8,10 @@ public interface ISrsService
 {
     Task<SrsDocumentResponse> UploadSrsAsync(long projectId, long uploaderUserId, UploadSrsRequest request);
     Task<PagedResponse<SrsDocumentResponse>> GetSrsListAsync(long projectId, PagedRequest request);
+    Task<PagedResponse<SrsDocumentResponse>> GetSrsListByCourseAsync(long? courseId, long? projectId, string? status, string? milestone, int page, int pageSize);
+    Task<SrsDocumentResponse> GetSrsByIdAsync(long srsId);
     Task<SrsDocumentResponse> ReviewSrsStatusAsync(long srsId, long reviewerUserId, ReviewSrsStatusRequest request);
     Task<SrsDocumentResponse> ProvideSrsFeedbackAsync(long srsId, long reviewerUserId, ReviewSrsFeedbackRequest request);
     Task DeleteSrsAsync(long srsId, long userId);
+    Task RemindOverdueAsync();
 }

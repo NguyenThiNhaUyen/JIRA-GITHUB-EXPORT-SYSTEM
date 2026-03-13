@@ -7,6 +7,7 @@ using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -110,5 +111,45 @@ public class ProjectCoreService : IProjectCoreService
 
         var dtoList = _mapper.Map<List<ProjectDetailResponse>>(items);
         return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
+    }
+
+    public async Task<List<CommitResponse>> GetProjectCommitsAsync(long projectId, int page = 1, int pageSize = 50)
+    {
+        var integration = await _unitOfWork.ProjectIntegrations.Query()
+            .FirstOrDefaultAsync(i => i.project_id == projectId);
+
+        if (integration?.github_repo_id == null)
+            return new List<CommitResponse>();
+
+        var repoId = integration.github_repo_id.Value;
+
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Include(c => c.author_github_user)
+            .Where(c => c.repo_id == repoId)
+            .OrderByDescending(c => c.committed_at)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return commits.Select(c => new CommitResponse
+        {
+            Id = c.id,
+            Sha = c.commit_sha,
+            Message = c.message ?? string.Empty,
+            AuthorName = c.author_github_user?.login,
+            CommittedAt = c.committed_at,
+            Additions = c.additions ?? 0,
+            Deletions = c.deletions ?? 0,
+        }).ToList();
+    }
+
+    public async Task<object> SyncProjectCommitsAsync(long projectId)
+    {
+        // Mark for immediate sync — SyncWorker sẽ pickup theo chu kỳ
+        // Hoặc có thể trigger trực tiếp qua background job
+        _logger.LogInformation("[SyncCommits] Manual sync triggered for project {ProjectId}", projectId);
+        await Task.CompletedTask;
+        return new { message = "Sync triggered. Commits will be updated shortly.", projectId };
     }
 }

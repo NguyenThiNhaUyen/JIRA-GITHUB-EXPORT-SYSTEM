@@ -1,36 +1,37 @@
-using System.Text.Json.Serialization;
-
 namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class SrsDocumentResponse
 {
-    [JsonPropertyName("id")]
     public long Id { get; set; }
-
-    [JsonPropertyName("project_id")]
     public long ProjectId { get; set; }
-
-    [JsonPropertyName("version_no")]
+    public string? ProjectName { get; set; }
     public int VersionNo { get; set; }
-
-    [JsonPropertyName("status")]
+    public string Version => $"v{VersionNo}.0";
     public string Status { get; set; } = null!;
-
-    [JsonPropertyName("file_url")]
+    public string? Milestone { get; set; }
     public string FileUrl { get; set; } = null!;
-
-    [JsonPropertyName("submitted_by_name")]
     public string? SubmittedByName { get; set; }
-
-    [JsonPropertyName("submitted_at")]
     public DateTime SubmittedAt { get; set; }
-
-    [JsonPropertyName("reviewer_name")]
+    public DateTime? Deadline { get; set; }
     public string? ReviewerName { get; set; }
-
-    [JsonPropertyName("reviewed_at")]
     public DateTime? ReviewedAt { get; set; }
-
-    [JsonPropertyName("feedback")]
     public string? Feedback { get; set; }
+    public double? Score { get; set; }
+}
+
+public class SrsListResponse
+{
+    public List<SrsDocumentResponse> Items { get; set; } = new();
+    public int TotalCount { get; set; }
+    public SrsSummary Summary { get; set; } = new();
+}
+
+public class SrsSummary
+{
+    public int Total { get; set; }
+    public int Submitted { get; set; }
+    public int UnderReview { get; set; }
+    public int NeedRevision { get; set; }
+    public int Approved { get; set; }
+    public int Overdue { get; set; }
 }

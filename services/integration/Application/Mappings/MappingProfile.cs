@@ -48,7 +48,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.user_id))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.user != null ? src.user.full_name : "N/A"))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer_code))
-            .ForMember(dest => dest.OfficeEmail, opt => opt.MapFrom(src => src.office_email))
             .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.department))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
 
@@ -75,10 +74,10 @@ public class MappingProfile : Profile
         // ============================================
 
         CreateMap<team_member, TeamMemberInfo>()
-            .ForMember(dest => dest.StudentUserId, opt => opt.MapFrom(src => src.student_user_id))
+            .ForMember(dest => dest.StudentId, opt => opt.MapFrom(src => src.student_user_id))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student_user.student_code))
-            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.student_user.user.full_name))
-            .ForMember(dest => dest.TeamRole, opt => opt.MapFrom(src => src.team_role))
+            .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.student_user.user.full_name))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.team_role))
             .ForMember(dest => dest.ParticipationStatus, opt => opt.MapFrom(src => src.participation_status))
             .ForMember(dest => dest.ContributionScore, opt => opt.MapFrom(src => 90)); // Sample score
 
@@ -88,17 +87,20 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.description))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
             .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.course != null ? src.course.course_name : "N/A"))
-            .ForMember(dest => dest.TeamMembers, opt => opt.MapFrom(src => src.team_members.Where(tm => tm.participation_status == "ACTIVE")))
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.team_members.Where(tm => tm.participation_status == "ACTIVE")))
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.github_repo != null ? src.project_integration.github_repo.repo_url : null))
             .ForMember(dest => dest.JiraProjectUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.jira_project != null ? src.project_integration.jira_project.jira_url : null))
-            .ForMember(dest => dest.IntegrationStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"));
+            .ForPath(dest => dest.Integration!.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"));
 
         CreateMap<team_invitation, InvitationResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
-            .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.project_id))
-            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.project.name))
+            .ForMember(dest => dest.GroupId, opt => opt.MapFrom(src => src.project_id))
+            .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.project.name))
+            .ForMember(dest => dest.CourseId, opt => opt.MapFrom(src => src.project.course_id))
+            .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.project.course != null ? src.project.course.course_name : "N/A"))
             .ForMember(dest => dest.InvitedByName, opt => opt.MapFrom(src => src.invited_by_user.full_name))
-            .ForMember(dest => dest.InvitedStudentUserId, opt => opt.MapFrom(src => src.invited_student_user_id))
+            .ForMember(dest => dest.InvitedByStudentId, opt => opt.MapFrom(src => src.invited_by_user_id))
+            .ForMember(dest => dest.InvitedStudentId, opt => opt.MapFrom(src => src.invited_student_user_id))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
             .ForMember(dest => dest.Message, opt => opt.MapFrom(src => src.message))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));

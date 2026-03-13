@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
-[Route("api/analytics")]
+[Route("api/admin")]
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
@@ -17,7 +17,15 @@ public class AnalyticsController : ControllerBase
         _analyticsService = analyticsService;
     }
 
-    [HttpGet("integrations")]
+    [HttpGet("stats")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> GetAdminStats()
+    {
+        var result = await _analyticsService.GetAdminStatsAsync();
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("integration-stats")]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     public async Task<IActionResult> GetIntegrationStats()
     {
@@ -25,27 +33,51 @@ public class AnalyticsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
-    [HttpGet("activity")]
+    [HttpGet("commit-trends")]
     [Authorize(Roles = "ADMIN,LECTURER")]
-    public async Task<IActionResult> GetActivityChart()
+    public async Task<IActionResult> GetCommitTrends([FromQuery] int days = 7)
     {
-        var result = await _analyticsService.GetActivityChartAsync();
+        var result = await _analyticsService.GetCommitTrendsAsync(days);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
-    [HttpGet("teams")]
+    [HttpGet("heatmap")]
+    [Authorize(Roles = "ADMIN,LECTURER")]
+    public async Task<IActionResult> GetHeatmap([FromQuery] int days = 90)
+    {
+        var result = await _analyticsService.GetHeatmapAsync(days);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("team-rankings")]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
-    public async Task<IActionResult> GetTeamAnalytics()
+    public async Task<IActionResult> GetTeamRankings([FromQuery] int limit = 4)
     {
-        var result = await _analyticsService.GetTeamAnalyticsAsync();
+        var result = await _analyticsService.GetTeamRankingsAsync(limit);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
-    [HttpGet("audit-logs/recent")]
-    [Authorize(Roles = "ADMIN,LECTURER")]
-    public async Task<IActionResult> GetRecentAuditLogs([FromQuery] int count = 10)
+    [HttpGet("inactive-teams")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> GetInactiveTeams()
     {
-        var result = await _analyticsService.GetRecentAuditLogsAsync(count);
+        var result = await _analyticsService.GetInactiveTeamsAsync();
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("team-activities")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> GetTeamActivities()
+    {
+        var result = await _analyticsService.GetTeamActivitiesAsync();
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    [HttpGet("activity-log")]
+    [Authorize(Roles = "ADMIN,LECTURER")]
+    public async Task<IActionResult> GetRecentAuditLogs([FromQuery] int limit = 10)
+    {
+        var result = await _analyticsService.GetRecentAuditLogsAsync(limit);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 

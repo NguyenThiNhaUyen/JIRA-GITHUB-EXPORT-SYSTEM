@@ -69,6 +69,17 @@ public class CoursesController : ControllerBase
     }
 
     /// <summary>
+    /// Get course students
+    /// </summary>
+    [HttpGet("{id}/students")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<EnrollmentInfo>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudents(long id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    {
+        var result = await _courseService.GetCourseStudentsAsync(id, page, pageSize);
+        return Ok(ApiResponse<PagedResponse<EnrollmentInfo>>.SuccessResponse(result));
+    }
+
+    /// <summary>
     /// Create a new course (Admin only)
     /// </summary>
     [HttpPost]

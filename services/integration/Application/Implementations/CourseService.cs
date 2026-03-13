@@ -418,6 +418,39 @@ public class CourseService : ICourseService
         return pendingProjects;
     }
 
+    public async Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize)
+    {
+        var query = _unitOfWork.CourseEnrollments.Query()
+            .Include(e => e.student_user).ThenInclude(s => s.user)
+            .Where(e => e.course_id == courseId && e.status == "ACTIVE");
+
+        var total = await query.CountAsync();
+        page = page > 0 ? page : 1;
+        pageSize = pageSize > 0 ? pageSize : 50;
+
+        var items = await query
+            .OrderBy(e => e.student_user.user.full_name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new EnrollmentInfo
+            {
+                UserId = e.student_user_id,
+                FullName = e.student_user.user.full_name,
+                Email = e.student_user.user.email,
+                StudentCode = e.student_user.student_code
+            })
+            .ToListAsync();
+
+        return new PagedResponse<EnrollmentInfo>
+        {
+            Items = items,
+            TotalItems = total,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(total / (double)pageSize)
+        };
+    }
+
     public async Task<EnrollmentResult> ImportEnrollmentsFromExcelAsync(long courseId, Microsoft.AspNetCore.Http.IFormFile file)
     {
         if (file == null || file.Length == 0)
