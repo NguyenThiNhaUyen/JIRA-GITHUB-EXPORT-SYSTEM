@@ -106,7 +106,7 @@ using Microsoft.OpenApi.Models;
                         // If the request for the hub
                         var path = context.HttpContext.Request.Path;
                         if (!string.IsNullOrEmpty(accessToken) &&
-                            (path.StartsWithSegments("/hubs")))
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
                         {
                             // Read the token out of the query string
                             context.Token = accessToken;
@@ -313,7 +313,9 @@ using Microsoft.OpenApi.Models;
 
             // Map controllers & SignalR Hubs
             app.MapControllers();
+            // Mount NotificationHub on both paths to support FE calling /notificationHub
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
 
             // Health Check Endpoint for Render/Deployments
             app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));

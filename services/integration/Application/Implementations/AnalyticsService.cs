@@ -471,22 +471,40 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>> GetRecentNotificationsAsync(long userId)
     {
-        var notifications = await _unitOfWork.Notifications.Query()
-            .AsNoTracking()
-            .Where(n => n.recipient_user_id == userId)
-            .OrderByDescending(n => n.created_at)
-            .Take(20)
-            .ToListAsync();
-
-        return notifications.Select(n => new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
+        try
         {
-            Id = n.id.ToString(),
-            Type = n.type,
-            Message = n.message,
-            Timestamp = n.created_at,
-            IsRead = n.is_read,
-            Metadata = string.IsNullOrEmpty(n.metadata) ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(n.metadata)
-        }).ToList();
+            var notifications = await _unitOfWork.Notifications.Query()
+                .AsNoTracking()
+                .Where(n => n.recipient_user_id == userId)
+                .OrderByDescending(n => n.created_at)
+                .Take(20)
+                .ToListAsync();
+
+            return notifications.Select(n =>
+            {
+                Dictionary<string, object>? metaObj = null;
+                if (!string.IsNullOrEmpty(n.metadata))
+                {
+                    try { metaObj = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(n.metadata); }
+                    catch { /* bỏ qua nếu metadata không phải JSON hợp lệ */ }
+                }
+
+                return new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
+                {
+                    Id = n.id.ToString(),
+                    Type = n.type ?? "SYSTEM",
+                    Message = n.message ?? "",
+                    Timestamp = n.created_at,
+                    IsRead = n.is_read,
+                    Metadata = metaObj
+                };
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching notifications for user {UserId}", userId);
+            return new List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>();
+        }
     }
 
     public async Task BuildNotificationAsync(long userId, string type, string message, string? metadata = null)
