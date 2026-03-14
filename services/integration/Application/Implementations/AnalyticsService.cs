@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
+using JiraGithubExport.Shared.Contracts.Requests.Courses;
+
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -111,28 +113,41 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<IntegrationStatsResponse> GetIntegrationStatsAsync()
     {
-        var totalProjectsTask = _unitOfWork.Projects.Query().CountAsync();
-        
-        var integrations = await _unitOfWork.ProjectIntegrations.Query().AsNoTracking().ToListAsync();
-
-        int repoConnected = integrations.Count(i => i.github_repo_id.HasValue);
-        int jiraConnected = integrations.Count(i => i.jira_project_id.HasValue);
-
-        int totalProjects = await totalProjectsTask;
-        int repoMissing = totalProjects - repoConnected;
-
-        // Dummy/Placeholder for SyncErrors and ReportsExported
-        int syncErrors = 0; 
-        int reportsExported = await _unitOfWork.ReportExports.Query().CountAsync();
-
-        return new IntegrationStatsResponse
+        try
         {
-            RepoConnected = repoConnected,
-            RepoMissing = repoMissing < 0 ? 0 : repoMissing,
-            JiraConnected = jiraConnected,
-            SyncErrors = syncErrors,
-            ReportsExported = reportsExported
-        };
+            int totalProjects = await _unitOfWork.Projects.Query().AsNoTracking().CountAsync();
+            
+            var integrations = await _unitOfWork.ProjectIntegrations.Query().AsNoTracking().ToListAsync();
+
+            int repoConnected = integrations.Count(i => i.github_repo_id.HasValue);
+            int jiraConnected = integrations.Count(i => i.jira_project_id.HasValue);
+
+            int repoMissing = totalProjects - repoConnected;
+
+            int reportsExported = 0;
+            try 
+            {
+                reportsExported = await _unitOfWork.ReportExports.Query().AsNoTracking().CountAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Could not fetch reports exported count: {Message}", ex.Message);
+            }
+
+            return new IntegrationStatsResponse
+            {
+                RepoConnected = repoConnected,
+                RepoMissing = repoMissing < 0 ? 0 : repoMissing,
+                JiraConnected = jiraConnected,
+                SyncErrors = 0,
+                ReportsExported = reportsExported
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetIntegrationStatsAsync");
+            throw; // Rethrow to let global error handler handle it, but now it's logged!
+        }
     }
 
     public async Task<ActivityChartResponse> GetActivityChartAsync()
@@ -566,29 +581,72 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request)
     {
+        _logger.LogInformation("Starting bulk assign for {Count} items", request.Assignments?.Count ?? 0);
+        
+        if (request.Assignments == null) return;
+        
         foreach (var item in request.Assignments)
+
         {
-            var course = await _unitOfWork.Courses.Query()
-                .Include(c => c.lecturer_users)
-                .FirstOrDefaultAsync(c => c.id == item.CourseId);
-            
-            var lecturer = await _unitOfWork.Lecturers.GetByIdAsync(item.LecturerId);
-            
-            if (course != null && lecturer != null)
+            try 
             {
-                if (!course.lecturer_users.Any(l => l.user_id == item.LecturerId))
+                var course = await _unitOfWork.Courses.Query()
+                    .Include(c => c.lecturer_users)
+                    .FirstOrDefaultAsync(c => c.id == item.CourseId);
+                
+                var lecturer = await _unitOfWork.Lecturers.GetByIdAsync(item.LecturerId);
+                
+                // If lecturer record doesn't exist but user exists with LECTURER role, create the lecturer record
+                if (lecturer == null)
                 {
-                    _logger.LogInformation("Assigning lecturer {LecturerId} to course {CourseId}", item.LecturerId, item.CourseId);
-                    course.lecturer_users.Add(lecturer);
-                    
-                    // Add real notification
-                    await BuildNotificationAsync(item.LecturerId, "SYSTEM", 
-                        $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                        System.Text.Json.JsonSerializer.Serialize(new { courseId = course.id }));
+                    var user = await _unitOfWork.Users.Query()
+                        .Include(u => u.roles)
+                        .FirstOrDefaultAsync(u => u.id == item.LecturerId);
+                        
+                    if (user != null && user.roles.Any(r => r.role_name == "LECTURER"))
+                    {
+                        _logger.LogInformation("Creating missing lecturer record for user {UserId}", item.LecturerId);
+                        lecturer = new lecturer
+                        {
+                            user_id = user.id,
+                            lecturer_code = $"LEC_{user.id}",
+                            created_at = DateTime.UtcNow,
+                            updated_at = DateTime.UtcNow
+                        };
+                        _unitOfWork.Lecturers.Add(lecturer);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+
+                if (course != null && lecturer != null)
+                {
+                    if (!course.lecturer_users.Any(l => l.user_id == item.LecturerId))
+                    {
+                        _logger.LogInformation("Assigning lecturer {LecturerId} to course {CourseId}", item.LecturerId, item.CourseId);
+                        course.lecturer_users.Add(lecturer);
+                        
+                        // Add real notification
+                        await BuildNotificationAsync(item.LecturerId, "SYSTEM", 
+                            $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
+                            System.Text.Json.JsonSerializer.Serialize(new { courseId = course.id }));
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing assignment for course {CourseId} and lecturer {LecturerId}", item.CourseId, item.LecturerId);
+            }
         }
-        await _unitOfWork.SaveChangesAsync();
+        
+        try 
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Final SaveChangesAsync failed in BulkAssignAsync");
+            throw;
+        }
     }
 
     public async Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId)
