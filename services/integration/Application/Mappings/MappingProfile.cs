@@ -65,8 +65,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SemesterName, opt => opt.MapFrom(src => src.semester != null ? src.semester.name : "N/A"))
             .ForMember(dest => dest.Lecturers, opt => opt.MapFrom(src => src.lecturer_users))
             .ForMember(dest => dest.Enrollments, opt => opt.MapFrom(src => src.course_enrollments.Where(e => e.status == "ACTIVE")))
+            .ForMember(dest => dest.CurrentStudents, opt => opt.MapFrom(src => src.course_enrollments != null ? src.course_enrollments.Count(e => e.status == "ACTIVE") : 0))
             .ForMember(dest => dest.MaxStudents, opt => opt.MapFrom(src => src.max_students))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status));
+
 
         CreateMap<course_enrollment, EnrollmentInfo>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.student_user_id))
