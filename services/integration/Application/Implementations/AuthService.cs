@@ -235,9 +235,10 @@ public class AuthService : IAuthService
 
     private static string GetPrimaryRole(List<string> roles)
     {
-        if (roles.Contains("ADMIN") || roles.Contains("SUPER_ADMIN")) return "ADMIN";
-        if (roles.Contains("LECTURER")) return "LECTURER";
-        return roles.FirstOrDefault() ?? "STUDENT";
+        var upperRoles = roles.Select(r => r.ToUpper()).ToList();
+        if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN")) return "ADMIN";
+        if (upperRoles.Contains("LECTURER")) return "LECTURER";
+        return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
     }
 }
 

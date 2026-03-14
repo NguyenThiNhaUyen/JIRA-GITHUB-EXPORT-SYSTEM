@@ -131,7 +131,7 @@ public class UserService : IUserService
         Email = u.email,
         FullName = u.full_name,
         Enabled = u.enabled,
-        Role = u.roles.FirstOrDefault()?.role_name ?? "STUDENT",
+        Role = u.roles.Any(r => r.role_name.ToUpper() == "ADMIN") ? "ADMIN" : (u.roles.Any(r => r.role_name.ToUpper() == "LECTURER") ? "LECTURER" : "STUDENT"),
         StudentCode = u.student?.student_code,
         StudentId = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
