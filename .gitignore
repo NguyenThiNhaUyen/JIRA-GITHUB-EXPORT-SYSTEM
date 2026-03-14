@@ -19,6 +19,9 @@ bld/
 *.user
 *.userosscache
 *.sln.docstates
+*.log
+build.log
+build_errors.txt
 
 # .NET Core
 project.lock.json

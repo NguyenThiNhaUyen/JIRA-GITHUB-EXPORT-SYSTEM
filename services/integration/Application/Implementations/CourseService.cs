@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -117,10 +119,11 @@ public class CourseService : ICourseService
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
         var course = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
             .Include(c => c.subject)
             .Include(c => c.semester)
             .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects)
+            .Include(c => c.projects).ThenInclude(p => p.project_integration)
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .FirstOrDefaultAsync(c => c.id == courseId);
 
@@ -129,7 +132,18 @@ public class CourseService : ICourseService
             throw new NotFoundException("Course not found");
         }
 
-        return _mapper.Map<CourseDetailResponse>(course);
+        var response = _mapper.Map<CourseDetailResponse>(course);
+        
+        // Manual mapping for groups with clear status
+        response.Groups = (course.projects ?? new List<project>()).Select(p => new CourseGroupInfo
+        {
+            Id = p.id,
+            Name = p.name,
+            GithubStatus = p.project_integration?.approval_status ?? "NONE",
+            JiraStatus = p.project_integration?.approval_status ?? "NONE"
+        }).ToList();
+
+        return response;
     }
 
     public async Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request)
@@ -437,14 +451,15 @@ public class CourseService : ICourseService
                 UserId = e.student_user_id,
                 FullName = e.student_user.user.full_name,
                 Email = e.student_user.user.email,
-                StudentCode = e.student_user.student_code
+                StudentCode = e.student_user.student_code,
+                StudentId = e.student_user.student_code
             })
             .ToListAsync();
 
         return new PagedResponse<EnrollmentInfo>
         {
             Items = items,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)

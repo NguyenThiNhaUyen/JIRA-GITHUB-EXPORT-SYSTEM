@@ -118,7 +118,7 @@ public class InvitationService : IInvitationService
         return new PagedResponse<InvitationResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)

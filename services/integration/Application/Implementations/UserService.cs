@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -20,6 +21,26 @@ public class UserService : IUserService
         _context = context;
         _passwordHasher = passwordHasher;
         _logger = logger;
+    }
+
+    public async Task<List<UserDetailResponse>> GetStudentsAsync()
+    {
+        var users = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .Where(u => u.roles.Any(r => r.role_name == "STUDENT"))
+            .ToListAsync();
+        return users.Select(MapToResponse).ToList();
+    }
+
+    public async Task<List<UserDetailResponse>> GetLecturersAsync()
+    {
+        var users = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.lecturer)
+            .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+            .ToListAsync();
+        return users.Select(MapToResponse).ToList();
     }
 
     public async Task<PagedResponse<UserDetailResponse>> GetAllUsersAsync(string? role, PagedRequest request)
@@ -49,7 +70,7 @@ public class UserService : IUserService
         return new PagedResponse<UserDetailResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -112,6 +133,7 @@ public class UserService : IUserService
         Enabled = u.enabled,
         Roles = u.roles.Select(r => r.role_name).ToList(),
         StudentCode = u.student?.student_code,
+        StudentId = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
         Department = u.lecturer?.department ?? u.student?.department,
         AssignedCourses = u.lecturer?.courses.Select(c => c.course_code).ToList() ?? new List<string>(),

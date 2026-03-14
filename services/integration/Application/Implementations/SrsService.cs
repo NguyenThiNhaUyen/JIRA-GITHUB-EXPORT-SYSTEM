@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -93,7 +94,7 @@ public class SrsService : ISrsService
         return new PagedResponse<SrsDocumentResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -174,7 +175,7 @@ public class SrsService : ISrsService
         return new PagedResponse<SrsDocumentResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)

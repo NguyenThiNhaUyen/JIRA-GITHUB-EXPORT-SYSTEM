@@ -14,7 +14,15 @@ public class CourseDetailResponse
     public int CurrentStudents { get; set; }
     public List<LecturerInfo> Lecturers { get; set; } = new();
     public List<EnrollmentInfo> Enrollments { get; set; } = new();
-    public List<object> Groups { get; set; } = new();
+    public List<CourseGroupInfo> Groups { get; set; } = new();
+}
+
+public class CourseGroupInfo
+{
+    public long Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string GithubStatus { get; set; } = "NONE";
+    public string JiraStatus { get; set; } = "NONE";
 }
 
 public class SubjectInfo
@@ -64,6 +72,7 @@ public class EnrollmentInfo
     public long UserId { get; set; }
     public string FullName { get; set; } = null!;
     public string StudentCode { get; set; } = null!;
+    public string StudentId { get; set; } = null!;
     public string? Email { get; set; }
 }
 

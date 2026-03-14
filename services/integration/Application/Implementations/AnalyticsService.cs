@@ -458,7 +458,8 @@ public class AnalyticsService : IAnalyticsService
                     {
                         UserId = e.student_user_id,
                         FullName = e.student_user?.user?.full_name ?? "N/A",
-                        StudentCode = e.student_user?.student_code ?? "N/A"
+                        StudentCode = e.student_user?.student_code ?? "N/A",
+                        StudentId = e.student_user?.student_code ?? "N/A"
                     }).ToList(),
                 CommitTrend = completeChartData
             });

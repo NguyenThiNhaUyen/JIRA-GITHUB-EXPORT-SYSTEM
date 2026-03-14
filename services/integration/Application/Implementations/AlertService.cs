@@ -71,7 +71,7 @@ public class AlertService : IAlertService
         return new PagedResponse<AlertResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)

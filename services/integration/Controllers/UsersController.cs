@@ -31,6 +31,24 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<PagedResponse<UserDetailResponse>>.SuccessResponse(result));
     }
 
+    [HttpGet("students")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudents()
+    {
+        var result = await _userService.GetStudentsAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
+    [HttpGet("lecturers")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLecturers()
+    {
+        var result = await _userService.GetLecturersAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
     /// <summary>
     /// Get user by ID (Admin only)
     /// </summary>
