@@ -78,7 +78,7 @@ public class AuthService : IAuthService
                 Id = user.id,
                 Email = user.email,
                 FullName = user.full_name ?? user.email,
-                Role = roles.FirstOrDefault() ?? "STUDENT",
+                Role = GetPrimaryRole(roles),
                 StudentCode = user.student?.student_code,
                 LecturerCode = user.lecturer?.lecturer_code
             }
@@ -189,7 +189,7 @@ public class AuthService : IAuthService
                     Id = user.id,
                     Email = user.email,
                     FullName = user.full_name ?? user.email,
-                    Role = roles.FirstOrDefault() ?? "STUDENT",
+                    Role = GetPrimaryRole(roles),
                     StudentCode = user.student?.student_code,
                     LecturerCode = user.lecturer?.lecturer_code
                 }
@@ -231,6 +231,13 @@ public class AuthService : IAuthService
         user.password_reset_token_expires_at = null;
         user.updated_at = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+    }
+
+    private static string GetPrimaryRole(List<string> roles)
+    {
+        if (roles.Contains("ADMIN") || roles.Contains("SUPER_ADMIN")) return "ADMIN";
+        if (roles.Contains("LECTURER")) return "LECTURER";
+        return roles.FirstOrDefault() ?? "STUDENT";
     }
 }
 

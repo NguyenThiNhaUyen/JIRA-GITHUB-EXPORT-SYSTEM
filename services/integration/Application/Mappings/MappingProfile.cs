@@ -19,14 +19,18 @@ public class MappingProfile : Profile
         // ============================================
 
         CreateMap<user, UserDetailResponse>() // FE likely uses UserDetailResponse for details
-            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.roles.FirstOrDefault() != null ? src.roles.FirstOrDefault().role_name : "STUDENT"))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => 
+                src.roles.Any(r => r.role_name == "ADMIN" || r.role_name == "SUPER_ADMIN") ? "ADMIN" : 
+                (src.roles.Any(r => r.role_name == "LECTURER") ? "LECTURER" : "STUDENT")))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null))
             .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.department : (src.student != null ? src.student.department : null)))
             .ForMember(dest => dest.AssignedCourses, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.courses.Select(c => c.course_code).ToList() : new List<string>()));
 
         CreateMap<user, UserInfo>() // Generic Info
-            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.roles.FirstOrDefault() != null ? src.roles.FirstOrDefault().role_name : "STUDENT"))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => 
+                src.roles.Any(r => r.role_name == "ADMIN" || r.role_name == "SUPER_ADMIN") ? "ADMIN" : 
+                (src.roles.Any(r => r.role_name == "LECTURER") ? "LECTURER" : "STUDENT")))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null));
 
