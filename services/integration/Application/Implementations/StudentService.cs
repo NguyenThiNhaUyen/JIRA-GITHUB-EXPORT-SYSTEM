@@ -16,13 +16,34 @@ public class StudentService : IStudentService
 
     public async Task<object> GetStudentStatsAsync(long userId)
     {
-        // Mock data for FE development based on interface constraints
+        var courseCount = await _unitOfWork.CourseEnrollments.Query().CountAsync(e => e.student_user_id == userId && e.status == "ACTIVE");
+        var projectCount = await _unitOfWork.TeamMembers.Query().CountAsync(t => t.student_user_id == userId && t.participation_status == "ACTIVE");
+        
+        // Commits this week
+        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+        var githubUsernames = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "GITHUB")
+            .Select(ea => ea.username ?? ea.external_user_key)
+            .ToListAsync();
+
+        var commitsThisWeek = await _unitOfWork.GitHubCommits.Query()
+            .CountAsync(c => githubUsernames.Contains(c.author_github_user.login) && c.committed_at >= sevenDaysAgo);
+
+        // SRS Completed
+        var projectIds = await _unitOfWork.TeamMembers.Query()
+            .Where(t => t.student_user_id == userId && t.participation_status == "ACTIVE")
+            .Select(t => t.project_id)
+            .ToListAsync();
+            
+        var srsCompleted = await _unitOfWork.ProjectDocuments.Query()
+            .CountAsync(d => projectIds.Contains(d.project_id) && d.status == "APPROVED");
+
         return new
         {
-            coursesCount = await _unitOfWork.CourseEnrollments.Query().CountAsync(e => e.student_user_id == userId),
-            projectsCount = await _unitOfWork.TeamMembers.Query().CountAsync(t => t.student_user_id == userId),
-            commitsThisWeek = 15,
-            srsCompleted = 3,
+            coursesCount = courseCount,
+            projectsCount = projectCount,
+            commitsThisWeek = commitsThisWeek,
+            srsCompleted = srsCompleted,
             overallScore = 8.5
         };
     }
@@ -103,5 +124,56 @@ public class StudentService : IStudentService
         {
             new { message = "You have not committed to the Github Repo for 7 days.", severity = "HIGH", courseCode = "PRN222" }
         };
+    }
+
+    public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>> GetStudentHeatmapAsync(long userId, int days = 35)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var githubUsernames = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "GITHUB")
+            .Select(ea => ea.username ?? ea.external_user_key)
+            .ToListAsync();
+
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => githubUsernames.Contains(c.author_github_user.login) && c.committed_at >= since)
+            .Select(c => new { c.committed_at })
+            .ToListAsync();
+
+        return commits
+            .Where(c => c.committed_at.HasValue)
+            .GroupBy(c => c.committed_at!.Value.Date)
+            .Select(g => new JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat 
+            { 
+                Date = g.Key.ToString("yyyy-MM-dd"), 
+                Count = g.Count() 
+            })
+            .OrderBy(h => h.Date)
+            .ToList();
+    }
+
+    public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>> GetStudentCommitActivityAsync(long userId, int days = 7)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var githubUsernames = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "GITHUB")
+            .Select(ea => ea.username ?? ea.external_user_key)
+            .ToListAsync();
+
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => githubUsernames.Contains(c.author_github_user.login) && c.committed_at >= since)
+            .Select(c => new { c.committed_at })
+            .ToListAsync();
+
+        var allDays = Enumerable.Range(0, days)
+            .Select(i => DateTime.UtcNow.AddDays(-days + i + 1).Date)
+            .ToList();
+
+        return allDays.Select(d => new JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat
+        {
+            Day = d.ToString("ddd"),
+            Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
+        }).ToList();
     }
 }

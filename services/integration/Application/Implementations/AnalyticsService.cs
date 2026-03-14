@@ -216,7 +216,8 @@ public class AnalyticsService : IAnalyticsService
 
         var detailedActivity = projects.Select(p => new DetailedTeamActivityStat
         {
-            Team = p.ProjectName,
+            TeamId = p.id,
+            TeamName = p.ProjectName,
             RepoStatus = p.HasRepo,
             TotalCommits = p.RepoId.HasValue && repoCommitCounts.ContainsKey(p.RepoId.Value) 
                 ? repoCommitCounts[p.RepoId.Value].Count : 0,
@@ -240,7 +241,7 @@ public class AnalyticsService : IAnalyticsService
             .Where(d => d.TotalCommits > 0)
             .OrderByDescending(d => d.TotalCommits)
             .Take(5)
-            .Select(d => new TeamRankingStat { Team = d.Team, Commits = d.TotalCommits })
+            .Select(d => new TeamRankingStat { TeamId = d.TeamId, TeamName = d.TeamName, Commits = d.TotalCommits })
             .ToList();
 
         // Inactive Warning Logic
@@ -249,18 +250,18 @@ public class AnalyticsService : IAnalyticsService
         {
             if (!p.HasRepo)
             {
-                inactiveWarning.Add(new TeamWarningStat { Team = p.ProjectName, Reason = "Repository is empty or missing" });
+                inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "Repository missing" });
             }
             else if (!p.HasJira)
             {
-                inactiveWarning.Add(new TeamWarningStat { Team = p.ProjectName, Reason = "No Jira connected since creation" });
+                inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "Jira missing" });
             }
             else
             {
-                var stat = detailedActivity.FirstOrDefault(d => d.Team == p.ProjectName);
+                var stat = detailedActivity.FirstOrDefault(d => d.TeamName == p.ProjectName);
                 if (stat != null && stat.Status == "LOW")
                 {
-                    inactiveWarning.Add(new TeamWarningStat { Team = p.ProjectName, Reason = "No commits in the last 14 days" });
+                    inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "No commits in the last 14 days" });
                 }
             }
         }
@@ -529,6 +530,45 @@ public class AnalyticsService : IAnalyticsService
             "LINK_GITHUB" => $"Dự án {log.entity_id} đã kết nối GitHub thành công",
             "ASSIGN_LECTURER" => "Bạn đã được phân công vào một lớp học mới",
             _ => $"{log.entity_type}: {log.action}"
+        };
+    }
+
+    public async Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request)
+    {
+        foreach (var item in request.Assignments)
+        {
+            var course = await _unitOfWork.Courses.Query()
+                .Include(c => c.lecturer_users)
+                .FirstOrDefaultAsync(c => c.id == item.CourseId);
+            
+            var lecturer = await _unitOfWork.Lecturers.GetByIdAsync(item.LecturerId);
+            
+            if (course != null && lecturer != null)
+            {
+                if (!course.lecturer_users.Any(l => l.user_id == item.LecturerId))
+                {
+                    _logger.LogInformation("Assigning lecturer {LecturerId} to course {CourseId}", item.LecturerId, item.CourseId);
+                    course.lecturer_users.Add(lecturer);
+                }
+            }
+        }
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId)
+    {
+        var courseCount = await _unitOfWork.Courses.Query()
+            .Where(c => c.lecturer_users.Any(l => l.user_id == lecturerId))
+            .CountAsync();
+            
+        var studentCount = await _unitOfWork.CourseEnrollments.Query()
+            .Where(e => e.course.lecturer_users.Any(l => l.user_id == lecturerId) && e.status == "ACTIVE")
+            .CountAsync();
+
+        return new LecturerWorkloadResponse
+        {
+            CourseCount = courseCount,
+            StudentCount = studentCount
         };
     }
 }

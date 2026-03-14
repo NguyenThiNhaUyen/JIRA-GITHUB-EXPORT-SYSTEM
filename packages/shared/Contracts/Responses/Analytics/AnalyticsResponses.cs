@@ -42,19 +42,21 @@ public class ActivityChartResponse
 
 public class TeamRankingStat
 {
-    public string Team { get; set; } = string.Empty;
+    public long TeamId { get; set; }
+    public string TeamName { get; set; } = string.Empty;
     public int Commits { get; set; }
 }
 
 public class TeamWarningStat
 {
-    public string Team { get; set; } = string.Empty;
+    public string TeamName { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;
 }
 
 public class DetailedTeamActivityStat
 {
-    public string Team { get; set; } = string.Empty;
+    public long TeamId { get; set; }
+    public string TeamName { get; set; } = string.Empty;
     public bool RepoStatus { get; set; }
     public int TotalCommits { get; set; }
     public DateTime? LastCommitTime { get; set; }
@@ -83,4 +85,10 @@ public class GroupRadarMetricResponse
     public int TeamSize { get; set; }
     public int GithubLinked { get; set; }
     public int JiraLinked { get; set; }
+}
+
+public class LecturerWorkloadResponse
+{
+    public int CourseCount { get; set; }
+    public int StudentCount { get; set; }
 }

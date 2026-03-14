@@ -19,4 +19,8 @@ public interface IAnalyticsService
     Task<List<GroupRadarMetricResponse>> GetGroupRadarMetricsAsync(long courseId);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Courses.LecturerCourseStatResponse>> GetLecturerCoursesStatsAsync(long lecturerId);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>> GetRecentNotificationsAsync(long userId);
+    
+    // New methods for Phase 2
+    Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request);
+    Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId);
 }

@@ -103,4 +103,12 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetLecturerCoursesStatsAsync(lecturerId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    [HttpPost("bulk-assign")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> BulkAssign([FromBody] JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request)
+    {
+        await _analyticsService.BulkAssignAsync(request);
+        return Ok(ApiResponse.SuccessResponse("Bulk assignment completed successfully"));
+    }
 }

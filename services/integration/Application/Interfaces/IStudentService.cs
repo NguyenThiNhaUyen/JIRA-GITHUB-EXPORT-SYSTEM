@@ -13,4 +13,8 @@ public interface IStudentService
     Task<PagedResponse<object>> GetStudentTasksAsync(long userId, PagedRequest request);
     Task<PagedResponse<object>> GetStudentGradesAsync(long userId, PagedRequest request);
     Task<List<object>> GetStudentWarningsAsync(long userId);
+    
+    // New methods for Phase 2
+    Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>> GetStudentHeatmapAsync(long userId, int days = 35);
+    Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>> GetStudentCommitActivityAsync(long userId, int days = 7);
 }

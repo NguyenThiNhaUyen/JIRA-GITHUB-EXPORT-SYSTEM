@@ -82,4 +82,18 @@ public class StudentController : ControllerBase
         var result = await _studentService.GetStudentWarningsAsync(GetCurrentUserId());
         return Ok(ApiResponse<List<object>>.SuccessResponse(result));
     }
+
+    [HttpGet("me/heatmap")]
+    public async Task<IActionResult> GetMyHeatmap([FromQuery] int days = 35)
+    {
+        var result = await _studentService.GetStudentHeatmapAsync(GetCurrentUserId(), days);
+        return Ok(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>>.SuccessResponse(result));
+    }
+
+    [HttpGet("me/commit-activity")]
+    public async Task<IActionResult> GetMyCommitActivity([FromQuery] int days = 7)
+    {
+        var result = await _studentService.GetStudentCommitActivityAsync(GetCurrentUserId(), days);
+        return Ok(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>>.SuccessResponse(result));
+    }
 }

@@ -93,6 +93,21 @@ public class EnrollStudentsRequest
     public List<long> StudentUserIds { get; set; } = new();
 }
 
+public class BulkAssignRequest
+{
+    [Required]
+    public List<AssignmentItem> Assignments { get; set; } = new();
+}
+
+public class AssignmentItem
+{
+    [Required]
+    public long CourseId { get; set; }
+    
+    [Required]
+    public long LecturerId { get; set; }
+}
+
 
 
 
