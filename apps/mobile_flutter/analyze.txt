@@ -1,0 +1,34 @@
+﻿Analyzing course_management_screen.dart...                      
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:661:189 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:688:189 - deprecated_member_use
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\screens\admin\course_management_screen.dart:758:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:758:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:879:120 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:899:109 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:910:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin\course_management_screen.dart:917:141 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\screens\admin\course_management_screen.dart:1113:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\admin\course_management_screen.dart:1188:39 - unnecessary_underscores
+
+flutter : 10 issues 
+found. (ran in 3.8s)
+At line:1 char:70
++ ... le_flutter; 
+flutter analyze lib/sc
+reens/admin/course_man
+agement_scree ...
++                 ~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (10 issues    
+ found. (ran in 3.    
+8s):String) [], R    
+emoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 

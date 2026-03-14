@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/mock_data.dart';
+import '../../../widgets/app_top_header.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 
 class StudentDashboard extends StatelessWidget {
@@ -17,13 +18,21 @@ class StudentDashboard extends StatelessWidget {
     final activeCourses = courses.where((c) => c.isActive).length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Trang chủ'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+      appBar: AppTopHeader(
+        title: 'Trang chủ',
+        user: AppUser(
+          name: user.fullName,
+          email: '${user.studentCode?.toLowerCase() ?? 'user'}@fe.edu.vn',
+          role: 'STUDENT',
+        ),
+        invitations: [
+          // Mock invitation
+          GroupInvitation(
+            id: '1',
+            projectName: 'E-learning Platform',
+            invitedByName: 'Nguyễn Văn A',
+            createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+          )
         ],
       ),
       body: SingleChildScrollView(
