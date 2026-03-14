@@ -21,6 +21,8 @@ public interface IAnalyticsService
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>> GetRecentNotificationsAsync(long userId);
     
     // New methods for Phase 2
-    Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request);
+    Task BuildNotificationAsync(long userId, string type, string message, string? metadata = null);
+    Task MarkNotificationAsReadAsync(long notificationId);
     Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId);
+    Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request);
 }

@@ -19,14 +19,14 @@ public class MappingProfile : Profile
         // ============================================
 
         CreateMap<user, UserDetailResponse>() // FE likely uses UserDetailResponse for details
-            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.roles.Select(r => r.role_name).ToList()))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.roles.FirstOrDefault() != null ? src.roles.FirstOrDefault().role_name : "STUDENT"))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null))
             .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.department : (src.student != null ? src.student.department : null)))
             .ForMember(dest => dest.AssignedCourses, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.courses.Select(c => c.course_code).ToList() : new List<string>()));
 
         CreateMap<user, UserInfo>() // Generic Info
-            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.roles.Select(r => r.role_name).ToList()))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.roles.FirstOrDefault() != null ? src.roles.FirstOrDefault().role_name : "STUDENT"))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null));
 
@@ -115,7 +115,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => src.submitted_at))
             .ForMember(dest => dest.ReviewerName, opt => opt.MapFrom(src => src.reviewer_user != null ? src.reviewer_user.full_name : "N/A"))
             .ForMember(dest => dest.ReviewedAt, opt => opt.MapFrom(src => src.reviewed_at))
-            .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.feedback));
+            .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.feedback))
+            .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.score))
+            .ForMember(dest => dest.Metadata, opt => opt.MapFrom(src => src.metadata));
     }
 }
 

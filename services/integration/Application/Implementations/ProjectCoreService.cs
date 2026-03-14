@@ -8,6 +8,7 @@ using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -16,12 +17,21 @@ public class ProjectCoreService : IProjectCoreService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<ProjectCoreService> _logger;
+    private readonly IGitHubClient _githubClient;
+    private readonly IJiraClient _jiraClient;
 
-    public ProjectCoreService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ProjectCoreService> logger)
+    public ProjectCoreService(
+        IUnitOfWork unitOfWork, 
+        IMapper mapper, 
+        ILogger<ProjectCoreService> logger,
+        IGitHubClient githubClient,
+        IJiraClient jiraClient)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _githubClient = githubClient;
+        _jiraClient = jiraClient;
     }
 
     public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId)
@@ -146,10 +156,59 @@ public class ProjectCoreService : IProjectCoreService
 
     public async Task<object> SyncProjectCommitsAsync(long projectId)
     {
-        // Mark for immediate sync — SyncWorker sẽ pickup theo chu kỳ
-        // Hoặc có thể trigger trực tiếp qua background job
-        _logger.LogInformation("[SyncCommits] Manual sync triggered for project {ProjectId}", projectId);
-        await Task.CompletedTask;
-        return new { message = "Sync triggered. Commits will be updated shortly.", projectId };
+        var integration = await _unitOfWork.ProjectIntegrations.Query()
+            .Include(pi => pi.github_repo)
+            .Include(pi => pi.jira_project)
+            .Include(pi => pi.project)
+            .FirstOrDefaultAsync(pi => pi.project_id == projectId);
+
+        if (integration == null)
+        {
+            throw new NotFoundException("Integration not found for this project");
+        }
+
+        if (integration.project.status != "ACTIVE")
+        {
+            throw new BusinessException("Cannot sync inactive projects");
+        }
+
+        // Fire and forget background sync
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                _logger.LogInformation("[ManualSync] Starting background sync for project {ProjectId}: {ProjectName}", 
+                    projectId, integration.project.name);
+
+                if (integration.github_repo != null)
+                {
+                    await _githubClient.SyncCommitsAsync(
+                        integration.github_repo.id, 
+                        integration.github_repo.owner_login, 
+                        integration.github_repo.name);
+                    
+                    await _githubClient.SyncPullRequestsAsync(
+                        integration.github_repo.id, 
+                        integration.github_repo.owner_login, 
+                        integration.github_repo.name);
+                }
+
+                if (integration.jira_project != null)
+                {
+                    await _jiraClient.SyncIssuesAsync(
+                        integration.jira_project.id, 
+                        integration.jira_project.jira_project_key, 
+                        integration.jira_project.jira_url ?? "https://atlassian.net");
+                }
+
+                _logger.LogInformation("[ManualSync] Successfully completed sync for project {ProjectId}", projectId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[ManualSync] Failed to sync project {ProjectId}", projectId);
+            }
+        });
+
+        return new { message = "Sync triggered. Data will be updated in the background.", projectId };
     }
 }

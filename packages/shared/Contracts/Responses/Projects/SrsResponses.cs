@@ -16,7 +16,8 @@ public class SrsDocumentResponse
     public string? ReviewerName { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public string? Feedback { get; set; }
-    public double? Score { get; set; }
+    public decimal? Score { get; set; }
+    public string? Metadata { get; set; } // For checklist JSON
 }
 
 public class SrsListResponse

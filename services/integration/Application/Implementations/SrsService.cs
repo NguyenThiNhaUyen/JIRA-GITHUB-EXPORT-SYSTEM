@@ -17,12 +17,14 @@ public class SrsService : ISrsService
     private readonly JiraGithubToolDbContext _context;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<SrsService> _logger;
+    private readonly IAnalyticsService _analyticsService;
 
-    public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger)
+    public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, IAnalyticsService analyticsService)
     {
         _context = context;
         _env = env;
         _logger = logger;
+        _analyticsService = analyticsService;
     }
 
     public async Task<SrsDocumentResponse> UploadSrsAsync(long projectId, long uploaderUserId, UploadSrsRequest request)
@@ -110,13 +112,29 @@ public class SrsService : ISrsService
         srs.status = request.Status;
         srs.reviewer_user_id = reviewerUserId;
         srs.reviewed_at = DateTime.UtcNow;
-        
+        srs.score = request.Score; // New field
+
         if (!string.IsNullOrEmpty(request.Feedback))
         {
             srs.feedback = request.Feedback;
         }
 
         await _context.SaveChangesAsync();
+
+        // Notify Team Members
+        var teamMembers = await _context.team_members
+            .Where(tm => tm.project_id == srs.project_id)
+            .ToListAsync();
+
+        foreach (var member in teamMembers)
+        {
+            await _analyticsService.BuildNotificationAsync(
+                member.student_user_id,
+                "ALERT",
+                $"Tài liệu SRS của nhóm bạn đã được cập nhật trạng thái: {request.Status}",
+                System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.id, projectId = srs.project_id })
+            );
+        }
 
         _logger.LogInformation("Lecturer {ReviewerId} reviewed SRS {SrsId} with status {Status}", reviewerUserId, srsId, request.Status);
 
@@ -241,6 +259,8 @@ public class SrsService : ISrsService
             SubmittedAt = d.submitted_at,
             ReviewerName = d.reviewer_user?.full_name,
             Feedback = d.feedback,
+            Score = d.score,
+            Metadata = d.metadata,
             ReviewedAt = d.reviewed_at
         };
     }

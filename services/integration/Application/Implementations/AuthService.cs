@@ -78,7 +78,7 @@ public class AuthService : IAuthService
                 Id = user.id,
                 Email = user.email,
                 FullName = user.full_name ?? user.email,
-                Roles = roles,
+                Role = roles.FirstOrDefault() ?? "STUDENT",
                 StudentCode = user.student?.student_code,
                 LecturerCode = user.lecturer?.lecturer_code
             }
@@ -189,7 +189,7 @@ public class AuthService : IAuthService
                     Id = user.id,
                     Email = user.email,
                     FullName = user.full_name ?? user.email,
-                    Roles = roles,
+                    Role = roles.FirstOrDefault() ?? "STUDENT",
                     StudentCode = user.student?.student_code,
                     LecturerCode = user.lecturer?.lecturer_code
                 }

@@ -471,54 +471,67 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>> GetRecentNotificationsAsync(long userId)
     {
-        var notifications = new List<JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse>();
-
-        // 1. Get pending invitations for this student (if user is student)
-        var invitations = await _unitOfWork.TeamInvitations.Query()
+        var notifications = await _unitOfWork.Notifications.Query()
             .AsNoTracking()
-            .Include(i => i.project)
-            .Include(i => i.invited_by_user)
-            .Where(i => i.invited_student_user_id == userId && i.status == "PENDING")
-            .OrderByDescending(i => i.created_at)
-            .Take(5)
+            .Where(n => n.recipient_user_id == userId)
+            .OrderByDescending(n => n.created_at)
+            .Take(20)
             .ToListAsync();
 
-        foreach (var inv in invitations)
+        return notifications.Select(n => new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
         {
-            notifications.Add(new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
+            Id = n.id.ToString(),
+            Type = n.type,
+            Message = n.message,
+            Timestamp = n.created_at,
+            IsRead = n.is_read,
+            Metadata = string.IsNullOrEmpty(n.metadata) ? null : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(n.metadata)
+        }).ToList();
+    }
+
+    public async Task BuildNotificationAsync(long userId, string type, string message, string? metadata = null)
+    {
+        var notif = new notification
+        {
+            recipient_user_id = userId,
+            type = type,
+            message = message,
+            is_read = false,
+            created_at = DateTime.UtcNow,
+            metadata = metadata
+        };
+
+        _unitOfWork.Notifications.Add(notif);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Push real-time via SignalR
+        try
+        {
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new 
             {
-                Id = $"INV_{inv.id}",
-                Type = "INVITATION",
-                Message = $"Bạn nhận được lời mời tham gia dự án {inv.project?.name} từ {inv.invited_by_user?.full_name}",
-                Timestamp = inv.created_at,
-                IsRead = false,
-                Metadata = new Dictionary<string, object> { { "projectId", inv.project_id }, { "invitationId", inv.id } }
+                id = notif.id.ToString(),
+                type = type,
+                message = message,
+                timestamp = notif.created_at,
+                isRead = false,
+                metadata = string.IsNullOrEmpty(metadata) ? null : System.Text.Json.JsonSerializer.Deserialize<object>(metadata)
             });
         }
-
-        // 2. Get recent audit logs related to user's activity or courses
-        // For simplicity, we get most recent relevant logs
-        var auditLogs = await _unitOfWork.AuditLogs.Query()
-            .AsNoTracking()
-            .Where(a => a.performed_by_user_id == userId || a.entity_type == "COURSE")
-            .OrderByDescending(a => a.timestamp)
-            .Take(10)
-            .ToListAsync();
-
-        foreach (var log in auditLogs)
+        catch (Exception ex)
         {
-            notifications.Add(new JiraGithubExport.Shared.Contracts.Responses.Notifications.NotificationResponse
-            {
-                Id = $"AUDIT_{log.id}",
-                Type = "SYSTEM",
-                Message = GetFriendlyMessage(log),
-                Timestamp = log.timestamp,
-                IsRead = true,
-                Metadata = new Dictionary<string, object> { { "entityId", log.entity_id }, { "entityType", log.entity_type } }
-            });
+            _logger.LogError(ex, "Failed to send SignalR notification to user {UserId}", userId);
         }
+    }
 
-        return notifications.OrderByDescending(n => n.Timestamp).Take(15).ToList();
+    public async Task MarkNotificationAsReadAsync(long notificationId)
+    {
+        var notif = await _unitOfWork.Notifications.GetByIdAsync(notificationId);
+        if (notif != null)
+        {
+            notif.is_read = true;
+            _unitOfWork.Notifications.Update(notif);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 
     private string GetFriendlyMessage(audit_log log)
@@ -549,6 +562,11 @@ public class AnalyticsService : IAnalyticsService
                 {
                     _logger.LogInformation("Assigning lecturer {LecturerId} to course {CourseId}", item.LecturerId, item.CourseId);
                     course.lecturer_users.Add(lecturer);
+                    
+                    // Add real notification
+                    await BuildNotificationAsync(item.LecturerId, "SYSTEM", 
+                        $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
+                        System.Text.Json.JsonSerializer.Serialize(new { courseId = course.id }));
                 }
             }
         }

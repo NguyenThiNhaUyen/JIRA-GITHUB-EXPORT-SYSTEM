@@ -22,19 +22,22 @@ public class CourseService : ICourseService
     private readonly ILogger<CourseService> _logger;
     private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
     private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly IAnalyticsService _analyticsService;
 
     public CourseService(
         IUnitOfWork unitOfWork, 
         IMapper mapper, 
         ILogger<CourseService> logger,
         JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher,
-        IHubContext<NotificationHub> hubContext)
+        IHubContext<NotificationHub> hubContext,
+        IAnalyticsService analyticsService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _passwordHasher = passwordHasher;
         _hubContext = hubContext;
+        _analyticsService = analyticsService;
     }
 
 
@@ -244,23 +247,15 @@ public class CourseService : ICourseService
         
         await _unitOfWork.SaveChangesAsync();
 
-        // Send Real-time notification
+        // Send Real-time notification via NEW system
         try
         {
-            await _hubContext.Clients.User(lecturerUserId.ToString())
-                .SendAsync("ReceiveNotification", new
-                {
-                    id = $"AUDIT_{auditLog.id}",
-                    type = "SYSTEM",
-                    message = $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                    timestamp = DateTime.UtcNow,
-                    isRead = false,
-                    metadata = new Dictionary<string, object> 
-                    { 
-                        { "entityId", courseId }, 
-                        { "entityType", "COURSE" } 
-                    }
-                });
+            await _analyticsService.BuildNotificationAsync(
+                lecturerUserId, 
+                "SYSTEM", 
+                $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
+                System.Text.Json.JsonSerializer.Serialize(new { entityId = courseId, entityType = "COURSE" })
+            );
         }
         catch (Exception ex)
         {
