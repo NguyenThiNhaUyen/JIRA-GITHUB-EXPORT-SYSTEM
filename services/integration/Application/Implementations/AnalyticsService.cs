@@ -583,29 +583,40 @@ public class AnalyticsService : IAnalyticsService
     {
         _logger.LogInformation("Starting bulk assign for {Count} items", request.Assignments?.Count ?? 0);
         
-        if (request.Assignments == null) return;
-        
-        foreach (var item in request.Assignments)
+        if (request.Assignments == null || request.Assignments.Count == 0) return;
 
+        // Phase 1: Collect all valid assignments (DO NOT call SaveChanges or BuildNotification here)
+        var successfulAssignments = new List<(long LecturerId, string CourseCode, string? CourseName, long CourseId)>();
+
+        foreach (var item in request.Assignments)
         {
             try 
             {
-                var course = await _unitOfWork.Courses.Query()
-                    .Include(c => c.lecturer_users)
-                    .FirstOrDefaultAsync(c => c.id == item.CourseId);
+                // Check if the course_lecturers record already exists in DB to avoid duplicate key
+                var alreadyAssigned = await _unitOfWork.Courses.Query()
+                    .AsNoTracking()
+                    .AnyAsync(c => c.id == item.CourseId && c.lecturer_users.Any(l => l.user_id == item.LecturerId));
+
+                if (alreadyAssigned)
+                {
+                    _logger.LogInformation("Lecturer {LecturerId} is already assigned to course {CourseId}. Skipping.", item.LecturerId, item.CourseId);
+                    continue;
+                }
+
+                // Ensure lecturer record exists
+                var lecturer = await _unitOfWork.Lecturers.Query()
+                    .FirstOrDefaultAsync(l => l.user_id == item.LecturerId);
                 
-                var lecturer = await _unitOfWork.Lecturers.GetByIdAsync(item.LecturerId);
-                
-                // If lecturer record doesn't exist but user exists with LECTURER role, create the lecturer record
                 if (lecturer == null)
                 {
+                    // Auto-create lecturer record if user has LECTURER role
                     var user = await _unitOfWork.Users.Query()
                         .Include(u => u.roles)
                         .FirstOrDefaultAsync(u => u.id == item.LecturerId);
                         
                     if (user != null && user.roles.Any(r => r.role_name == "LECTURER"))
                     {
-                        _logger.LogInformation("Creating missing lecturer record for user {UserId}", item.LecturerId);
+                        _logger.LogInformation("Auto-creating lecturer record for user {UserId}", item.LecturerId);
                         lecturer = new lecturer
                         {
                             user_id = user.id,
@@ -616,38 +627,68 @@ public class AnalyticsService : IAnalyticsService
                         _unitOfWork.Lecturers.Add(lecturer);
                         await _unitOfWork.SaveChangesAsync();
                     }
-                }
-
-                if (course != null && lecturer != null)
-                {
-                    if (!course.lecturer_users.Any(l => l.user_id == item.LecturerId))
+                    else
                     {
-                        _logger.LogInformation("Assigning lecturer {LecturerId} to course {CourseId}", item.LecturerId, item.CourseId);
-                        course.lecturer_users.Add(lecturer);
-                        
-                        // Add real notification
-                        await BuildNotificationAsync(item.LecturerId, "SYSTEM", 
-                            $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                            System.Text.Json.JsonSerializer.Serialize(new { courseId = course.id }));
+                        _logger.LogWarning("User {UserId} not found or does not have LECTURER role. Skipping.", item.LecturerId);
+                        continue;
                     }
                 }
+
+                // Fetch course WITH tracking (needed for EF to track the relationship change)
+                var course = await _unitOfWork.Courses.Query()
+                    .Include(c => c.lecturer_users)
+                    .FirstOrDefaultAsync(c => c.id == item.CourseId);
+
+                if (course == null)
+                {
+                    _logger.LogWarning("Course {CourseId} not found. Skipping.", item.CourseId);
+                    continue;
+                }
+
+                // Add lecturer to course (this adds to the join table course_lecturers)
+                course.lecturer_users.Add(lecturer);
+                _logger.LogInformation("Queued assignment: Lecturer {LecturerId} -> Course {CourseId}", item.LecturerId, item.CourseId);
+                
+                successfulAssignments.Add((item.LecturerId, course.course_code, course.course_name, course.id));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing assignment for course {CourseId} and lecturer {LecturerId}", item.CourseId, item.LecturerId);
+                _logger.LogError(ex, "Error preparing assignment for course {CourseId}, lecturer {LecturerId}", item.CourseId, item.LecturerId);
             }
         }
-        
-        try 
+
+        // Phase 2: Save ALL assignment changes in one transaction
+        if (successfulAssignments.Count > 0)
         {
-            await _unitOfWork.SaveChangesAsync();
+            try
+            {
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("Successfully saved {Count} lecturer assignments to database.", successfulAssignments.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save lecturer assignments. Rolling back.");
+                throw; // This is a real error - propagate it
+            }
         }
-        catch (Exception ex)
+
+        // Phase 3: Send notifications AFTER all data is safely committed
+        foreach (var assignment in successfulAssignments)
         {
-            _logger.LogError(ex, "Final SaveChangesAsync failed in BulkAssignAsync");
-            throw;
+            try
+            {
+                await BuildNotificationAsync(assignment.LecturerId, "SYSTEM", 
+                    $"Bạn đã được phân công vào lớp học {assignment.CourseCode} - {assignment.CourseName}",
+                    System.Text.Json.JsonSerializer.Serialize(new { courseId = assignment.CourseId }));
+            }
+            catch (Exception ex)
+            {
+                // Notification failure should NOT roll back the assignment
+                _logger.LogWarning(ex, "Failed to send notification for lecturer {LecturerId}, but assignment was successful.", assignment.LecturerId);
+            }
         }
     }
+
 
     public async Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId)
     {
