@@ -30,6 +30,9 @@ import '../screens/lecturer/lecturer_groups_screen.dart';
 import '../screens/lecturer/my_courses_screen.dart';
 import '../screens/lecturer/manage_groups_screen.dart';
 import '../screens/lecturer/contributions_screen.dart';
+import '../screens/lecturer/lecturer_alerts_screen.dart';
+import '../screens/lecturer/lecturer_srs_reports_screen.dart';
+
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
@@ -69,7 +72,15 @@ final GoRouter router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
-
+    
+GoRoute(
+      path: '/lecturer/alerts',
+      builder: (context, state) => const LecturerAlertsScreen(),
+    ),
+    GoRoute(
+      path: '/lecturer/srs',
+      builder: (context, state) => const LecturerSrsReportsScreen(),
+    ),
     GoRoute(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
