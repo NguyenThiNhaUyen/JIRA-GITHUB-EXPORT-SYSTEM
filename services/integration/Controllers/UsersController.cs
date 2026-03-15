@@ -23,7 +23,7 @@ public class UsersController : ControllerBase
     /// Get all users (Admin only). Supports ?role=ADMIN|LECTURER|STUDENT filter.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "LECTURER,ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] string? role, [FromQuery] PagedRequest request)
     {
@@ -31,11 +31,29 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<PagedResponse<UserDetailResponse>>.SuccessResponse(result));
     }
 
+    [HttpGet("students")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudents()
+    {
+        var result = await _userService.GetStudentsAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
+    [HttpGet("lecturers")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLecturers()
+    {
+        var result = await _userService.GetLecturersAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
     /// <summary>
     /// Get user by ID (Admin only)
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "LECTURER,ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<UserDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(long id)
     {
@@ -47,7 +65,7 @@ public class UsersController : ControllerBase
     /// Change user role (Admin only)
     /// </summary>
     [HttpPatch("{id}/role")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateRole(long id, [FromBody] UpdateUserRoleRequest request)
     {
@@ -59,7 +77,7 @@ public class UsersController : ControllerBase
     /// Enable or disable user account (Admin only)
     /// </summary>
     [HttpPatch("{id}/status")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateUserStatusRequest request)
     {
@@ -71,7 +89,7 @@ public class UsersController : ControllerBase
     /// Admin reset password for a user
     /// </summary>
     [HttpPost("{id}/reset-password")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AdminResetPassword(long id, [FromBody] AdminResetPasswordRequest request)
     {

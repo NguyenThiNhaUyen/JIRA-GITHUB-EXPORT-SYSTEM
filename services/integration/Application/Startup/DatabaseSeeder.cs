@@ -33,14 +33,22 @@ public static class DatabaseSeeder
 
             // 2. Admin
             string adminEmail = "admin@truonghoc.com";
-            if (!await dbContext.users.AnyAsync(u => u.email == adminEmail))
+            var adminUser = await dbContext.users.Include(u => u.roles).FirstOrDefaultAsync(u => u.email == adminEmail);
+            var adminRole = await dbContext.roles.FirstAsync(r => r.role_name == "ADMIN");
+
+            if (adminUser == null)
             {
-                var adminRole = await dbContext.roles.FirstAsync(r => r.role_name == "ADMIN");
-                var adminUser = new user { email = adminEmail, password = hasher.HashPassword("Admin@123"), full_name = "Super Admin", enabled = true };
+                adminUser = new user { email = adminEmail, password = hasher.HashPassword("Admin@123"), full_name = "Super Admin", enabled = true };
                 adminUser.roles.Add(adminRole);
                 dbContext.users.Add(adminUser);
                 await dbContext.SaveChangesAsync();
-                seedLogger.LogWarning("🚀 [SEED] Admin seeded: {Email}", adminEmail);
+                seedLogger.LogWarning("🚀 [SEED] Admin created and seeded: {Email}", adminEmail);
+            }
+            else if (!adminUser.roles.Any(r => r.role_name == "ADMIN"))
+            {
+                adminUser.roles.Add(adminRole);
+                await dbContext.SaveChangesAsync();
+                seedLogger.LogWarning("🚀 [SEED] Admin role forced for existing user: {Email}", adminEmail);
             }
 
             // 3. Lecturer

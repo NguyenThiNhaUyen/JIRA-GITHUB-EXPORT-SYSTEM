@@ -1,96 +1,53 @@
-using System.Text.Json.Serialization;
-
 namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
 {
-    [JsonPropertyName("id")]
     public long Id { get; set; }
-
-    [JsonPropertyName("course_code")]
     public string CourseCode { get; set; } = null!;
-
-    [JsonPropertyName("course_name")]
     public string CourseName { get; set; } = null!;
-
-    [JsonPropertyName("subject_id")]
     public long SubjectId { get; set; }
-
-    [JsonPropertyName("subject_code")]
     public string SubjectCode { get; set; } = null!;
-
-    [JsonPropertyName("semester_id")]
     public long SemesterId { get; set; }
-
-    [JsonPropertyName("semester_name")]
     public string SemesterName { get; set; } = null!;
-
-    [JsonPropertyName("status")]
     public string Status { get; set; } = "ACTIVE";
-
-    [JsonPropertyName("max_students")]
     public int? MaxStudents { get; set; }
-
-    [JsonPropertyName("lecturers")]
+    public int CurrentStudents { get; set; }
     public List<LecturerInfo> Lecturers { get; set; } = new();
-
-    [JsonPropertyName("enrollments")]
     public List<EnrollmentInfo> Enrollments { get; set; } = new();
+    public List<CourseGroupInfo> Groups { get; set; } = new();
+}
+
+public class CourseGroupInfo
+{
+    public long Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string GithubStatus { get; set; } = "NONE";
+    public string JiraStatus { get; set; } = "NONE";
 }
 
 public class SubjectInfo
 {
-    [JsonPropertyName("id")]
     public long Id { get; set; }
-    
-    [JsonPropertyName("subject_code")]
     public string SubjectCode { get; set; } = null!;
-    
-    [JsonPropertyName("subject_name")]
     public string SubjectName { get; set; } = null!;
-    
-    [JsonPropertyName("department")]
     public string Department { get; set; } = null!;
-    
-    [JsonPropertyName("description")]
     public string? Description { get; set; }
-    
-    [JsonPropertyName("credits")]
     public int Credits { get; set; }
-
-
-    
-    [JsonPropertyName("max_students")]
     public int MaxStudents { get; set; }
-    
-    [JsonPropertyName("status")]
     public string Status { get; set; } = null!;
-    
-    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; set; }
 }
 
 public class SemesterInfo
 {
-    [JsonPropertyName("id")]
     public long Id { get; set; }
-
-    [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
-
-    [JsonPropertyName("semester_code")]
-    public string? Code { get; set; } // alias for Name, used by FE
-
-    [JsonPropertyName("start_date")]
+    public string? Code { get; set; }
     public DateOnly StartDate { get; set; }
-
-    [JsonPropertyName("end_date")]
     public DateOnly EndDate { get; set; }
-    
-    [JsonPropertyName("status")]
-    public string Status 
+    public string Status
     {
-        get 
+        get
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (today < StartDate) return "UPCOMING";
@@ -102,35 +59,21 @@ public class SemesterInfo
 
 public class LecturerInfo
 {
-    [JsonPropertyName("user_id")]
     public long UserId { get; set; }
-
-    [JsonPropertyName("full_name")]
     public string FullName { get; set; } = null!;
-
-    [JsonPropertyName("lecturer_code")]
     public string LecturerCode { get; set; } = null!;
-
-    [JsonPropertyName("email")]
-    public string? OfficeEmail { get; set; }
-
-    [JsonPropertyName("department")]
+    public string? Email { get; set; }
     public string? Department { get; set; }
-
-    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; set; }
 }
 
 public class EnrollmentInfo
 {
-    [JsonPropertyName("user_id")]
     public long UserId { get; set; }
-
-    [JsonPropertyName("full_name")]
     public string FullName { get; set; } = null!;
-
-    [JsonPropertyName("student_code")]
     public string StudentCode { get; set; } = null!;
+    public string StudentId { get; set; } = null!;
+    public string? Email { get; set; }
 }
 
 public class EnrollmentResult
@@ -153,18 +96,12 @@ public class LecturerCourseStatResponse
     public string SubjectCode { get; set; } = string.Empty;
     public string Semester { get; set; } = string.Empty;
     public int CurrentStudents { get; set; }
-    public int GroupCount { get; set; }
+    public int ProjectsCount { get; set; } // Renamed from GroupCount to match FE real data expect
     public int ActiveTeams { get; set; }
     public int JiraConnected { get; set; }
     public int AlertsCount { get; set; }
     public bool Archived { get; set; }
     public DateTime? LastCommit { get; set; }
-    public List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat> CommitTrend { get; set; } = new();
+    public List<EnrollmentInfo> Enrollments { get; set; } = new();
+    public List<int> CommitTrends { get; set; } = new(); // Match basic integer array
 }
-
-
-
-
-
-
-

@@ -29,6 +29,7 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<audit_log> AuditLogs { get; }
     IGenericRepository<team_invitation> TeamInvitations { get; }
     IGenericRepository<external_account> ExternalAccounts { get; }
+    IGenericRepository<notification> Notifications { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

@@ -51,6 +51,47 @@ public class SrsController : ControllerBase
         _srsService = srsService;
     }
 
+    [HttpGet]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<SrsDocumentResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSrsListByCourse(
+        [FromQuery] long? courseId, [FromQuery] long? projectId, 
+        [FromQuery] string? status, [FromQuery] string? milestone, 
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _srsService.GetSrsListByCourseAsync(courseId, projectId, status, milestone, page, pageSize);
+        return Ok(ApiResponse<PagedResponse<SrsDocumentResponse>>.SuccessResponse(result));
+    }
+
+    [HttpGet("{id}")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<SrsDocumentResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSrsById(long id)
+    {
+        var result = await _srsService.GetSrsByIdAsync(id);
+        return Ok(ApiResponse<SrsDocumentResponse>.SuccessResponse(result));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<SrsDocumentResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UploadSrsFlat([FromForm] long projectId, [FromForm] UploadSrsRequest request)
+    {
+        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var result = await _srsService.UploadSrsAsync(projectId, userId, request);
+        return Ok(ApiResponse<SrsDocumentResponse>.SuccessResponse(result, "SRS uploaded successfully"));
+    }
+
+    [HttpPost("remind-overdue")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RemindOverdue()
+    {
+        await _srsService.RemindOverdueAsync();
+        return Ok(ApiResponse<object>.SuccessResponse(new { }, "Reminders sent for overdue SRS"));
+    }
+
     [HttpPatch("{id}/status")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<SrsDocumentResponse>), StatusCodes.Status200OK)]

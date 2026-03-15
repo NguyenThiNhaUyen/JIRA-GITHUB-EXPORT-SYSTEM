@@ -230,9 +230,10 @@ public class ProjectIntegrationService : IProjectIntegrationService
 
         return new IntegrationInfo
         {
-            ApprovalStatus = integration.approval_status,
-            GithubRepoUrl = integration.github_repo?.repo_url,
-            JiraSiteUrl = integration.jira_project?.jira_url
+            GithubStatus = integration.approval_status ?? "PENDING",
+            JiraStatus = integration.approval_status ?? "PENDING",
+            GithubUrl = integration.github_repo?.repo_url,
+            JiraUrl = integration.jira_project?.jira_url
         };
     }
 

@@ -1,68 +1,64 @@
-using System.Text.Json.Serialization;
-
 namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class ProjectDetailResponse
 {
-    [JsonPropertyName("id")]
     public long Id { get; set; }
-
-    [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
-
-    [JsonPropertyName("description")]
     public string? Description { get; set; }
-
-    [JsonPropertyName("status")]
     public string Status { get; set; } = null!;
-
-    [JsonPropertyName("course_name")]
+    public long CourseId { get; set; }
     public string CourseName { get; set; } = null!;
-
-    [JsonPropertyName("github_repo_url")]
+    public string CourseCode { get; set; } = string.Empty;  // e.g. "SWD392-SE1831"
     public string? GithubRepoUrl { get; set; }
-
-    [JsonPropertyName("jira_project_url")]
     public string? JiraProjectUrl { get; set; }
-
-    [JsonPropertyName("integration_status")]
-    public string? IntegrationStatus { get; set; }
-
-    [JsonPropertyName("members")]
-    public List<TeamMemberInfo> TeamMembers { get; set; } = new();
+    public string? GithubStatus { get; set; }
+    public string? JiraStatus { get; set; }
+    public IntegrationInfo? Integration { get; set; }
+    public List<TeamMemberInfo> Members { get; set; } = new();
+    public int CommitCount { get; set; }
+    public int Commits { get; set; }              // alias for CommitCount
+    public int IssueCount { get; set; }
+    public int IssuesDone { get; set; }           // done issues count
+    public int OpenIssues { get; set; }           // open issues count
+    public int PrsMerged { get; set; }            // merged pull requests count
+    public int TeamSize { get; set; }             // number of active members
+    public int SrsVersions { get; set; }          // SRS docs submitted
+    public int SprintCompletion { get; set; }     // alias for ProgressPercent
+    public int MyContribution { get; set; }       // current user contribution %
+    public string? LastCommit { get; set; }       // relative string: "2 giờ trước"
+    public DateTime? LastActivity { get; set; }
+    public int ProgressPercent { get; set; }
+    public int RiskScore { get; set; }
 }
 
 public class TeamMemberInfo
 {
-    [JsonPropertyName("user_id")]
-    public long StudentUserId { get; set; }
-
-    [JsonPropertyName("student_code")]
+    public long StudentUserId { get; set; } // Changed from StudentId to match FE
     public string StudentCode { get; set; } = null!;
-
-    [JsonPropertyName("full_name")]
-    public string FullName { get; set; } = null!;
-
-    [JsonPropertyName("team_role")]
-    public string TeamRole { get; set; } = null!;
-
-    [JsonPropertyName("participation_status")]
+    public string StudentName { get; set; } = null!;
+    public string Role { get; set; } = null!;
     public string ParticipationStatus { get; set; } = null!;
-
-    [JsonPropertyName("contribution_score")]
     public int ContributionScore { get; set; }
 }
 
 public class IntegrationInfo
 {
-    [JsonPropertyName("github_repo_url")]
-    public string? GithubRepoUrl { get; set; }
-    
-    [JsonPropertyName("jira_url")]
-    public string? JiraSiteUrl { get; set; }
-    
-    [JsonPropertyName("status")]
-    public string ApprovalStatus { get; set; } = "PENDING";
+    public string? GithubUrl { get; set; }
+    public string? JiraUrl { get; set; }
+    public string GithubStatus { get; set; } = "PENDING";
+    public string JiraStatus { get; set; } = "PENDING";
+}
+
+public class CommitResponse
+{
+    public long Id { get; set; }
+    public string Sha { get; set; } = null!;
+    public string Message { get; set; } = null!;
+    public string? AuthorName { get; set; }
+    public string? AuthorStudentCode { get; set; }
+    public DateTime? CommittedAt { get; set; }
+    public int Additions { get; set; }
+    public int Deletions { get; set; }
 }
 
 public class ProjectDashboardResponse
@@ -115,10 +111,3 @@ public class MemberContribution
     public int InactiveDays { get; set; }
     public string? Alert { get; set; }
 }
-
-
-
-
-
-
-

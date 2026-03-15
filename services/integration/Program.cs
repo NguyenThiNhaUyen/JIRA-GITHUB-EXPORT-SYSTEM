@@ -99,6 +99,20 @@ using Microsoft.OpenApi.Models;
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request for the hub
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = context =>
                     {
                         context.HandleResponse();
@@ -150,6 +164,7 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
 
 
             // Background Services
@@ -168,7 +183,12 @@ using Microsoft.OpenApi.Models;
             // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
             // ============================================
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();
@@ -261,22 +281,27 @@ using Microsoft.OpenApi.Models;
             // Global exception handler
             app.UseCustomExceptionHandler();
 
-            // Swagger (Development only)
-            if (app.Environment.IsDevelopment())
+
+           if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-                    c.RoutePrefix = "swagger"; // Swagger at /swagger
-                });
-            }
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+                c.RoutePrefix = "swagger"; // Swagger at /swagger
+            });
+          }
 
-            if (!app.Environment.IsDevelopment())
+            // Render/Cloud handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-Render environments.
+            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
             {
                 app.UseHttpsRedirection();
             }
 
+            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
             app.UseStaticFiles();
 
             // CORS
@@ -288,7 +313,9 @@ using Microsoft.OpenApi.Models;
 
             // Map controllers & SignalR Hubs
             app.MapControllers();
+            // Mount NotificationHub on both paths to support FE calling /notificationHub
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
 
             // Health Check Endpoint for Render/Deployments
             app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
@@ -308,8 +335,22 @@ using Microsoft.OpenApi.Models;
             // ============================================
             // RUN APPLICATION
             // ============================================
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-            await app.RunAsync($"http://0.0.0.0:{port}");
+            var envPort = Environment.GetEnvironmentVariable("PORT");
+            if (!string.IsNullOrEmpty(envPort))
+            {
+                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
+                var url = $"http://0.0.0.0:{envPort}";
+                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
+                app.Urls.Clear(); // Clear any pre-configured URLs
+                app.Urls.Add(url);
+                await app.RunAsync();
+            }
+            else
+            {
+                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
+                await app.RunAsync();
+            }
 
 
 

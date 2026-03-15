@@ -116,11 +116,8 @@ public class SyncWorker : BackgroundService
             .AsNoTracking() // Optimize Memory
             .ToListAsync(stoppingToken);
             
-        // Explicitly dispose of the DB Context attached to the current Scope
-        // so we don't hold the connection open while making slow REST API calls to Github/Jira
-        unitOfWork.Dispose();
-
         _logger.LogInformation("Found {Count} active integrations to sync. DB Connection released to pool.", integrations.Count);
+
 
         foreach (var integration in integrations)
         {

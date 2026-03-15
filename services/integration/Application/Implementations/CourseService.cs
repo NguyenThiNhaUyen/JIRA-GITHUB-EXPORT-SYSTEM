@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -20,19 +22,22 @@ public class CourseService : ICourseService
     private readonly ILogger<CourseService> _logger;
     private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
     private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly IAnalyticsService _analyticsService;
 
     public CourseService(
         IUnitOfWork unitOfWork, 
         IMapper mapper, 
         ILogger<CourseService> logger,
         JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher,
-        IHubContext<NotificationHub> hubContext)
+        IHubContext<NotificationHub> hubContext,
+        IAnalyticsService analyticsService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _passwordHasher = passwordHasher;
         _hubContext = hubContext;
+        _analyticsService = analyticsService;
     }
 
 
@@ -116,13 +121,32 @@ public class CourseService : ICourseService
 
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+        var course = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+            .Include(c => c.projects).ThenInclude(p => p.project_integration)
+            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+            .FirstOrDefaultAsync(c => c.id == courseId);
+
         if (course == null)
         {
             throw new NotFoundException("Course not found");
         }
 
-        return _mapper.Map<CourseDetailResponse>(course);
+        var response = _mapper.Map<CourseDetailResponse>(course);
+        
+        // Manual mapping for groups with clear status
+        response.Groups = (course.projects ?? new List<project>()).Select(p => new CourseGroupInfo
+        {
+            Id = p.id,
+            Name = p.name,
+            GithubStatus = p.project_integration?.approval_status ?? "NONE",
+            JiraStatus = p.project_integration?.approval_status ?? "NONE"
+        }).ToList();
+
+        return response;
     }
 
     public async Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request)
@@ -223,16 +247,15 @@ public class CourseService : ICourseService
         
         await _unitOfWork.SaveChangesAsync();
 
-        // Send Real-time notification
+        // Send Real-time notification via NEW system
         try
         {
-            await _hubContext.Clients.User(lecturerUserId.ToString())
-                .SendAsync("ReceiveNotification", new
-                {
-                    type = "SYSTEM",
-                    message = $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                    timestamp = DateTime.UtcNow
-                });
+            await _analyticsService.BuildNotificationAsync(
+                lecturerUserId, 
+                "SYSTEM", 
+                $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
+                System.Text.Json.JsonSerializer.Serialize(new { entityId = courseId, entityType = "COURSE" })
+            );
         }
         catch (Exception ex)
         {
@@ -402,6 +425,40 @@ public class CourseService : ICourseService
             .ToListAsync();
 
         return pendingProjects;
+    }
+
+    public async Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize)
+    {
+        var query = _unitOfWork.CourseEnrollments.Query()
+            .Include(e => e.student_user).ThenInclude(s => s.user)
+            .Where(e => e.course_id == courseId && e.status == "ACTIVE");
+
+        var total = await query.CountAsync();
+        page = page > 0 ? page : 1;
+        pageSize = pageSize > 0 ? pageSize : 50;
+
+        var items = await query
+            .OrderBy(e => e.student_user.user.full_name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new EnrollmentInfo
+            {
+                UserId = e.student_user_id,
+                FullName = e.student_user.user.full_name,
+                Email = e.student_user.user.email,
+                StudentCode = e.student_user.student_code,
+                StudentId = e.student_user.student_code
+            })
+            .ToListAsync();
+
+        return new PagedResponse<EnrollmentInfo>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(total / (double)pageSize)
+        };
     }
 
     public async Task<EnrollmentResult> ImportEnrollmentsFromExcelAsync(long courseId, Microsoft.AspNetCore.Http.IFormFile file)

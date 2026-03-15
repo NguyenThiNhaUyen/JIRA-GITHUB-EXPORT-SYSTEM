@@ -1,3 +1,18 @@
+# === [1. CHẶN TRIỆT ĐỂ FILE RÁC PHÁT SINH] ===
+# Chặn tất cả các file log và text rác ở bất kỳ đâu
+*.log
+*.txt
+*.binlog
+*.err
+*.out
+*.md
+
+# Chặn đích danh các file bạn vừa bị dính
+build_output.txt
+final_errors.txt
+build.log
+build_errors.txt
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -19,6 +34,7 @@ bld/
 *.user
 *.userosscache
 *.sln.docstates
+
 
 # .NET Core
 project.lock.json
@@ -47,8 +63,13 @@ TestResults/
 coveragereport/
 
 # Node
-node_modules
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
 
+
+     
 # Flutter generated
 apps/mobile_flutter/windows/
 apps/mobile_flutter/web/
