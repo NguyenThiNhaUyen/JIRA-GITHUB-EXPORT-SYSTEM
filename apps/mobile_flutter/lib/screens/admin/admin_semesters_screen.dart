@@ -3,14 +3,14 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 
-class AdminCoursesScreen extends StatefulWidget {
-  const AdminCoursesScreen({super.key});
+class AdminSemestersScreen extends StatefulWidget {
+  const AdminSemestersScreen({super.key});
 
   @override
-  State<AdminCoursesScreen> createState() => _AdminCoursesScreenState();
+  State<AdminSemestersScreen> createState() => _AdminSemestersScreenState();
 }
 
-class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
+class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<Map<String, dynamic>> _semesters = [

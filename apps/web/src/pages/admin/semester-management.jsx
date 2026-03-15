@@ -8,7 +8,6 @@ import {
   Trash2, 
   Edit2, 
   Zap,
-  LayoutDashboard,
   BarChart3,
   Calendar
 } from "lucide-react";
@@ -92,9 +91,7 @@ export default function SemesterManagement() {
   const handleEdit = (semester) => {
     setEditingSemester(semester);
     const [type, year] = semester.name?.split(" ") || ["Spring", new Date().getFullYear()];
-    
     const formatDate = (d) => d ? d.split('T')[0] : "";
-    
     setFormData({ 
       type: type || "Spring", 
       year: year || new Date().getFullYear(), 
@@ -219,7 +216,7 @@ export default function SemesterManagement() {
           <div className="space-y-6">
             {semesters.slice(0, 5).map((s) => {
               const count = allCourses.filter(c => c.semesterId === s.id || c.semester?.id === s.id).length;
-              const percentage = Math.min((count / 30) * 100, 100); // Giả định max 30 lớp/kỳ
+              const percentage = Math.min((count / 30) * 100, 100);
               return (
                 <div key={s.id} className="relative z-10">
                   <div className="flex justify-between items-end mb-2 px-1">
@@ -284,39 +281,43 @@ export default function SemesterManagement() {
                       </div>
                     </TableCell>
                     <TableCell className="py-6 px-8 text-center">
-                       <span className={`px-4 py-1.5 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
-                         count > 0 ? "bg-indigo-50 border-indigo-100 text-indigo-700" : "bg-gray-50 border-gray-100 text-gray-400"
-                       }`}>
-                         {count} Lớp học
-                       </span>
+                      <span className={`px-4 py-1.5 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
+                        count > 0 ? "bg-indigo-50 border-indigo-100 text-indigo-700" : "bg-gray-50 border-gray-100 text-gray-400"
+                      }`}>
+                        {count} Lớp học
+                      </span>
                     </TableCell>
                     <TableCell className="py-6 px-8 text-center">
-                       <span className={`px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest border transition-all ${
-                         s.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                         s.status === 'UPCOMING' ? 'bg-sky-50 border-sky-100 text-sky-700' :
-                         'bg-gray-50 border-gray-100 text-gray-400'
-                       }`}>
-                         {s.status === 'ACTIVE' ? 'Đang mở' : s.status === 'UPCOMING' ? 'Sắp mở' : 'Đã đóng'}
-                       </span>
+                      <span className={`px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest border transition-all ${
+                        s.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                        s.status === 'UPCOMING' ? 'bg-sky-50 border-sky-100 text-sky-700' :
+                        'bg-gray-50 border-gray-100 text-gray-400'
+                      }`}>
+                        {s.status === 'ACTIVE' ? 'Đang mở' : s.status === 'UPCOMING' ? 'Sắp mở' : 'Đã đóng'}
+                      </span>
                     </TableCell>
                     <TableCell className="py-6 px-8">
-                       <div className="flex justify-end gap-2">
-                          <Button onClick={() => handleEdit(s)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-teal-100 hover:text-teal-600 shadow-sm transition-all"><Edit2 size={16}/></Button>
-                          <Button onClick={() => handleDelete(s.id)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-red-100 hover:text-red-600 shadow-sm transition-all"><Trash2 size={16}/></Button>
-                       </div>
-                    </td>
+                      <div className="flex justify-end gap-2">
+                        <Button onClick={() => handleEdit(s)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-teal-100 hover:text-teal-600 shadow-sm transition-all">
+                          <Edit2 size={16}/>
+                        </Button>
+                        <Button onClick={() => handleDelete(s.id)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-red-100 hover:text-red-600 shadow-sm transition-all">
+                          <Trash2 size={16}/>
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {filteredSemesters.length === 0 && (
                 <TableRow>
-                   <td colSpan={5} className="py-20 text-center">
-                      <CalendarDays size={48} className="text-gray-100 mx-auto mb-4" />
-                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Không tìm thấy học kỳ khả dụng</p>
-                   </td>
+                  <TableCell colSpan={5} className="py-20 text-center">
+                    <CalendarDays size={48} className="text-gray-100 mx-auto mb-4" />
+                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Không tìm thấy học kỳ khả dụng</p>
+                  </TableCell>
                 </TableRow>
               )}
-            </tbody>
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
@@ -324,8 +325,8 @@ export default function SemesterManagement() {
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingSemester ? "Cập nhật Học kỳ" : "Thiết lập Học kỳ mới"} size="md">
         <form onSubmit={handleSubmit} className="p-2 space-y-6">
           <div className="p-4 bg-teal-50 rounded-2xl border border-teal-100 mb-2">
-             <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1">Dự kiến tên học kỳ</p>
-             <p className="text-sm font-black text-gray-800 tracking-tight">{formData.type} {formData.year}</p>
+            <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1">Dự kiến tên học kỳ</p>
+            <p className="text-sm font-black text-gray-800 tracking-tight">{formData.type} {formData.year}</p>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <SelectField label="Giai đoạn đào tạo" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>

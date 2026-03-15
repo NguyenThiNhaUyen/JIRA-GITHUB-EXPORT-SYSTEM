@@ -4,10 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/mock_data.dart';
-<<<<<<< HEAD
-import '../../../widgets/app_top_header.dart';
-=======
->>>>>>> origin
 import '../../../widgets/bottom_nav_bar.dart';
 
 class StudentDashboard extends StatelessWidget {
@@ -21,23 +17,6 @@ class StudentDashboard extends StatelessWidget {
     final activeCourses = courses.where((c) => c.isActive).length;
 
     return Scaffold(
-<<<<<<< HEAD
-      appBar: AppTopHeader(
-        title: 'Trang chủ',
-        user: AppUser(
-          name: user.fullName,
-          email: '${user.studentCode?.toLowerCase() ?? 'user'}@fe.edu.vn',
-          role: 'STUDENT',
-        ),
-        invitations: [
-          // Mock invitation
-          GroupInvitation(
-            id: '1',
-            projectName: 'E-learning Platform',
-            invitedByName: 'Nguyễn Văn A',
-            createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-          )
-=======
       appBar: AppBar(
         title: const Text('Trang chủ'),
         actions: [
@@ -45,7 +24,6 @@ class StudentDashboard extends StatelessWidget {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
           ),
->>>>>>> origin
         ],
       ),
       body: SingleChildScrollView(
@@ -66,11 +44,7 @@ class StudentDashboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-<<<<<<< HEAD
                     'Chào ${user.fullName.split(' ').last}! 👋',
-=======
-                    'Chào ${user.name.split(' ').last}! 👋',
->>>>>>> origin
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
