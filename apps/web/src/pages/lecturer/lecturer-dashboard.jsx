@@ -1,8 +1,9 @@
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
 import { subDays } from "date-fns";
-import { useGetSemesters } from "../../features/system/hooks/useSystem.js";
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
   LineChart,
   Line,
@@ -24,8 +25,12 @@ import {
   TrendingUp, Clock, CheckCircle, Activity, FileText
 } from "lucide-react";
 
-// Feature Hooks
-import { useGetSubjects } from "../../features/system/hooks/useSystem.js";
+import {
+  useLecturerWorkload,
+  useAnalyticsHeatmap,
+  useAnalyticsRadar,
+  useCommitTrends
+} from "../../features/dashboard/hooks/useDashboard.js";
 import { useGetCourses, useGetCourseById } from "../../features/courses/hooks/useCourses.js";
 import { useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
@@ -52,9 +57,10 @@ const [semesterFilter, setSemesterFilter] = useState("all");
 const [courseFilter, setCourseFilter] = useState("all");
 const [groupFilter, setGroupFilter] = useState("all");
 
+const { user } = useAuth();
 const { data: semesters = [] } = useGetSemesters();
-const { data: coursesApi  = [] } = useGetCourses();
-const { data: projects  = [] } = useGetProjects(); 
+const { data: workload } = useLecturerWorkload(user?.id);
+const { data: projects = [] } = useGetProjects(); 
 
 
 const [selectedSubject, setSelectedSubject] = useState("");
@@ -78,15 +84,13 @@ const demoCourses = [
 
 /* ───── Merge API + demo ───── */
 
-const subjects = subjectsData.items.length
+const subjects = subjectsData?.items?.length
   ? subjectsData.items
   : demoSubjects;
 
-const coursesRaw = coursesData.items.length
+const coursesRaw = coursesData?.items?.length
   ? coursesData.items
-  : coursesApi.length
-    ? coursesApi
-    : demoCourses;
+  : demoCourses;
 
 /* ───── Auto select subject ───── */
 
@@ -114,21 +118,22 @@ useEffect(() => {
   const rejectIntMutation = useRejectIntegration();
   const resolveAlertMutation = useResolveAlert();
 
-const MOCK_HEATMAP = [
-  { date: "2026-03-01", count: 3 },
-  { date: "2026-03-02", count: 6 },
-  { date: "2026-03-03", count: 2 },
-  { date: "2026-03-04", count: 8 },
-  { date: "2026-03-05", count: 4 }
-];
+const { data: heatmapDataCloud } = useAnalyticsHeatmap();
+const { data: radarDataCloud } = useAnalyticsRadar(selectedCourse);
+const { data: commitTrendsCloud } = useCommitTrends(7);
 
-const MOCK_COMMITS = [
-  { day: "Mon", commits: 5 },
-  { day: "Tue", commits: 7 },
-  { day: "Wed", commits: 3 },
-  { day: "Thu", commits: 9 },
-  { day: "Fri", commits: 12 }
-];
+const heatmapValues = heatmapDataCloud || [];
+const radarValues = radarDataCloud || [];
+// Commit Trend: ưu tiên dữ liệu thực từ API, fallback sang mảng mẫu
+const commitChartData = commitTrendsCloud?.length
+  ? commitTrendsCloud
+  : [
+    { day: "Mon", commits: 5 },
+    { day: "Tue", commits: 7 },
+    { day: "Wed", commits: 3 },
+    { day: "Thu", commits: 9 },
+    { day: "Fri", commits: 12 }
+  ];
 
   //const subjects = subjectsData.items || [];
   //const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
@@ -217,8 +222,9 @@ const MOCK_COMMITS = [
   };
 
   // Derived stats
-  const stats = {
-    total: groups.length,
+  const dashboardStats = {
+    courses: workload?.coursesCount || 0,
+    students: workload?.studentsCount || 0,
     github: groups.filter(g => g.integration?.githubStatus === "APPROVED").length,
     jira: groups.filter(g => g.integration?.jiraStatus === "APPROVED").length,
     alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
@@ -237,17 +243,9 @@ const MOCK_COMMITS = [
   );
 
   // Build RadarChart data from groups
-  const radarData = groups.map(group => {
-    const teamSize = group.team?.length || 0;
-    return {
-      groupName: group.name,
-      commits: Math.floor(Math.random() * 20) + 1, // Mock commits for now
-      srsDone: Math.floor(Math.random() * 3), // Mock SRS for now
-      teamSize,
-      githubLinked: group.integration?.githubStatus === 'APPROVED' ? 1 : 0,
-      jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 1 : 0,
-    };
-  });
+  // Build RadarChart data from groups (Deprecated, use API if possible)
+  // const radarData = ...
+
 
 
   return (
@@ -300,10 +298,10 @@ const MOCK_COMMITS = [
 
       {/* ── A. Summary Stats ────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Tổng nhóm" value={selectedCourse ? stats.total : "—"} />
-        <StatCard icon={<GitBranch size={20} />} color="bg-teal-500" label="GitHub đã duyệt" value={selectedCourse ? stats.github : "—"} />
-        <StatCard icon={<BookOpen size={20} />} color="bg-indigo-500" label="Jira đã duyệt" value={selectedCourse ? stats.jira : "—"} />
-        <StatCard icon={<AlertTriangle size={20} />} color="bg-orange-400" label="Cần cảnh báo" value={selectedCourse ? stats.alerts : "—"} />
+        <StatCard icon={<BookOpen size={20} />} color="bg-blue-600" label="Lớp đang dạy" value={dashboardStats.courses} />
+        <StatCard icon={<Users size={20} />} color="bg-indigo-500" label="Tổng sinh viên" value={dashboardStats.students} />
+        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Nhóm của lớp" value={selectedCourse ? groups.length : "—"} />
+        <StatCard icon={<AlertTriangle size={20} />} color="bg-orange-400" label="Cần cảnh báo" value={selectedCourse ? dashboardStats.alerts : "—"} />
       </div>
 
       {/* ── B. Activity & Alerts (2-col) ─────── */}
@@ -565,7 +563,7 @@ className="border rounded-lg px-3 py-2 text-sm"
 <CalendarHeatmap
 startDate={subDays(new Date(), 90)}
 endDate={new Date()}
-values={MOCK_HEATMAP}
+values={heatmapValues}
 />
 
 {/* Legend */}
@@ -598,9 +596,9 @@ Commit Trend
 
 <div className="h-64">
 
-<ResponsiveContainer width="100%" height="100%">
+<ResponsiveContainer width="100%" height="100%" minHeight={200}>
 
-<LineChart data={MOCK_COMMITS}>
+<LineChart data={commitChartData}>
 
 <XAxis dataKey="day" />
 <YAxis />
@@ -637,7 +635,7 @@ strokeWidth={3}
 )}
 
 
-      {selectedCourse && radarData.length > 0 && (
+      {selectedCourse && radarValues.length > 0 && (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 pb-4">
             <div className="flex items-center gap-2">
@@ -648,15 +646,17 @@ strokeWidth={3}
               </div>
               <CardTitle className="text-base font-semibold text-gray-800">So sánh Nhóm</CardTitle>
               <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-3 py-1 font-medium border border-gray-100 ml-auto">
-                {radarData.length} nhóm · {currentCourse?.code}
+                {radarValues.length} nhóm · {currentCourse?.code}
               </span>
             </div>
           </CardHeader>
           <CardContent className="pt-4 pb-6">
             <p className="text-xs text-gray-400 mb-4 text-center">
-              So sánh 5 chỉ số: Commits · SRS Done · Team Size · GitHub · Jira (đã chuẩn hoá 0–100)
+              So sánh các chỉ số: Commits · SRS Done · Team Size · GitHub · Jira (đã chuẩn hoá 0–100)
             </p>
-            <GroupRadarChart data={radarData} />
+            <div className="h-[350px] w-full">
+               <GroupRadarChart data={radarValues} />
+            </div>
           </CardContent>
         </Card>
       )}

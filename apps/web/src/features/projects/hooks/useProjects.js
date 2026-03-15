@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
     getProjects,
     getProjectById,
@@ -13,6 +13,7 @@ import {
     rejectIntegration,
     getProjectMetrics
 } from '../api/projectApi.js';
+import * as projectApi from '../api/projectApi.js';
 
 
 export const PROJECT_KEYS = {
@@ -141,5 +142,23 @@ export const useRejectIntegration = () => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
+    });
+};
+
+export const useProjectCommitHistory = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'commit-history'],
+        queryFn: () => projectApi.getProjectCommitHistory(projectId),
+        enabled: !!projectId
+    });
+};
+
+export const useCourseCommitHistories = (projectIds) => {
+    return useQueries({
+        queries: (projectIds || []).map(id => ({
+            queryKey: [...PROJECT_KEYS.detail(id), 'commit-history'],
+            queryFn: () => projectApi.getProjectCommitHistory(id),
+            enabled: !!id,
+        }))
     });
 };

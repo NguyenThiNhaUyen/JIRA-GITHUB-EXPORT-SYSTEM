@@ -56,3 +56,15 @@ export async function getMyReports() {
     const res = await client.get(`/reports`);
     return unwrap(res);
 }
+
+export async function getProjectReports(projectId, type) {
+    const res = await client.get(`/reports`, {
+        params: { projectId, type }
+    });
+    return unwrap(res);
+}
+
+export async function updateReportStatus(reportId, status) {
+    const res = await client.put(`/reports/${reportId}/status`, { status });
+    return unwrap(res);
+}

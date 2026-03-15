@@ -17,7 +17,9 @@ import '../screens/admin/course_management_screen.dart';
 import '../screens/admin/admin_groups_screen.dart';
 import '../screens/lecturer/lecturer_dashboard_screen.dart';
 import '../screens/lecturer/lecturer_groups_screen.dart';
+import '../screens/lecturer/my_courses_screen.dart';
 import '../screens/admin/admin_users_screen.dart';
+import '../screens/lecturer/manage_groups_screen.dart';
 
 
 final GoRouter router = GoRouter(
@@ -75,6 +77,16 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/lecturer/groups',
       builder: (context, state) => const LecturerGroupsScreen(),
+    ),
+    GoRoute(
+      path: '/lecturer/my-courses',
+      builder: (context, state) => const MyCoursesScreen(),
+    ),
+    GoRoute(
+      path: '/lecturer/course/:courseId/manage-groups',
+      builder: (context, state) => ManageGroupsScreen(
+        courseId: state.pathParameters['courseId'] ?? '',
+      ),
     ),
 
     // ── ADMIN ─────────────────────────────────

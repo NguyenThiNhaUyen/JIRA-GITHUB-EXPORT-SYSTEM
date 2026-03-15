@@ -30,6 +30,8 @@ import {
 } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useCourseProjectReports, useUpdateReportStatus } from "../../features/admin/hooks/useReports.js";
 
 /* --------------------------------- MOCK --------------------------------- */
 
@@ -417,27 +419,93 @@ export default function SrsReports() {
   const [sortBy, setSortBy] = useState("latest");
   const [feedbackText, setFeedbackText] = useState("");
 
-  useEffect(() => {
-    const merged = MOCK_SRS.map((srs) => {
-      const project = PROJECTS.find((p) => p.id === srs.projectId);
-      const course = COURSES.find((c) => c.id === project?.courseId);
+  const updateStatusMutation = useUpdateReportStatus();
+  
+  const { data: coursesData = { items: [] } } = useGetCourses({ pageSize: 100 });
+  const realCourses = coursesData?.items || [];
+  const activeCourses = realCourses.length > 0 ? realCourses : COURSES;
 
-      return {
-        ...srs,
-        teamName: project?.teamName || "Unknown Team",
-        projectName: project?.projectName || "Unknown Project",
-        leader: project?.leader || "—",
-        members: project?.members || [],
-        jiraUrl: project?.jiraUrl || "#",
-        githubUrl: project?.githubUrl || "#",
-        courseCode: course?.code || "—",
-        courseName: course?.name || "—",
-      };
+  const allProjectsList = useMemo(() => {
+    if (realCourses.length > 0) {
+      let projs = [];
+      realCourses.forEach(c => {
+        const groups = c.groups || c.projects || [];
+        groups.forEach(g => {
+           projs.push({
+             ...g,
+             courseId: c.id,
+             courseCode: c.code,
+             courseName: c.name,
+             teamName: g.name,
+             projectName: g.description || "Unknown Project", 
+             leader: g.members?.find(m => m.teamRole === "LEADER")?.studentName || "—",
+             members: g.members?.map(m => m.studentName) || [],
+             jiraUrl: g.integration?.jiraProjectUrl || "#",
+             githubUrl: g.integration?.githubRepoUrl || "#",
+           });
+        });
+      });
+      return projs;
+    }
+    return PROJECTS; 
+  }, [realCourses]);
+
+  const reportQueries = useCourseProjectReports(realCourses.length ? allProjectsList.map(p => p.id) : [], "SRS");
+
+  useEffect(() => {
+    if (!realCourses.length) {
+      const merged = MOCK_SRS.map((srs) => {
+        const project = PROJECTS.find((p) => p.id === srs.projectId);
+        const course = COURSES.find((c) => c.id === project?.courseId);
+
+        return {
+          ...srs,
+          teamName: project?.teamName || "Unknown Team",
+          projectName: project?.projectName || "Unknown Project",
+          leader: project?.leader || "—",
+          members: project?.members || [],
+          jiraUrl: project?.jiraUrl || "#",
+          githubUrl: project?.githubUrl || "#",
+          courseCode: course?.code || "—",
+          courseName: course?.name || "—",
+        };
+      });
+
+      setSrsList(merged);
+      if (merged.length && !selected) setSelected(merged[0].id);
+      return;
+    }
+
+    let merged = [];
+    allProjectsList.forEach((project, index) => {
+       const query = reportQueries[index];
+       if (query?.data && Array.isArray(query.data)) {
+          query.data.forEach(rpt => {
+             merged.push({
+                ...rpt,
+                id: rpt.id || rpt.reportId,
+                projectId: project.id,
+                teamName: project.teamName || "Unknown Team",
+                projectName: project.projectName || "Unknown Project",
+                leader: project.leader,
+                members: project.members || [],
+                jiraUrl: project.jiraUrl || "#",
+                githubUrl: project.githubUrl || "#",
+                courseCode: project.courseCode || "—",
+                courseName: project.courseName || "—",
+                score: rpt.score || 0,
+                githubCoverage: rpt.githubCoverage || 0,
+             });
+          });
+       }
     });
 
-    setSrsList(merged);
-    if (merged.length) setSelected(merged[0].id);
-  }, []);
+    if (merged.length > 0) {
+      // sort again by update or somewhat to ensure stability, avoid deep updates causing loop
+      setSrsList(merged);
+      if (!selected) setSelected(merged[0].id || merged[0].reportId);
+    }
+  }, [realCourses.length, allProjectsList, reportQueries.map(q => q.dataUpdatedAt).join(',')]);
 
   useEffect(() => {
     const current = srsList.find((item) => item.id === selected);
@@ -528,25 +596,32 @@ export default function SrsReports() {
   };
 
   const handleStatusUpdate = (id, newStatus) => {
-    setSrsList((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: newStatus,
-              feedback: feedbackText || item.feedback,
-              reviewer:
-                item.reviewer === "—" || item.reviewer === "Chưa phân công"
-                  ? "Lê Thị Mai"
-                  : item.reviewer,
-              updatedAt: new Date().toISOString(),
-            }
-          : item
-      )
-    );
+    updateStatusMutation.mutate({ reportId: id, status: newStatus }, {
+      onSuccess: () => {
+        setSrsList((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  status: newStatus,
+                  feedback: feedbackText || item.feedback,
+                  reviewer:
+                    item.reviewer === "—" || item.reviewer === "Chưa phân công"
+                      ? "Lê Thị Mai"
+                      : item.reviewer,
+                  updatedAt: new Date().toISOString(),
+                }
+              : item
+          )
+        );
 
-    const label = STATUS_META[newStatus]?.label || newStatus;
-    success(`Đã cập nhật trạng thái sang "${label}"`);
+        const label = STATUS_META[newStatus]?.label || newStatus;
+        success(`Đã cập nhật trạng thái sang "${label}"`);
+      },
+      onError: (error) => {
+         success(`Lỗi cập nhật trạng thái SRS`);
+      }
+    });
   };
 
   const renderStatusChip = (status) => {

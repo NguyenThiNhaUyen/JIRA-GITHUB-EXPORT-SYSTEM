@@ -9,9 +9,10 @@ export default function RoleGuard({ children, requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (userRole !== requiredRole) {
+  if (!userRole || userRole !== requiredRole) {
     // Redirect to unauthorized page or to user's dashboard
-    const userDashboard = `/${userRole.toLowerCase()}`;
+    const roleSlug = userRole ? userRole.toLowerCase() : "login";
+    const userDashboard = `/${roleSlug}`;
     return <Navigate to="/unauthorized" state={{ from: window.location.pathname, redirectTo: userDashboard }} replace />;
   }
 

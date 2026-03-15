@@ -17,11 +17,21 @@ export async function getAlerts(params = {}) {
 }
 
 /**
- * PATCH /api/alerts/:id/resolve
+ * PUT /api/alerts/:id/resolve  (BE v2.2 cũng nhận PATCH, đổi sang PUT chuẩn REST)
  * [LECTURER, ADMIN only]
  * @param {number|string} id
  */
 export async function resolveAlert(id) {
-    const res = await client.patch(`/alerts/${id}/resolve`);
+    const res = await client.put(`/alerts/${id}/resolve`);
+    return unwrap(res);
+}
+
+/**
+ * POST /api/alerts/send
+ * Frontend có thể cho Giảng Viên gửi cảnh báo thủ công.
+ * Payload: { "projectId": 12, "message": "...", "severity": "HIGH" }
+ */
+export async function sendAlert(payload) {
+    const res = await client.post("/alerts/send", payload);
     return unwrap(res);
 }

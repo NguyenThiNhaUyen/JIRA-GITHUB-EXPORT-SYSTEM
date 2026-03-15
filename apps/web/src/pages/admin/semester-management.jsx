@@ -29,6 +29,7 @@ import {
   useCreateSemester,
   useUpdateSemester,
   useDeleteSemester,
+  useGenerateSemesters,
 } from "../../features/system/hooks/useSystem.js";
 
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
@@ -45,10 +46,12 @@ export default function QuanLyHocKy() {
   const createMutation = useCreateSemester();
   const updateMutation = useUpdateSemester();
   const deleteMutation = useDeleteSemester();
+  const generateMutation = useGenerateSemesters();
 
   const isCreating = createMutation.isPending;
-const isUpdating = updateMutation.isPending;
-const isDeleting = deleteMutation.isPending;
+  const isUpdating = updateMutation.isPending;
+  const isDeleting = deleteMutation.isPending;
+  const isGenerating = generateMutation.isPending;
 
   
 
@@ -131,39 +134,13 @@ const semesterExists = (name) => {
   /* ---------------- AUTO GENERATE ---------------- */
 
   const autoGenerateYear = async (year) => {
-    const semestersToCreate = [
-      { type: "Spring", start: `${year}-01-01`, end: `${year}-04-30` },
-      { type: "Summer", start: `${year}-05-01`, end: `${year}-08-31` },
-      { type: "Fall", start: `${year}-09-01`, end: `${year}-12-31` },
-    ];
-
     try {
-
-  for (const s of semestersToCreate) {
-
-    const name = `${s.type} ${year}`;
-
-    if (semesterExists(name)) continue;
-
-    await createMutation.mutateAsync({
-      name,
-      code: name.toUpperCase().replace(/\s+/g, ""),
-      startDate: s.start,
-      endDate: s.end,
-      status: tinhTrangThai(s.start, s.end),
-    });
-
-  }
-
-  success("Đã tạo học kỳ cho năm " + year);
-
-} catch {
-
-  showError("Auto generate thất bại");
-
-}
-
-    success("Đã tạo 3 học kỳ cho năm " + year);
+      await generateMutation.mutateAsync(parseInt(year));
+      success(`Đã tự động khởi tạo học kỳ cho năm ${year}`);
+    } catch (e) {
+      console.error(e);
+      showError("Auto generate thất bại, vui lòng kiểm tra lại phía Server");
+    }
   };
 
   /* ---------------- CRUD ---------------- */
@@ -233,8 +210,8 @@ if (!editingSemester && semesterExists(name)) {
     const payload = {
       name,
       code: name.toUpperCase().replace(/\s+/g, ""),
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      startDate: new Date(formData.startDate).toISOString(),
+      endDate: new Date(formData.endDate).toISOString(),
       status,
     };
 

@@ -5,32 +5,28 @@
 export function mapUser(beUser) {
     if (!beUser) return null;
 
-    // BE role list -> single role string (fallback logic)
-    const roles = beUser.roles || beUser.Roles || [];
-    let role = "STUDENT";
-    if (roles.includes("ADMIN")) role = "ADMIN";
-    else if (roles.includes("LECTURER")) role = "LECTURER";
+    // BE role: string (ADMIN | LECTURER | STUDENT)
+    const role = beUser.role || "STUDENT";
 
     return {
-        id: String(beUser.id || beUser.Id),
-        name: beUser.fullName || beUser.FullName || "",
-        email: beUser.email || beUser.Email || "",
+        id: String(beUser.id),
+        name: beUser.fullName || "",
+        email: beUser.email || "",
         role: role,
-        status: (beUser.enabled ?? beUser.Enabled) ? "ACTIVE" : "DISABLED",
-        studentId: beUser.studentCode || beUser.StudentCode || null,
-        lecturerCode: beUser.lecturerCode || beUser.LecturerCode || null,
-        createdAt: beUser.createdAt || beUser.CreatedAt
+        status: beUser.enabled ? "ACTIVE" : "DISABLED",
+        studentId: beUser.studentId || beUser.studentCode || null,
+        lecturerCode: beUser.lecturerCode || null,
+        createdAt: beUser.createdAt
     };
 }
 
 export function mapUserList(beData) {
-    if (beData && (beData.results || beData.Results)) {
-        const results = beData.results || beData.Results || [];
+    if (beData && beData.items) {
         return {
-            items: results.map(mapUser),
-            totalCount: beData.totalCount || beData.TotalCount || results.length,
-            page: beData.page || beData.Page || 1,
-            pageSize: beData.pageSize || beData.PageSize || results.length
+            items: beData.items.map(mapUser),
+            totalCount: beData.totalCount || beData.items.length,
+            page: beData.page || 1,
+            pageSize: beData.pageSize || beData.items.length
         };
     }
 
@@ -45,3 +41,4 @@ export function mapUserList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
+

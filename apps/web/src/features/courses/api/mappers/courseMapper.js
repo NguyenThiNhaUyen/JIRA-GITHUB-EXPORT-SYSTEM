@@ -38,52 +38,52 @@
 export function mapCourse(beCourse) {
     if (!beCourse) return null;
 
-    const subj = beCourse.subject ?? beCourse.Subject ?? {};
-    const sem = beCourse.semester ?? beCourse.Semester ?? {};
-    const lecs = beCourse.lecturers ?? beCourse.Lecturers ?? [];
+    const subj = beCourse.subject ?? {};
+    const sem = beCourse.semester ?? {};
+    const lecs = beCourse.lecturers ?? [];
 
     return {
         // ── Core identity ──────────────────────────────────────────
-        id: String(beCourse.id ?? beCourse.Id),
-        code: beCourse.courseCode ?? beCourse.CourseCode ?? "",
-        name: beCourse.courseName ?? beCourse.CourseName ?? "",
+        id: String(beCourse.id ?? ""),
+        code: beCourse.courseCode ?? "",
+        name: beCourse.courseName ?? "",
 
-        // ── Subject (nested, FE vẫn có thể dùng subjectId để lookup) ──
-        subjectId: String(subj.id ?? subj.Id ?? ""),
+        // ── Subject ───────────────────────────────────────────────
+        subjectId: String(subj.id ?? ""),
         subject: {
-            id: String(subj.id ?? subj.Id ?? ""),
-            code: subj.subjectCode ?? subj.SubjectCode ?? "",
-            name: subj.subjectName ?? subj.SubjectName ?? "",
+            id: String(subj.id ?? ""),
+            code: subj.subjectCode ?? "",
+            name: subj.subjectName ?? "",
         },
 
         // ── Semester ───────────────────────────────────────────────
-        semesterId: String(sem.id ?? sem.Id ?? ""),
+        semesterId: String(sem.id ?? ""),
         semester: {
-            id: String(sem.id ?? sem.Id ?? ""),
-            name: sem.name ?? sem.Name ?? "",
-            code: sem.name ?? sem.Name ?? "",   // mock dùng .code, BE chỉ có .name
-            startDate: sem.startDate ?? sem.StartDate ?? null,
-            endDate: sem.endDate ?? sem.EndDate ?? null,
+            id: String(sem.id ?? ""),
+            name: sem.name ?? "",
+            code: sem.name ?? "",
+            startDate: sem.startDate ?? null,
+            endDate: sem.endDate ?? null,
         },
 
         // ── Students & capacity ────────────────────────────────────
-        currentStudents: beCourse.enrolledStudentsCount ?? beCourse.EnrolledStudentsCount ?? 0,
-        maxStudents: 40,  // TODO: BE chưa trả về — cần bổ sung vào CourseDetailResponse
+        // BE v2.1 giờ trả về `currentStudents`
+        currentStudents: beCourse.currentStudents ?? beCourse.enrolledStudentsCount ?? 0,
+        maxStudents: beCourse.maxStudents ?? 40,
 
         // ── Status ────────────────────────────────────────────────
-        // TODO: BE chưa trả về status trực tiếp — hardcode ACTIVE tạm thời
-        status: "ACTIVE",
+        status: beCourse.status ?? "ACTIVE",
 
         // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({
-            id: String(l.userId ?? l.UserId ?? ""),
-            name: l.fullName ?? l.FullName ?? "",
-            code: l.lecturerCode ?? l.LecturerCode ?? "",
-            email: l.officeEmail ?? l.OfficeEmail ?? "",
+            id: String(l.userId ?? ""),
+            name: l.fullName ?? "",
+            code: l.lecturerCode ?? "",
+            email: l.officeEmail ?? "",
         })),
 
         // ── Projects count ─────────────────────────────────────────
-        projectsCount: beCourse.projectsCount ?? beCourse.ProjectsCount ?? 0,
+        projectsCount: beCourse.projectsCount ?? 0,
     };
 }
 
@@ -93,12 +93,12 @@ export function mapCourse(beCourse) {
  * @returns {{ items: object[], totalCount: number, page: number, pageSize: number }}
  */
 export function mapCourseList(beData) {
-    // PagedResponse shape: { results: [], totalCount, page, pageSize }
-    if (beData && (beData.results !== undefined || beData.Results !== undefined)) {
-        const results = beData.results ?? beData.Results ?? [];
+    // PagedResponse shape: { items: [], totalCount, page, pageSize }
+    if (beData && (beData.items !== undefined || beData.Items !== undefined || beData.results !== undefined || beData.Results !== undefined)) {
+        const results = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
         return {
             items: results.map(mapCourse),
-            totalCount: beData.totalCount ?? beData.TotalCount ?? results.length,
+            totalCount: beData.totalCount ?? beData.TotalCount ?? beData.totalItems ?? beData.TotalItems ?? results.length,
             page: beData.page ?? beData.Page ?? 1,
             pageSize: beData.pageSize ?? beData.PageSize ?? results.length,
         };

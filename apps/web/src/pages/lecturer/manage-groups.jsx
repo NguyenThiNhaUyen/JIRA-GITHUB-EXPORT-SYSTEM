@@ -41,6 +41,7 @@ import {
   useGetEnrolledStudents,
 } from "../../features/courses/hooks/useCourses.js";
 import {
+  useGetProjects,
   useCreateProject,
   useDeleteProject,
   useUpdateProject,
@@ -48,144 +49,7 @@ import {
   useRemoveTeamMember,
 } from "../../features/projects/hooks/useProjects.js";
 
-const MOCK_COURSE = {
-  id: 1,
-  code: "SWD392-SE1831",
-  name: "Software Architecture",
-  groups: [
-    {
-      id: 101,
-      name: "Nhóm 1",
-      description: "Hệ thống quản lý đồ án sinh viên tích hợp Jira & GitHub",
-      progressPercent: 82,
-      riskScore: 18,
-      commitCount: 124,
-      issueCount: 21,
-      lastActivity: "45 phút trước",
-      integration: {
-        githubStatus: "APPROVED",
-        jiraStatus: "APPROVED",
-      },
-      team: [
-        {
-          studentId: 1,
-          studentName: "Nguyễn Minh Anh",
-          role: "LEADER",
-        },
-        {
-          studentId: 2,
-          studentName: "Trần Gia Huy",
-          role: "MEMBER",
-        },
-        {
-          studentId: 3,
-          studentName: "Lê Hoàng Nam",
-          role: "MEMBER",
-        },
-        {
-          studentId: 4,
-          studentName: "Phạm Khánh Linh",
-          role: "MEMBER",
-        },
-        {
-          studentId: 5,
-          studentName: "Võ Nhật Quang",
-          role: "MEMBER",
-        },
-      ],
-    },
-    {
-      id: 102,
-      name: "Nhóm 2",
-      description: "Nền tảng đánh giá CV và mô phỏng phỏng vấn AI",
-      progressPercent: 61,
-      riskScore: 39,
-      commitCount: 89,
-      issueCount: 16,
-      lastActivity: "3 giờ trước",
-      integration: {
-        githubStatus: "APPROVED",
-        jiraStatus: "PENDING",
-      },
-      team: [
-        {
-          studentId: 6,
-          studentName: "Bùi Thanh Hằng",
-          role: "LEADER",
-        },
-        {
-          studentId: 7,
-          studentName: "Ngô Đức Mạnh",
-          role: "MEMBER",
-        },
-        {
-          studentId: 8,
-          studentName: "Đinh Quốc Bảo",
-          role: "MEMBER",
-        },
-        {
-          studentId: 9,
-          studentName: "Phan Mỹ Tiên",
-          role: "MEMBER",
-        },
-      ],
-    },
-    {
-      id: 103,
-      name: "Nhóm 3",
-      description: "",
-      progressPercent: 27,
-      riskScore: 72,
-      commitCount: 22,
-      issueCount: 5,
-      lastActivity: "2 ngày trước",
-      integration: {
-        githubStatus: "PENDING",
-        jiraStatus: "PENDING",
-      },
-      team: [
-        {
-          studentId: 10,
-          studentName: "Nguyễn Thế Anh",
-          role: "LEADER",
-        },
-        {
-          studentId: 11,
-          studentName: "Huỳnh Gia Bảo",
-          role: "MEMBER",
-        },
-        {
-          studentId: 12,
-          studentName: "Trương Ngọc Ánh",
-          role: "MEMBER",
-        },
-      ],
-    },
-  ],
-};
 
-const MOCK_STUDENTS_DATA = {
-  items: [
-    { id: 1, name: "Nguyễn Minh Anh", studentCode: "SE180001", studentId: "SE180001" },
-    { id: 2, name: "Trần Gia Huy", studentCode: "SE180002", studentId: "SE180002" },
-    { id: 3, name: "Lê Hoàng Nam", studentCode: "SE180003", studentId: "SE180003" },
-    { id: 4, name: "Phạm Khánh Linh", studentCode: "SE180004", studentId: "SE180004" },
-    { id: 5, name: "Võ Nhật Quang", studentCode: "SE180005", studentId: "SE180005" },
-    { id: 6, name: "Bùi Thanh Hằng", studentCode: "SE180006", studentId: "SE180006" },
-    { id: 7, name: "Ngô Đức Mạnh", studentCode: "SE180007", studentId: "SE180007" },
-    { id: 8, name: "Đinh Quốc Bảo", studentCode: "SE180008", studentId: "SE180008" },
-    { id: 9, name: "Phan Mỹ Tiên", studentCode: "SE180009", studentId: "SE180009" },
-    { id: 10, name: "Nguyễn Thế Anh", studentCode: "SE180010", studentId: "SE180010" },
-    { id: 11, name: "Huỳnh Gia Bảo", studentCode: "SE180011", studentId: "SE180011" },
-    { id: 12, name: "Trương Ngọc Ánh", studentCode: "SE180012", studentId: "SE180012" },
-    { id: 13, name: "Lý Thanh Trúc", studentCode: "SE180013", studentId: "SE180013" },
-    { id: 14, name: "Đỗ Minh Khoa", studentCode: "SE180014", studentId: "SE180014" },
-    { id: 15, name: "Mai Khánh Vy", studentCode: "SE180015", studentId: "SE180015" },
-    { id: 16, name: "Phùng Quốc Thịnh", studentCode: "SE180016", studentId: "SE180016" },
-    { id: 17, name: "Tạ Hoài Phương", studentCode: "SE180017", studentId: "SE180017" },
-    { id: 18, name: "Lâm Tuấn Kiệt", studentCode: "SE180018", studentId: "SE180018" },
-  ],
-};
 
 const MIN_MEMBERS = 4;
 const MAX_MEMBERS = 6;
@@ -218,6 +82,9 @@ export default function ManageGroups() {
   const { data: studentsData = { items: [] }, isLoading: loadingStudents } =
     useGetEnrolledStudents(parsedCourseId);
 
+  const { data: projectsData = { items: [] }, isLoading: loadingProjects } =
+    useGetProjects({ courseId: parsedCourseId });
+
   // Mutations
   const createProjectMutation = useCreateProject();
   const deleteProjectMutation = useDeleteProject();
@@ -225,14 +92,11 @@ export default function ManageGroups() {
   const addTeamMemberMutation = useAddTeamMember();
   const removeTeamMemberMutation = useRemoveTeamMember();
 
-const finalCourse =
-  course && Object.keys(course).length > 0 ? course : MOCK_COURSE;
+  // Map 100% data thật từ BE
+  const finalCourse = course || {};
+  const students = studentsData?.items || [];
+  const groups = projectsData?.items || [];
 
-const finalStudentsData =
-  studentsData?.items?.length > 0 ? studentsData : MOCK_STUDENTS_DATA;
-
-const students = finalStudentsData.items || [];
-const groups = finalCourse?.groups || [];
 
   const isBusy =
     createProjectMutation.isPending ||
@@ -293,10 +157,6 @@ const groups = finalCourse?.groups || [];
         courseId: parsedCourseId,
         name: `Nhóm ${groups.length + 1}`,
         description: newGroupTopic.trim(),
-        startDate: new Date().toISOString(),
-        endDate: new Date(
-          Date.now() + 90 * 24 * 60 * 60 * 1000
-        ).toISOString(),
       });
 
       for (let i = 0; i < selectedStudents.length; i += 1) {
@@ -357,10 +217,6 @@ const groups = finalCourse?.groups || [];
           courseId: parsedCourseId,
           name: `Nhóm ${groups.length + i + 1}`,
           description: `Đề tài nhóm ${groups.length + i + 1}`,
-          startDate: new Date().toISOString(),
-          endDate: new Date(
-            Date.now() + 90 * 24 * 60 * 60 * 1000
-          ).toISOString(),
         });
 
         for (let j = 0; j < members.length; j += 1) {
@@ -661,7 +517,7 @@ const groups = finalCourse?.groups || [];
       ? Math.ceil(availableStudents.length / autoGroupSize)
       : 0;
 
-  if (loadingCourse || loadingStudents) {
+  if (loadingCourse || loadingStudents || loadingProjects) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
         <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-teal-600" />

@@ -29,181 +29,16 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 
-/* ----------------------------- MOCK DATA ----------------------------- */
+import {
+  useStudentStats,
+  useAnalyticsHeatmap,
+  useStudentCommitActivity,
+  useStudentDeadlines,
+} from "../../features/dashboard/hooks/useDashboard.js";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 
-const WEEKLY_ACTIVITY = [
-  { label: "T2", commits: 3, issuesDone: 1 },
-  { label: "T3", commits: 5, issuesDone: 2 },
-  { label: "T4", commits: 2, issuesDone: 1 },
-  { label: "T5", commits: 6, issuesDone: 3 },
-  { label: "T6", commits: 4, issuesDone: 2 },
-  { label: "T7", commits: 1, issuesDone: 0 },
-  { label: "CN", commits: 2, issuesDone: 1 },
-];
-
-const HEATMAP_DATA = [
-  1, 0, 2, 3, 1, 4, 0,
-  2, 1, 0, 3, 4, 2, 1,
-  0, 1, 2, 0, 4, 3, 2,
-  1, 0, 1, 2, 3, 2, 1,
-  4, 3, 1, 0, 2, 1, 3,
-];
-
-const COURSES = [
-  {
-    id: "SE113",
-    code: "SE113.SP25",
-    name: "Software Engineering",
-    lecturer: "TS. Nguyễn Thanh Bình",
-    projects: 1,
-    status: "ACTIVE",
-    progress: 76,
-  },
-  {
-    id: "SWD392",
-    code: "SWD392.SP25",
-    name: "SWP Project",
-    lecturer: "ThS. Lê Hoàng",
-    projects: 1,
-    status: "ACTIVE",
-    progress: 68,
-  },
-  {
-    id: "PRU211",
-    code: "PRU211.SP25",
-    name: "C# Programming",
-    lecturer: "TS. Trần Minh Hà",
-    projects: 1,
-    status: "ACTIVE",
-    progress: 84,
-  },
-];
-
-const PROJECTS = [
-  {
-    id: "P1",
-    courseId: "SE113",
-    courseCode: "SE113.SP25",
-    title: "Jira GitHub Export Tool",
-    description:
-      "Hệ thống theo dõi tiến độ nhóm, contribution GitHub, task Jira và export báo cáo cho lecturer/admin.",
-    role: "LEADER",
-    status: "ACTIVE",
-    repository: "jira-gh-export-tool",
-    jiraKey: "JGT",
-    teamSize: 5,
-    sprintCompletion: 78,
-    myContribution: 82,
-    commits: 24,
-    issuesDone: 11,
-    prsMerged: 4,
-    linesChanged: 1260,
-    lastCommit: "2 giờ trước",
-    srsVersions: 3,
-    openIssues: 5,
-  },
-  {
-    id: "P2",
-    courseId: "SWD392",
-    courseCode: "SWD392.SP25",
-    title: "CV Review AI Platform",
-    description:
-      "Nền tảng đánh giá CV cho sinh viên năm cuối và fresher, có AI feedback và scoring.",
-    role: "MEMBER",
-    status: "ACTIVE",
-    repository: "jobie-cv-review",
-    jiraKey: "JOB",
-    teamSize: 4,
-    sprintCompletion: 64,
-    myContribution: 69,
-    commits: 16,
-    issuesDone: 7,
-    prsMerged: 2,
-    linesChanged: 845,
-    lastCommit: "Hôm qua",
-    srsVersions: 2,
-    openIssues: 8,
-  },
-];
-
-const UPCOMING_DEADLINES = [
-  {
-    id: "D1",
-    title: "Sprint 4 Demo",
-    project: "Jira GitHub Export Tool",
-    due: "Ngày mai - 09:00",
-    daysLeft: 1,
-    severity: "high",
-  },
-  {
-    id: "D2",
-    title: "SRS Version 3",
-    project: "Jira GitHub Export Tool",
-    due: "Trong 2 ngày",
-    daysLeft: 2,
-    severity: "medium",
-  },
-  {
-    id: "D3",
-    title: "UI Progress Report",
-    project: "CV Review AI Platform",
-    due: "Trong 4 ngày",
-    daysLeft: 4,
-    severity: "low",
-  },
-];
-
-const ALERTS = [
-  {
-    id: "A1",
-    type: "warning",
-    title: "Lecturer warning: contribution tuần này giảm",
-    desc: "Số commit tuần này thấp hơn 35% so với tuần trước. Hãy cập nhật task Jira và đẩy tiến độ đều hơn.",
-    time: "2 giờ trước",
-  },
-  {
-    id: "A2",
-    type: "info",
-    title: "Sprint 4 cần hoàn thành trước demo",
-    desc: "Team đang còn 5 open issues. Ưu tiên các task blocker trước deadline.",
-    time: "Hôm qua",
-  },
-];
-
-const PERSONAL_TASKS = [
-  {
-    id: "T1",
-    key: "JGT-41",
-    title: "Hoàn thiện dashboard Student với mock data",
-    status: "In Progress",
-    priority: "High",
-    due: "Hôm nay",
-  },
-  {
-    id: "T2",
-    key: "JGT-38",
-    title: "Kết nối API sync contribution GitHub",
-    status: "Todo",
-    priority: "Medium",
-    due: "Ngày mai",
-  },
-  {
-    id: "T3",
-    key: "JOB-12",
-    title: "Fix validation upload CV",
-    status: "Done",
-    priority: "Low",
-    due: "Đã xong",
-  },
-];
-
-const TEAM_MEMBERS = [
-  { name: "Trần Thị B", commits: 24, issuesDone: 11, score: 82, role: "Leader" },
-  { name: "Nguyễn Văn A", commits: 18, issuesDone: 9, score: 74, role: "Member" },
-  { name: "Lê Minh C", commits: 12, issuesDone: 6, score: 61, role: "Member" },
-  { name: "Phạm Khánh D", commits: 9, issuesDone: 4, score: 48, role: "Member" },
-  { name: "Hoàng Gia E", commits: 7, issuesDone: 3, score: 43, role: "Member" },
-];
+/* ----------------------------- MOCKED / FALLBACK DATA DELETED ----------------------------- */
 
 /* ----------------------------- HELPERS ----------------------------- */
 
@@ -299,27 +134,57 @@ export default function StudentDashboard() {
   const { user, logout } = useAuth();
   const { success } = useToast();
   const navigate = useNavigate();
-  const [selectedCourseId, setSelectedCourseId] = useState(COURSES[0]?.id || "all");
+  const [selectedCourseId, setSelectedCourseId] = useState("all");
+
+  // Fetch real data
+  const { data: stats, isLoading: statsLoading } = useStudentStats();
+  const { data: heatmap, isLoading: heatmapLoading } = useAnalyticsHeatmap();
+  const { data: commitActivity, isLoading: activityLoading } = useStudentCommitActivity(7);
+  const { data: deadlinesData } = useStudentDeadlines();
+  const { data: courseData, isLoading: coursesLoading } = useGetCourses();
+  const { data: projectData, isLoading: projectsLoading } = useGetProjects();
 
   const handleLogout = () => {
     logout();
     window.location.href = "/login";
   };
 
+  const courses = courseData?.items || [];
+  const projects = projectData?.items || [];
+  const upcomingDeadlines = deadlinesData?.items || deadlinesData || [];
+
   const filteredProjects = useMemo(() => {
-    if (selectedCourseId === "all") return PROJECTS;
-    return PROJECTS.filter((project) => project.courseId === selectedCourseId);
-  }, [selectedCourseId]);
+    if (selectedCourseId === "all") return projects;
+    return projects.filter((project) => String(project.courseId) === String(selectedCourseId));
+  }, [selectedCourseId, projects]);
 
-  const totalCommits = PROJECTS.reduce((sum, item) => sum + item.commits, 0);
-  const totalIssuesDone = PROJECTS.reduce((sum, item) => sum + item.issuesDone, 0);
-  const totalPrsMerged = PROJECTS.reduce((sum, item) => sum + item.prsMerged, 0);
-  const avgContribution = Math.round(
-    PROJECTS.reduce((sum, item) => sum + item.myContribution, 0) / PROJECTS.length
-  );
+  const weeklyActivity = commitActivity || [];
+  const heatmapData = heatmap || [];
 
-  const currentMainProject = filteredProjects[0] || PROJECTS[0];
-  const maxCommits = Math.max(...WEEKLY_ACTIVITY.map((item) => item.commits), 1);
+  const currentMainProject = filteredProjects[0] || projects[0];
+
+  const studentKPI = {
+    totalCommits: stats?.weeklyCommits || projects.reduce((sum, item) => sum + (item.commits || 0), 0),
+    totalIssues: stats?.totalIssues || projects.reduce((sum, item) => sum + (item.issuesDone || 0), 0),
+    totalPrs: stats?.totalPrs || projects.reduce((sum, item) => sum + (item.prsMerged || 0), 0),
+    avgContrib: stats?.contributionPercent || (projects.length > 0
+      ? Math.round(projects.reduce((sum, item) => sum + (item.myContribution || 0), 0) / projects.length)
+      : 0)
+  };
+
+  const maxCommits = Math.max(...weeklyActivity.map((item) => item.commits ?? item.count ?? 0), 1);
+
+
+  if (statsLoading || coursesLoading || projectsLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="h-10 w-10 animate-spin text-emerald-500" />
+          <p className="text-slate-500 font-medium">Đang tải dữ liệu dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSyncProject = (project) => {
     success?.(`Đã đồng bộ mock commits cho project ${project.title}`);
@@ -383,7 +248,7 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Tổng Commits"
-            value={totalCommits}
+            value={studentKPI.totalCommits}
             hint="Xem trang contribution"
             icon={Github}
             tone="green"
@@ -391,7 +256,7 @@ export default function StudentDashboard() {
           />
           <StatCard
             title="Issues hoàn thành"
-            value={totalIssuesDone}
+            value={studentKPI.totalIssues}
             hint="Xem project của tôi"
             icon={CheckSquare}
             tone="blue"
@@ -399,7 +264,7 @@ export default function StudentDashboard() {
           />
           <StatCard
             title="PRs Merged"
-            value={totalPrsMerged}
+            value={studentKPI.totalPrs}
             hint="Xem chi tiết project"
             icon={GitBranch}
             tone="violet"
@@ -407,7 +272,7 @@ export default function StudentDashboard() {
           />
           <StatCard
             title="Contribution Score"
-            value={`${avgContribution}%`}
+            value={`${studentKPI.avgContrib}%`}
             hint="Phân tích đóng góp cá nhân"
             icon={Target}
             tone="amber"
@@ -490,7 +355,7 @@ export default function StudentDashboard() {
               }
             >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {COURSES.map((course) => {
+                {courses.map((course) => {
                   const active = selectedCourseId === course.id;
                   return (
                     <button
@@ -518,19 +383,19 @@ export default function StudentDashboard() {
                       </div>
 
                       <div className="mt-4 space-y-2 text-sm text-slate-600">
-                        <div>Giảng viên: {course.lecturer}</div>
-                        <div>Số project: {course.projects}</div>
+                        <div>Giảng viên: {course.lecturer?.name || "N/A"}</div>
+                        <div>Số sinh viên: {course.currentStudents || 0}</div>
                       </div>
 
                       <div className="mt-4">
                         <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-                          <span>Tiến độ môn học</span>
-                          <span>{course.progress}%</span>
+                          <span>Dung lượng lớp</span>
+                          <span>{course.currentStudents}/{course.maxStudents}</span>
                         </div>
                         <div className="h-2 rounded-full bg-slate-100">
                           <div
                             className="h-2 rounded-full bg-emerald-500"
-                            style={{ width: `${course.progress}%` }}
+                            style={{ width: `${(course.currentStudents / course.maxStudents) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -693,20 +558,24 @@ export default function StudentDashboard() {
                   </div>
 
                   <div className="flex h-56 items-end justify-between gap-3">
-                    {WEEKLY_ACTIVITY.map((item) => (
-                      <div key={item.label} className="flex flex-1 flex-col items-center gap-2">
-                        <div className="text-xs font-medium text-slate-500">{item.commits}</div>
-                        <div className="flex h-44 items-end">
-                          <div
-                            className="w-8 rounded-t-xl bg-emerald-500"
-                            style={{
-                              height: `${(item.commits / maxCommits) * 170 + 10}px`,
-                            }}
-                          />
+                    {weeklyActivity.map((item, idx) => {
+                      const commitCount = item.commits ?? item.count ?? 0;
+                      const dayLabel = item.label ?? item.day ?? `D${idx + 1}`;
+                      return (
+                        <div key={dayLabel} className="flex flex-1 flex-col items-center gap-2">
+                          <div className="text-xs font-medium text-slate-500">{commitCount}</div>
+                          <div className="flex h-44 items-end">
+                            <div
+                              className="w-8 rounded-t-xl bg-emerald-500"
+                              style={{
+                                height: `${(commitCount / maxCommits) * 170 + 10}px`,
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-slate-500">{dayLabel}</div>
                         </div>
-                        <div className="text-xs text-slate-500">{item.label}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -717,13 +586,16 @@ export default function StudentDashboard() {
                   </div>
 
                   <div className="grid grid-cols-7 gap-2">
-                    {HEATMAP_DATA.map((value, index) => (
-                      <div
-                        key={index}
-                        className={`aspect-square rounded-md ${getHeatColor(value)}`}
-                        title={`Activity level: ${value}`}
-                      />
-                    ))}
+                    {heatmapData.map((item, index) => {
+                      const count = typeof item === 'object' ? (item.count ?? item.value ?? 0) : item;
+                      return (
+                        <div
+                          key={item.date || index}
+                          className={`aspect-square rounded-md ${getHeatColor(count)}`}
+                          title={item.date ? `${item.date}: ${count} commits` : `Activity: ${count}`}
+                        />
+                      );
+                    })}
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
@@ -750,43 +622,45 @@ export default function StudentDashboard() {
               }
             >
               <div className="space-y-3">
-                {PERSONAL_TASKS.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                          {task.key}
-                        </span>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getTaskStatusClass(task.status)}`}>
-                          {task.status}
-                        </span>
-                        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                          {task.priority}
-                        </span>
-                      </div>
-                      <div className="mt-2 font-semibold text-slate-900">{task.title}</div>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                      <div className="flex items-center gap-1">
-                        <Clock3 className="h-4 w-4" />
-                        {task.due}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => navigate("/student/my-project")}
-                      >
-                        Xem
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
+                {filteredProjects.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
+                    Chưa có task nào được gữ — Hãy kiểm tra Jira.
                   </div>
-                ))}
+                ) : (
+                  filteredProjects.slice(0, 5).map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                            {project.courseCode || project.courseName || "Task"}
+                          </span>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(project.status)}`}>
+                            {project.status}
+                          </span>
+                        </div>
+                        <div className="mt-2 font-semibold text-slate-900">{project.title || project.name}</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-slate-600">
+                        <div className="flex items-center gap-1">
+                          <Clock3 className="h-4 w-4" />
+                          {project.lastCommit || "Chưa có commit"}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => navigate("/student/my-project")}
+                        >
+                          Xem
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </SectionCard>
           </div>
@@ -804,25 +678,31 @@ export default function StudentDashboard() {
               }
             >
               <div className="space-y-3">
-                {UPCOMING_DEADLINES.map((item) => (
+                {upcomingDeadlines.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
+                    Không có deadline sắp tới ✔️
+                  </div>
+                ) : (
+                  upcomingDeadlines.map((item, idx) => (
                   <button
-                    key={item.id}
+                    key={item.id || idx}
                     type="button"
                     onClick={() => navigate("/student/srs")}
                     className={`w-full rounded-2xl border p-4 text-left transition hover:shadow-sm ${getSeverityClass(
-                      item.severity
+                      item.severity || (item.daysLeft <= 1 ? "high" : item.daysLeft <= 3 ? "medium" : "low")
                     )}`}
                   >
                     <div className="flex items-start gap-3">
                       <CalendarClock className="mt-0.5 h-5 w-5" />
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold">{item.title}</div>
-                        <div className="text-sm opacity-90">{item.project}</div>
-                        <div className="mt-2 text-sm font-medium">{item.due}</div>
+                        <div className="text-sm opacity-90">{item.project || item.projectName}</div>
+                        <div className="mt-2 text-sm font-medium">{item.due || item.dueDate}</div>
                       </div>
                     </div>
                   </button>
-                ))}
+                  ))
+                )}
               </div>
             </SectionCard>
 
@@ -837,32 +717,10 @@ export default function StudentDashboard() {
               }
             >
               <div className="space-y-3">
-                {ALERTS.map((alert) => (
-                  <button
-                    key={alert.id}
-                    type="button"
-                    onClick={() => navigate("/student/alerts")}
-                    className={`w-full rounded-2xl border p-4 text-left transition hover:shadow-sm ${
-                      alert.type === "warning"
-                        ? "border-amber-200 bg-amber-50"
-                        : "border-blue-200 bg-blue-50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {alert.type === "warning" ? (
-                        <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
-                      ) : (
-                        <Bell className="mt-0.5 h-5 w-5 text-blue-600" />
-                      )}
-
-                      <div>
-                        <div className="font-semibold text-slate-900">{alert.title}</div>
-                        <div className="mt-1 text-sm text-slate-600">{alert.desc}</div>
-                        <div className="mt-2 text-xs text-slate-500">{alert.time}</div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
+                  <Bell className="mx-auto mb-2 h-6 w-6 text-slate-300" />
+                  Các cảnh báo sẽ hiện thị ở đây khi giảng viên gửi thông báo.
+                </div>
               </div>
             </SectionCard>
 
@@ -930,39 +788,45 @@ export default function StudentDashboard() {
               }
             >
               <div className="space-y-3">
-                {TEAM_MEMBERS.map((member, index) => (
-                  <div
-                    key={member.name}
-                    className="rounded-2xl border border-slate-200 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                            #{index + 1}
-                          </span>
-                          <div className="font-semibold text-slate-900">{member.name}</div>
-                        </div>
-                        <div className="mt-1 text-xs text-slate-500">{member.role}</div>
-                      </div>
-
-                      <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {member.score}%
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                      <div className="rounded-xl bg-slate-50 p-3">
-                        <div className="text-slate-500">Commits</div>
-                        <div className="font-bold text-slate-900">{member.commits}</div>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-3">
-                        <div className="text-slate-500">Done Issues</div>
-                        <div className="font-bold text-slate-900">{member.issuesDone}</div>
-                      </div>
-                    </div>
+                {(currentMainProject?.team || []).length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
+                    Chưa có dữ liệu thành viên nhóm.
                   </div>
-                ))}
+                ) : (
+                  (currentMainProject?.team || []).map((member, index) => (
+                    <div
+                      key={member.studentId || index}
+                      className="rounded-2xl border border-slate-200 p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                              #{index + 1}
+                            </span>
+                            <div className="font-semibold text-slate-900">{member.studentName || member.name}</div>
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">{member.role}</div>
+                        </div>
+
+                        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {member.contributionScore ?? "--"}%
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <div className="text-slate-500">Commits</div>
+                          <div className="font-bold text-slate-900">{member.commits ?? "--"}</div>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <div className="text-slate-500">Done Issues</div>
+                          <div className="font-bold text-slate-900">{member.issuesDone ?? "--"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </SectionCard>
 
