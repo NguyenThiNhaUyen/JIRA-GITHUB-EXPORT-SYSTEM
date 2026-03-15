@@ -462,7 +462,7 @@ public class AnalyticsService : IAnalyticsService
                 SubjectCode = course.subject?.subject_code ?? "Unknown",
                 Semester = course.semester?.name ?? "Unknown",
                 CurrentStudents = course.course_enrollments?.Count ?? 0,
-                GroupCount = course.projects?.Count ?? 0,
+                ProjectsCount = course.projects?.Count ?? 0,
                 ActiveTeams = course.projects?.Count(p => p.project_integration?.github_repo_id != null) ?? 0,
                 JiraConnected = course.projects?.Count(p => p.project_integration?.jira_project_id != null) ?? 0,
                 AlertsCount = alertsCount,
@@ -477,7 +477,7 @@ public class AnalyticsService : IAnalyticsService
                         StudentCode = e.student_user?.student_code ?? "N/A",
                         StudentId = e.student_user?.student_code ?? "N/A"
                     }).ToList(),
-                CommitTrend = completeChartData
+                CommitTrends = completeChartData.Select(c => c.Commits).ToList() // Return [int, int, int...] as requested
             });
         }
 
@@ -731,5 +731,282 @@ public class AnalyticsService : IAnalyticsService
             CourseCount = courseCount,
             StudentCount = studentCount
         };
+    }
+
+    // ============================================================
+    // STUDENT DASHBOARD APIs
+    // ============================================================
+
+    public async Task<StudentDashboardStatsResponse> GetStudentDashboardStatsAsync(long studentUserId)
+    {
+        // Get all projects this student is a team member of
+        var teamMemberships = await _unitOfWork.TeamMembers.Query()
+            .AsNoTracking()
+            .Include(tm => tm.project)
+                .ThenInclude(p => p.course)
+            .Include(tm => tm.project)
+                .ThenInclude(p => p.project_integration)
+            .Where(tm => tm.student_user_id == studentUserId && tm.participation_status == "ACTIVE")
+            .ToListAsync();
+
+        var response = new StudentDashboardStatsResponse
+        {
+            TotalProjects = teamMemberships.Count
+        };
+
+        if (!teamMemberships.Any()) return response;
+
+        // Collect all repo IDs for commit queries
+        var repoMap = new Dictionary<long, long>(); // projectId -> repoId
+        foreach (var tm in teamMemberships)
+        {
+            if (tm.project?.project_integration?.github_repo_id != null)
+                repoMap[tm.project.id] = tm.project.project_integration.github_repo_id.Value;
+        }
+
+        var allRepoIds = repoMap.Values.Distinct().ToList();
+
+        // Fetch commits grouped by repo
+        var commitsByRepo = new Dictionary<long, int>();
+        int totalStudentCommits = 0;
+        int totalTeamCommits = 0;
+        int totalPRs = 0;
+
+        if (allRepoIds.Any())
+        {
+            // Total commits per repo
+            var repoCommits = await _unitOfWork.GitHubCommits.Query()
+                .AsNoTracking()
+                .Where(c => allRepoIds.Contains(c.repo_id))
+                .GroupBy(c => c.repo_id)
+                .Select(g => new { RepoId = g.Key, Count = g.Count() })
+                .ToListAsync();
+            foreach (var rc in repoCommits)
+                commitsByRepo[rc.RepoId] = rc.Count;
+
+            totalTeamCommits = repoCommits.Sum(r => r.Count);
+
+            // Student's personal commits (by matching user email to github_user email)
+            var studentUser = await _unitOfWork.Users.GetByIdAsync(studentUserId);
+            if (studentUser != null)
+            {
+                var studentGithubUsers = await _unitOfWork.GitHubUsers.Query()
+                    .AsNoTracking()
+                    .Where(gu => gu.email != null && gu.email == studentUser.email)
+                    .Select(gu => gu.id)
+                    .ToListAsync();
+
+                if (studentGithubUsers.Any())
+                {
+                    totalStudentCommits = await _unitOfWork.GitHubCommits.Query()
+                        .AsNoTracking()
+                        .Where(c => allRepoIds.Contains(c.repo_id) && c.author_github_user_id.HasValue && studentGithubUsers.Contains(c.author_github_user_id.Value))
+                        .CountAsync();
+                }
+            }
+
+            // PRs
+            totalPRs = await _unitOfWork.GitHubPullRequests.Query()
+                .AsNoTracking()
+                .Where(pr => allRepoIds.Contains(pr.repo_id))
+                .CountAsync();
+        }
+
+        response.TotalCommits = totalStudentCommits;
+        response.TotalPullRequests = totalPRs;
+        response.ContributionPercent = totalTeamCommits > 0 
+            ? Math.Round((double)totalStudentCommits * 100 / totalTeamCommits, 1) 
+            : 0;
+
+        // Jira tasks
+        var jiraProjectIds = teamMemberships
+            .Where(tm => tm.project?.project_integration?.jira_project_id != null)
+            .Select(tm => tm.project!.project_integration!.jira_project_id!.Value)
+            .Distinct()
+            .ToList();
+
+        if (jiraProjectIds.Any())
+        {
+            response.JiraTasksAssigned = await _unitOfWork.JiraIssues.Query()
+                .AsNoTracking()
+                .Where(i => jiraProjectIds.Contains(i.jira_project_id))
+                .CountAsync();
+            response.JiraTasksDone = await _unitOfWork.JiraIssues.Query()
+                .AsNoTracking()
+                .Where(i => jiraProjectIds.Contains(i.jira_project_id) && i.status != null && i.status.ToUpper() == "DONE")
+                .CountAsync();
+        }
+
+        // Build per-project info
+        foreach (var tm in teamMemberships)
+        {
+            var proj = tm.project;
+            if (proj == null) continue;
+
+            int projCommits = 0;
+            if (repoMap.TryGetValue(proj.id, out var rId) && commitsByRepo.TryGetValue(rId, out var cnt))
+                projCommits = cnt;
+
+            int completionPct = 0;
+            if (proj.project_integration?.jira_project_id != null)
+            {
+                var jpId = proj.project_integration.jira_project_id.Value;
+                var total = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId);
+                var done = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId && i.status != null && i.status.ToUpper() == "DONE");
+                completionPct = total > 0 ? (int)Math.Round((double)done * 100 / total) : 0;
+            }
+
+            response.Projects.Add(new StudentProjectInfo
+            {
+                ProjectId = proj.id,
+                ProjectName = proj.name ?? "Unknown",
+                CourseName = proj.course?.course_name ?? "N/A",
+                Role = tm.team_role ?? "MEMBER",
+                CommitCount = projCommits,
+                CompletionPercent = completionPct,
+                LastActivity = proj.updated_at
+            });
+        }
+
+        return response;
+    }
+
+    public async Task<List<StudentDeadlineResponse>> GetStudentDeadlinesAsync(long studentUserId)
+    {
+        // Get student's projects
+        var projectIds = await _unitOfWork.TeamMembers.Query()
+            .AsNoTracking()
+            .Where(tm => tm.student_user_id == studentUserId && tm.participation_status == "ACTIVE")
+            .Select(tm => tm.project_id)
+            .ToListAsync();
+
+        if (!projectIds.Any()) return new List<StudentDeadlineResponse>();
+
+        // Get Jira project IDs
+        var jiraProjectIds = await _unitOfWork.ProjectIntegrations.Query()
+            .AsNoTracking()
+            .Where(pi => projectIds.Contains(pi.project_id) && pi.jira_project_id != null)
+            .Select(pi => new { pi.project_id, pi.jira_project_id })
+            .ToListAsync();
+
+        if (!jiraProjectIds.Any()) return new List<StudentDeadlineResponse>();
+
+        var jpIds = jiraProjectIds.Select(j => j.jira_project_id!.Value).ToList();
+
+        // Get active (non-DONE) issues with due dates
+        var issues = await _unitOfWork.JiraIssues.Query()
+            .AsNoTracking()
+            .Include(i => i.jira_project)
+            .Where(i => jpIds.Contains(i.jira_project_id) 
+                && i.status != null 
+                && i.status.ToUpper() != "DONE" 
+                && i.status.ToUpper() != "CLOSED")
+            .OrderByDescending(i => i.updated_at)
+            .Take(20)
+            .ToListAsync();
+
+        // Get project names for display
+        var projectNames = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Where(p => projectIds.Contains(p.id))
+            .ToDictionaryAsync(p => p.id, p => p.name ?? "Unknown");
+
+        return issues.Select(i =>
+        {
+            var jpEntry = jiraProjectIds.FirstOrDefault(j => j.jira_project_id == i.jira_project_id);
+            var projName = jpEntry != null && projectNames.ContainsKey(jpEntry.project_id) 
+                ? projectNames[jpEntry.project_id] 
+                : "Unknown";
+
+            return new StudentDeadlineResponse
+            {
+                Title = i.title ?? "(no title)",
+                Due = i.updated_at.ToString("dd-MM-yyyy"),
+                Project = projName,
+                Status = i.status ?? "TO DO",
+                Priority = i.priority,
+                IssueKey = i.jira_issue_key
+            };
+        }).ToList();
+    }
+
+    // ============================================================
+    // LECTURER DASHBOARD APIs
+    // ============================================================
+
+    public async Task<List<LecturerActivityLogResponse>> GetLecturerActivityLogsAsync(long lecturerId, int limit = 10)
+    {
+        // Get course IDs that this lecturer manages
+        var courseIds = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
+            .Where(c => c.lecturer_users.Any(l => l.user_id == lecturerId))
+            .Select(c => c.id)
+            .ToListAsync();
+
+        if (!courseIds.Any()) return new List<LecturerActivityLogResponse>();
+
+        // Get project IDs in those courses
+        var projectIds = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Where(p => courseIds.Contains(p.course_id))
+            .Select(p => p.id)
+            .ToListAsync();
+
+        // Get recent audit logs related to those projects or courses
+        var logs = await _unitOfWork.AuditLogs.Query()
+            .AsNoTracking()
+            .Where(a => 
+                (a.entity_type == "PROJECT" && projectIds.Contains(a.entity_id)) ||
+                (a.entity_type == "COURSE" && courseIds.Contains(a.entity_id)))
+            .OrderByDescending(a => a.timestamp)
+            .Take(limit)
+            .ToListAsync();
+
+        // Get course and project names for display
+        var courseNames = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
+            .Where(c => courseIds.Contains(c.id))
+            .ToDictionaryAsync(c => c.id, c => c.course_name ?? c.course_code);
+
+        var projectInfo = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Where(p => projectIds.Contains(p.id))
+            .ToDictionaryAsync(p => p.id, p => new { p.name, p.course_id });
+
+        return logs.Select(l =>
+        {
+            string courseName = "";
+            string? projectName = null;
+
+            if (l.entity_type == "PROJECT" && projectInfo.TryGetValue(l.entity_id, out var pInfo))
+            {
+                projectName = pInfo.name;
+                courseName = courseNames.GetValueOrDefault(pInfo.course_id, "");
+            }
+            else if (l.entity_type == "COURSE" && courseNames.TryGetValue(l.entity_id, out var cName))
+            {
+                courseName = cName;
+            }
+
+            string message = l.action switch
+            {
+                "CREATE_PROJECT" => $"Nhóm '{projectName ?? l.entity_id.ToString()}' đã được tạo",
+                "LINK_GITHUB" => $"Nhóm '{projectName ?? ""}' đã kết nối GitHub",
+                "LINK_JIRA" => $"Nhóm '{projectName ?? ""}' đã kết nối Jira",
+                "ENROLL_STUDENT" => $"Sinh viên mới đăng ký vào lớp",
+                "SYNC_COMMITS" => $"Đồng bộ commit cho nhóm '{projectName ?? ""}'",
+                "SUBMIT_SRS" => $"Nhóm '{projectName ?? ""}' đã nộp tài liệu SRS",
+                _ => $"{l.entity_type} {l.entity_id}: {l.action}"
+            };
+
+            return new LecturerActivityLogResponse
+            {
+                Type = l.action,
+                Message = message,
+                CourseName = courseName,
+                ProjectName = projectName,
+                Timestamp = l.timestamp
+            };
+        }).ToList();
     }
 }

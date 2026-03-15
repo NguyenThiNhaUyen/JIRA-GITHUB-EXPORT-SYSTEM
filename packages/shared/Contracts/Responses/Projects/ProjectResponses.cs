@@ -17,11 +17,13 @@ public class ProjectDetailResponse
     public int CommitCount { get; set; }
     public int IssueCount { get; set; }
     public DateTime? LastActivity { get; set; }
+    public int ProgressPercent { get; set; } // Added for frontend real data
+    public int RiskScore { get; set; }       // Added for frontend real data
 }
 
 public class TeamMemberInfo
 {
-    public long StudentId { get; set; }
+    public long StudentUserId { get; set; } // Changed from StudentId to match FE
     public string StudentCode { get; set; } = null!;
     public string StudentName { get; set; } = null!;
     public string Role { get; set; } = null!;

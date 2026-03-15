@@ -25,4 +25,11 @@ public interface IAnalyticsService
     Task MarkNotificationAsReadAsync(long notificationId);
     Task<LecturerWorkloadResponse> GetLecturerWorkloadAsync(long lecturerId);
     Task BulkAssignAsync(JiraGithubExport.Shared.Contracts.Requests.Courses.BulkAssignRequest request);
+    
+    // Student Dashboard APIs (Phase 3)
+    Task<StudentDashboardStatsResponse> GetStudentDashboardStatsAsync(long studentUserId);
+    Task<List<StudentDeadlineResponse>> GetStudentDeadlinesAsync(long studentUserId);
+    
+    // Lecturer Dashboard APIs (Phase 3)
+    Task<List<LecturerActivityLogResponse>> GetLecturerActivityLogsAsync(long lecturerId, int limit = 10);
 }

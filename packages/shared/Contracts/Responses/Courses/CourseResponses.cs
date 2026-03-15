@@ -96,12 +96,12 @@ public class LecturerCourseStatResponse
     public string SubjectCode { get; set; } = string.Empty;
     public string Semester { get; set; } = string.Empty;
     public int CurrentStudents { get; set; }
-    public int GroupCount { get; set; }
+    public int ProjectsCount { get; set; } // Renamed from GroupCount to match FE real data expect
     public int ActiveTeams { get; set; }
     public int JiraConnected { get; set; }
     public int AlertsCount { get; set; }
     public bool Archived { get; set; }
     public DateTime? LastCommit { get; set; }
     public List<EnrollmentInfo> Enrollments { get; set; } = new();
-    public List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat> CommitTrend { get; set; } = new();
+    public List<int> CommitTrends { get; set; } = new(); // Match basic integer array
 }

@@ -115,6 +115,45 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetLecturerCoursesStatsAsync(lecturerId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    /// <summary>GET /api/analytics/lecturer/activity-logs?limit=10</summary>
+    [HttpGet("lecturer/activity-logs")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    public async Task<IActionResult> GetLecturerActivityLogs([FromQuery] int limit = 10)
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long lecturerId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+
+        var result = await _analyticsService.GetLecturerActivityLogsAsync(lecturerId, limit);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    /// <summary>GET /api/analytics/student/stats</summary>
+    [HttpGet("student/stats")]
+    [Authorize(Roles = "STUDENT,ADMIN")]
+    public async Task<IActionResult> GetStudentDashboardStats()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long studentUserId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+
+        var result = await _analyticsService.GetStudentDashboardStatsAsync(studentUserId);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
+
+    /// <summary>GET /api/analytics/student/deadlines</summary>
+    [HttpGet("student/deadlines")]
+    [Authorize(Roles = "STUDENT,ADMIN")]
+    public async Task<IActionResult> GetStudentDeadlines()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long studentUserId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+
+        var result = await _analyticsService.GetStudentDeadlinesAsync(studentUserId);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }
 
 /// <summary>

@@ -206,6 +206,17 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
+    /// Get project commit history grouped by student
+    /// </summary>
+    [HttpGet("{projectId}/commit-history")]
+    [ProducesResponseType(typeof(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCommitHistory(long projectId)
+    {
+        var result = await _coreService.GetProjectCommitHistoryAsync(projectId);
+        return Ok(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
     /// Sync project commits
     /// </summary>
     [HttpPost("{projectId}/sync-commits")]

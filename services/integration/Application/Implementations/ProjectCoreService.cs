@@ -120,6 +120,77 @@ public class ProjectCoreService : IProjectCoreService
         );
 
         var dtoList = _mapper.Map<List<ProjectDetailResponse>>(items);
+
+        if (dtoList.Any())
+        {
+            var repoIds = items.Where(p => p.project_integration?.github_repo_id != null)
+                .Select(p => p.project_integration!.github_repo_id!.Value)
+                .ToList();
+            var jiraIds = items.Where(p => p.project_integration?.jira_project_id != null)
+                .Select(p => p.project_integration!.jira_project_id!.Value)
+                .ToList();
+
+            var commitCounts = new Dictionary<long, int>();
+            if (repoIds.Any())
+            {
+                commitCounts = await _unitOfWork.GitHubCommits.Query()
+                    .Where(c => repoIds.Contains(c.repo_id))
+                    .GroupBy(c => c.repo_id)
+                    .ToDictionaryAsync(g => g.Key, g => g.Count());
+            }
+
+            var issueStats = new Dictionary<long, (int Total, int Done)>();
+            if (jiraIds.Any())
+            {
+                var stats = await _unitOfWork.JiraIssues.Query()
+                    .Where(i => jiraIds.Contains(i.jira_project_id))
+                    .GroupBy(i => i.jira_project_id)
+                    .Select(g => new {
+                        JiraId = g.Key,
+                        Total = g.Count(),
+                        Done = g.Count(i => i.status != null && i.status.ToUpper() == "DONE")
+                    })
+                    .ToListAsync();
+
+                foreach (var s in stats)
+                {
+                    issueStats[s.JiraId] = (s.Total, s.Done);
+                }
+            }
+
+            foreach (var dto in dtoList)
+            {
+                var project = items.First(p => p.id == dto.Id);
+                
+                dto.CommitCount = 0;
+                dto.IssueCount = 0;
+                dto.ProgressPercent = 0;
+                dto.RiskScore = 0;
+
+                if (project.project_integration?.github_repo_id != null)
+                {
+                    var repoId = project.project_integration.github_repo_id.Value;
+                    if (commitCounts.TryGetValue(repoId, out int commits))
+                    {
+                        dto.CommitCount = commits;
+                    }
+                    
+                    // Simple heuristic for risk score out of 100 based on commits (FE needs this)
+                    dto.RiskScore = Math.Max(0, 100 - (dto.CommitCount * 2));
+                }
+                
+                if (project.project_integration?.jira_project_id != null)
+                {
+                    var jiraId = project.project_integration.jira_project_id.Value;
+                    if (issueStats.TryGetValue(jiraId, out var stats))
+                    {
+                        dto.IssueCount = stats.Total;
+                        dto.ProgressPercent = stats.Total > 0 ? (int)Math.Round((double)stats.Done * 100 / stats.Total) : 0;
+                    }
+                }
+            }
+        }
+
         return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
     }
 
@@ -152,6 +223,79 @@ public class ProjectCoreService : IProjectCoreService
             Additions = c.additions ?? 0,
             Deletions = c.deletions ?? 0,
         }).ToList();
+    }
+
+    public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>> GetProjectCommitHistoryAsync(long projectId)
+    {
+        var result = new List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>();
+        
+        // Match members from project
+        var members = await _unitOfWork.TeamMembers.Query()
+            .AsNoTracking()
+            .Include(tm => tm.student_user)
+                .ThenInclude(s => s.user)
+            .Where(tm => tm.project_id == projectId && tm.participation_status == "ACTIVE")
+            .ToListAsync();
+            
+        if (!members.Any()) return result;
+
+        var integration = await _unitOfWork.ProjectIntegrations.Query()
+            .FirstOrDefaultAsync(i => i.project_id == projectId);
+
+        if (integration?.github_repo_id == null)
+        {
+            // No repo linked, return 0 commits for all
+            return members.Select(tm => new JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse
+            {
+                StudentUserId = tm.student_user_id,
+                StudentName = tm.student_user?.user?.full_name ?? "Unknown",
+                StudentCode = tm.student_user?.student_code ?? "Unknown",
+                Commits = 0,
+                PullRequests = 0
+            }).ToList();
+        }
+
+        var repoId = integration.github_repo_id.Value;
+        
+        foreach (var member in members)
+        {
+            int commits = 0;
+            int prs = 0;
+            var email = member.student_user?.user?.email;
+            
+            if (!string.IsNullOrEmpty(email))
+            {
+                var githubUsers = await _unitOfWork.GitHubUsers.Query()
+                    .AsNoTracking()
+                    .Where(gu => gu.email != null && gu.email.ToLower() == email.ToLower())
+                    .Select(gu => gu.id)
+                    .ToListAsync();
+
+                if (githubUsers.Any())
+                {
+                    commits = await _unitOfWork.GitHubCommits.Query()
+                        .AsNoTracking()
+                        .Where(c => c.repo_id == repoId && c.author_github_user_id.HasValue && githubUsers.Contains(c.author_github_user_id.Value))
+                        .CountAsync();
+                        
+                    prs = await _unitOfWork.GitHubPullRequests.Query()
+                        .AsNoTracking()
+                        .Where(pr => pr.repo_id == repoId && pr.author_github_user_id.HasValue && githubUsers.Contains(pr.author_github_user_id.Value))
+                        .CountAsync();
+                }
+            }
+
+            result.Add(new JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse
+            {
+                StudentUserId = member.student_user_id,
+                StudentName = member.student_user?.user?.full_name ?? "Unknown",
+                StudentCode = member.student_user?.student_code ?? "Unknown",
+                Commits = commits,
+                PullRequests = prs
+            });
+        }
+
+        return result;
     }
 
     public async Task<object> SyncProjectCommitsAsync(long projectId)

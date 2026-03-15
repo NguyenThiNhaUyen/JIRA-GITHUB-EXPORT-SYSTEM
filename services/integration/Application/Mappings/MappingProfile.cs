@@ -80,7 +80,7 @@ public class MappingProfile : Profile
         // ============================================
 
         CreateMap<team_member, TeamMemberInfo>()
-            .ForMember(dest => dest.StudentId, opt => opt.MapFrom(src => src.student_user_id))
+            .ForMember(dest => dest.StudentUserId, opt => opt.MapFrom(src => src.student_user_id))
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student_user.student_code))
             .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.student_user.user.full_name))
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.team_role))
