@@ -96,10 +96,10 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a project (Admin only)
+    /// Delete a project (Admin/Lecturer only)
     /// </summary>
     [HttpDelete("{projectId}")]
-    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteProject(long projectId)
     {
