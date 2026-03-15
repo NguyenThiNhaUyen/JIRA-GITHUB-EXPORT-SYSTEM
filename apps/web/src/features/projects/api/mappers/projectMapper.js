@@ -1,27 +1,34 @@
 export const mapProject = (project) => {
     if (!project) return null;
     return {
-        id: String(project.id || ""),
-        name: project.name || "",
-        description: project.description || "",
-        status: project.status || "ACTIVE",
-        courseName: project.course_name || "",
-        team: (project.members || []).map(member => ({
-            studentId: String(member.user_id || ""),
-            studentName: member.full_name || "",
-            studentCode: member.student_code || "",
-            role: member.team_role || "MEMBER",
-            participationStatus: member.participation_status || "ACTIVE",
-            contributionScore: member.contribution_score || 0
+        id: String(project.id || project.Id || ""),
+        name: project.name || project.Name || "",
+        description: project.description || project.Description || "",
+        status: project.status || project.Status || "ACTIVE",
+        courseId: project.courseId || project.CourseId || null,
+        courseName: project.course_name || project.courseName || project.CourseName || "",
+        team: (project.members || project.teamMembers || project.team || []).map(member => ({
+            studentId: String(member.studentUserId || member.user_id || member.Id || ""),
+            studentName: member.studentName || member.full_name || member.FullName || "",
+            studentCode: member.studentCode || member.student_code || member.StudentCode || "",
+            role: member.role || member.team_role || "MEMBER",
+            participationStatus: member.participationStatus || member.participation_status || "ACTIVE",
+            contributionScore: member.contributionScore || member.contribution_score || 0
         })),
-        integration: {
+        integration: project.integration ? {
+            githubUrl: project.githubRepoUrl || project.github_repo_url || project.integration.githubUrl || "",
+            jiraUrl: project.jiraProjectUrl || project.jira_project_url || project.integration.jiraUrl || "",
+            githubStatus: project.integration.githubStatus || project.integration_status || "PENDING",
+            jiraStatus: project.integration.jiraStatus || project.integration_status || "PENDING",
+            lastSyncAt: project.integration.lastSyncAt || project.integration.last_sync_at || null
+        } : {
             githubUrl: project.github_repo_url || "",
             jiraUrl: project.jira_project_url || "",
             status: project.integration_status || "PENDING",
-            lastSyncAt: project.integration?.last_sync_at || null
+            lastSyncAt: null
         },
-        createdAt: project.created_at || null,
-        updatedAt: project.updated_at || null
+        createdAt: project.createdAt || project.created_at || null,
+        updatedAt: project.updatedAt || project.updated_at || null
     };
 };
 
@@ -66,4 +73,3 @@ export const mapProjectMetrics = (metrics) => {
         }))
     };
 };
-

@@ -7,8 +7,11 @@ using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Logging;
+<<<<<<< HEAD
+=======
 using Microsoft.EntityFrameworkCore;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+>>>>>>> origin
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -17,6 +20,10 @@ public class ProjectCoreService : IProjectCoreService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<ProjectCoreService> _logger;
+<<<<<<< HEAD
+
+    public ProjectCoreService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ProjectCoreService> logger)
+=======
     private readonly IGitHubClient _githubClient;
     private readonly IJiraClient _jiraClient;
 
@@ -26,12 +33,16 @@ public class ProjectCoreService : IProjectCoreService
         ILogger<ProjectCoreService> logger,
         IGitHubClient githubClient,
         IJiraClient jiraClient)
+>>>>>>> origin
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+<<<<<<< HEAD
+=======
         _githubClient = githubClient;
         _jiraClient = jiraClient;
+>>>>>>> origin
     }
 
     public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId)
@@ -120,6 +131,10 @@ public class ProjectCoreService : IProjectCoreService
         );
 
         var dtoList = _mapper.Map<List<ProjectDetailResponse>>(items);
+<<<<<<< HEAD
+        return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
+    }
+=======
 
         if (dtoList.Any())
         {
@@ -445,4 +460,5 @@ public class ProjectCoreService : IProjectCoreService
 
         return new { message = "Sync triggered. Data will be updated in the background.", projectId };
     }
+>>>>>>> origin
 }

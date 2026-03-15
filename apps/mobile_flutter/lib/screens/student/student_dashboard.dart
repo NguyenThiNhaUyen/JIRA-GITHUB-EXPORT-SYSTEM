@@ -44,7 +44,7 @@ class StudentDashboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Chào ${user.name.split(' ').last}! 👋',
+                    'Chào ${user.fullName.split(' ').last}! 👋',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

@@ -12,12 +12,19 @@ public class UploadSrsRequest
 public class ReviewSrsStatusRequest
 {
     [Required]
+<<<<<<< HEAD
+    [RegularExpression("^(FINAL|DRAFT)$", ErrorMessage = "Status must be FINAL or DRAFT")]
+    public string Status { get; set; } = null!;
+    
+    public string? Feedback { get; set; }
+=======
     [RegularExpression("^(APPROVED|REJECTED|NEED_REVISION|UNDER_REVIEW)$", ErrorMessage = "Status must be APPROVED, REJECTED, UNDER_REVIEW or NEED_REVISION")]
     public string Status { get; set; } = null!;
     
     public string? Feedback { get; set; }
     public decimal? Score { get; set; }
     public string? Metadata { get; set; } // JSON checklist
+>>>>>>> origin
 }
 
 public class ReviewSrsFeedbackRequest

@@ -29,6 +29,13 @@ public class JwtService : IJwtService
             new Claim("email", user.email)
         };
 
+<<<<<<< HEAD
+        // Add roles as claims
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+=======
         // Add primary role as claim (ưu tiên cao nhất: ADMIN > LECTURER > STUDENT)
         // Chỉ dùng 1 role duy nhất để [Authorize(Roles = "...")] hoạt động chính xác
         var upperRoles = roles.Select(r => r.ToUpper()).ToList();
@@ -43,6 +50,7 @@ public class JwtService : IJwtService
         claims.Add(new Claim(ClaimTypes.Role, primaryRole));
         // Cũng thêm claim "role" để FE decode JWT lấy được
         claims.Add(new Claim("role", primaryRole));
+>>>>>>> origin
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

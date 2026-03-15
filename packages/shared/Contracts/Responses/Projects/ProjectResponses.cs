@@ -8,6 +8,11 @@ public class ProjectDetailResponse
     public string Status { get; set; } = null!;
     public long CourseId { get; set; }
     public string CourseName { get; set; } = null!;
+<<<<<<< HEAD
+    public int TeamCount { get; set; }
+    public List<TeamMemberInfo> TeamMembers { get; set; } = new();
+    public IntegrationInfo? Integration { get; set; }
+=======
     public string CourseCode { get; set; } = string.Empty;  // e.g. "SWD392-SE1831"
     public string? GithubRepoUrl { get; set; }
     public string? JiraProjectUrl { get; set; }
@@ -29,20 +34,46 @@ public class ProjectDetailResponse
     public DateTime? LastActivity { get; set; }
     public int ProgressPercent { get; set; }
     public int RiskScore { get; set; }
+>>>>>>> origin
 }
 
 public class TeamMemberInfo
 {
+<<<<<<< HEAD
+    public long StudentUserId { get; set; }
+    public string StudentCode { get; set; } = null!;
+    public string FullName { get; set; } = null!;
+    public string TeamRole { get; set; } = null!;
+    public string ParticipationStatus { get; set; } = null!;
+    public string? Responsibility { get; set; }
+    public DateTime? JoinedAt { get; set; }
+=======
     public long StudentUserId { get; set; } // Changed from StudentId to match FE
     public string StudentCode { get; set; } = null!;
     public string StudentName { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string ParticipationStatus { get; set; } = null!;
     public int ContributionScore { get; set; }
+>>>>>>> origin
 }
 
 public class IntegrationInfo
 {
+<<<<<<< HEAD
+    public string? GithubRepoUrl { get; set; }
+    public string? GithubRepoOwner { get; set; }
+    public string? GithubRepoName { get; set; }
+    public string? JiraProjectKey { get; set; }
+    public string? JiraSiteUrl { get; set; }
+    // Approval workflow
+    public string ApprovalStatus { get; set; } = "PENDING";
+    public long? SubmittedByUserId { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+    public long? ApprovedByUserId { get; set; }
+    public string? ApprovedByName { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public string? RejectedReason { get; set; }
+=======
     public string? GithubUrl { get; set; }
     public string? JiraUrl { get; set; }
     public string GithubStatus { get; set; } = "PENDING";
@@ -59,6 +90,7 @@ public class CommitResponse
     public DateTime? CommittedAt { get; set; }
     public int Additions { get; set; }
     public int Deletions { get; set; }
+>>>>>>> origin
 }
 
 public class ProjectDashboardResponse
@@ -111,3 +143,13 @@ public class MemberContribution
     public int InactiveDays { get; set; }
     public string? Alert { get; set; }
 }
+<<<<<<< HEAD
+
+
+
+
+
+
+
+=======
+>>>>>>> origin

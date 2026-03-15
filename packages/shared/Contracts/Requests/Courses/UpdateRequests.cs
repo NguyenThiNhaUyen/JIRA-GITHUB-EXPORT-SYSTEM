@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
+
+public class UpdateSemesterRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+=======
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -24,10 +33,14 @@ public class UpdateSemesterRequest : IValidatableObject
         if (EndDate <= StartDate && StartDate != DateTime.MinValue && EndDate != DateTime.MinValue)
             yield return new ValidationResult("Ngày kết thúc phải lớn hơn ngày bắt đầu.", new[] { nameof(EndDate) });
     }
+>>>>>>> origin
 }
 
 public class UpdateSubjectRequest
 {
+<<<<<<< HEAD
+    public string SubjectName { get; set; } = string.Empty;
+=======
     public string? SubjectName { get; set; }
     
     public string? Department { get; set; }
@@ -39,6 +52,7 @@ public class UpdateSubjectRequest
     public int? MaxStudents { get; set; }
     
     public string? Status { get; set; }
+>>>>>>> origin
 }
 
 public class UpdateCourseRequest

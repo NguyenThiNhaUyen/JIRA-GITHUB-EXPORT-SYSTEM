@@ -27,9 +27,13 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<inactive_alert> InactiveAlerts { get; }
     IGenericRepository<report_export> ReportExports { get; }
     IGenericRepository<audit_log> AuditLogs { get; }
+<<<<<<< HEAD
+    IGenericRepository<external_account> ExternalAccounts { get; }
+=======
     IGenericRepository<team_invitation> TeamInvitations { get; }
     IGenericRepository<external_account> ExternalAccounts { get; }
     IGenericRepository<notification> Notifications { get; }
+>>>>>>> origin
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

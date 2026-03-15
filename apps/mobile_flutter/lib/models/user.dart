@@ -1,44 +1,56 @@
-// User Model
 class User {
-  final String id;
+  final int id;
   final String email;
-  final String name;
-  final String role; // ADMIN, LECTURER, STUDENT
+  final String fullName;
+  final List<String> roles;
   final String? studentCode;
-  final String? department;
+  final String? lecturerCode;
 
   User({
     required this.id,
     required this.email,
-    required this.name,
-    required this.role,
+    required this.fullName,
+    required this.roles,
     this.studentCode,
-    this.department,
+    this.lecturerCode,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final dynamic rawRoles = json['roles'];
+    final dynamic rawRole = json['role'];
+
+    List<String> parsedRoles = [];
+
+    if (rawRoles is List) {
+      parsedRoles = rawRoles.map((e) => e.toString().toUpperCase()).toList();
+    } else if (rawRole != null && rawRole.toString().trim().isNotEmpty) {
+      parsedRoles = [rawRole.toString().toUpperCase()];
+    }
+
     return User(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      name: json['name'] as String,
-      role: json['role'] as String,
-      studentCode: json['studentCode'] as String?,
-      department: json['department'] as String?,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id'].toString()) ?? 0,
+      email: json['email']?.toString() ?? '',
+      fullName: json['fullName']?.toString() ?? '',
+      roles: parsedRoles,
+      studentCode: json['studentCode']?.toString(),
+      lecturerCode: json['lecturerCode']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'email': email,
-      'name': name,
-      'role': role,
-      if (studentCode != null) 'studentCode': studentCode,
-      if (department != null) 'department': department,
+      "id": id,
+      "email": email,
+      "fullName": fullName,
+      "roles": roles,
+      "studentCode": studentCode,
+      "lecturerCode": lecturerCode,
     };
   }
 
-  bool get isAdmin => role == 'ADMIN';
-  bool get isLecturer => role == 'LECTURER';
-  bool get isStudent => role == 'STUDENT';
+  bool get isAdmin => roles.contains("ADMIN");
+  bool get isLecturer => roles.contains("LECTURER");
+  bool get isStudent => roles.contains("STUDENT");
 }

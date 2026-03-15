@@ -41,7 +41,11 @@ public class CoursesController : ControllerBase
 
         PagedResponse<CourseDetailResponse> result;
 
+<<<<<<< HEAD
+        if (userRole == "ADMIN")
+=======
         if (userRole == "ADMIN" || userRole == "SUPER_ADMIN")
+>>>>>>> origin
         {
             result = await _courseService.GetAllCoursesAsync(request);
         }
@@ -69,6 +73,12 @@ public class CoursesController : ControllerBase
     }
 
     /// <summary>
+<<<<<<< HEAD
+    /// Create a new course (Admin only)
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = "ADMIN")]
+=======
     /// Get course students
     /// </summary>
     [HttpGet("{id}/students")]
@@ -84,6 +94,7 @@ public class CoursesController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<CourseDetailResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateCourseRequest request)
     {
@@ -96,7 +107,11 @@ public class CoursesController : ControllerBase
     /// Update a course (Admin only)
     /// </summary>
     [HttpPut("{id}")]
+<<<<<<< HEAD
+    [Authorize(Roles = "ADMIN")]
+=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<CourseDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateCourseRequest request)
     {
@@ -108,7 +123,11 @@ public class CoursesController : ControllerBase
     /// Delete a course (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
+<<<<<<< HEAD
+    [Authorize(Roles = "ADMIN")]
+=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {
@@ -120,7 +139,11 @@ public class CoursesController : ControllerBase
     /// Assign lecturer to course (Admin only)
     /// </summary>
     [HttpPost("{id}/lecturers")]
+<<<<<<< HEAD
+    [Authorize(Roles = "ADMIN")]
+=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AssignLecturer(long id, [FromBody] AssignLecturerRequest request)
     {
@@ -128,8 +151,16 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Lecturer assigned successfully"));
     }
 
+<<<<<<< HEAD
+    /// <summary>
+    /// Enroll students to course (Admin only)
+    /// </summary>
+    [HttpPost("{id}/enrollments")]
+    [Authorize(Roles = "ADMIN")]
+=======
     [HttpPost("{id}/enrollments")]
     [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
     public async Task<IActionResult> EnrollStudents(long id, [FromBody] EnrollStudentsRequest request)
     {
@@ -137,6 +168,8 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse<EnrollmentResult>.SuccessResponse(result, "Enrollment completed"));
     }
 
+<<<<<<< HEAD
+=======
     [HttpPost("{id}/enrollments/import")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResult>), StatusCodes.Status200OK)]
@@ -159,11 +192,16 @@ public class CoursesController : ControllerBase
         }
     }
 
+>>>>>>> origin
     /// <summary>
     /// Get all projects pending integration approval for a course (Lecturer/Admin)
     /// </summary>
     [HttpGet("{id}/pending-integrations")]
+<<<<<<< HEAD
+    [Authorize(Roles = "LECTURER,ADMIN")]
+=======
     [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPendingIntegrations(long id)
     {
@@ -175,23 +213,39 @@ public class CoursesController : ControllerBase
     /// Remove a lecturer from a course (Admin only)
     /// </summary>
     [HttpDelete("{id}/lecturers/{lecturerId}")]
+<<<<<<< HEAD
+    [Authorize(Roles = "ADMIN")]
+=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveLecturer(long id, long lecturerId)
     {
         await _courseService.RemoveLecturerAsync(id, lecturerId);
+<<<<<<< HEAD
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Lecturer removed from course"));
+=======
         return Ok(ApiResponse<object>.SuccessResponse(new { }, "Lecturer removed from course"));
+>>>>>>> origin
     }
 
     /// <summary>
     /// Remove a student enrollment from a course (Admin only)
     /// </summary>
     [HttpDelete("{id}/enrollments/{studentId}")]
+<<<<<<< HEAD
+    [Authorize(Roles = "ADMIN")]
+=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RemoveEnrollment(long id, long studentId)
     {
         await _courseService.RemoveStudentAsync(id, studentId);
+<<<<<<< HEAD
+        return Ok(ApiResponse<object>.SuccessResponse(null, "Student removed from course"));
+=======
         return Ok(ApiResponse<object>.SuccessResponse(new { }, "Student removed from course"));
+>>>>>>> origin
     }
 }

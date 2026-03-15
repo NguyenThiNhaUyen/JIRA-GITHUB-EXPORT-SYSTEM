@@ -18,8 +18,12 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
+<<<<<<< HEAD
+            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+=======
             query = query.Where(c => (c.course_name ?? "").ToLower().Contains(lowerKeyword) || 
                                      (c.course_code ?? "").ToLower().Contains(lowerKeyword));
+>>>>>>> origin
         }
 
         if (sortDir?.ToLower() == "desc")
@@ -29,11 +33,14 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
 
         var totalItems = await query.CountAsync();
         var items = await query
+<<<<<<< HEAD
+=======
             .Include(c => c.subject)
             .Include(c => c.semester)
             .Include(c => c.lecturer_users).ThenInclude(l => l.user)
             .Include(c => c.projects)
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+>>>>>>> origin
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -48,8 +55,40 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
+<<<<<<< HEAD
+            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+        }
+
+        if (sortDir?.ToLower() == "desc")
+            query = query.OrderByDescending(x => x.created_at);
+        else
+            query = query.OrderBy(x => x.created_at);
+
+        var totalItems = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalItems);
+    }
+
+    public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesByStudentAsync(long studentUserId, string? keyword, string? sortDir, int page, int pageSize)
+    {
+        // Must access via CourseEnrollments if needed, or directly from context map
+        // Given we are inside CourseRepository, we can join with CourseEnrollments
+        var query = _context.Set<course_enrollment>()
+            .Where(e => e.student_user_id == studentUserId && e.status == "ACTIVE")
+            .Select(e => e.course);
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var lowerKeyword = keyword.ToLower();
+            query = query.Where(c => c.course_name.ToLower().Contains(lowerKeyword) || c.course_code.ToLower().Contains(lowerKeyword));
+=======
             query = query.Where(c => (c.course_name ?? "").ToLower().Contains(lowerKeyword) || 
                                      (c.course_code ?? "").ToLower().Contains(lowerKeyword));
+>>>>>>> origin
         }
 
         if (sortDir?.ToLower() == "desc")
@@ -61,6 +100,8 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         var items = await query
             .Include(c => c.subject)
             .Include(c => c.semester)
+<<<<<<< HEAD
+=======
             .Include(c => c.lecturer_users).ThenInclude(l => l.user)
             .Include(c => c.projects)
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
@@ -96,6 +137,7 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
             .Include(c => c.lecturer_users).ThenInclude(l => l.user)
             .Include(c => c.projects)
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+>>>>>>> origin
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

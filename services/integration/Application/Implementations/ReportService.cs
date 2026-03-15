@@ -85,12 +85,20 @@ public class ReportService : IReportService
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
+<<<<<<< HEAD
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name, projects);
+=======
                 var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects);
+>>>>>>> origin
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
+<<<<<<< HEAD
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name, projects);
+=======
                 var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects);
+>>>>>>> origin
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 

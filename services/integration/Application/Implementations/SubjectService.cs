@@ -34,11 +34,14 @@ public class SubjectService : ISubjectService
         {
             subject_code = request.SubjectCode,
             subject_name = request.SubjectName,
+<<<<<<< HEAD
+=======
             department = request.Department,
             description = request.Description,
             credits = request.Credits,
             max_students = request.MaxStudents,
             status = request.Status,
+>>>>>>> origin
             created_at = DateTime.UtcNow
         };
 
@@ -53,6 +56,9 @@ public class SubjectService : ISubjectService
         var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
         if (subject == null) throw new NotFoundException("Subject not found");
 
+<<<<<<< HEAD
+        subject.subject_name = request.SubjectName;
+=======
         if (!string.IsNullOrWhiteSpace(request.SubjectName))
             subject.subject_name = request.SubjectName;
             
@@ -70,6 +76,7 @@ public class SubjectService : ISubjectService
             
         if (!string.IsNullOrWhiteSpace(request.Status))
             subject.status = request.Status;
+>>>>>>> origin
 
         _unitOfWork.Subjects.Update(subject);
         await _unitOfWork.SaveChangesAsync();
@@ -96,6 +103,8 @@ public class SubjectService : ISubjectService
 
         return new PagedResponse<SubjectInfo>(_mapper.Map<List<SubjectInfo>>(items), totalItems, request.Page, request.PageSize);
     }
+<<<<<<< HEAD
+=======
 
     public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
     {
@@ -105,4 +114,5 @@ public class SubjectService : ISubjectService
 
         return _mapper.Map<List<SubjectInfo>>(items);
     }
+>>>>>>> origin
 }

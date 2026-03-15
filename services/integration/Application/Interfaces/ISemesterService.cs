@@ -7,9 +7,15 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 public interface ISemesterService
 {
     Task<SemesterInfo> CreateSemesterAsync(CreateSemesterRequest request);
+<<<<<<< HEAD
+    Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request);
+    Task DeleteSemesterAsync(long semesterId);
+    Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
+=======
     Task<List<SemesterInfo>> GenerateSemestersAsync(GenerateSemestersRequest request);
     Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request);
     Task DeleteSemesterAsync(long semesterId);
     Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
     Task<List<SemesterInfo>> GetAllSemestersAsync();
+>>>>>>> origin
 }

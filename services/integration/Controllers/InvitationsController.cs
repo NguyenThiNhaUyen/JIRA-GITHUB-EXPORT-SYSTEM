@@ -41,6 +41,10 @@ public class InvitationsController : ControllerBase
         _invitationService = invitationService;
     }
 
+<<<<<<< HEAD
+    [HttpGet("my-pending")]
+    [Authorize(Roles = "STUDENT")]
+=======
     public class SendInvitationFlatRequest
     {
         public long GroupId { get; set; }
@@ -60,6 +64,7 @@ public class InvitationsController : ControllerBase
 
     [HttpGet("my-pending")]
     [Authorize(Roles = "STUDENT,LECTURER,ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<InvitationResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyPendingInvitations([FromQuery] PagedRequest request)
     {
@@ -69,7 +74,10 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpPatch("{id}/accept")]
+<<<<<<< HEAD
+=======
     [HttpPut("{id}/accept")]
+>>>>>>> origin
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AcceptInvitation(long id)
@@ -80,7 +88,10 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpPatch("{id}/reject")]
+<<<<<<< HEAD
+=======
     [HttpPut("{id}/decline")]
+>>>>>>> origin
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectInvitation(long id)

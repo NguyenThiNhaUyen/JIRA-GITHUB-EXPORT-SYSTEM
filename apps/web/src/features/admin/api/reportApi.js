@@ -42,7 +42,7 @@ export async function generateSrs(projectId, format = "PDF") {
 }
 
 /**
- * Láy link tải báo cáo
+ * Lấy link tải báo cáo
  */
 export async function getReportDownloadLink(reportId) {
     const res = await client.get(`/reports/${reportId}/download-link`);
@@ -54,5 +54,23 @@ export async function getReportDownloadLink(reportId) {
  */
 export async function getMyReports() {
     const res = await client.get(`/reports`);
+    return unwrap(res);
+}
+
+/**
+ * Láy báo cáo theo Project và Type
+ */
+export async function getProjectReports(projectId, type) {
+    const res = await client.get(`/reports`, {
+        params: { projectId, type }
+    });
+    return unwrap(res);
+}
+
+/**
+ * Cập nhật trạng thái báo cáo
+ */
+export async function updateReportStatus(reportId, status) {
+    const res = await client.put(`/reports/${reportId}/status`, { status });
     return unwrap(res);
 }

@@ -13,14 +13,18 @@ class AuthProvider with ChangeNotifier {
   User? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get isAuthenticated => _user != null;
-  String? get userRole => _user?.role;
 
-  // Initialize - check if user is already logged in
+  bool get isAuthenticated => _user != null;
+
+  /// lấy role đầu tiên (backend trả array)
+  String? get userRole =>
+      _user != null && _user!.roles.isNotEmpty ? _user!.roles.first : null;
+
+  /// init app
   Future<void> init() async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       final isLoggedIn = await _authService.isLoggedIn();
       if (isLoggedIn) {
@@ -29,12 +33,11 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     }
-    
     _isLoading = false;
     notifyListeners();
   }
 
-  // Login
+  /// login
   Future<Map<String, dynamic>> login(String email, String password) async {
     _isLoading = true;
     _error = null;
@@ -42,23 +45,23 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final result = await _authService.login(email, password);
-      
+
       if (result['success'] == true) {
-        _user = result['user'] as User;
+        _user = result['user'];
         _error = null;
       } else {
-        _error = result['error'] as String;
+        _error = result['error'];
       }
-      
+
       _isLoading = false;
       notifyListeners();
-      
+
       return result;
     } catch (e) {
       _error = 'Đăng nhập thất bại';
       _isLoading = false;
       notifyListeners();
-      
+
       return {
         'success': false,
         'error': _error,
@@ -66,7 +69,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Logout
+  /// logout
   Future<void> logout() async {
     await _authService.logout();
     _user = null;

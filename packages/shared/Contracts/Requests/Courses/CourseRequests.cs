@@ -1,15 +1,27 @@
 using System.ComponentModel.DataAnnotations;
 
+<<<<<<< HEAD
+namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
+
+public class CreateSemesterRequest
+=======
 using System.Text.Json.Serialization;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
 
 public class CreateSemesterRequest : IValidatableObject
+>>>>>>> origin
 {
     [Required]
     public string Name { get; set; } = null!;
 
     [Required]
+<<<<<<< HEAD
+    public DateTime StartDate { get; set; }
+
+    [Required]
+    public DateTime EndDate { get; set; }
+=======
     [JsonPropertyName("startDate")]
     public DateTime StartDate { get; set; }
 
@@ -35,6 +47,7 @@ public class GenerateSemestersRequest
     [Required]
     [Range(2020, 2100, ErrorMessage = "Năm không hợp lệ (phải từ 2020 đến 2100).")]
     public int Year { get; set; }
+>>>>>>> origin
 }
 
 public class CreateSubjectRequest
@@ -44,6 +57,8 @@ public class CreateSubjectRequest
 
     [Required]
     public string SubjectName { get; set; } = null!;
+<<<<<<< HEAD
+=======
 
     [Required]
     public string Department { get; set; } = null!;
@@ -58,6 +73,7 @@ public class CreateSubjectRequest
     
     [Required]
     public string Status { get; set; } = "ACTIVE";
+>>>>>>> origin
 }
 
 public class CreateCourseRequest
@@ -82,7 +98,10 @@ public class CreateCourseRequest
 public class AssignLecturerRequest
 {
     [Required]
+<<<<<<< HEAD
+=======
     [Range(1, long.MaxValue, ErrorMessage = "Vui lòng chọn giảng viên hợp lệ.")]
+>>>>>>> origin
     public long LecturerUserId { get; set; }
 }
 
@@ -93,6 +112,8 @@ public class EnrollStudentsRequest
     public List<long> StudentUserIds { get; set; } = new();
 }
 
+<<<<<<< HEAD
+=======
 public class BulkAssignRequest
 {
     [Required]
@@ -108,6 +129,7 @@ public class AssignmentItem
     public long LecturerId { get; set; }
 }
 
+>>>>>>> origin
 
 
 

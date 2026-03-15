@@ -1,0 +1,110 @@
+﻿[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mâœ“[39m 2522 modules transformed.
+node.exe : [31mâœ—[39m 
+Build failed in 5.65s
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: ([31m  
+  âœ—[39m Build failed i   
+ n 5.65s:String) [], Rem    
+oteException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+[31merror during build:
+[31msrc/pages/student/stude
+nt-dashboard-new.jsx 
+(18:41): "useUpdateSrs" is 
+not exported by "src/feature
+s/srs/hooks/useSrs.js", 
+imported by "src/pages/stude
+nt/student-dashboard-new.jsx
+".[31m
+file: [36mD:/ki7/SWD/JIRA-G
+ITHUB-EXPORT-SYSTEM/apps/web
+/src/pages/student/student-d
+ashboard-new.jsx:18:41[31m
+[33m
+16: import { useGetCourses, 
+useGetEnrolledStudents } 
+from "../../features/courses
+/hooks/useCourses.js";
+17: import { 
+useGetProjects, 
+useLinkIntegration, 
+useAddTeamMember } from "../
+../features/projects/hooks/u
+seProjects.js";
+18: import { 
+useGetProjectSrs, 
+useSubmitSrs, useUpdateSrs, 
+useDeleteSrs } from "../../f
+eatures/srs/hooks/useSrs.js"
+;
+                            
+                 ^
+19: 
+20: import SRSUploadModal 
+from "./SRSUploadModal.jsx";
+[31m
+    at getRollupError (file:
+///D:/ki7/SWD/JIRA-GITHUB-EX
+PORT-SYSTEM/node_modules/rol
+lup/dist/es/shared/parseAst.
+js:402:41)
+    at error (file:///D:/ki7
+/SWD/JIRA-GITHUB-EXPORT-SYST
+EM/node_modules/rollup/dist/
+es/shared/parseAst.js:398:42
+)
+    at Module.error (file://
+/D:/ki7/SWD/JIRA-GITHUB-EXPO
+RT-SYSTEM/node_modules/rollu
+p/dist/es/shared/node-entry.
+js:17040:16)
+    at Module.traceVariable 
+(file:///D:/ki7/SWD/JIRA-GIT
+HUB-EXPORT-SYSTEM/node_modul
+es/rollup/dist/es/shared/nod
+e-entry.js:17452:29)
+    at 
+ModuleScope.findVariable (fi
+le:///D:/ki7/SWD/JIRA-GITHUB
+-EXPORT-SYSTEM/node_modules/
+rollup/dist/es/shared/node-e
+ntry.js:15070:39)
+    at 
+FunctionScope.findVariable (
+file:///D:/ki7/SWD/JIRA-GITH
+UB-EXPORT-SYSTEM/node_module
+s/rollup/dist/es/shared/node
+-entry.js:5673:38)
+    at FunctionBodyScope.fin
+dVariable (file:///D:/ki7/SW
+D/JIRA-GITHUB-EXPORT-SYSTEM/
+node_modules/rollup/dist/es/
+shared/node-entry.js:5673:38
+)
+    at Identifier.bind (file
+:///D:/ki7/SWD/JIRA-GITHUB-E
+XPORT-SYSTEM/node_modules/ro
+llup/dist/es/shared/node-ent
+ry.js:5447:40)
+    at CallExpression.bind (
+file:///D:/ki7/SWD/JIRA-GITH
+UB-EXPORT-SYSTEM/node_module
+s/rollup/dist/es/shared/node
+-entry.js:2829:23)
+    at CallExpression.bind (
+file:///D:/ki7/SWD/JIRA-GITH
+UB-EXPORT-SYSTEM/node_module
+s/rollup/dist/es/shared/node
+-entry.js:12179:15)[39m
