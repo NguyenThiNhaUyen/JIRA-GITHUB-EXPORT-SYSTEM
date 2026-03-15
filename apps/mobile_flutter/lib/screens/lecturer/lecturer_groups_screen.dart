@@ -1,615 +1,785 @@
-// Lecturer Groups Management Screen
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import 'lecturer_groups_widgets.dart';
+
+const int kMinMembers = 4;
+const int kMaxMembers = 6;
 
 class LecturerGroupsScreen extends StatefulWidget {
-  const LecturerGroupsScreen({super.key});
+  final String? courseId;
+
+  const LecturerGroupsScreen({
+    super.key,
+    this.courseId,
+  });
 
   @override
   State<LecturerGroupsScreen> createState() => _LecturerGroupsScreenState();
 }
-
 class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
-  static const Color bgColor = Color(0xFFF0FDF4);
-  static const Color cardBorder = Color(0xFFE2E8F0);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color teal = Color(0xFF0F766E);
+  // State mirroring JSX useState
+  List<int> _selectedStudents = [];
+  String _newGroupTopic = '';
+  String _studentSearch = '';
+  String _groupSearch = '';
+  String _groupFilter = 'all';
+  bool _showForceAddModal = false;
+  int? _forceAddGroupId;
+  List<int> _forceAddSelectedIds = [];
+  String _forceAddSearch = '';
+  int _autoGroupSize = 5;
 
-  String _searchQuery = '';
-  String _courseFilter = 'all';
-  String _statusFilter = 'all';
+  // Mock data (thay cho API calls trong JSX)
+  final Map<String, dynamic> _course = {'id': 1, 'code': 'SWD392', 'name': 'Software Development Project'};
 
-  static final List<Map<String, dynamic>> _groups = [
+  final List<Map<String, dynamic>> _students = List.generate(12, (i) => {
+    'id': i + 1,
+    'name': 'Sinh viên ${i + 1}',
+    'studentCode': 'SE16${1000 + i}',
+  });
+
+  List<Map<String, dynamic>> _groups = [
     {
-      'id': '1',
-      'name': 'Team Alpha',
-      'topic': 'AI Interview System',
-      'course': 'SWD392',
-      'courseClass': 'SE1830',
-      'members': [
-        {'name': 'Nguyễn Văn An', 'code': 'SE161234'},
-        {'name': 'Trần Thị Bình', 'code': 'SE161235'},
-        {'name': 'Lê Văn Chi', 'code': 'SE161236'},
-        {'name': 'Phạm Thị Dung', 'code': 'SE161237'},
+      'id': 1, 'name': 'Nhóm 1', 'description': 'AI Interview System',
+      'team': [
+        {'studentId': 1, 'studentName': 'Nguyễn Văn An', 'role': 'LEADER'},
+        {'studentId': 2, 'studentName': 'Trần Thị Bình', 'role': 'MEMBER'},
+        {'studentId': 3, 'studentName': 'Lê Văn Chi', 'role': 'MEMBER'},
+        {'studentId': 4, 'studentName': 'Phạm Thị Dung', 'role': 'MEMBER'},
       ],
-      'githubUrl': 'https://github.com/team-alpha/ai-interview',
-      'jiraUrl': 'https://alpha.atlassian.net/jira',
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'APPROVED',
-      'commits': 145,
-      'issues': 23,
-      'lastActive': '2 giờ trước',
-      'srsVersion': 'v2.1',
+      'integration': {'githubStatus': 'APPROVED', 'jiraStatus': 'APPROVED'},
     },
     {
-      'id': '2',
-      'name': 'Team Beta',
-      'topic': 'Job Matching Platform',
-      'course': 'SWD392',
-      'courseClass': 'SE1830',
-      'members': [
-        {'name': 'Hoàng Văn Em', 'code': 'SE161238'},
-        {'name': 'Ngô Thị Phượng', 'code': 'SE161239'},
-        {'name': 'Võ Văn Giang', 'code': 'SE161240'},
+      'id': 2, 'name': 'Nhóm 2', 'description': 'Job Matching Platform',
+      'team': [
+        {'studentId': 5, 'studentName': 'Hoàng Văn Em', 'role': 'LEADER'},
+        {'studentId': 6, 'studentName': 'Ngô Thị Phượng', 'role': 'MEMBER'},
+        {'studentId': 7, 'studentName': 'Võ Văn Giang', 'role': 'MEMBER'},
       ],
-      'githubUrl': 'https://github.com/team-beta/job-match',
-      'jiraUrl': 'https://beta.atlassian.net/jira',
-      'githubStatus': 'PENDING',
-      'jiraStatus': 'APPROVED',
-      'commits': 32,
-      'issues': 15,
-      'lastActive': '1 ngày trước',
-      'srsVersion': 'v1.0',
+      'integration': {'githubStatus': 'PENDING', 'jiraStatus': 'APPROVED'},
     },
     {
-      'id': '3',
-      'name': 'Team Gamma',
-      'topic': 'Smart Resume Analyzer',
-      'course': 'PRJ301',
-      'courseClass': 'SE1825',
-      'members': [
-        {'name': 'Đinh Thị Hoa', 'code': 'SE161241'},
-        {'name': 'Bùi Văn Ích', 'code': 'SE161242'},
-        {'name': 'Đỗ Thị Kim', 'code': 'SE161243'},
-        {'name': 'Lý Văn Long', 'code': 'SE161244'},
-        {'name': 'Cao Thị Mai', 'code': 'SE161245'},
+      'id': 3, 'name': 'Nhóm 3', 'description': '',
+      'team': [
+        {'studentId': 8, 'studentName': 'Đinh Thị Hoa', 'role': 'LEADER'},
+        {'studentId': 9, 'studentName': 'Bùi Văn Ích', 'role': 'MEMBER'},
       ],
-      'githubUrl': 'https://github.com/team-gamma/resume',
-      'jiraUrl': 'https://gamma.atlassian.net/jira',
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'PENDING',
-      'commits': 88,
-      'issues': 31,
-      'lastActive': '3 giờ trước',
-      'srsVersion': 'v1.5',
-    },
-    {
-      'id': '4',
-      'name': 'Team Delta',
-      'topic': 'E-learning Platform',
-      'course': 'PRJ301',
-      'courseClass': 'SE1825',
-      'members': [
-        {'name': 'Phan Văn Nam', 'code': 'SE161246'},
-        {'name': 'Tô Thị Oanh', 'code': 'SE161247'},
-        {'name': 'Hồ Văn Phong', 'code': 'SE161248'},
-        {'name': 'Lưu Thị Quỳnh', 'code': 'SE161249'},
-      ],
-      'githubUrl': '',
-      'jiraUrl': '',
-      'githubStatus': 'MISSING',
-      'jiraStatus': 'MISSING',
-      'commits': 0,
-      'issues': 0,
-      'lastActive': '7 ngày trước',
-      'srsVersion': 'Chưa có',
+      'integration': {'githubStatus': 'MISSING', 'jiraStatus': 'MISSING'},
     },
   ];
 
-  List<Map<String, dynamic>> get _filteredGroups {
-    return _groups.where((g) {
-      final matchSearch = _searchQuery.isEmpty ||
-          (g['name'] as String)
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          (g['topic'] as String)
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase());
-      final matchCourse =
-          _courseFilter == 'all' || g['course'] == _courseFilter;
-      final matchStatus = _statusFilter == 'all' ||
-          (_statusFilter == 'ok' &&
-              g['githubStatus'] == 'APPROVED' &&
-              g['jiraStatus'] == 'APPROVED') ||
-          (_statusFilter == 'pending' &&
-              (g['githubStatus'] == 'PENDING' ||
-                  g['jiraStatus'] == 'PENDING')) ||
-          (_statusFilter == 'missing' &&
-              (g['githubStatus'] == 'MISSING' ||
-                  g['jiraStatus'] == 'MISSING'));
-      return matchSearch && matchCourse && matchStatus;
+  // Computed: assignedStudentIds
+  Set<int> get _assignedIds => _groups
+      .expand((g) => (g['team'] as List).map((m) => m['studentId'] as int))
+      .toSet();
+
+  // Computed: availableStudents
+  List<Map<String, dynamic>> get _available =>
+      _students.where((s) => !_assignedIds.contains(s['id'] as int)).toList();
+
+  // Computed: filteredAvailableStudents
+  List<Map<String, dynamic>> get _filteredAvailable {
+    final kw = _studentSearch.trim().toLowerCase();
+    if (kw.isEmpty) return _available;
+    return _available.where((s) =>
+      (s['name'] as String).toLowerCase().contains(kw) ||
+      (s['studentCode'] as String).toLowerCase().contains(kw)).toList();
+  }
+
+  // Computed: filteredForceAddStudents
+  List<Map<String, dynamic>> get _filteredForceAdd {
+    final kw = _forceAddSearch.trim().toLowerCase();
+    if (kw.isEmpty) return _available;
+    return _available.where((s) =>
+      (s['name'] as String).toLowerCase().contains(kw) ||
+      (s['studentCode'] as String).toLowerCase().contains(kw)).toList();
+  }
+
+  // Computed: groupsWithMetrics (mirrors JSX useMemo)
+  List<Map<String, dynamic>> get _groupsWithMetrics => _groups.asMap().entries.map((e) {
+    final i = e.key; final g = e.value;
+    final integration = (g['integration'] as Map<String, dynamic>?) ?? {};
+    final team = (g['team'] as List?) ?? [];
+    final memberCount = team.length;
+    final githubApproved = integration['githubStatus'] == 'APPROVED';
+    final jiraApproved = integration['jiraStatus'] == 'APPROVED';
+    final commitCount = memberCount * 6 + (i + 1) * 3;
+    final issueCount = memberCount * 2 + i;
+    final lastActivity = i == 0 ? '2 giờ trước' : i == 1 ? '1 ngày trước' : '3 ngày trước';
+    var progress = 0;
+    if (githubApproved) progress += 35;
+    if (jiraApproved) progress += 25;
+    progress += (memberCount * 8).clamp(0, 40);
+    progress = progress.clamp(0, 100);
+    var riskScore = 100 - progress;
+    if (!githubApproved) riskScore += 15;
+    if (!jiraApproved) riskScore += 10;
+    riskScore = riskScore.clamp(0, 100);
+    final leader = team.cast<Map<String,dynamic>>().where((m) => m['role'] == 'LEADER').map((m) => m['studentName'] as String?).firstOrNull;
+    String state = 'healthy';
+    if (!githubApproved && !jiraApproved) state = 'critical';
+    else if (riskScore >= 55) state = 'warning';
+    else if (riskScore >= 30) state = 'watch';
+    final missingTopic = (g['description'] as String? ?? '').trim().isEmpty;
+    return {...g, 'integration': integration, 'memberCount': memberCount, 'githubApproved': githubApproved,
+      'jiraApproved': jiraApproved, 'commitCount': commitCount, 'issueCount': issueCount,
+      'lastActivity': lastActivity, 'progress': progress, 'riskScore': riskScore,
+      'state': state, 'leader': leader, 'missingTopic': missingTopic};
+  }).toList();
+
+  // Computed: visibleGroups
+  List<Map<String, dynamic>> get _visibleGroups {
+    final kw = _groupSearch.trim().toLowerCase();
+    return _groupsWithMetrics.where((g) {
+      final name = (g['name'] as String).toLowerCase();
+      final desc = (g['description'] as String? ?? '').toLowerCase();
+      final matchSearch = kw.isEmpty || name.contains(kw) || desc.contains(kw);
+      final state = g['state'] as String;
+      final matchFilter = _groupFilter == 'all' ||
+        (_groupFilter == 'healthy' && state == 'healthy') ||
+        (_groupFilter == 'watch' && state == 'watch') ||
+        (_groupFilter == 'warning' && state == 'warning') ||
+        (_groupFilter == 'critical' && state == 'critical') ||
+        (_groupFilter == 'missing-github' && !(g['githubApproved'] as bool)) ||
+        (_groupFilter == 'missing-jira' && !(g['jiraApproved'] as bool)) ||
+        (_groupFilter == 'missing-topic' && (g['missingTopic'] as bool));
+      return matchSearch && matchFilter;
     }).toList();
   }
+
+  // Stats
+  int get _healthyCount => _groupsWithMetrics.where((g) => g['state'] == 'healthy').length;
+  int get _riskCount => _groupsWithMetrics.where((g) => g['state'] == 'warning' || g['state'] == 'critical').length;
+  int get _missingGithubCount => _groupsWithMetrics.where((g) => !(g['githubApproved'] as bool)).length;
+  int get _missingJiraCount => _groupsWithMetrics.where((g) => !(g['jiraApproved'] as bool)).length;
+  int get _missingTopicCount => _groupsWithMetrics.where((g) => g['missingTopic'] as bool).length;
+  int get _avgProgress => _groupsWithMetrics.isEmpty ? 0 :
+    (_groupsWithMetrics.fold(0, (s, g) => s + (g['progress'] as int)) / _groupsWithMetrics.length).round();
+  int get _estimatedGroupCount => _available.isEmpty ? 0 : (_available.length / _autoGroupSize).ceil();
+
+  // Handlers
+  void _handleCreateGroup() {
+    if (_selectedStudents.isEmpty) { _snack('Vui lòng chọn ít nhất 1 sinh viên'); return; }
+    if (_newGroupTopic.trim().isEmpty) { _snack('Vui lòng nhập đề tài cho nhóm'); return; }
+    setState(() {
+      final newId = (_groups.isEmpty ? 0 : _groups.map((g) => g['id'] as int).reduce((a, b) => a > b ? a : b)) + 1;
+      final newTeam = _selectedStudents.asMap().entries.map((e) {
+        final s = _students.firstWhere((st) => st['id'] == e.value);
+        return {'studentId': e.value, 'studentName': s['name'], 'role': e.key == 0 ? 'LEADER' : 'MEMBER'};
+      }).toList();
+      _groups.add({'id': newId, 'name': 'Nhóm ${_groups.length + 1}', 'description': _newGroupTopic.trim(),
+        'team': newTeam, 'integration': {'githubStatus': 'MISSING', 'jiraStatus': 'MISSING'}});
+      _selectedStudents = []; _newGroupTopic = ''; _studentSearch = '';
+    });
+    _snack('Đã tạo nhóm thành công');
+  }
+
+  void _handleAutoCreateGroups() {
+    if (_available.isEmpty) { _snack('Không còn sinh viên chưa phân nhóm'); return; }
+    setState(() {
+      final shuffled = [..._available]..shuffle();
+      int base = _groups.length;
+      for (int i = 0; i < shuffled.length; i += _autoGroupSize) {
+        final chunk = shuffled.skip(i).take(_autoGroupSize).toList();
+        final newId = (_groups.isEmpty ? 0 : _groups.map((g) => g['id'] as int).reduce((a, b) => a > b ? a : b)) + 1;
+        _groups.add({'id': newId, 'name': 'Nhóm ${base + (i ~/ _autoGroupSize) + 1}',
+          'description': 'Đề tài nhóm ${base + (i ~/ _autoGroupSize) + 1}',
+          'team': chunk.asMap().entries.map((e) => {'studentId': e.value['id'], 'studentName': e.value['name'], 'role': e.key == 0 ? 'LEADER' : 'MEMBER'}).toList(),
+          'integration': {'githubStatus': 'MISSING', 'jiraStatus': 'MISSING'}});
+      }
+    });
+    _snack('Đã tự động chia nhóm');
+  }
+
+  void _handleDeleteGroup(int groupId) {
+    setState(() => _groups.removeWhere((g) => g['id'] == groupId));
+    _snack('Đã xóa nhóm');
+  }
+
+  void _handleUpdateTopic(int groupId, String newTopic) {
+    setState(() {
+      final idx = _groups.indexWhere((g) => g['id'] == groupId);
+      if (idx >= 0) _groups[idx] = {..._groups[idx], 'description': newTopic.trim()};
+    });
+    _snack('Đã cập nhật đề tài');
+  }
+
+  void _handleRemoveMember(int groupId, int studentId) {
+    setState(() {
+      final idx = _groups.indexWhere((g) => g['id'] == groupId);
+      if (idx >= 0) {
+        final team = List<Map<String,dynamic>>.from(_groups[idx]['team'] as List)
+          ..removeWhere((m) => m['studentId'] == studentId);
+        _groups[idx] = {..._groups[idx], 'team': team};
+      }
+    });
+    _snack('Đã xóa sinh viên khỏi nhóm');
+  }
+
+  void _handleForceAddSubmit() {
+    if (_forceAddSelectedIds.isEmpty) { _snack('Vui lòng chọn ít nhất 1 sinh viên'); return; }
+    setState(() {
+      final idx = _groups.indexWhere((g) => g['id'] == _forceAddGroupId);
+      if (idx >= 0) {
+        final team = List<Map<String,dynamic>>.from(_groups[idx]['team'] as List);
+        for (final sid in _forceAddSelectedIds) {
+          final s = _students.firstWhere((st) => st['id'] == sid);
+          team.add({'studentId': sid, 'studentName': s['name'], 'role': 'MEMBER'});
+        }
+        _groups[idx] = {..._groups[idx], 'team': team};
+      }
+      _showForceAddModal = false; _forceAddSelectedIds = []; _forceAddSearch = '';
+    });
+    _snack('Đã thêm sinh viên vào nhóm');
+  }
+
+  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: kTeal, behavior: SnackBarBehavior.floating));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
-      appBar: const AppTopHeader(
-        title: 'Quản lý nhóm',
+      backgroundColor: Colors.white,
+      appBar: AppTopHeader(
+        title: 'Nhóm & Dự án',
         showBack: true,
         backPath: '/lecturer',
-        user: AppUser(name: 'Nguyễn Văn Nam', email: 'namnv@fe.edu.vn', role: 'LECTURER'),
+        user: const AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER'),
       ),
-      body: Column(
-        children: [
-          // Search + filter
-          _buildFilters(),
-          // Groups list
-          Expanded(
-            child: _filteredGroups.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: _filteredGroups.length,
-                    itemBuilder: (context, i) =>
-                        _buildGroupCard(_filteredGroups[i]),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilters() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
-        children: [
-          // Search bar
-          TextField(
-            onChanged: (v) => setState(() => _searchQuery = v),
-            decoration: InputDecoration(
-              hintText: 'Tìm tên nhóm, đề tài...',
-              hintStyle: const TextStyle(color: textSecondary, fontSize: 13),
-              prefixIcon:
-                  const Icon(Icons.search_rounded, color: textSecondary),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: cardBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: cardBorder),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdown(
-                  value: _courseFilter,
-                  items: const {
-                    'all': 'Tất cả môn',
-                    'SWD392': 'SWD392',
-                    'PRJ301': 'PRJ301'
-                  },
-                  onChanged: (v) => setState(() => _courseFilter = v!),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildDropdown(
-                  value: _statusFilter,
-                  items: const {
-                    'all': 'Tất cả trạng thái',
-                    'ok': '✅ Hoàn chỉnh',
-                    'pending': '⏳ Chờ duyệt',
-                    'missing': '❌ Thiếu kết nối'
-                  },
-                  onChanged: (v) => setState(() => _statusFilter = v!),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String value,
-    required Map<String, String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      onChanged: onChanged,
-      isDense: true,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: cardBorder),
+      body: Stack(children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _buildHeader(context),
+            const SizedBox(height: 16),
+            _buildGovernanceOverview(),
+            const SizedBox(height: 16),
+            _buildCreateGroupPanel(),
+            const SizedBox(height: 16),
+            _buildAutoGroupPanel(),
+            const SizedBox(height: 16),
+            _buildGroupList(),
+          ]),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: cardBorder),
-        ),
-      ),
-      items: items.entries
-          .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 12))))
-          .toList(),
+        if (_showForceAddModal) _buildForceAddModal(),
+      ]),
     );
   }
 
-  Widget _buildGroupCard(Map<String, dynamic> g) {
-    final githubOk = g['githubStatus'] == 'APPROVED';
-    final jiraOk = g['jiraStatus'] == 'APPROVED';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [teal.withOpacity(0.8), const Color(0xFF14B8A6)],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.groups_2_outlined,
-                      color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        g['name'] as String,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: textPrimary,
-                        ),
-                      ),
-                      Text(
-                        g['topic'] as String,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    g['course'] as String,
-                    style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Stats row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-            child: Row(
-              children: [
-                _buildMiniStat(
-                    Icons.people_outline, '${(g['members'] as List).length}', 'SV'),
-                const SizedBox(width: 16),
-                _buildMiniStat(Icons.commit, '${g['commits']}', 'Commits'),
-                const SizedBox(width: 16),
-                _buildMiniStat(Icons.task_alt_outlined, '${g['issues']}', 'Issues'),
-                const SizedBox(width: 16),
-                _buildMiniStat(
-                    Icons.description_outlined, g['srsVersion'] as String, 'SRS'),
-              ],
-            ),
-          ),
-
-          // Integration status
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Row(
-              children: [
-                _buildStatusBadge('GitHub', g['githubStatus'] as String),
-                const SizedBox(width: 8),
-                _buildStatusBadge('Jira', g['jiraStatus'] as String),
-                const Spacer(),
-                Text(
-                  g['lastActive'] as String,
-                  style: const TextStyle(fontSize: 10, color: textSecondary),
-                ),
-              ],
-            ),
-          ),
-
-          // Action buttons
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildActionBtn(
-                    'Xem thành viên',
-                    Icons.people_outline,
-                    const Color(0xFF6366F1),
-                    () => _showMembersDialog(context, g),
-                  ),
-                ),
-                if (!githubOk || !jiraOk) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildActionBtn(
-                      g['githubStatus'] == 'PENDING' ||
-                              g['jiraStatus'] == 'PENDING'
-                          ? 'Duyệt tích hợp'
-                          : 'Nhắc nhở',
-                      g['githubStatus'] == 'PENDING' ||
-                              g['jiraStatus'] == 'PENDING'
-                          ? Icons.check_circle_outline
-                          : Icons.notifications_outlined,
-                      g['githubStatus'] == 'PENDING' ||
-                              g['jiraStatus'] == 'PENDING'
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFFF59E0B),
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              g['githubStatus'] == 'PENDING' ||
-                                      g['jiraStatus'] == 'PENDING'
-                                  ? 'Đã duyệt tích hợp cho ${g['name']}'
-                                  : 'Đã gửi nhắc nhở đến ${g['name']}',
-                            ),
-                            backgroundColor: teal,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  // ── Header ───────────────────────────────────────────────
+  Widget _buildHeader(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // Breadcrumb
+      Row(children: [
+        GestureDetector(onTap: () => context.go('/lecturer'),
+          child: const Text('Giảng viên', style: TextStyle(fontSize: 11, color: kTeal, fontWeight: FontWeight.w600))),
+        const Icon(Icons.chevron_right_rounded, size: 14, color: kTextSecondary),
+        const Text('Quản lý nhóm', style: TextStyle(fontSize: 11, color: kTextSecondary)),
+        const Icon(Icons.chevron_right_rounded, size: 14, color: kTextSecondary),
+        Text(_course['code'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: kTextPrimary)),
+      ]),
+      const SizedBox(height: 8),
+      const Text('Nhóm & Dự án', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kTextPrimary)),
+      const SizedBox(height: 2),
+      const Text('Điều hành nhóm đồ án, theo dõi tích hợp Jira/GitHub và kiểm soát rủi ro theo từng lớp học.',
+        style: TextStyle(fontSize: 12, color: kTextSecondary)),
+      const SizedBox(height: 10),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        HeaderInfoChip(icon: Icons.book_outlined, label: _course['code'] as String),
+        HeaderInfoChip(icon: Icons.school_outlined, label: _course['name'] as String),
+        HeaderInfoChip(icon: Icons.layers_outlined, label: '${_students.length} sinh viên'),
+        HeaderInfoChip(icon: Icons.folder_outlined, label: '${_groups.length} nhóm'),
+        HeaderInfoChip(icon: Icons.shield_outlined, label: '$_riskCount nhóm rủi ro'),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        _buildOutlineBtn(Icons.arrow_back_rounded, 'Quay lại', () => context.go('/lecturer')),
+        const SizedBox(width: 8),
+        _buildOutlineBtn(Icons.analytics_outlined, 'Analytics', () => context.go('/lecturer/course/${widget.courseId}/analytics')),
+        const SizedBox(width: 8),
+        _buildOutlineBtn(Icons.download_rounded, 'Xuất CSV', () => _snack('Đã xuất danh sách nhóm')),
+      ]),
+    ]);
   }
 
-  Widget _buildMiniStat(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 11, color: textSecondary),
-            const SizedBox(width: 3),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
-              ),
-            ),
-          ],
-        ),
-        Text(label, style: const TextStyle(fontSize: 9, color: textSecondary)),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge(String label, String status) {
-    Color color;
-    IconData icon;
-
-    switch (status) {
-      case 'APPROVED':
-        color = const Color(0xFF10B981);
-        icon = Icons.check_circle_outline;
-        break;
-      case 'PENDING':
-        color = const Color(0xFFF59E0B);
-        icon = Icons.schedule_outlined;
-        break;
-      default:
-        color = const Color(0xFFEF4444);
-        icon = Icons.cancel_outlined;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 10, color: color, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionBtn(
-      String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildOutlineBtn(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w600, color: color),
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(border: Border.all(color: kCardBorder), borderRadius: BorderRadius.circular(12)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 13, color: kTextSecondary), const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontSize: 12, color: kTextSecondary)),
+        ]),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Icon(Icons.groups_2_outlined,
-                size: 36, color: Color(0xFF14B8A6)),
+  // ── Governance Overview ──────────────────────────────────
+  Widget _buildGovernanceOverview() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: kCardBorder),
+        borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        GridView.count(crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 2.8, children: [
+          MiniStat(label: 'Tổng sinh viên', value: '${_students.length}', bgColor: const Color(0xFFEFF6FF), textColor: const Color(0xFF2563EB)),
+          MiniStat(label: 'Chưa phân nhóm', value: '${_available.length}', bgColor: const Color(0xFFFFF7ED), textColor: const Color(0xFFEA580C)),
+          MiniStat(label: 'Nhóm hiện có', value: '${_groups.length}', bgColor: const Color(0xFFF0FDFA), textColor: kTeal),
+          MiniStat(label: 'Tiến độ TB', value: '$_avgProgress%', bgColor: const Color(0xFFEEF2FF), textColor: const Color(0xFF6366F1)),
+          MiniStat(label: 'Nhóm ổn định', value: '$_healthyCount', bgColor: const Color(0xFFF0FDF4), textColor: const Color(0xFF16A34A)),
+          MiniStat(label: 'Nhóm rủi ro', value: '$_riskCount', bgColor: const Color(0xFFFEF2F2), textColor: const Color(0xFFDC2626)),
+          MiniStat(label: 'Thiếu GitHub', value: '$_missingGithubCount', bgColor: const Color(0xFFFFFBEB), textColor: const Color(0xFFD97706)),
+          MiniStat(label: 'Thiếu Jira', value: '$_missingJiraCount', bgColor: const Color(0xFFFDF2F8), textColor: const Color(0xFFDB2777)),
+        ]),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFFF0FDFA), Color(0xFFECFEFF)]),
+            border: Border.all(color: const Color(0xFF99F6E4)),
+            borderRadius: BorderRadius.circular(16),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Không có nhóm nào',
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
-          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.auto_awesome_rounded, size: 14, color: kTeal)),
+              const SizedBox(width: 8),
+              const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Gợi ý quản trị lớp', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kTextPrimary)),
+                Text('Theo rule FPTU cho đồ án nhóm', style: TextStyle(fontSize: 10, color: kTextSecondary)),
+              ]),
+            ]),
+            const SizedBox(height: 10),
+            Column(children: [
+              RuleLine(ok: _available.isEmpty, text: _available.isEmpty ? 'Tất cả sinh viên đã được phân nhóm.' : 'Còn ${_available.length} sinh viên chưa có nhóm.'),
+              const SizedBox(height: 6),
+              RuleLine(ok: _missingTopicCount == 0, text: _missingTopicCount == 0 ? 'Tất cả nhóm đã có đề tài.' : '$_missingTopicCount nhóm chưa có đề tài rõ ràng.'),
+              const SizedBox(height: 6),
+              RuleLine(ok: _missingGithubCount == 0, text: _missingGithubCount == 0 ? 'Tất cả nhóm đã có GitHub.' : '$_missingGithubCount nhóm chưa hoàn tất GitHub.'),
+              const SizedBox(height: 6),
+              RuleLine(ok: _missingJiraCount == 0, text: _missingJiraCount == 0 ? 'Tất cả nhóm đã có Jira.' : '$_missingJiraCount nhóm chưa hoàn tất Jira.'),
+            ]),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  // ── Create Group Panel ───────────────────────────────────
+  Widget _buildCreateGroupPanel() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: kCardBorder),
+        borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Row(children: [
+            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFF0FDFA), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.person_add_alt_1_rounded, size: 15, color: kTeal)),
+            const SizedBox(width: 8),
+            const Text('Tạo Nhóm Mới', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kTextPrimary)),
+          ])),
+        const Divider(height: 1, color: Color(0xFFF9FAFB)),
+        Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('ĐỀ TÀI NHÓM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: kTextSecondary, letterSpacing: 1)),
           const SizedBox(height: 6),
-          const Text(
-            'Thử thay đổi bộ lọc',
-            style: TextStyle(fontSize: 13, color: textSecondary),
+          TextField(
+            onChanged: (v) => setState(() => _newGroupTopic = v),
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(hintText: 'Nhập đề tài cho nhóm...', hintStyle: const TextStyle(color: kTextSecondary, fontSize: 13),
+              filled: true, fillColor: kBg, contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kTeal, width: 1.5))),
           ),
-        ],
-      ),
+          const SizedBox(height: 14),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            const Text('SINH VIÊN CHƯA PHÂN NHÓM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: kTextSecondary, letterSpacing: 1)),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(20)),
+              child: Text('${_available.length} có sẵn', style: const TextStyle(fontSize: 10, color: kTextSecondary))),
+          ]),
+          const SizedBox(height: 8),
+          GroupsSearchBar(hint: 'Tìm sinh viên...', onChanged: (v) => setState(() => _studentSearch = v)),
+          const SizedBox(height: 8),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            decoration: BoxDecoration(border: Border.all(color: kCardBorder), borderRadius: BorderRadius.circular(12)),
+            child: _filteredAvailable.isEmpty
+                ? Padding(padding: const EdgeInsets.all(20),
+                    child: Center(child: Text(_available.isEmpty ? 'Tất cả sinh viên đã được phân nhóm' : 'Không tìm thấy sinh viên phù hợp',
+                        style: const TextStyle(fontSize: 11, color: kTextSecondary))))
+                : ListView.separated(shrinkWrap: true,
+                    itemCount: _filteredAvailable.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF9FAFB)),
+                    itemBuilder: (_, i) {
+                      final s = _filteredAvailable[i];
+                      final sid = s['id'] as int;
+                      final selected = _selectedStudents.contains(sid);
+                      return InkWell(onTap: () => setState(() => selected ? _selectedStudents.remove(sid) : _selectedStudents.add(sid)),
+                        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          child: Row(children: [
+                            SizedBox(width: 18, height: 18,
+                              child: Checkbox(value: selected, onChanged: (_) => setState(() => selected ? _selectedStudents.remove(sid) : _selectedStudents.add(sid)),
+                                activeColor: kTeal, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)))),
+                            const SizedBox(width: 10),
+                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(s['name'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextPrimary)),
+                              Text(s['studentCode'] as String, style: const TextStyle(fontSize: 10, color: kTextSecondary)),
+                            ]),
+                          ])));
+                    }),
+          ),
+          if (_selectedStudents.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text('Đã chọn ${_selectedStudents.length} sinh viên', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kTeal)),
+          ],
+          const SizedBox(height: 14),
+          SizedBox(width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _selectedStudents.isEmpty || _newGroupTopic.trim().isEmpty ? null : _handleCreateGroup,
+              style: ElevatedButton.styleFrom(backgroundColor: kTeal, foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12),
+                disabledBackgroundColor: kTeal.withOpacity(0.4)),
+              child: const Text('+ Tạo nhóm', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)))),
+        ])),
+      ]),
     );
   }
 
-  void _showMembersDialog(BuildContext context, Map<String, dynamic> g) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.55,
-        builder: (_, controller) => Column(
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                children: [
-                  const Icon(Icons.people_outline, color: teal),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${g['name']} · Thành viên',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: ListView.builder(
-                controller: controller,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: (g['members'] as List).length,
-                itemBuilder: (_, i) {
-                  final m = (g['members'] as List)[i] as Map<String, dynamic>;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      backgroundColor: teal.withOpacity(0.1),
-                      child: Text(
-                        m['name'].toString().split(' ').last[0],
-                        style: const TextStyle(
-                            color: teal, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    title: Text(m['name'] as String,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                    subtitle: Text(m['code'] as String,
-                        style: const TextStyle(fontSize: 11)),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+  // ── Auto Group Panel ─────────────────────────────────────
+  Widget _buildAutoGroupPanel() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: kCardBorder),
+        borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Row(children: [
+            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFF5F3FF), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.auto_fix_high_rounded, size: 15, color: Color(0xFF7C3AED))),
+            const SizedBox(width: 8),
+            const Text('Tự Động Chia Nhóm', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kTextPrimary)),
+          ])),
+        const Divider(height: 1, color: Color(0xFFF9FAFB)),
+        Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: const Color(0xFFF5F3FF), border: Border.all(color: const Color(0xFFDDD6FE)), borderRadius: BorderRadius.circular(14)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Hỗ trợ chia nhanh theo quy mô nhóm', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kTextPrimary)),
+              const SizedBox(height: 3),
+              Text('Khuyến nghị nhóm từ $kMinMembers–$kMaxMembers sinh viên theo format đồ án FPTU.',
+                style: const TextStyle(fontSize: 11, color: kTextSecondary)),
+            ])),
+          const SizedBox(height: 12),
+          const Text('SỐ THÀNH VIÊN / NHÓM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: kTextSecondary, letterSpacing: 1)),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<int>(
+            value: _autoGroupSize,
+            onChanged: (v) => setState(() => _autoGroupSize = v!),
+            decoration: InputDecoration(filled: true, fillColor: kBg, contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder))),
+            items: const [
+              DropdownMenuItem(value: 4, child: Text('4 sinh viên', style: TextStyle(fontSize: 13))),
+              DropdownMenuItem(value: 5, child: Text('5 sinh viên', style: TextStyle(fontSize: 13))),
+              DropdownMenuItem(value: 6, child: Text('6 sinh viên', style: TextStyle(fontSize: 13))),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: SmartInfoCard(icon: Icons.people_outline, label: 'Chưa phân nhóm', value: '${_available.length}')),
+            const SizedBox(width: 10),
+            Expanded(child: SmartInfoCard(icon: Icons.folder_outlined, label: 'Ước tính nhóm mới', value: '$_estimatedGroupCount')),
+          ]),
+          const SizedBox(height: 12),
+          SizedBox(width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _available.isEmpty ? null : _handleAutoCreateGroups,
+              icon: const Icon(Icons.auto_fix_high_rounded, size: 14),
+              label: const Text('Tự động chia nhóm', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C3AED), foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12),
+                disabledBackgroundColor: const Color(0xFF7C3AED).withOpacity(0.4)))),
+        ])),
+      ]),
     );
+  }
+
+  // ── Group List ───────────────────────────────────────────
+  Widget _buildGroupList() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, border: Border.all(color: kCardBorder),
+        borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Row(children: [
+              Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.groups_rounded, size: 15, color: Color(0xFF2563EB))),
+              const SizedBox(width: 8),
+              const Text('Danh sách Nhóm', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kTextPrimary)),
+            ]),
+            Row(children: [
+              if (_missingTopicCount > 0)
+                Container(margin: const EdgeInsets.only(right: 6), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(20)),
+                  child: Text('$_missingTopicCount nhóm thiếu đề tài', style: const TextStyle(fontSize: 10, color: Color(0xFFD97706), fontWeight: FontWeight.w600))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(20)),
+                child: Text('${_visibleGroups.length}/${_groups.length} nhóm', style: const TextStyle(fontSize: 10, color: kTextSecondary, fontWeight: FontWeight.w600))),
+            ]),
+          ]),
+          const SizedBox(height: 12),
+          GroupsSearchBar(hint: 'Tìm nhóm hoặc đề tài...', onChanged: (v) => setState(() => _groupSearch = v)),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _groupFilter,
+            onChanged: (v) => setState(() => _groupFilter = v!),
+            decoration: InputDecoration(filled: true, fillColor: kBg, contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              prefixIcon: const Icon(Icons.filter_list_rounded, size: 15, color: kTextSecondary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kCardBorder))),
+            items: const [
+              DropdownMenuItem(value: 'all', child: Text('Tất cả trạng thái', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'healthy', child: Text('Ổn định', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'watch', child: Text('Cần theo dõi', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'warning', child: Text('Rủi ro', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'critical', child: Text('Nguy cấp', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'missing-github', child: Text('Thiếu GitHub', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'missing-jira', child: Text('Thiếu Jira', style: TextStyle(fontSize: 12))),
+              DropdownMenuItem(value: 'missing-topic', child: Text('Thiếu đề tài', style: TextStyle(fontSize: 12))),
+            ],
+          ),
+        ])),
+        const Divider(height: 1, color: Color(0xFFF9FAFB)),
+        _visibleGroups.isEmpty ? _buildEmptyGroups() : Column(
+          children: _visibleGroups.asMap().entries.map((e) =>
+            _buildGroupCard(e.value, isLast: e.key == _visibleGroups.length - 1)).toList()),
+      ]),
+    );
+  }
+
+  Widget _buildEmptyGroups() {
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(child: Column(children: [
+        Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.assignment_outlined, size: 24, color: kTextSecondary)),
+        const SizedBox(height: 12),
+        const Text('Chưa có nhóm phù hợp', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kTextSecondary)),
+        const SizedBox(height: 4),
+        const Text('Bắt đầu bằng cách tạo nhóm thủ công\nhoặc dùng tính năng tự động chia nhóm.',
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: kTextSecondary)),
+      ])));
+  }
+
+  Widget _buildGroupCard(Map<String, dynamic> g, {bool isLast = false}) {
+    final team = (g['team'] as List).cast<Map<String, dynamic>>();
+    final gid = g['id'] as int;
+    final topicController = TextEditingController(text: g['description'] as String? ?? '');
+
+    return Container(
+      decoration: BoxDecoration(border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF9FAFB)))),
+      child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Name row + badges + action buttons
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: 5, runSpacing: 4, children: [
+              Text(g['name'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextPrimary)),
+              StatusBadge(status: (g['integration'] as Map)['githubStatus'] as String?, icon: Icons.code_rounded, label: 'GitHub'),
+              StatusBadge(status: (g['integration'] as Map)['jiraStatus'] as String?, icon: Icons.book_online_outlined, label: 'Jira'),
+              RiskBadge(state: g['state'] as String),
+              if (g['missingTopic'] as bool)
+                Container(padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(6)),
+                  child: const Text('Thiếu đề tài', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFD97706), letterSpacing: 0.5))),
+            ]),
+            const SizedBox(height: 6),
+            Wrap(spacing: 5, runSpacing: 4, children: [
+              MetricChip(icon: Icons.people_outline, label: '${g['memberCount']} thành viên'),
+              MetricChip(icon: Icons.school_outlined, label: g['leader'] != null ? 'Leader: ${g['leader']}' : 'Chưa có leader'),
+              MetricChip(icon: Icons.commit_rounded, label: '${g['commitCount']} commits'),
+              MetricChip(icon: Icons.book_outlined, label: '${g['issueCount']} issues'),
+              MetricChip(icon: Icons.access_time_rounded, label: g['lastActivity'] as String),
+              MetricChip(icon: Icons.shield_outlined, label: 'Risk ${g['riskScore']}%'),
+            ]),
+          ])),
+          const SizedBox(width: 8),
+          Column(children: [
+            _buildSmBtn(Icons.remove_red_eye_outlined, 'Chi tiết', const Color(0xFF0F766E), const Color(0xFFF0FDFA),
+              () => context.go('/lecturer/group/$gid')),
+            const SizedBox(height: 5),
+            _buildSmBtn(Icons.delete_outline_rounded, 'Xóa', const Color(0xFFDC2626), const Color(0xFFFEF2F2),
+              () => _handleDeleteGroup(gid)),
+          ]),
+        ]),
+        const SizedBox(height: 10),
+        // Topic input
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: const [Icon(Icons.edit_note_rounded, size: 11, color: kTextSecondary), SizedBox(width: 4),
+            Text('Đề tài / Mô tả dự án', style: TextStyle(fontSize: 10, color: kTextSecondary))]),
+          const SizedBox(height: 5),
+          TextField(controller: topicController, onSubmitted: (v) => _handleUpdateTopic(gid, v),
+            style: const TextStyle(fontSize: 12),
+            decoration: InputDecoration(hintText: 'Chưa có đề tài...', hintStyle: const TextStyle(color: kTextSecondary, fontSize: 12),
+              filled: true, fillColor: kBg, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: kCardBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: kCardBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: kTeal, width: 1.5)))),
+        ]),
+        const SizedBox(height: 10),
+        // Progress bar
+        Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            const Text('Tiến độ dự án', style: TextStyle(fontSize: 10, color: kTextSecondary)),
+            Text('${g['progress']}%', style: const TextStyle(fontSize: 10, color: kTextSecondary)),
+          ]),
+          const SizedBox(height: 5),
+          ClipRRect(borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(value: (g['progress'] as int) / 100, minHeight: 7, backgroundColor: const Color(0xFFF3F4F6),
+              valueColor: AlwaysStoppedAnimation(_progressColor(g['progress'] as int)))),
+        ]),
+        const SizedBox(height: 10),
+        // Members
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('Thành viên (${team.length})', style: const TextStyle(fontSize: 11, color: kTextSecondary)),
+          GestureDetector(onTap: () => setState(() { _forceAddGroupId = gid; _forceAddSelectedIds = []; _forceAddSearch = ''; _showForceAddModal = true; }),
+            child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: const Color(0xFFF0FDFA), border: Border.all(color: const Color(0xFF99F6E4)), borderRadius: BorderRadius.circular(8)),
+              child: const Row(children: [Icon(Icons.person_add_alt_1_rounded, size: 10, color: kTeal), SizedBox(width: 4),
+                Text('Thêm SV', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kTeal))]))),
+        ]),
+        const SizedBox(height: 6),
+        team.isEmpty
+          ? const Text('Chưa có thành viên', style: TextStyle(fontSize: 11, color: kTextSecondary))
+          : Wrap(spacing: 6, runSpacing: 6, children: team.map((m) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: Colors.white, border: Border.all(color: kCardBorder),
+                  borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)]),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFFCCFBF1), borderRadius: BorderRadius.circular(20)),
+                    child: Center(child: Text((m['studentName'] as String).characters.first,
+                      style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: kTeal)))),
+                  const SizedBox(width: 5),
+                  Text(m['studentName'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kTextPrimary)),
+                  if (m['role'] == 'LEADER') ...[
+                    const SizedBox(width: 4),
+                    Container(padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFFFFFBEB), border: Border.all(color: const Color(0xFFFDE68A)), borderRadius: BorderRadius.circular(20)),
+                      child: const Text('Leader', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFD97706)))),
+                  ],
+                  const SizedBox(width: 3),
+                  GestureDetector(onTap: () => _handleRemoveMember(gid, m['studentId'] as int),
+                    child: const Text('×', style: TextStyle(fontSize: 14, color: kTextSecondary, fontWeight: FontWeight.bold))),
+                ]),
+              );
+            }).toList()),
+        // Risk/topic alerts
+        if (g['state'] == 'warning' || g['state'] == 'critical' || g['missingTopic'] == true) ...[
+          const SizedBox(height: 10),
+          if (g['state'] == 'warning' || g['state'] == 'critical')
+            Container(margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFFFEF2F2), border: Border.all(color: const Color(0xFFFECACA)), borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [const Icon(Icons.warning_amber_rounded, size: 13, color: Color(0xFFDC2626)), const SizedBox(width: 6),
+                Flexible(child: Text(g['state'] == 'critical' ? 'Nhóm đang thiếu tích hợp quan trọng và có rủi ro cao.' : 'Nhóm cần được theo dõi thêm về tiến độ hoặc mức độ hoạt động.',
+                  style: const TextStyle(fontSize: 11, color: Color(0xFFDC2626))))])),
+          if (g['missingTopic'] == true)
+            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: const Color(0xFFFFFBEB), border: Border.all(color: const Color(0xFFFDE68A)), borderRadius: BorderRadius.circular(12)),
+              child: const Row(children: [Icon(Icons.error_outline_rounded, size: 13, color: Color(0xFFD97706)), SizedBox(width: 6),
+                Flexible(child: Text('Nhóm chưa có đề tài cụ thể. Nên cập nhật để thuận tiện review.',
+                  style: TextStyle(fontSize: 11, color: Color(0xFFD97706))))])),
+        ],
+      ])),
+    );
+  }
+
+  Color _progressColor(int p) {
+    if (p >= 80) return const Color(0xFF16A34A);
+    if (p >= 50) return kTeal;
+    if (p >= 30) return const Color(0xFFCA8A04);
+    return const Color(0xFFDC2626);
+  }
+
+  Widget _buildSmBtn(IconData icon, String label, Color color, Color bg, VoidCallback onTap) {
+    return GestureDetector(onTap: onTap,
+      child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(color: bg, border: Border.all(color: color.withOpacity(0.2)), borderRadius: BorderRadius.circular(8)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 11, color: color), const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+        ])));
+  }
+
+  // ── ForceAdd Modal ───────────────────────────────────────
+  Widget _buildForceAddModal() {
+    return GestureDetector(
+      onTap: () => setState(() => _showForceAddModal = false),
+      child: Container(color: Colors.black.withOpacity(0.3),
+        child: Center(child: GestureDetector(onTap: () {},
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            constraints: const BoxConstraints(maxHeight: 520),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 20)]),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Padding(padding: const EdgeInsets.fromLTRB(20, 20, 20, 0), child: Row(children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                  Text('Thêm Thành Viên', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kTextPrimary)),
+                  Text('Thêm sinh viên vào nhóm này', style: TextStyle(fontSize: 11, color: kTextSecondary)),
+                ])),
+                GestureDetector(onTap: () => setState(() => _showForceAddModal = false),
+                  child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(20)),
+                    child: const Icon(Icons.close_rounded, size: 16, color: kTextSecondary))),
+              ])),
+              Padding(padding: const EdgeInsets.all(16),
+                child: GroupsSearchBar(hint: 'Tìm sinh viên...', onChanged: (v) => setState(() => _forceAddSearch = v))),
+              Flexible(child: Container(margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(border: Border.all(color: kCardBorder), borderRadius: BorderRadius.circular(12)),
+                child: _filteredForceAdd.isEmpty
+                  ? Padding(padding: const EdgeInsets.all(24),
+                      child: Center(child: Text(_available.isEmpty ? 'Tất cả sinh viên trong lớp đã có nhóm.' : 'Không tìm thấy sinh viên phù hợp.',
+                        style: const TextStyle(fontSize: 12, color: kTextSecondary))))
+                  : ListView.separated(shrinkWrap: true, itemCount: _filteredForceAdd.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF9FAFB)),
+                      itemBuilder: (_, i) {
+                        final s = _filteredForceAdd[i];
+                        final sid = s['id'] as int;
+                        final selected = _forceAddSelectedIds.contains(sid);
+                        return InkWell(onTap: () => setState(() => selected ? _forceAddSelectedIds.remove(sid) : _forceAddSelectedIds.add(sid)),
+                          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            child: Row(children: [
+                              SizedBox(width: 18, height: 18,
+                                child: Checkbox(value: selected, onChanged: (_) => setState(() => selected ? _forceAddSelectedIds.remove(sid) : _forceAddSelectedIds.add(sid)),
+                                  activeColor: kTeal, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)))),
+                              const SizedBox(width: 10),
+                              Container(width: 30, height: 30, decoration: BoxDecoration(color: const Color(0xFFCCFBF1), borderRadius: BorderRadius.circular(20)),
+                                child: Center(child: Text((s['name'] as String).characters.first,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: kTeal)))),
+                              const SizedBox(width: 10),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(s['name'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kTextPrimary)),
+                                Text(s['studentCode'] as String, style: const TextStyle(fontSize: 10, color: kTextSecondary)),
+                              ])),
+                            ])));
+                      }))),
+              Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+                const Divider(height: 1, color: Color(0xFFF9FAFB)),
+                const SizedBox(height: 12),
+                SizedBox(width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _forceAddSelectedIds.isEmpty ? null : _handleForceAddSubmit,
+                    style: ElevatedButton.styleFrom(backgroundColor: kTeal, foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 12),
+                      disabledBackgroundColor: kTeal.withOpacity(0.4)),
+                    child: const Text('Xác nhận thêm', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)))),
+              ])),
+            ]),
+          ))),
+    ));
+    
   }
 }
