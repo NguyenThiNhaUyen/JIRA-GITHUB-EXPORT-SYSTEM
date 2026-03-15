@@ -78,11 +78,7 @@ public class AuthService : IAuthService
                 Id = user.id,
                 Email = user.email,
                 FullName = user.full_name ?? user.email,
-<<<<<<< HEAD
-                Roles = roles,
-=======
                 Role = GetPrimaryRole(roles),
->>>>>>> origin
                 StudentCode = user.student?.student_code,
                 LecturerCode = user.lecturer?.lecturer_code
             }
@@ -193,11 +189,7 @@ public class AuthService : IAuthService
                     Id = user.id,
                     Email = user.email,
                     FullName = user.full_name ?? user.email,
-<<<<<<< HEAD
-                    Roles = roles,
-=======
                     Role = GetPrimaryRole(roles),
->>>>>>> origin
                     StudentCode = user.student?.student_code,
                     LecturerCode = user.lecturer?.lecturer_code
                 }
@@ -240,8 +232,6 @@ public class AuthService : IAuthService
         user.updated_at = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
-<<<<<<< HEAD
-=======
 
     private static string GetPrimaryRole(List<string> roles)
     {
@@ -250,7 +240,6 @@ public class AuthService : IAuthService
         if (upperRoles.Contains("LECTURER")) return "LECTURER";
         return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
     }
->>>>>>> origin
 }
 
 

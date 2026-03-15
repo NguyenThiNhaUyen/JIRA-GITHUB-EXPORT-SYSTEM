@@ -31,12 +31,6 @@ public class SubjectsController : ControllerBase
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Create a new subject (Admin only)
-    /// </summary>
-    [HttpPost]
-    [Authorize(Roles = "ADMIN")]
-=======
     /// Get all subjects for select list (unpaged)
     /// </summary>
     [HttpGet("all")]
@@ -52,7 +46,6 @@ public class SubjectsController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<SubjectInfo>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateSubjectRequest request)
     {
@@ -64,11 +57,7 @@ public class SubjectsController : ControllerBase
     /// Update a subject (Admin only)
     /// </summary>
     [HttpPut("{id}")]
-<<<<<<< HEAD
-    [Authorize(Roles = "ADMIN")]
-=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<SubjectInfo>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateSubjectRequest request)
     {
@@ -80,11 +69,7 @@ public class SubjectsController : ControllerBase
     /// Delete a subject (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
-<<<<<<< HEAD
-    [Authorize(Roles = "ADMIN")]
-=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {

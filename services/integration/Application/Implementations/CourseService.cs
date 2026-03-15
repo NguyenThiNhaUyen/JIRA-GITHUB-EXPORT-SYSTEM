@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 using System.Collections.Generic;
 using System.Linq;
->>>>>>> origin
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -12,12 +9,9 @@ using JiraGithubExport.Shared.Contracts.Responses.Courses;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
-=======
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using JiraGithubExport.IntegrationService.Hubs;
->>>>>>> origin
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -26,10 +20,6 @@ public class CourseService : ICourseService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CourseService> _logger;
-<<<<<<< HEAD
-
-    public CourseService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<CourseService> logger)
-=======
     private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IAnalyticsService _analyticsService;
@@ -41,17 +31,13 @@ public class CourseService : ICourseService
         JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher,
         IHubContext<NotificationHub> hubContext,
         IAnalyticsService analyticsService)
->>>>>>> origin
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
-<<<<<<< HEAD
-=======
         _passwordHasher = passwordHasher;
         _hubContext = hubContext;
         _analyticsService = analyticsService;
->>>>>>> origin
     }
 
 
@@ -135,9 +121,6 @@ public class CourseService : ICourseService
 
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
-<<<<<<< HEAD
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-=======
         var course = await _unitOfWork.Courses.Query()
             .AsNoTracking()
             .Include(c => c.subject)
@@ -147,15 +130,11 @@ public class CourseService : ICourseService
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .FirstOrDefaultAsync(c => c.id == courseId);
 
->>>>>>> origin
         if (course == null)
         {
             throw new NotFoundException("Course not found");
         }
 
-<<<<<<< HEAD
-        return _mapper.Map<CourseDetailResponse>(course);
-=======
         var response = _mapper.Map<CourseDetailResponse>(course);
         
         // Manual mapping for groups with clear status
@@ -168,7 +147,6 @@ public class CourseService : ICourseService
         }).ToList();
 
         return response;
->>>>>>> origin
     }
 
     public async Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request)
@@ -233,14 +211,10 @@ public class CourseService : ICourseService
 
     public async Task AssignLecturerAsync(long courseId, long lecturerUserId)
     {
-<<<<<<< HEAD
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-=======
         var course = await _unitOfWork.Courses.Query()
             .Include(c => c.lecturer_users)
             .FirstOrDefaultAsync(c => c.id == courseId);
 
->>>>>>> origin
         if (course == null)
         {
             throw new NotFoundException("Course not found");
@@ -249,11 +223,7 @@ public class CourseService : ICourseService
         var lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
         if (lecturer == null)
         {
-<<<<<<< HEAD
-            throw new NotFoundException("Lecturer not found");
-=======
             throw new NotFoundException($"Lecturer with UserID {lecturerUserId} not found in lecturers table");
->>>>>>> origin
         }
 
         // Check if already assigned
@@ -263,10 +233,6 @@ public class CourseService : ICourseService
         }
 
         course.lecturer_users.Add(lecturer);
-<<<<<<< HEAD
-        await _unitOfWork.SaveChangesAsync();
-
-=======
         
         // Add Audit Log for notification bell
         var auditLog = new audit_log
@@ -296,7 +262,6 @@ public class CourseService : ICourseService
             _logger.LogError(ex, "Failed to send real-time notification to lecturer {LecturerId}", lecturerUserId);
         }
 
->>>>>>> origin
         _logger.LogInformation("Lecturer {LecturerId} assigned to course {CourseId}", lecturerUserId, courseId);
     }
 
@@ -461,8 +426,6 @@ public class CourseService : ICourseService
 
         return pendingProjects;
     }
-<<<<<<< HEAD
-=======
 
     public async Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize)
     {
@@ -645,16 +608,7 @@ public class CourseService : ICourseService
             return await EnrollStudentsAsync(courseId, finalUserIdsList);
         }
     }
->>>>>>> origin
 }
 
 
 
-<<<<<<< HEAD
-
-
-
-
-
-=======
->>>>>>> origin

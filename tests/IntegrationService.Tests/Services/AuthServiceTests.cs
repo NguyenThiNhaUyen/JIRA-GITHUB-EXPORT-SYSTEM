@@ -91,11 +91,7 @@ namespace IntegrationService.Tests.Services
             Assert.Equal("Bearer", response.TokenType);
             Assert.Equal(3600, response.ExpiresIn);
             Assert.Equal("test@example.com", response.User.Email);
-<<<<<<< HEAD
-            Assert.Contains("STUDENT", response.User.Roles);
-=======
             Assert.Equal("STUDENT", response.User.Role);
->>>>>>> origin
         }
 
         [Fact]

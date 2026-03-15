@@ -96,17 +96,10 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Delete a project (Admin only)
-    /// </summary>
-    [HttpDelete("{projectId}")]
-    [Authorize(Roles = "ADMIN")]
-=======
     /// Delete a project (Admin/Lecturer only)
     /// </summary>
     [HttpDelete("{projectId}")]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteProject(long projectId)
     {
@@ -140,10 +133,7 @@ public class ProjectsController : ControllerBase
     /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
     /// </summary>
     [HttpPost("{projectId}/integrations")]
-<<<<<<< HEAD
-=======
     [HttpPut("{projectId}/integration")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
@@ -156,10 +146,7 @@ public class ProjectsController : ControllerBase
     /// Approve integration (Lecturer only)
     /// </summary>
     [HttpPost("{projectId}/integrations/approve")]
-<<<<<<< HEAD
-=======
     [HttpPut("{projectId}/approve-integration")]
->>>>>>> origin
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveIntegration(long projectId)
@@ -173,10 +160,7 @@ public class ProjectsController : ControllerBase
     /// Reject integration (Lecturer only)
     /// </summary>
     [HttpPost("{projectId}/integrations/reject")]
-<<<<<<< HEAD
-=======
     [HttpPut("{projectId}/reject-integration")]
->>>>>>> origin
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectIntegration(long projectId, [FromBody] RejectIntegrationRequest request)
@@ -194,10 +178,7 @@ public class ProjectsController : ControllerBase
     public async Task<IActionResult> GetIntegration(long projectId)
     {
         var result = await _integrationService.GetIntegrationStatusAsync(projectId);
-<<<<<<< HEAD
-=======
         if (result == null) return NotFound(ApiResponse<IntegrationInfo>.ErrorResponse("Integration status not found"));
->>>>>>> origin
         return Ok(ApiResponse<IntegrationInfo>.SuccessResponse(result));
     }
 
@@ -212,8 +193,6 @@ public class ProjectsController : ControllerBase
         await _teamService.UpdateContributionScoreAsync(projectId, memberId, request.ContributionScore);
         return Ok(ApiResponse.SuccessResponse("Contribution score updated"));
     }
-<<<<<<< HEAD
-=======
 
     /// <summary>
     /// Get project commits
@@ -247,7 +226,6 @@ public class ProjectsController : ControllerBase
         var result = await _coreService.SyncProjectCommitsAsync(projectId);
         return Ok(ApiResponse<object>.SuccessResponse(result, "Sync triggered"));
     }
->>>>>>> origin
 }
 
 

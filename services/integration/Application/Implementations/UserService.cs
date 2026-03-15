@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 using System.Collections.Generic;
->>>>>>> origin
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -26,8 +23,6 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-<<<<<<< HEAD
-=======
     public async Task<List<UserDetailResponse>> GetStudentsAsync()
     {
         var users = await _context.users
@@ -48,7 +43,6 @@ public class UserService : IUserService
         return users.Select(MapToResponse).ToList();
     }
 
->>>>>>> origin
     public async Task<PagedResponse<UserDetailResponse>> GetAllUsersAsync(string? role, PagedRequest request)
     {
         var query = _context.users
@@ -66,29 +60,17 @@ public class UserService : IUserService
         var page = request.Page > 0 ? request.Page : 1;
         var pageSize = request.PageSize > 0 ? request.PageSize : 20;
         var items = await query
-<<<<<<< HEAD
-            .OrderBy(u => u.id)
-=======
             .OrderByDescending(u => u.created_at)
->>>>>>> origin
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-<<<<<<< HEAD
-        var mapped = items.Select(u => MapToResponse(u)).ToList();
-=======
         var mapped = items.Select(MapToResponse).ToList();
->>>>>>> origin
 
         return new PagedResponse<UserDetailResponse>
         {
             Items = mapped,
-<<<<<<< HEAD
-            TotalItems = total,
-=======
             TotalCount = total,
->>>>>>> origin
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -149,18 +131,12 @@ public class UserService : IUserService
         Email = u.email,
         FullName = u.full_name,
         Enabled = u.enabled,
-<<<<<<< HEAD
-        Roles = u.roles.Select(r => r.role_name).ToList(),
-        StudentCode = u.student?.student_code,
-        LecturerCode = u.lecturer?.lecturer_code,
-=======
         Role = u.roles.Any(r => r.role_name.ToUpper() == "ADMIN") ? "ADMIN" : (u.roles.Any(r => r.role_name.ToUpper() == "LECTURER") ? "LECTURER" : "STUDENT"),
         StudentCode = u.student?.student_code,
         StudentId = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
         Department = u.lecturer?.department ?? u.student?.department,
         AssignedCourses = u.lecturer?.courses.Select(c => c.course_code).ToList() ?? new List<string>(),
->>>>>>> origin
         CreatedAt = u.created_at
     };
 }

@@ -11,10 +11,7 @@ public interface IProjectCoreService
     Task DeleteProjectAsync(long projectId);
     Task<ProjectDetailResponse> GetProjectByIdAsync(long projectId);
     Task<PagedResponse<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId, PagedRequest request);
-<<<<<<< HEAD
-=======
     Task<List<CommitResponse>> GetProjectCommitsAsync(long projectId, int page = 1, int pageSize = 50);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>> GetProjectCommitHistoryAsync(long projectId);
     Task<object> SyncProjectCommitsAsync(long projectId);
->>>>>>> origin
 }
