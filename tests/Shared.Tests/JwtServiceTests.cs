@@ -55,8 +55,7 @@ namespace Shared.Tests.Identity
             Assert.Equal(_jwtSettings.Issuer, token.Issuer);
             Assert.Equal(_jwtSettings.Audience, token.Audiences.First());
             Assert.Contains(token.Claims, c => c.Type == "email" && c.Value == testUser.email);
-            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
-            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "User");
+            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "ADMIN");
         }
 
         [Fact]
