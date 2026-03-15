@@ -8,6 +8,7 @@ public class ProjectDetailResponse
     public string Status { get; set; } = null!;
     public long CourseId { get; set; }
     public string CourseName { get; set; } = null!;
+    public string CourseCode { get; set; } = string.Empty;  // e.g. "SWD392-SE1831"
     public string? GithubRepoUrl { get; set; }
     public string? JiraProjectUrl { get; set; }
     public string? GithubStatus { get; set; }
@@ -15,10 +16,19 @@ public class ProjectDetailResponse
     public IntegrationInfo? Integration { get; set; }
     public List<TeamMemberInfo> Members { get; set; } = new();
     public int CommitCount { get; set; }
+    public int Commits { get; set; }              // alias for CommitCount
     public int IssueCount { get; set; }
+    public int IssuesDone { get; set; }           // done issues count
+    public int OpenIssues { get; set; }           // open issues count
+    public int PrsMerged { get; set; }            // merged pull requests count
+    public int TeamSize { get; set; }             // number of active members
+    public int SrsVersions { get; set; }          // SRS docs submitted
+    public int SprintCompletion { get; set; }     // alias for ProgressPercent
+    public int MyContribution { get; set; }       // current user contribution %
+    public string? LastCommit { get; set; }       // relative string: "2 giờ trước"
     public DateTime? LastActivity { get; set; }
-    public int ProgressPercent { get; set; } // Added for frontend real data
-    public int RiskScore { get; set; }       // Added for frontend real data
+    public int ProgressPercent { get; set; }
+    public int RiskScore { get; set; }
 }
 
 public class TeamMemberInfo

@@ -39,7 +39,8 @@ public class AlertsController : ControllerBase
     /// <summary>
     /// Mark an alert as resolved (Lecturer/Admin only)
     /// </summary>
-    [HttpPatch("{id}/resolve")]
+    [HttpPut("{id}/resolve")]
+    [HttpPatch("{id}/resolve")] // keeping patch for backward compatibility
     [Authorize(Roles = "LECTURER,ADMIN")]
     public async Task<IActionResult> ResolveAlert(long id)
     {

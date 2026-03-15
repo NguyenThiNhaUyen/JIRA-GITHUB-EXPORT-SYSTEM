@@ -24,7 +24,7 @@ public class IntegrationStatsResponse
 
 public class DailyCommitStat
 {
-    public string Day { get; set; } = string.Empty;
+    public string Day { get; set; } = string.Empty;  // Can be "Mon" or date string "09/03"
     public int Commits { get; set; }
 }
 
@@ -43,14 +43,18 @@ public class ActivityChartResponse
 public class TeamRankingStat
 {
     public long TeamId { get; set; }
-    public string TeamName { get; set; } = string.Empty;
+    public string Team { get; set; } = string.Empty;      // FE expects "team" field
+    public string TeamName { get; set; } = string.Empty; // Kept for backward compat
     public int Commits { get; set; }
+    public int Rank { get; set; }
 }
 
 public class TeamWarningStat
 {
-    public string TeamName { get; set; } = string.Empty;
+    public string Team { get; set; } = string.Empty;      // FE expects "team"
+    public string TeamName { get; set; } = string.Empty; // backward compat
     public string Reason { get; set; } = string.Empty;
+    public string? LastActivity { get; set; }             // FE expects lastActivity (YYYY-MM-DD or null)
 }
 
 public class DetailedTeamActivityStat
@@ -72,8 +76,9 @@ public class TeamAnalyticsResponse
 
 public class AuditLogResponse
 {
-    public string Type { get; set; } = string.Empty;
+    public string Type { get; set; } = "info";   // info/success/warning/error
     public string Message { get; set; } = string.Empty;
+    public string Time { get; set; } = string.Empty;  // FE expects time: "5 phút trước"
     public DateTime Timestamp { get; set; }
 }
 

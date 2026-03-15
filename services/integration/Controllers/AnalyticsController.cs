@@ -154,6 +154,20 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetStudentDeadlinesAsync(studentUserId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    /// <summary>GET /api/analytics/student/me/commit-activity?days=7</summary>
+    [HttpGet("student/me/commit-activity")]
+    [HttpGet("/api/student/me/commit-activity")] // Also add root alias to match FE perfectly if they call that
+    [Authorize(Roles = "STUDENT,ADMIN")]
+    public async Task<IActionResult> GetStudentCommitActivity([FromQuery] int days = 7)
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdStr, out long studentUserId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
+
+        var result = await _analyticsService.GetStudentCommitActivityAsync(studentUserId, days);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }
 
 /// <summary>

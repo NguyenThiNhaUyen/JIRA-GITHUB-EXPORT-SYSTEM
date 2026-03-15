@@ -71,7 +71,7 @@ public class AnalyticsService : IAnalyticsService
 
         return allDays.Select(d => new DailyCommitStat
         {
-            Day = d.ToString("ddd"),
+            Day = d.ToString("dd/MM"),  // FE expects: "09/03" format
             Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
         }).ToList();
     }
@@ -251,12 +251,19 @@ public class AnalyticsService : IAnalyticsService
             }
         }
 
-        // Top Ranking (by Commits)
+        // Top Ranking (by Commits) — populate Team + Rank fields for FE
         var topRanking = detailedActivity
             .Where(d => d.TotalCommits > 0)
             .OrderByDescending(d => d.TotalCommits)
             .Take(5)
-            .Select(d => new TeamRankingStat { TeamId = d.TeamId, TeamName = d.TeamName, Commits = d.TotalCommits })
+            .Select((d, idx) => new TeamRankingStat
+            {
+                TeamId = d.TeamId,
+                Team = d.TeamName,       // FE: "team" field
+                TeamName = d.TeamName,
+                Commits = d.TotalCommits,
+                Rank = idx + 1
+            })
             .ToList();
 
         // Inactive Warning Logic
@@ -265,18 +272,36 @@ public class AnalyticsService : IAnalyticsService
         {
             if (!p.HasRepo)
             {
-                inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "Repository missing" });
+                inactiveWarning.Add(new TeamWarningStat
+                {
+                    Team = p.ProjectName,
+                    TeamName = p.ProjectName,
+                    Reason = "Chưa kết nối GitHub",
+                    LastActivity = null
+                });
             }
             else if (!p.HasJira)
             {
-                inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "Jira missing" });
+                inactiveWarning.Add(new TeamWarningStat
+                {
+                    Team = p.ProjectName,
+                    TeamName = p.ProjectName,
+                    Reason = "Chưa kết nối Jira",
+                    LastActivity = null
+                });
             }
             else
             {
                 var stat = detailedActivity.FirstOrDefault(d => d.TeamName == p.ProjectName);
                 if (stat != null && stat.Status == "LOW")
                 {
-                    inactiveWarning.Add(new TeamWarningStat { TeamName = p.ProjectName, Reason = "No commits in the last 14 days" });
+                    inactiveWarning.Add(new TeamWarningStat
+                    {
+                        Team = p.ProjectName,
+                        TeamName = p.ProjectName,
+                        Reason = "Không commit trong 7 ngày",
+                        LastActivity = stat.LastCommitTime.HasValue ? stat.LastCommitTime.Value.ToString("yyyy-MM-dd") : null
+                    });
                 }
             }
         }
@@ -297,11 +322,42 @@ public class AnalyticsService : IAnalyticsService
             .Take(count)
             .ToListAsync();
 
-        return logs.Select(l => new AuditLogResponse
+        return logs.Select(l =>
         {
-            Type = l.action,      
-            Message = $"{l.entity_type} {l.entity_id} was updated.", 
-            Timestamp = l.timestamp
+            var minutesAgo = (int)(DateTime.UtcNow - l.timestamp).TotalMinutes;
+            string timeStr = minutesAgo < 1 ? "vừa xong"
+                : minutesAgo < 60 ? $"{minutesAgo} phút trước"
+                : minutesAgo < 1440 ? $"{minutesAgo / 60} giờ trước"
+                : $"{minutesAgo / 1440} ngày trước";
+
+            string msgType = l.action switch
+            {
+                var a when a.Contains("GITHUB") || a.Contains("COMMIT") || a.Contains("REPO") => "github",
+                var a when a.Contains("JIRA") => "jira",
+                var a when a.Contains("CREATE") || a.Contains("ENROLL") => "success",
+                var a when a.Contains("DELETE") || a.Contains("REJECT") => "warning",
+                _ => "info"
+            };
+
+            string humanMessage = l.action switch
+            {
+                "CREATE_PROJECT" => $"Nhóm mới được tạo (ID: {l.entity_id})",
+                "LINK_GITHUB" => $"Nhóm (ID: {l.entity_id}) đã kết nối GitHub",
+                "LINK_JIRA" => $"Nhóm (ID: {l.entity_id}) đã kết nối Jira",
+                "ENROLL_STUDENT" => $"Sinh viên mới đăng ký vào lớp (ID: {l.entity_id})",
+                "SYNC_COMMITS" => $"Đồng bộ commit cho nhóm (ID: {l.entity_id})",
+                "SUBMIT_SRS" => $"Nhóm (ID: {l.entity_id}) đã nộp tài liệu SRS",
+                "ASSIGN_LECTURER" => $"Admin đã phân công giảng viên vào lớp (ID: {l.entity_id})",
+                _ => $"{l.entity_type} — {l.action}"
+            };
+
+            return new AuditLogResponse
+            {
+                Type = msgType,
+                Message = humanMessage,
+                Time = timeStr,
+                Timestamp = l.timestamp
+            };
         }).ToList();
     }
 
@@ -818,6 +874,17 @@ public class AnalyticsService : IAnalyticsService
             ? Math.Round((double)totalStudentCommits * 100 / totalTeamCommits, 1) 
             : 0;
 
+        // Weekly commits (last 7 days)
+        int weeklyCommits = 0;
+        if (allRepoIds.Any())
+        {
+            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+            weeklyCommits = await _unitOfWork.GitHubCommits.Query()
+                .AsNoTracking()
+                .Where(c => allRepoIds.Contains(c.repo_id) && c.committed_at >= sevenDaysAgo)
+                .CountAsync();
+        }
+
         // Jira tasks
         var jiraProjectIds = teamMemberships
             .Where(tm => tm.project?.project_integration?.jira_project_id != null)
@@ -837,6 +904,11 @@ public class AnalyticsService : IAnalyticsService
                 .CountAsync();
         }
 
+        response.WeeklyCommits = weeklyCommits;
+        response.TotalPullRequests = totalPRs;
+        response.TotalPrs = totalPRs;
+        response.TotalIssues = response.JiraTasksAssigned;
+
         // Build per-project info
         foreach (var tm in teamMemberships)
         {
@@ -847,13 +919,26 @@ public class AnalyticsService : IAnalyticsService
             if (repoMap.TryGetValue(proj.id, out var rId) && commitsByRepo.TryGetValue(rId, out var cnt))
                 projCommits = cnt;
 
+            int openIssues = 0;
+            int issuesDone = 0;
             int completionPct = 0;
             if (proj.project_integration?.jira_project_id != null)
             {
                 var jpId = proj.project_integration.jira_project_id.Value;
-                var total = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId);
-                var done = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId && i.status != null && i.status.ToUpper() == "DONE");
-                completionPct = total > 0 ? (int)Math.Round((double)done * 100 / total) : 0;
+                var totalIss = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId);
+                issuesDone = await _unitOfWork.JiraIssues.Query().CountAsync(i => i.jira_project_id == jpId && i.status != null && i.status.ToUpper() == "DONE");
+                openIssues = totalIss - issuesDone;
+                completionPct = totalIss > 0 ? (int)Math.Round((double)issuesDone * 100 / totalIss) : 0;
+            }
+
+            // relative last commit time
+            string? lastCommitStr = null;
+            if (proj.updated_at != default)
+            {
+                var mins = (int)(DateTime.UtcNow - proj.updated_at).TotalMinutes;
+                lastCommitStr = mins < 60 ? $"{mins} phút trước"
+                    : mins < 1440 ? $"{mins / 60} giờ trước"
+                    : $"{mins / 1440} ngày trước";
             }
 
             response.Projects.Add(new StudentProjectInfo
@@ -861,9 +946,16 @@ public class AnalyticsService : IAnalyticsService
                 ProjectId = proj.id,
                 ProjectName = proj.name ?? "Unknown",
                 CourseName = proj.course?.course_name ?? "N/A",
+                CourseCode = proj.course?.course_code ?? "",
                 Role = tm.team_role ?? "MEMBER",
                 CommitCount = projCommits,
+                Commits = projCommits,
+                IssuesDone = issuesDone,
+                OpenIssues = openIssues,
                 CompletionPercent = completionPct,
+                SprintCompletion = completionPct,
+                Status = proj.status ?? "ACTIVE",
+                LastCommit = lastCommitStr,
                 LastActivity = proj.updated_at
             });
         }
@@ -920,9 +1012,19 @@ public class AnalyticsService : IAnalyticsService
 
             return new StudentDeadlineResponse
             {
+                Id = i.jira_issue_key ?? i.id.ToString(),
                 Title = i.title ?? "(no title)",
-                Due = i.updated_at.ToString("dd-MM-yyyy"),
+                DueDate = i.updated_at.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                Due = "Xem Jira",
+                DaysLeft = 0,
+                Severity = (i.priority?.ToUpper()) switch
+                {
+                    "HIGH" or "HIGHEST" or "BLOCKER" => "high",
+                    "MEDIUM" => "medium",
+                    _ => "low"
+                },
                 Project = projName,
+                ProjectName = projName,
                 Status = i.status ?? "TO DO",
                 Priority = i.priority,
                 IssueKey = i.jira_issue_key
@@ -999,14 +1101,85 @@ public class AnalyticsService : IAnalyticsService
                 _ => $"{l.entity_type} {l.entity_id}: {l.action}"
             };
 
+            var minutesAgoLec = (int)(DateTime.UtcNow - l.timestamp).TotalMinutes;
+            string timeLec = minutesAgoLec < 1 ? "vừa xong"
+                : minutesAgoLec < 60 ? $"{minutesAgoLec} phút trước"
+                : minutesAgoLec < 1440 ? $"{minutesAgoLec / 60} giờ trước"
+                : $"{minutesAgoLec / 1440} ngày trước";
+
+            string msgTypeLec = l.action switch
+            {
+                var a when a.Contains("GITHUB") || a.Contains("COMMIT") => "github",
+                var a when a.Contains("JIRA") => "jira",
+                _ => "info"
+            };
+
             return new LecturerActivityLogResponse
             {
-                Type = l.action,
+                Type = msgTypeLec,
                 Message = message,
+                Time = timeLec,
                 CourseName = courseName,
                 ProjectName = projectName,
                 Timestamp = l.timestamp
             };
+        }).ToList();
+    }
+
+    public async Task<List<DailyLabeledCommitStat>> GetStudentCommitActivityAsync(long studentUserId, int days = 7)
+    {
+        var since = DateTime.UtcNow.AddDays(-days).Date;
+        var studentUser = await _unitOfWork.Users.GetByIdAsync(studentUserId);
+        if (studentUser == null || string.IsNullOrEmpty(studentUser.email))
+            return new List<DailyLabeledCommitStat>();
+
+        var githubUserIds = await _unitOfWork.GitHubUsers.Query()
+            .AsNoTracking()
+            .Where(gu => gu.email != null && gu.email.ToLower() == studentUser.email.ToLower())
+            .Select(gu => gu.id)
+            .ToListAsync();
+
+        if (!githubUserIds.Any())
+            return new List<DailyLabeledCommitStat>();
+
+        var projectIds = await _unitOfWork.TeamMembers.Query()
+            .AsNoTracking()
+            .Where(tm => tm.student_user_id == studentUserId && tm.participation_status == "ACTIVE")
+            .Select(tm => tm.project_id)
+            .ToListAsync();
+
+        var repoIds = await _unitOfWork.ProjectIntegrations.Query()
+            .AsNoTracking()
+            .Where(pi => projectIds.Contains(pi.project_id) && pi.github_repo_id != null)
+            .Select(pi => pi.github_repo_id!.Value)
+            .ToListAsync();
+
+        if (!repoIds.Any())
+            return new List<DailyLabeledCommitStat>();
+
+        var commits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => repoIds.Contains(c.repo_id) 
+                && c.author_github_user_id.HasValue 
+                && githubUserIds.Contains(c.author_github_user_id.Value)
+                && c.committed_at >= since)
+            .Select(c => new { c.committed_at })
+            .ToListAsync();
+
+        var allDays = Enumerable.Range(0, days)
+            .Select(i => DateTime.UtcNow.AddDays(-days + i + 1).Date)
+            .ToList();
+
+        var dictLabels = new Dictionary<DayOfWeek, string>
+        {
+            { DayOfWeek.Monday, "T2" }, { DayOfWeek.Tuesday, "T3" }, { DayOfWeek.Wednesday, "T4" },
+            { DayOfWeek.Thursday, "T5" }, { DayOfWeek.Friday, "T6" }, { DayOfWeek.Saturday, "T7" }, { DayOfWeek.Sunday, "CN" }
+        };
+
+        return allDays.Select(d => new DailyLabeledCommitStat
+        {
+            Label = dictLabels.GetValueOrDefault(d.DayOfWeek, d.DayOfWeek.ToString()),
+            Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
         }).ToList();
     }
 }

@@ -158,14 +158,43 @@ public class ProjectCoreService : IProjectCoreService
                 }
             }
 
+            var lastCommitByRepo = new Dictionary<long, DateTime?>();
+            var prCounts2 = new Dictionary<long, int>();
+            if (repoIds.Any())
+            {
+                prCounts2 = await _unitOfWork.GitHubPullRequests.Query()
+                    .Where(pr => repoIds.Contains(pr.repo_id))
+                    .GroupBy(pr => pr.repo_id)
+                    .ToDictionaryAsync(g => g.Key, g => g.Count());
+
+                var lastCommitData = await _unitOfWork.GitHubCommits.Query()
+                    .Where(c => repoIds.Contains(c.repo_id) && c.committed_at.HasValue)
+                    .GroupBy(c => c.repo_id)
+                    .Select(g => new { RepoId = g.Key, Last = g.Max(x => x.committed_at) })
+                    .ToListAsync();
+                foreach (var lc in lastCommitData)
+                    lastCommitByRepo[lc.RepoId] = lc.Last;
+            }
+
+            var srsExportsByProject = await _unitOfWork.ReportExports.Query()
+                .Where(r => r.report_type == "SRS" && r.scope == "PROJECT")
+                .GroupBy(r => r.scope_entity_id)
+                .Select(g => new { ProjectId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
+
             foreach (var dto in dtoList)
             {
                 var project = items.First(p => p.id == dto.Id);
                 
                 dto.CommitCount = 0;
+                dto.Commits = 0;
                 dto.IssueCount = 0;
                 dto.ProgressPercent = 0;
+                dto.SprintCompletion = 0;
                 dto.RiskScore = 0;
+                dto.CourseCode = project.course?.course_code ?? "";
+                dto.CourseName = project.course?.course_name ?? dto.CourseName;
+                dto.TeamSize = project.team_members.Count(tm => tm.participation_status == "ACTIVE");
 
                 if (project.project_integration?.github_repo_id != null)
                 {
@@ -173,9 +202,18 @@ public class ProjectCoreService : IProjectCoreService
                     if (commitCounts.TryGetValue(repoId, out int commits))
                     {
                         dto.CommitCount = commits;
+                        dto.Commits = commits;
                     }
-                    
-                    // Simple heuristic for risk score out of 100 based on commits (FE needs this)
+                    if (prCounts2.TryGetValue(repoId, out int prCount))
+                        dto.PrsMerged = prCount;
+                    if (lastCommitByRepo.TryGetValue(repoId, out var lastCommit) && lastCommit.HasValue)
+                    {
+                        var mins = (int)(DateTime.UtcNow - lastCommit.Value).TotalMinutes;
+                        dto.LastCommit = mins < 60 ? $"{mins} phút trước"
+                            : mins < 1440 ? $"{mins / 60} giờ trước"
+                            : $"{mins / 1440} ngày trước";
+                        dto.LastActivity = lastCommit.Value;
+                    }
                     dto.RiskScore = Math.Max(0, 100 - (dto.CommitCount * 2));
                 }
                 
@@ -185,9 +223,14 @@ public class ProjectCoreService : IProjectCoreService
                     if (issueStats.TryGetValue(jiraId, out var stats))
                     {
                         dto.IssueCount = stats.Total;
+                        dto.IssuesDone = stats.Done;
+                        dto.OpenIssues = stats.Total - stats.Done;
                         dto.ProgressPercent = stats.Total > 0 ? (int)Math.Round((double)stats.Done * 100 / stats.Total) : 0;
+                        dto.SprintCompletion = dto.ProgressPercent;
                     }
                 }
+
+                dto.SrsVersions = srsExportsByProject.GetValueOrDefault(project.id, 0);
             }
         }
 
@@ -257,41 +300,88 @@ public class ProjectCoreService : IProjectCoreService
 
         var repoId = integration.github_repo_id.Value;
         
+        // Get all commits for this repo once for efficiency
+        var allRepoCommits = await _unitOfWork.GitHubCommits.Query()
+            .AsNoTracking()
+            .Where(c => c.repo_id == repoId && c.author_github_user_id.HasValue)
+            .Select(c => new { c.author_github_user_id, c.committed_at, c.additions, c.deletions })
+            .ToListAsync();
+
+        int totalRepoCommits = allRepoCommits.Count;
+        var ninetyDaysAgo = DateTime.UtcNow.AddDays(-90);
+        
         foreach (var member in members)
         {
-            int commits = 0;
-            int prs = 0;
-            var email = member.student_user?.user?.email;
+            int commits = 0, prs = 0, linesAdded = 0, linesDeleted = 0;
+            List<long> githubUserIds = new();
+            var email = member.student_user?.user?.email ?? "";
             
             if (!string.IsNullOrEmpty(email))
             {
-                var githubUsers = await _unitOfWork.GitHubUsers.Query()
+                githubUserIds = await _unitOfWork.GitHubUsers.Query()
                     .AsNoTracking()
                     .Where(gu => gu.email != null && gu.email.ToLower() == email.ToLower())
                     .Select(gu => gu.id)
                     .ToListAsync();
-
-                if (githubUsers.Any())
-                {
-                    commits = await _unitOfWork.GitHubCommits.Query()
-                        .AsNoTracking()
-                        .Where(c => c.repo_id == repoId && c.author_github_user_id.HasValue && githubUsers.Contains(c.author_github_user_id.Value))
-                        .CountAsync();
-                        
-                    prs = await _unitOfWork.GitHubPullRequests.Query()
-                        .AsNoTracking()
-                        .Where(pr => pr.repo_id == repoId && pr.author_github_user_id.HasValue && githubUsers.Contains(pr.author_github_user_id.Value))
-                        .CountAsync();
-                }
             }
+
+            DateTime? lastCommitAt = null;
+            var studentCommits = new List<DateTime>();
+            var weeklyCommits = new List<int>(new int[12]); // 12 weeks
+            var heatmapDict = new Dictionary<string, int>();
+
+            if (githubUserIds.Any())
+            {
+                var myCommits = allRepoCommits
+                    .Where(c => c.author_github_user_id.HasValue && githubUserIds.Contains(c.author_github_user_id.Value))
+                    .ToList();
+
+                commits = myCommits.Count;
+                linesAdded = myCommits.Sum(c => c.additions ?? 0);
+                linesDeleted = myCommits.Sum(c => c.deletions ?? 0);
+                lastCommitAt = myCommits.Where(c => c.committed_at.HasValue).Select(c => c.committed_at!.Value).DefaultIfEmpty().Max();
+
+                // Weekly commits (last 12 weeks, index 0 = oldest)
+                for (int w = 0; w < 12; w++)
+                {
+                    var wStart = DateTime.UtcNow.AddDays(-((12 - w) * 7));
+                    var wEnd = wStart.AddDays(7);
+                    weeklyCommits[w] = myCommits.Count(c => c.committed_at.HasValue && c.committed_at.Value >= wStart && c.committed_at.Value < wEnd);
+                }
+
+                // Heatmap last 90 days
+                heatmapDict = myCommits
+                    .Where(c => c.committed_at.HasValue && c.committed_at.Value >= ninetyDaysAgo)
+                    .GroupBy(c => c.committed_at!.Value.Date.ToString("yyyy-MM-dd"))
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                prs = await _unitOfWork.GitHubPullRequests.Query()
+                    .AsNoTracking()
+                    .Where(pr => pr.repo_id == repoId && pr.author_github_user_id.HasValue && githubUserIds.Contains(pr.author_github_user_id.Value))
+                    .CountAsync();
+            }
+
+            var heatmapData = heatmapDict
+                .Select(kv => new JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat { Date = kv.Key, Count = kv.Value })
+                .OrderBy(h => h.Date)
+                .ToList();
 
             result.Add(new JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse
             {
+                StudentId = member.student_user_id,
                 StudentUserId = member.student_user_id,
                 StudentName = member.student_user?.user?.full_name ?? "Unknown",
                 StudentCode = member.student_user?.student_code ?? "Unknown",
+                Email = email,
+                TotalCommits = commits,
                 Commits = commits,
-                PullRequests = prs
+                LinesAdded = linesAdded,
+                LinesDeleted = linesDeleted,
+                PullRequests = prs,
+                ContributionPercent = totalRepoCommits > 0 ? Math.Round((double)commits * 100 / totalRepoCommits, 1) : 0,
+                WeeklyCommits = weeklyCommits,
+                HeatmapData = heatmapData,
+                LastCommitAt = lastCommitAt
             });
         }
 
