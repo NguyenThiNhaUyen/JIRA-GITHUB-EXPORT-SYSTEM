@@ -339,11 +339,16 @@ using Microsoft.OpenApi.Models;
             if (!string.IsNullOrEmpty(envPort))
             {
                 // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
-                await app.RunAsync($"http://0.0.0.0:{envPort}");
+                var url = $"http://0.0.0.0:{envPort}";
+                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
+                app.Urls.Clear(); // Clear any pre-configured URLs
+                app.Urls.Add(url);
+                await app.RunAsync();
             }
             else
             {
                 // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
                 await app.RunAsync();
             }
 

@@ -25,12 +25,13 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Environment variables (Example defaults)
-ENV ASPNETCORE_URLS=http://+:8080
+# Environment variables
+# DO NOT set ASPNETCORE_URLS here - let Program.cs handle port binding via PORT env var from Render
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Expose container port
-EXPOSE 8080
+# Expose port (Render assigns PORT dynamically, default 10000)
+EXPOSE 10000
 
 # Run the app
 ENTRYPOINT ["dotnet", "IntegrationService.dll"]
+
