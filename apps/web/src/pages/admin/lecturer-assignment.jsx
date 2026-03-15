@@ -1,692 +1,186 @@
-// Lecturer Assignment — Admin Module (Enhanced LMS Version)
-
-import { DndContext } from "@dnd-kit/core";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { Card, CardContent } from "../../components/ui/card.jsx";
-import { Button } from "../../components/ui/button.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
-
 import {
   ChevronRight,
   Search,
   Plus,
   X,
   BookOpen,
-  ArrowUpDown
+  ArrowUpDown,
+  Users,
+  Layers3,
+  CalendarCheck,
 } from "lucide-react";
 
+// Components UI
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
+import { Button } from "../../components/ui/button.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
+
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
+
+// Feature Hooks
 import {
   useGetCourses,
   useAssignLecturer,
   useRemoveLecturer
 } from "../../features/courses/hooks/useCourses.js";
-
-import {
-  useGetSemesters,
-  useGetSubjects
-} from "../../features/system/hooks/useSystem.js";
-
+import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 
-
-/* ---------------- COMPONENTS ---------------- */
-
-function Avatar({ name }) {
-
-  const letter = name?.charAt(0)?.toUpperCase() || "L";
-
-  return (
-    <div className="w-6 h-6 rounded-full bg-teal-200 text-teal-800 flex items-center justify-center text-xs font-bold">
-      {letter}
-    </div>
-  );
-}
-
-function SkeletonRow() {
-
-  return (
-    <div className="grid grid-cols-12 gap-3 px-6 py-4 animate-pulse">
-      <div className="col-span-4 h-4 bg-gray-200 rounded"></div>
-      <div className="col-span-2 h-4 bg-gray-200 rounded"></div>
-      <div className="col-span-1 h-4 bg-gray-200 rounded"></div>
-      <div className="col-span-3 h-4 bg-gray-200 rounded"></div>
-      <div className="col-span-2 h-4 bg-gray-200 rounded"></div>
-    </div>
-  );
-}
-
-
-/* ---------------- MAIN ---------------- */
-
 export default function LecturerAssignment() {
-
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-
-  /* ---------------- DATA ---------------- */
-
-  const { data: coursesData = { items: [] }, isLoading: loadingCourses } =
-    useGetCourses();
-
-  const courses = coursesData.items || [];
-
-  const { data: lecturers = [], isLoading: loadingLects } =
-    useGetUsers("LECTURER");
-
-  const { data: semesters = [], isLoading: loadingSems } =
-    useGetSemesters();
-
-  const { data: subjects = [], isLoading: loadingSubs } =
-    useGetSubjects();
+  const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
+  const { data: lecturers = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+  const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
+  const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
 
   const assignMutation = useAssignLecturer();
   const removeMutation = useRemoveLecturer();
 
-
-  /* ---------------- STATE ---------------- */
-
   const [search, setSearch] = useState("");
-  const [filterSem, setFilterSem] = useState("");
-  const [sort, setSort] = useState("");
-
+  const [filterSem, setFilterSem] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedLecturer, setSelectedLecturer] = useState("");
 
-  const [page, setPage] = useState(1);
-  const pageSize = 8;
-
-
-  /* ---------------- MAP LOOKUP ---------------- */
-
-  const subjectMap = useMemo(() => {
-
-    const map = {};
-    subjects.forEach((s) => (map[String(s.id)] = s));
-    return map;
-
-  }, [subjects]);
-
-  const semesterMap = useMemo(() => {
-
-    const map = {};
-    semesters.forEach((s) => (map[String(s.id)] = s));
-    return map;
-
-  }, [semesters]);
-
-
-  /* ---------------- LECTURER WORKLOAD ---------------- */
-
+  const courses = coursesData.items || [];
+  
   const lecturerWorkload = useMemo(() => {
-
     const map = {};
-
-    courses.forEach((c) => {
-
-      (c.lecturers || []).forEach((l) => {
-
-        map[l.id] = (map[l.id] || 0) + 1;
-
-      });
-
-    });
-
+    courses.forEach(c => (c.lecturers || []).forEach(l => { map[l.id] = (map[l.id] || 0) + 1; }));
     return map;
-
   }, [courses]);
 
-
-  /* ---------------- FILTER ---------------- */
-
   const filtered = useMemo(() => {
-
-    let result = courses.filter((c) => {
-
-      const matchSearch =
-        !search ||
-        c.code?.toLowerCase().includes(search.toLowerCase()) ||
-        c.name?.toLowerCase().includes(search.toLowerCase());
-
-      const matchSem =
-        !filterSem ||
-        String(c.semesterId) === String(filterSem);
-
+    return courses.filter(c => {
+      const q = search.toLowerCase();
+      const matchSearch = !search || c.code?.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q);
+      const matchSem = filterSem === 'all' || String(c.semesterId) === String(filterSem);
       return matchSearch && matchSem;
-
     });
-
-    if (sort === "students") {
-
-      result = [...result].sort(
-        (a, b) => (b.currentStudents || 0) - (a.currentStudents || 0)
-      );
-
-    }
-
-    if (sort === "course") {
-
-      result = [...result].sort(
-        (a, b) => a.code.localeCompare(b.code)
-      );
-
-    }
-
-    return result;
-
-  }, [courses, search, filterSem, sort]);
-
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, filterSem]);
-
-
-  /* ---------------- PAGINATION ---------------- */
-
-  const totalPages = Math.ceil(filtered.length / pageSize);
-
-  const paginated = filtered.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
-
-
-  /* ---------------- STATS ---------------- */
-
-  const assignedCount = courses.filter(
-    (c) => (c.lecturers?.length || 0) > 0
-  ).length;
-
-  const unassignedCount = courses.filter(
-    (c) => (c.lecturers?.length || 0) === 0
-  ).length;
-
-
-  /* ---------------- ACTIONS ---------------- */
-
-  const handleDragEnd = async (event) => {
-
-    const lecturerId = event.active.id;
-    const courseId = event.over?.id;
-
-    if (!courseId) return;
-
-    await assignMutation.mutateAsync({
-      courseId,
-      lecturerUserId: lecturerId
-    });
-
-  };
-
+  }, [courses, search, filterSem]);
 
   const handleAssign = async () => {
-
-    if (!selectedLecturer || !selectedCourse) {
-      showError("Vui lòng chọn giảng viên");
-      return;
-    }
-
+    if (!selectedLecturer || !selectedCourse) return showError("Vui lòng chọn giảng viên");
     try {
-
-      await assignMutation.mutateAsync({
-        courseId: selectedCourse.id,
-        lecturerUserId: selectedLecturer
-      });
-
+      await assignMutation.mutateAsync({ courseId: selectedCourse.id, lecturerUserId: selectedLecturer });
       success("Đã phân công giảng viên");
-
-      setModalOpen(false);
-      setSelectedCourse(null);
-      setSelectedLecturer("");
-
-    } catch (err) {
-
-      showError(err.message || "Không thể phân công");
-
-    }
-
+      setModalOpen(false); setSelectedLecturer("");
+    } catch (err) { showError(err.message); }
   };
 
-
-  const handleRemove = async (courseId, lecturerId, lecturerName) => {
-
-    const confirmDelete = window.confirm(
-      `Xóa giảng viên ${lecturerName} khỏi lớp này?`
-    );
-
-    if (!confirmDelete) return;
-
-    try {
-
-      await removeMutation.mutateAsync({
-        courseId,
-        lecturerUserId: lecturerId
-      });
-
-      success("Đã xóa phân công");
-
-    } catch (err) {
-
-      showError(err.message || "Không thể xóa");
-
-    }
-
-  };
-
-
-  const isLoading =
-    loadingCourses ||
-    loadingLects ||
-    loadingSems ||
-    loadingSubs;
-
-
-  /* ---------------- UI ---------------- */
+  if (loadingCourses || loadingLects) return (
+     <div className="flex h-64 items-center justify-center">
+        <Layers3 className="animate-pulse text-teal-600 mr-2" /> 
+        <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Đang tải dữ liệu giảng viên...</span>
+     </div>
+  );
 
   return (
-
-<DndContext onDragEnd={handleDragEnd}>
-
-<div className="space-y-6">
-
-{/* Breadcrumb */}
-
-<nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-
-<span
-className="text-teal-700 font-semibold cursor-pointer hover:underline"
-onClick={() => navigate("/admin")}
->
-Admin
-</span>
-
-<ChevronRight size={12} />
-
-<span className="text-gray-800 font-semibold">
-Phân công Giảng viên
-</span>
-
-</nav>
-
-
-{/* TITLE */}
-
-<div>
-
-<h2 className="text-2xl font-bold text-gray-800">
-Phân công Giảng viên
-</h2>
-
-<p className="text-sm text-gray-500">
-Gán giảng viên phụ trách các lớp học phần
-</p>
-
-</div>
-
-
-{/* STATS */}
-
-<div className="grid grid-cols-3 gap-4">
-
-<div className="rounded-2xl px-4 py-3 border border-blue-100 bg-blue-50 flex justify-between text-blue-700">
-<span className="text-xs font-semibold">Tổng lớp</span>
-<span className="text-xl font-bold">{courses.length}</span>
-</div>
-
-<div className="rounded-2xl px-4 py-3 border border-green-100 bg-green-50 flex justify-between text-green-700">
-<span className="text-xs font-semibold">Đã phân công</span>
-<span className="text-xl font-bold">{assignedCount}</span>
-</div>
-
-<div className="rounded-2xl px-4 py-3 border border-orange-100 bg-orange-50 flex justify-between text-orange-600">
-<span className="text-xs font-semibold">Chưa phân công</span>
-<span className="text-xl font-bold">{unassignedCount}</span>
-</div>
-
-</div>
-
-
-{/* FILTER */}
-
-<Card className="border border-gray-100 shadow-sm rounded-[24px]">
-
-<CardContent className="p-5 flex gap-4 items-end">
-
-<div className="relative flex-1">
-
-<Search
-size={15}
-className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-/>
-
-<input
-value={search}
-onChange={(e) => setSearch(e.target.value)}
-placeholder="Tìm lớp học..."
-className="pl-9 pr-4 py-2.5 w-full bg-gray-50 border border-gray-100 rounded-xl text-sm"
-/>
-
-</div>
-
-<select
-value={filterSem}
-onChange={(e) => setFilterSem(e.target.value)}
-className="px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm"
->
-
-<option value="">Tất cả học kỳ</option>
-
-{semesters.map((s) => (
-
-<option key={s.id} value={s.id}>
-{s.code} – {s.name}
-</option>
-
-))}
-
-</select>
-
-<button
-onClick={() => setSort("students")}
-className="px-3 py-2 border rounded-lg text-xs flex items-center gap-1"
->
-<ArrowUpDown size={12} />
-Sort sĩ số
-</button>
-
-</CardContent>
-
-</Card>
-
-
-{/* TABLE */}
-
-<Card className="border border-gray-100 shadow-sm rounded-[24px]">
-
-<div className="grid grid-cols-12 gap-3 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
-
-<div className="col-span-4">Lớp học phần</div>
-<div className="col-span-2 text-center hidden md:block">Môn / Kỳ</div>
-<div className="col-span-1 text-center">Sĩ số</div>
-<div className="col-span-3">Giảng viên</div>
-<div className="col-span-2 text-right">Thao tác</div>
-
-</div>
-
-<CardContent className="p-0">
-
-{isLoading ? (
-
-<>
-<SkeletonRow />
-<SkeletonRow />
-<SkeletonRow />
-</>
-
-) : paginated.length === 0 ? (
-
-<div className="flex flex-col items-center py-20 text-gray-400">
-
-<BookOpen size={40} />
-
-<p className="mt-2 font-medium">
-Chưa có lớp học phần
-</p>
-
-<p className="text-xs">
-Hãy tạo lớp học phần trước khi phân công giảng viên
-</p>
-
-</div>
-
-) : (
-
-<div className="divide-y">
-
-{paginated.map((course) => {
-
-const assigned = course.lecturers || [];
-const subject = subjectMap[String(course.subjectId)];
-const semester = semesterMap[String(course.semesterId)];
-
-return (
-
-<div
-key={course.id}
-id={course.id}
-className="grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-teal-50 transition"
->
-
-<div className="col-span-4">
-
-<p className="font-bold text-teal-700">
-{course.code}
-</p>
-
-<p className="text-xs text-gray-400">
-{course.name}
-</p>
-
-</div>
-
-<div className="col-span-2 text-center hidden md:block">
-
-<p className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded inline-block">
-{subject?.code || "N/A"}
-</p>
-
-<p className="text-[11px] text-gray-400">
-{semester?.name || "N/A"}
-</p>
-
-</div>
-
-<div className="col-span-1 text-center text-xs">
-
-<span className="font-semibold">
-{course.currentStudents || 0}
-</span>
-
-<span className="text-gray-400">
-/{course.maxStudents || 40}
-</span>
-
-<div className="w-full bg-gray-100 rounded-full h-1 mt-1">
-<div
-className="bg-teal-500 h-1 rounded-full"
-style={{
-width: `${((course.currentStudents || 0) /
-(course.maxStudents || 40)) * 100}%`
-}}
-/>
-</div>
-
-</div>
-
-<div className="col-span-3 flex flex-wrap gap-2">
-
-{assigned.length === 0 ? (
-
-<span className="text-xs text-gray-400 italic">
-Chưa phân công
-</span>
-
-) : (
-
-assigned.map((lect) => (
-
-<div
-key={lect.id}
-className="flex items-center gap-2 bg-teal-50 border border-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full"
->
-
-<Avatar name={lect.name} />
-
-<span className="font-semibold">
-{lect.name}
-</span>
-
-<span
-className={`text-xs ${
-(lecturerWorkload[lect.id] || 1) > 4
-? "text-red-500"
-: "text-gray-400"
-}`}
->
-{lecturerWorkload[lect.id] || 1} lớp
-</span>
-
-<button
-onClick={() =>
-handleRemove(
-course.id,
-lect.id,
-lect.name
-)
-}
-className="text-teal-400 hover:text-red-500"
->
-<X size={11} />
-</button>
-
-</div>
-
-))
-
-)}
-
-</div>
-
-<div className="col-span-2 flex justify-end">
-
-<button
-onClick={() => {
-setSelectedCourse(course);
-setModalOpen(true);
-}}
-className="flex items-center gap-1 text-xs bg-teal-600 text-white rounded-xl px-3 py-1.5 hover:bg-teal-700"
->
-
-<Plus size={12} />
-Phân công
-
-</button>
-
-</div>
-
-</div>
-
-);
-
-})}
-
-</div>
-
-)}
-
-</CardContent>
-
-</Card>
-
-
-{/* Pagination */}
-
-{totalPages > 1 && (
-
-<div className="flex justify-end items-center gap-3 text-sm">
-
-<Button
-disabled={page === 1}
-onClick={() => setPage((p) => p - 1)}
->
-Prev
-</Button>
-
-<span>
-Page {page} / {totalPages}
-</span>
-
-<Button
-disabled={page === totalPages}
-onClick={() => setPage((p) => p + 1)}
->
-Next
-</Button>
-
-</div>
-
-)}
-
-
-{/* Assign Modal */}
-
-{modalOpen && selectedCourse && (
-
-<div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-
-<div className="bg-white rounded-2xl w-[420px] shadow-xl p-6 space-y-4">
-
-<div className="flex justify-between items-center">
-
-<h3 className="font-bold text-lg">
-Phân công giảng viên
-</h3>
-
-<button
-onClick={() => setModalOpen(false)}
-className="text-gray-400 hover:text-red-500"
->
-<X size={16} />
-</button>
-
-</div>
-
-<p className="text-sm text-gray-500">
-
-{selectedCourse.code} — {selectedCourse.name}
-
-</p>
-
-<select
-value={selectedLecturer}
-onChange={(e) => setSelectedLecturer(e.target.value)}
-className="w-full border rounded-xl px-3 py-2 text-sm"
->
-
-<option value="">Chọn giảng viên</option>
-
-{lecturers.map((l) => (
-
-<option key={l.id} value={l.id}>
-{l.name} ({lecturerWorkload[l.id] || 0} lớp)
-</option>
-
-))}
-
-</select>
-
-<Button
-onClick={handleAssign}
-className="w-full bg-teal-600 hover:bg-teal-700"
->
-
-Xác nhận phân công
-
-</Button>
-
-</div>
-
-</div>
-
-)}
-
-</div>
-
-</DndContext>
-
-);
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="Điều phối Giảng viên"
+        subtitle="Gán giảng viên phụ trách các lớp học phần và quản lý khối lượng công việc."
+        breadcrumb={["Admin", "Phân công"]}
+        actions={[
+          <Button key="add" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest border-0 shadow-lg shadow-teal-100" onClick={() => setModalOpen(true)}>
+             <Plus size={16} className="mr-2"/> Phân công mới
+          </Button>
+        ]}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <StatsCard label="Tổng số lớp" value={courses.length} icon={Layers3} variant="default" />
+         <StatsCard label="Đã phân công" value={courses.filter(c=>(c.lecturers?.length||0)>0).length} icon={CalendarCheck} variant="success" />
+         <StatsCard label="Chưa có GV" value={courses.filter(c=>(c.lecturers?.length||0)===0).length} icon={Users} variant="warning" />
+      </div>
+
+      <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+           <div className="md:col-span-2">
+              <InputField placeholder="Tìm kiếm mã lớp, tên lớp..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
+           </div>
+           <SelectField value={filterSem} onChange={e => setFilterSem(e.target.value)}>
+              <option value="all">Tất cả học kỳ</option>
+              {semesters.map(s => <option key={s.id} value={s.id}>{s.code} - {s.name}</option>)}
+           </SelectField>
+        </CardContent>
+      </Card>
+
+      <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+         <CardHeader className="border-b border-gray-50 py-5 px-8">
+            <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Danh sách Phân công</CardTitle>
+         </CardHeader>
+         <CardContent className="p-0">
+            <div className="divide-y divide-gray-50">
+               {filtered.map(c => (
+                 <div key={c.id} className="p-6 hover:bg-gray-50/50 transition-all flex items-center justify-between gap-8 group">
+                    <div className="flex-1 min-w-0">
+                       <h3 className="font-black text-teal-700 text-base uppercase tracking-tight">{c.code}</h3>
+                       <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{c.name}</p>
+                    </div>
+                    <div className="w-48 hidden md:block">
+                       <p className="text-[10px] font-black text-gray-300 uppercase mb-1">Học kỳ</p>
+                       <p className="text-xs font-bold text-gray-800">{semesters.find(s=>s.id===c.semesterId)?.name || '—'}</p>
+                    </div>
+                    <div className="flex-1">
+                       <p className="text-[10px] font-black text-gray-300 uppercase mb-2">Giảng viên phụ trách</p>
+                       <div className="flex flex-wrap gap-2">
+                          {c.lecturers?.length ? c.lecturers.map(l => (
+                            <div key={l.id} className="flex items-center gap-2 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded-xl text-teal-700">
+                               <div className="w-5 h-5 rounded-full bg-teal-200 flex items-center justify-center text-[9px] font-black">{l.name.charAt(0)}</div>
+                               <span className="text-[10px] font-bold">{l.name}</span>
+                               <span className="text-[8px] bg-white px-1.5 py-0.5 rounded-md border border-teal-100 font-black">{lecturerWorkload[l.id] || 0} Lớp</span>
+                               <button onClick={() => removeMutation.mutate({courseId: c.id, lecturerUserId: l.id})} className="hover:text-red-500"><X size={10}/></button>
+                            </div>
+                          )) : <span className="text-[10px] font-bold text-gray-300 italic">Chưa gán giảng viên</span>}
+                       </div>
+                    </div>
+                    <Button size="sm" variant="outline" className="rounded-xl h-9 px-4 text-[10px] font-black uppercase tracking-widest transition-all group-hover:bg-teal-600 group-hover:text-white group-hover:border-teal-600" onClick={() => { setSelectedCourse(c); setModalOpen(true); }}><Plus size={14} className="mr-2"/> Phân công</Button>
+                 </div>
+               ))}
+            </div>
+         </CardContent>
+      </Card>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+           <Card className="w-[450px] rounded-[32px] border-0 shadow-2xl overflow-hidden bg-white">
+              <CardHeader className="bg-teal-600 text-white p-8">
+                 <div className="flex justify-between items-center mb-4">
+                    <CardTitle className="text-xl font-black uppercase tracking-widest">Phân công mới</CardTitle>
+                    <button onClick={() => setModalOpen(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all"><X size={20}/></button>
+                 </div>
+                 <p className="text-teal-50 text-xs font-bold uppercase tracking-widest">{selectedCourse ? `${selectedCourse.code} — ${selectedCourse.name}` : 'Chọn lớp trước'}</p>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                 {!selectedCourse && (
+                   <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Chọn lớp học</p>
+                      <SelectField value={selectedCourse?.id || ''} onChange={e => setSelectedCourse(courses.find(c=>c.id===e.target.value))}>
+                         <option value="">-- Chọn lớp học --</option>
+                         {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                      </SelectField>
+                   </div>
+                 )}
+                 <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Giảng viên (Lớp đang giảng dạy)</p>
+                    <SelectField value={selectedLecturer} onChange={e => setSelectedLecturer(e.target.value)}>
+                       <option value="">-- Chọn giảng viên --</option>
+                       {lecturers.map(l => <option key={l.id} value={l.id}>{l.name} ({lecturerWorkload[l.id] || 0} Lớp)</option>)}
+                    </SelectField>
+                 </div>
+                 <Button className="w-full h-14 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-teal-100 border-0" onClick={handleAssign} disabled={assignMutation.isPending}>Hoàn tất phân công</Button>
+              </CardContent>
+           </Card>
+        </div>
+      )}
+    </div>
+  );
 }

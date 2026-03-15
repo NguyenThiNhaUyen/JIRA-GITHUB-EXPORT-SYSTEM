@@ -13,11 +13,19 @@ export const SRS_KEYS = {
     list: (projectId) => [...SRS_KEYS.all, "list", projectId],
 };
 
+/** Lấy danh sách SRS cho giảng viên (load tất cả) */
+export const useSrsReports = (params = {}) => {
+    return useQuery({
+        queryKey: [...SRS_KEYS.all, "reports", params],
+        queryFn: () => getProjectSrs(params),
+    });
+};
+
 /** Lấy danh sách SRS của một project */
 export const useGetProjectSrs = (projectId) => {
     return useQuery({
         queryKey: SRS_KEYS.list(projectId),
-        queryFn: () => getProjectSrs(projectId),
+        queryFn: () => getProjectSrs({ projectId }),
         enabled: !!projectId,
     });
 };

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -100,12 +100,19 @@ export function TopHeader() {
       .configureLogging(LogLevel.Information)
       .build();
 
+    let isStopped = false;
+
     const startConnection = async () => {
+      if (connection.state !== "Disconnected") return;
       try {
         await connection.start();
-        console.log("[SignalR] Connected to NotificationHub");
+        if (!isStopped) {
+          console.log("[SignalR] Connected to NotificationHub");
+        }
       } catch (err) {
-        console.error("[SignalR] Connection failed: ", err);
+        if (!isStopped && err.name !== "AbortError") {
+          console.error("[SignalR] Connection failed: ", err);
+        }
       }
     };
 
@@ -122,6 +129,7 @@ export function TopHeader() {
     startConnection();
 
     return () => {
+      isStopped = true;
       connection.stop();
     };
   }, [user, queryClient, info]);
@@ -159,6 +167,15 @@ export function TopHeader() {
   };
 
   const getPageTitle = () => {
+    const now = useRef(Date.now()).current;
+
+    const formatTime = (dateStr) => {
+        const diff = now - new Date(dateStr).getTime();
+        const h = Math.floor(diff / 3600000);
+        if (h < 1) return "Vừa xong";
+        if (h < 24) return `${h} giờ trước`;
+        return `${Math.floor(h / 24)} ngày trước`;
+    };
 
     const path = location.pathname;
 
@@ -286,10 +303,10 @@ className="relative p-2 rounded-full hover:bg-gray-100"
 </div>
 )}
 
-{notifications.map((notif) => (
+{notifications.map((notif, idx) => (
 
 <div 
-  key={notif.id} 
+  key={notif.id || `notif-${idx}`} 
   className={`px-4 py-3 border-b hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
   onClick={() => !notif.isRead && handleMarkRead(notif.id)}
 >

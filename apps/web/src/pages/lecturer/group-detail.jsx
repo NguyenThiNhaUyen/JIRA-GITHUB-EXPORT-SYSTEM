@@ -12,6 +12,11 @@ import {
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
 
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { StatusBadge } from "../../components/shared/Badge.jsx";
+
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
     Users, Calendar, CheckCircle, Clock, ExternalLink,
@@ -128,75 +133,47 @@ export default function GroupDetail() {
 
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader 
+                title={group.name}
+                subtitle={`${course?.code || ''} — ${course?.name || ''}. Quản lý trạng thái và thành viên của nhóm dự án.`}
+                breadcrumb={["Giảng viên", "Nhóm", group.name]}
+                actions={[
+                    <Button 
+                        key="back"
+                        variant="outline" 
+                        onClick={() => navigate(-1)}
+                        className="rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest"
+                    >
+                        <ArrowLeft size={14} className="mr-2"/> Quay lại
+                    </Button>
+                ]}
+            />
 
-            {/* ── Breadcrumb + Page Header ─────────────── */}
-            <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2 min-w-0">
-                    <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-                        <button
-                            onClick={() => navigate("/lecturer")}
-                            className="text-teal-700 font-semibold hover:underline"
-                        >Giảng viên</button>
-                        <ChevronRight size={12} />
-                        <button
-                            onClick={() => navigate(`/lecturer/course/${group.courseId}/manage-groups`)}
-                            className="text-gray-600 hover:underline"
-                        >Quản lý Nhóm</button>
-                        <ChevronRight size={12} />
-                        <span className="text-gray-800 font-semibold truncate">{group.name}</span>
-                    </nav>
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">{group.name}</h2>
-                        {fullyApproved ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-100 px-3 py-1 rounded-full">
-                                <CheckCircle size={12} /> Hoàn thành
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full">
-                                <Clock size={12} /> Chờ duyệt
-                            </span>
-                        )}
-                    </div>
-                    {course && (
-                        <p className="text-sm text-gray-400">{course.code} — {course.name}</p>
-                    )}
-                </div>
-                <Button
-                    onClick={() => navigate(`/lecturer/course/${group.courseId}/manage-groups`)}
-                    variant="outline"
-                    className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm shrink-0"
-                >
-                    <ArrowLeft size={14} />
-                    Quay lại
-                </Button>
-            </div>
-
-            {/* ── Quick Status Bar ─────────────────────── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <QuickStat
-                    icon={<Users size={15} />}
-                    label="Thành viên"
-                    value={students.length}
-                    color="text-blue-600 bg-blue-50 border-blue-100"
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatsCard 
+                    label="Thành viên" 
+                    value={students.length} 
+                    icon={Users} 
+                    variant="info" 
                 />
-                <QuickStat
-                    icon={<GitBranch size={15} />}
-                    label="GitHub"
-                    value={githubApproved ? "Đã duyệt" : "Chờ duyệt"}
-                    color={githubApproved ? "text-green-700 bg-green-50 border-green-100" : "text-gray-500 bg-gray-50 border-gray-100"}
+                <StatsCard 
+                    label="GitHub" 
+                    value={githubApproved ? "Ổn định" : "Chờ duyệt"} 
+                    icon={GitBranch} 
+                    variant={githubApproved ? "success" : "warning"} 
                 />
-                <QuickStat
-                    icon={<BookOpen size={15} />}
-                    label="Jira"
-                    value={jiraApproved ? "Đã duyệt" : "Chờ duyệt"}
-                    color={jiraApproved ? "text-green-700 bg-green-50 border-green-100" : "text-gray-500 bg-gray-50 border-gray-100"}
+                <StatsCard 
+                    label="Jira" 
+                    value={jiraApproved ? "Ổn định" : "Chờ duyệt"} 
+                    icon={BookOpen} 
+                    variant={jiraApproved ? "success" : "warning"} 
                 />
-                <QuickStat
-                    icon={<Calendar size={15} />}
-                    label="Ngày tạo"
-                    value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "N/A"}
-                    color="text-gray-600 bg-gray-50 border-gray-100"
+                <StatsCard 
+                    label="Ngày tạo" 
+                    value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "N/A"} 
+                    icon={Calendar} 
+                    variant="indigo" 
                 />
             </div>
 
@@ -364,18 +341,6 @@ export default function GroupDetail() {
 }
 
 /* ─── Sub-components ─────────────────────────────────────────── */
-
-function QuickStat({ icon, label, value, color }) {
-    return (
-        <div className={`rounded-2xl px-4 py-3 border flex items-center gap-3 ${color}`}>
-            <div className="shrink-0">{icon}</div>
-            <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
-                <p className="text-sm font-bold truncate">{value}</p>
-            </div>
-        </div>
-    );
-}
 
 function InfoRow({ label, value }) {
     return (

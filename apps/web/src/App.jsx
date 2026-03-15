@@ -57,7 +57,6 @@ export default function App() {
     if (role === "STUDENT") return "/student";
     return "/login";
   };
-
   return (
     <Routes>
       {/* Public routes */}
