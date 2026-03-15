@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 // ── Constants ────────────────────────────────────────────────
 const _kTeal = Color(0xFF0F766E);
@@ -167,7 +168,8 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const AppTopHeader(title: 'Cảnh báo', showBack: true, backPath: '/lecturer',
+      drawer: const LecturerDrawer(),
+      appBar: const AppTopHeader(title: 'Cảnh báo',
         user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 const _kT = Color(0xFF0F766E);
 const _kBg = Color(0xFFF9FAFB);
@@ -138,7 +139,8 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
     final st = _stats;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const AppTopHeader(title: 'SRS Reports', showBack: true, backPath: '/lecturer',
+      drawer: const LecturerDrawer(),
+      appBar: const AppTopHeader(title: 'SRS Reports',
         user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

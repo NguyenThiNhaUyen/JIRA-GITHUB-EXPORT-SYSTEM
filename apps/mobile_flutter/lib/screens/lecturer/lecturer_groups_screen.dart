@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 import 'lecturer_groups_widgets.dart';
 
 const int kMinMembers = 4;
@@ -241,11 +242,10 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppTopHeader(
+      drawer: const LecturerDrawer(),
+      appBar: const AppTopHeader(
         title: 'Nhóm & Dự án',
-        showBack: true,
-        backPath: '/lecturer',
-        user: const AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER'),
+        user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER'),
       ),
       body: Stack(children: [
         SingleChildScrollView(

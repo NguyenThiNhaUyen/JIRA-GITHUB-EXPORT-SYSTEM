@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 // ── Palette ───────────────────────────────────────────────────
 const _kT = Color(0xFF0F766E);
@@ -153,7 +154,8 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
     final p = _preview;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const AppTopHeader(title: 'Báo cáo & Export', showBack: true, backPath: '/lecturer',
+      drawer: const LecturerDrawer(),
+      appBar: const AppTopHeader(title: 'Báo cáo & Export',
         user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 class ContributionsScreen extends StatefulWidget {
   const ContributionsScreen({super.key});
@@ -503,6 +504,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bg,
+      drawer: const LecturerDrawer(),
       appBar: const AppTopHeader(
         title: 'Theo dõi đóng góp',
         user: AppUser(
