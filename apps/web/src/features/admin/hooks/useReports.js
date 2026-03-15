@@ -1,11 +1,13 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import {
     generateCommitStats,
     generateTeamRoster,
     generateActivitySummary,
     generateSrs,
     getReportDownloadLink,
-    getMyReports
+    getMyReports,
+    getProjectReports,
+    updateReportStatus
 } from "../api/reportApi.js";
 
 /**
@@ -64,5 +66,39 @@ export function useGetMyReports(options = {}) {
         queryKey: ["reports", "me"],
         queryFn: getMyReports,
         ...options
+    });
+}
+
+/**
+ * Hook Query cho: Get Reports by Project
+ */
+export function useGetProjectReports(projectId, type, options = {}) {
+    return useQuery({
+        queryKey: ["reports", "project", projectId, type],
+        queryFn: () => getProjectReports(projectId, type),
+        enabled: !!projectId && options.enabled !== false,
+        ...options
+    });
+}
+
+/**
+ * Hook Mutation cho: Update Report Status
+ */
+export function useUpdateReportStatus() {
+    return useMutation({
+        mutationFn: ({ reportId, status }) => updateReportStatus(reportId, status),
+    });
+}
+
+/**
+ * Hook Queries cho: Get Reports của nhiều Project cùng lúc
+ */
+export function useCourseProjectReports(projectIds, type) {
+    return useQueries({
+        queries: (projectIds || []).map(id => ({
+            queryKey: ["reports", "project", id, type],
+            queryFn: () => getProjectReports(id, type),
+            enabled: !!id,
+        }))
     });
 }

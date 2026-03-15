@@ -4,11 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Button } from "../components/ui/button.jsx";
 import { Alert } from "../components/ui/interactive.jsx";
-import { BookOpen, Shield, GraduationCap } from "lucide-react";
+import { BookOpen, Shield, GraduationCap, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const { login, loading } = useAuth();
   const navigate = useNavigate();
@@ -29,8 +30,8 @@ export default function Login() {
     // Tài khoản mặc định BE seed — xem Program.cs
     const QUICK_CREDS = {
       admin: { email: "admin@truonghoc.com", password: "Admin@123" },
-      lecturer: { email: "lecturer@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
-      student: { email: "student@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
+      lecturer: { email: "gv@fpt.edu.vn", password: "Lecturer@123" }, 
+      student: { email: "sv@fpt.edu.vn", password: "Student@123" }, 
     };
     const creds = QUICK_CREDS[role];
     const result = await login(creds.email, creds.password);
@@ -87,15 +88,24 @@ export default function Login() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu của bạn"
-                  required
-                  disabled={loading}
-                  className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu của bạn"
+                    required
+                    disabled={loading}
+                    className="w-full px-5 py-4 pr-12 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors bg-transparent border-none outline-none"
+                  >
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                  </button>
+                </div>
               </div>
 
               {error && (

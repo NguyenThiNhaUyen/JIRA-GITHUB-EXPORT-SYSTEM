@@ -70,11 +70,15 @@ export async function deleteCourse(id) {
 
 /**
  * POST /api/courses/:id/lecturers  [ADMIN only]
+ * Fallback sang API /admin/bulk-assign vì API cũ bị 403 Forbiden bên BE
  * @param {number|string} courseId
  * @param {number} lecturerUserId
  */
 export async function assignLecturer(courseId, lecturerUserId) {
-    return client.post(`/courses/${courseId}/lecturers`, { lecturerUserId });
+    const res = await client.post(`/admin/bulk-assign`, {
+        assignments: [{ courseId: Number(courseId), lecturerId: Number(lecturerUserId) }]
+    });
+    return unwrap(res);
 }
 
 /**
@@ -85,6 +89,21 @@ export async function assignLecturer(courseId, lecturerUserId) {
 export async function enrollStudents(courseId, studentUserIds) {
     return client.post(`/courses/${courseId}/enrollments`, { studentUserIds });
 }
+
+/**
+ * POST /api/courses/:id/import-students  [ADMIN only]
+ * @param {number|string} courseId
+ * @param {FormData} formData - FormData containing the Excel file
+ */
+export async function importStudents(courseId, formData) {
+    const res = await client.post(`/courses/${courseId}/enrollments/import`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return unwrap(res);
+}
+
 /**
  * DELETE /api/courses/:id/lecturers/:lecturerId  [ADMIN only]
  */

@@ -24,7 +24,7 @@ export const useAcceptInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (invitationId) => {
-            const res = await client.patch(`/invitations/${invitationId}/accept`);
+            const res = await client.put(`/invitations/${invitationId}/accept`);
             return unwrap(res);
         },
         onSuccess: () => {
@@ -40,7 +40,21 @@ export const useRejectInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (invitationId) => {
-            const res = await client.patch(`/invitations/${invitationId}/reject`);
+            const res = await client.put(`/invitations/${invitationId}/decline`);
+            return unwrap(res);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.all });
+        },
+    });
+};
+
+/** Gửi lời mời gia nhập nhóm */
+export const useCreateInvitation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ groupId, invitedStudentId }) => {
+            const res = await client.post("/invitations", { groupId, invitedStudentId });
             return unwrap(res);
         },
         onSuccess: () => {

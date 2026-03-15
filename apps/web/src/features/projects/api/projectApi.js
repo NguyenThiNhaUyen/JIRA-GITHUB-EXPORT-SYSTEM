@@ -30,7 +30,7 @@ export async function deleteProject(projectId) {
 export async function addTeamMember(projectId, studentUserId, role = "MEMBER", responsibility = "") {
     const res = await client.post(`/projects/${projectId}/members`, {
         studentUserId,
-        role,
+        teamRole: role,   // BE expects "teamRole" not "role"
         responsibility
     });
     return unwrap(res);
@@ -50,16 +50,19 @@ export async function updateTeamMember(projectId, studentUserId, contributionSco
 }
 
 export async function linkIntegration(projectId, body) {
+    // BE: POST /projects/{id}/integrations (not PUT /integration)
     const res = await client.post(`/projects/${projectId}/integrations`, body);
     return unwrap(res);
 }
 
 export async function approveIntegration(projectId) {
+    // BE: POST /projects/{id}/integrations/approve
     const res = await client.post(`/projects/${projectId}/integrations/approve`);
     return unwrap(res);
 }
 
 export async function rejectIntegration(projectId, reason) {
+    // BE: POST /projects/{id}/integrations/reject
     const res = await client.post(`/projects/${projectId}/integrations/reject`, { reason });
     return unwrap(res);
 }
@@ -69,3 +72,17 @@ export async function getProjectMetrics(projectId) {
     return mapProjectMetrics(unwrap(res));
 }
 
+export async function getProjectCommits(projectId) {
+    const res = await client.get(`/projects/${projectId}/commits`);
+    return unwrap(res);
+}
+
+export async function syncProjectCommits(projectId) {
+    const res = await client.post(`/projects/${projectId}/sync-commits`);
+    return unwrap(res);
+}
+
+export async function getProjectCommitHistory(projectId) {
+    const res = await client.get(`/projects/${projectId}/commit-history`);
+    return unwrap(res);
+}

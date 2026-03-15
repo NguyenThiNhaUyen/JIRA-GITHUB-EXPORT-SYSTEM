@@ -32,7 +32,7 @@ import {
 } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-
+import { useCourseCommitHistories } from "../../features/projects/hooks/useProjects.js";
 const WEEKS = [
   "T1",
   "T2",
@@ -1081,6 +1081,8 @@ export default function Contributions() {
       : [];
   }, [currentCourse]);
 
+  const commitQueries = useCourseCommitHistories(groups.map((g) => g.id));
+
   const { studentsMap, weeklyCommits, weeklyJira } = useMemo(() => {
     if (!currentCourse) {
       return {
@@ -1089,8 +1091,98 @@ export default function Contributions() {
         weeklyJira: new Array(12).fill(0),
       };
     }
-    return buildMockContribution(currentCourse.id, groups);
-  }, [currentCourse, groups]);
+    if (usingMockData) {
+      return buildMockContribution(currentCourse.id, groups);
+    }
+
+    const allStudentsMap = {};
+    const weeklyCommitsAgg = new Array(12).fill(0);
+    const weeklyJiraAgg = new Array(12).fill(0);
+
+    groups.forEach((group, gIndex) => {
+      const query = commitQueries[gIndex];
+      const apiStudents = query?.data || [];
+      const apiStudentMap = {};
+      apiStudents.forEach((st) => {
+        apiStudentMap[st.studentId] = st;
+      });
+
+      group.team.forEach((member) => {
+        const studentId = member.studentId;
+        const apiData = apiStudentMap[studentId] || {};
+
+        const commits = apiData.commits ?? apiData.totalCommits ?? 0;
+        const jiraDone = apiData.issuesDone ?? apiData.totalIssues ?? 0;
+        const prs = apiData.pullRequests ?? apiData.totalPrs ?? 0;
+        const reviews = 0; // Not returned directly currently
+        const activeDays = (apiData.heatmapData || []).filter((d) => d.count > 0).length;
+        const overdueTasks = 0; // Not returned directly currently
+        
+        let lastActiveDaysAgo = 14; 
+        if (apiData.lastCommitAt) {
+          const diffMs = new Date() - new Date(apiData.lastCommitAt);
+          lastActiveDaysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        } else if (commits > 0) {
+          lastActiveDaysAgo = 0;
+        }
+
+        let score = apiData.contributionPercent || 0;
+        if (!score && (commits > 0 || jiraDone > 0)) {
+           score = Math.round(commits * 2.2 + jiraDone * 2 + prs * 3);
+        }
+        score = Math.max(0, Math.min(100, Math.round(score)));
+
+        let status = "Ổn định";
+        if (commits === 0 && jiraDone === 0) status = "Chưa commit";
+        else if (score >= 82) status = "Rất tốt";
+        else if (score >= 62) status = "Tích cực";
+        else if (score >= 40) status = "Ổn định";
+        else status = "Cần chú ý";
+
+        const dailyActivity = new Array(HEATMAP_DAYS).fill(0);
+        if (apiData.heatmapData) {
+            const totalDays = apiData.heatmapData.length;
+            for (let i = 0; i < HEATMAP_DAYS; i++) {
+                const targetIdx = totalDays - 1 - (HEATMAP_DAYS - 1 - i);
+                if (targetIdx >= 0 && targetIdx < totalDays) {
+                    dailyActivity[i] = apiData.heatmapData[targetIdx].count || 0;
+                }
+            }
+        }
+
+        allStudentsMap[studentId] = {
+          studentId,
+          name: member.studentName || member.name,
+          studentCode: member.studentCode,
+          email: member.email,
+          groupId: group.id,
+          groupName: group.name,
+          commits,
+          jiraDone,
+          prs,
+          reviews,
+          activeDays,
+          overdueTasks,
+          lastActiveDaysAgo,
+          score,
+          status,
+          dailyActivity,
+        };
+
+        const weekData = apiData.weeklyCommits || new Array(12).fill(0);
+        for (let i = 0; i < 12; i++) {
+          weeklyCommitsAgg[i] += weekData[i] || 0;
+          weeklyJiraAgg[i] += Math.ceil((weekData[i] || 0) * 0.4); 
+        }
+      });
+    });
+
+    return {
+      studentsMap: allStudentsMap,
+      weeklyCommits: weeklyCommitsAgg,
+      weeklyJira: weeklyJiraAgg,
+    };
+  }, [currentCourse, groups, commitQueries, usingMockData]);
 
   const sentMap = useMemo(() => {
     return sentLogs.reduce((acc, log) => {

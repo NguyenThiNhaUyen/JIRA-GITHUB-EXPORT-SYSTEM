@@ -20,7 +20,17 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, AlertCircle, PlayCircle, CheckCircle, Upload } from "lucide-react";
 
 // Feature Hooks
-import { useGetCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignLecturer, useEnrollStudents } from "../../features/courses/hooks/useCourses.js";
+import { 
+  useGetCourses, 
+  useCreateCourse, 
+  useUpdateCourse, 
+  useDeleteCourse, 
+  useAssignLecturer, 
+  useEnrollStudents,
+  useImportStudents,
+  useGetEnrolledStudents,
+  useUnenrollStudent
+} from "../../features/courses/hooks/useCourses.js";
 import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 
@@ -43,6 +53,7 @@ export default function CourseManagement() {
   const deleteMutation = useDeleteCourse();
   const assignMutation = useAssignLecturer();
   const enrollMutation = useEnrollStudents();
+  const importStudentsMutation = useImportStudents();
 
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -50,10 +61,11 @@ export default function CourseManagement() {
   const [showViewStudentsModal, setShowViewStudentsModal] = useState(false);
 
   const [viewStudentsCourse, setViewStudentsCourse] = useState(null);
-  const [viewStudentsList, setViewStudentsList] = useState([]);
+  const { data: enrollmentData = { items: [] }, refetch: refetchStudents } = useGetEnrolledStudents(viewStudentsCourse?.id, { pageSize: 100 });
+  const viewStudentsList = enrollmentData.items || [];
 
   const [importCourse, setImportCourse] = useState(null);
-  const [importSelectedIds, setImportSelectedIds] = useState([]);
+  const [importFile, setImportFile] = useState(null);
 
   const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
@@ -271,38 +283,34 @@ const [formData, setFormData] = useState({
   };
 
   const handleOpenViewStudents = (course) => {
-    // In real app, we might need a separate API to get students by course
-    // For now, if CourseDetailResponse has students, use it. 
-    // Otherwise, we might need useGetCourseStudents(course.id) hook.
     setViewStudentsCourse(course);
-    setViewStudentsList(course.students || []);
     setShowViewStudentsModal(true);
   };
 
-  
- const handleKickStudent = (enrollmentId, studentName) => {
+ const unenrollMutation = useUnenrollStudent();
+
+ const handleKickStudent = async (studentUserId, studentName) => {
 
   if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
 
-  const updatedStudents = viewStudentsList.filter(
-    s => s.enrollmentId !== enrollmentId
-  );
-
-  setViewStudentsList(updatedStudents);
-
-  success(`Đã đuổi ${studentName} khỏi lớp`);
+  try {
+    await unenrollMutation.mutateAsync({
+      courseId: viewStudentsCourse.id,
+      studentUserId: studentUserId
+    });
+    success(`Đã đuổi ${studentName} khỏi lớp`);
+    // React Query sẽ tự động invalidate và refetch nhờ mutation onSuccess
+  } catch (err) {
+    showError(err.message || "Không thể đuổi sinh viên");
+  }
 
 };
   // Import SV helpers
   const handleOpenImport = (course) => {
-
-  setImportCourse(course);
-
-  setImportSelectedIds([]);
-
-  setShowImportModal(true);
-
-};
+    setImportCourse(course);
+    setImportFile(null);
+    setShowImportModal(true);
+  };
 
 const handleCreate = () => {
 
@@ -338,45 +346,25 @@ const handleCreate = () => {
   };
 
   const handleImportSubmit = async () => {
+    if (!importCourse || !importFile) {
+      showError("Vui lòng chọn file Excel (.xlsx, .csv)");
+      return;
+    }
 
-  if (!importCourse) return;
+    const formData = new FormData();
+    formData.append("file", importFile);
 
-  if (importSelectedIds.length === 0) {
-    showError("Vui lòng chọn ít nhất 1 sinh viên!");
-    return;
-  }
-
-  const currentStudents = importCourse.currentStudents ?? 0;
-
-  if (
-    importSelectedIds.length + currentStudents >
-    importCourse.maxStudents
-  ) {
-    showError("Lớp đã vượt quá sĩ số tối đa");
-    return;
-  }
-
-  try {
-
-    await enrollMutation.mutateAsync({
-      courseId: importCourse.id,
-      studentUserIds: importSelectedIds.map(Number)
-    });
-
-    success(
-      `Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`
-    );
-
-    setShowImportModal(false);
-    setImportSelectedIds([]);
-
-  } catch (err) {
-
-    showError(err.message || "Import thất bại");
-
-  }
-
-};
+    try {
+      await importStudentsMutation.mutateAsync({
+        courseId: importCourse.id,
+        formData
+      });
+      success(`Đã import sinh viên vào lớp ${importCourse.code} thành công!`);
+      setShowImportModal(false);
+    } catch (err) {
+      showError(err.message || "Import thất bại");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -434,60 +422,6 @@ const handleCreate = () => {
                 onChange={(e) => setFilterSemester(e.target.value)}
               >
                 <option value="">Tất cả học kỳ</option>
-                <div>
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Giảng viên phụ trách
-</label>
-
-<select
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.lecturerId}
-onChange={(e)=>setFormData({...formData, lecturerId:e.target.value})}
->
-
-<option value="">-- Chọn giảng viên --</option>
-
-{lecturers.map(l=>(
-<option key={l.id} value={l.id}>
-{l.name} - {l.email}
-</option>
-))}
-
-</select>
-</div>
-<div className="grid grid-cols-2 gap-4">
-
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Ngày bắt đầu
-</label>
-
-<input
-type="date"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.startDate}
-onChange={(e)=>setFormData({...formData,startDate:e.target.value})}
-/>
-
-</div>
-
-<div>
-
-<label className="block text-sm font-medium text-gray-700 mb-2">
-Ngày kết thúc
-</label>
-
-<input
-type="date"
-className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
-value={formData.endDate}
-onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
-/>
-
-</div>
-
-</div>
                 {semesters.map(sem => (
                   <option key={sem.id} value={sem.id}>{sem.name}</option>
                 ))}
@@ -871,52 +805,54 @@ onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
               </p>
             </div>
 
-            {/* Excel upload placeholder */}
-            <div className="border-2 border-dashed border-purple-200 rounded-xl p-4 flex flex-col items-center gap-2 bg-purple-50/30 cursor-pointer hover:bg-purple-50 transition-colors">
-              <Upload size={24} className="text-purple-400" />
-              <p className="text-sm font-medium text-purple-700">Kéo & thả file Excel hoặc nhấn để chọn</p>
-              <p className="text-xs text-gray-400">.xlsx, .xls (tính năng parse sẽ kết nối BE)</p>
+            {/* Excel upload */}
+            <div 
+              onClick={() => document.getElementById("excel-upload").click()}
+              className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-all ${
+                importFile 
+                  ? "border-green-300 bg-green-50/50" 
+                  : "border-purple-200 bg-purple-50/30 hover:bg-purple-50"
+              }`}
+            >
+              <input 
+                id="excel-upload"
+                type="file" 
+                className="hidden" 
+                accept=".xlsx, .xls, .csv" 
+                onChange={(e) => setImportFile(e.target.files[0])}
+              />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                importFile ? "bg-green-100 text-green-600" : "bg-purple-100 text-purple-600"
+              }`}>
+                <Upload size={24} />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-gray-800">
+                  {importFile ? importFile.name : "Kéo & thả file Excel hoặc nhấn để chọn"}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Hỗ trợ định dạng .xlsx, .xls, .csv</p>
+              </div>
+              {importFile && (
+                <button 
+                  type="button"
+                  className="text-xs text-gray-400 hover:text-red-500 font-medium underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImportFile(null);
+                  }}
+                >
+                  Xóa file
+                </button>
+              )}
             </div>
 
-            {/* Student checkbox list */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Chọn sinh viên chưa có trong lớp ({importAvailableStudents.length} SV)
-                </label>
-                {importSelectedIds.length > 0 && (
-                  <span className="text-xs font-semibold text-white bg-purple-600 rounded-full px-2 py-0.5">
-                    Đã chọn: {importSelectedIds.length}
-                  </span>
-                )}
-              </div>
-              {importAvailableStudents.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">Tất cả sinh viên đã có trong lớp này.</p>
-              ) : (
-                <div className="max-h-[280px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
-                  {importAvailableStudents.map((stu) => (
-                    <label
-                      key={stu.id}
-                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-purple-50/40 transition-colors ${importSelectedIds.includes(stu.id) ? 'bg-purple-50' : ''
-                        }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={importSelectedIds.includes(stu.id)}
-                        onChange={() => toggleImportStudent(stu.id)}
-                        className="accent-purple-600 w-4 h-4"
-                      />
-                      <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                        {stu.name?.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
-                        <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
+            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-[11px] text-blue-700 leading-relaxed">
+              <p className="font-bold mb-1 italic opacity-80">Lưu ý cấu trúc file:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Dòng đầu tiên là tiêu đề (Header).</li>
+                <li>Cột bắt buộc: <span className="font-bold uppercase">StudentId</span> (ví dụ SE123456) hoặc <span className="font-bold uppercase">Email</span>.</li>
+                <li>Hệ thống sẽ tự động map và enroll sinh viên vào lớp.</li>
+              </ul>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -930,10 +866,10 @@ onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
               </Button>
               <Button
                 onClick={handleImportSubmit}
-                disabled={importSelectedIds.length === 0}
+                disabled={!importFile}
                 className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm disabled:opacity-50"
               >
-                Thêm {importSelectedIds.length > 0 ? `${importSelectedIds.length} SV` : ''} vào lớp
+                Tiến hành Import
               </Button>
             </div>
           </div>
@@ -969,7 +905,7 @@ onChange={(e)=>setFormData({...formData,endDate:e.target.value})}
                       <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
                     </div>
                     <button
-                      onClick={() => handleKickStudent(stu.enrollmentId, stu.name)}
+                      onClick={() => handleKickStudent(stu.id, stu.name)}
                       className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Đuổi

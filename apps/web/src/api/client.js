@@ -47,9 +47,18 @@ client.interceptors.response.use(
 
         if (status === 401) {
             console.warn("[API] 401 Unauthorized — Token hết hạn hoặc chưa đăng nhập");
-            // TODO: Clear token + redirect /login khi tích hợp Auth hoàn chỉnh
+            // Clear token + redirect /login khi token lỗi
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login";
         } else if (status === 403) {
             console.warn("[API] 403 Forbidden — Không có quyền truy cập endpoint này");
+            // Kẹt cache role cũ -> đá về login
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login";
         } else if (!status) {
             // Network lỗi hoặc Render đang ngủ (503)
             console.warn("[API] Network error hoặc Render cold start (503). Thử lại sau ~30s.");

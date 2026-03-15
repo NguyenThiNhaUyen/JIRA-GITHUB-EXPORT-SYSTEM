@@ -2,38 +2,69 @@ import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
- * Lấy danh sách SRS Reports của một project
- * GET /api/projects/:projectId/srs
- *
- * BE trả về PagedResponse<SrsDocumentResponse>:
- * { id, projectId, versionNo, status, fileUrl, submittedByUserId, submittedByName, submittedAt, feedback, reviewedAt }
+ * Lấy danh sách SRS Reports
+ * GET /api/srs
  */
-export async function getProjectSrs(projectId) {
-    const res = await client.get(`/projects/${projectId}/srs`);
+export async function getProjectSrs(params = {}) {
+    const res = await client.get(`/srs`, { params });
     const paged = unwrap(res);
-    // Trả về mảng items, map về shape mà UI đang dùng
     return (paged?.items ?? paged ?? []).map(mapSrs);
+}
+
+// Alias for backward compatibility if needed
+export const getSrs = getProjectSrs;
+
+/**
+ * Lấy chi tiết 1 Document bằng ID
+ * GET /api/srs/{id}
+ */
+export async function getSrsById(id) {
+    const res = await client.get(`/srs/${id}`);
+    return mapSrs(unwrap(res));
 }
 
 /**
  * Nộp SRS Report mới — gửi multipart/form-data vì BE dùng IFormFile
- * POST /api/projects/:projectId/srs
- * Body: FormData { File: <File object> }
+ * POST /api/srs
+ * Body: FormData { File: <File object>, projectId: <projectId> }
  */
 export async function submitSrsReport(projectId, { file }) {
     const formData = new FormData();
     formData.append("File", file);
+    formData.append("projectId", projectId);
 
-    const res = await client.post(`/projects/${projectId}/srs`, formData, {
+    const res = await client.post(`/srs`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
     return mapSrs(unwrap(res));
 }
 
 /**
- * Cập nhật status SRS (Giảng viên duyệt/từ chối + ghi feedback)
- * PATCH /api/srs/:id/status
- * Body: { status: "FINAL"|"DRAFT", feedback? }
+ * Gửi reminder tới các nhóm bị trễ hạn nộp (dành cho GV/Admin)
+ * POST /api/srs/remind-overdue
+ */
+export async function remindOverdueSrs() {
+    const res = await client.post(`/srs/remind-overdue`);
+    return unwrap(res);
+}
+
+/**
+ * Đánh giá SRS (Giảng viên)
+ * POST /api/srs/:id/review
+ * Body: { status, feedback, score, metadata? }
+ */
+export async function reviewSrs(reportId, { status, feedback, score, metadata }) {
+    const res = await client.post(`/srs/${reportId}/review`, {
+        status,
+        feedback,
+        score,
+        metadata: metadata || "{}"
+    });
+    return mapSrs(unwrap(res));
+}
+
+/**
+ * Cập nhật status SRS (Old version, keep if needed)
  */
 export async function updateSrsStatus(reportId, newStatus, feedback) {
     const res = await client.patch(`/srs/${reportId}/status`, {
@@ -44,9 +75,7 @@ export async function updateSrsStatus(reportId, newStatus, feedback) {
 }
 
 /**
- * Gửi feedback cho SRS (Giảng viên)
- * PATCH /api/srs/:id/feedback
- * Body: { feedback }
+ * Gửi feedback cho SRS (Old version)
  */
 export async function provideSrsFeedback(reportId, feedback) {
     const res = await client.patch(`/srs/${reportId}/feedback`, { feedback });
