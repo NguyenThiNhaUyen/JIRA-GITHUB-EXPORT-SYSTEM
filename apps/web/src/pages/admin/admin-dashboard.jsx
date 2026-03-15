@@ -39,83 +39,16 @@ import { useGetCourses } from "../../features/courses/hooks/useCourses.js"
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js"
 import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js"
 import { useGetUsers } from "../../features/users/hooks/useUsers.js"
+import {
+  useAdminStats,
+  useIntegrationStats,
+  useTeamRankings,
+  useInactiveTeams,
+  useActivityLog,
+  useCommitTrends,
+  useAnalyticsHeatmap
+} from "../../features/dashboard/hooks/useDashboard.js"
 
-
-/* ---------------- MOCK DATA ---------------- */
-
-const INTEGRATION_STATS = {
-repoConnected: 70,
-repoMissing: 15,
-jiraConnected: 60,
-syncErrors: 2,
-reportsExported: 120
-}
-
-const COMMIT_DATA = [
-{ day: "Mon", commits: 45 },
-{ day: "Tue", commits: 60 },
-{ day: "Wed", commits: 72 },
-{ day: "Thu", commits: 30 },
-{ day: "Fri", commits: 90 },
-{ day: "Sat", commits: 40 },
-{ day: "Sun", commits: 15 }
-]
-
-const HEATMAP_DATA = [
-{ date: "2026-02-01", count: 3 },
-{ date: "2026-02-02", count: 7 },
-{ date: "2026-02-03", count: 2 },
-{ date: "2026-02-04", count: 10 },
-{ date: "2026-02-05", count: 1 },
-{ date: "2026-02-06", count: 5 },
-{ date: "2026-02-07", count: 8 }
-]
-
-const TEAM_RANKING = [
-{ team: "SE021", commits: 520 },
-{ team: "SE003", commits: 480 },
-{ team: "SE015", commits: 430 },
-{ team: "SE018", commits: 390 }
-]
-
-const INACTIVE_TEAMS = [
-{ team: "SE007", reason: "No commits 14 days" },
-{ team: "SE014", reason: "Repository empty" },
-{ team: "SE020", reason: "No Jira updates" }
-]
-
-const TEAM_ACTIVITY = [
-{ team:"SE001", repo:true, commits:320, lastCommit:"2 hours ago", status:"ACTIVE"},
-{ team:"SE002", repo:true, commits:48, lastCommit:"3 days ago", status:"LOW"},
-{ team:"SE003", repo:false, commits:0, lastCommit:"-", status:"MISSING_REPO"}
-]
-
-const SYSTEM_ACTIVITY = [
-{
-icon: FolderKanban,
-color: "text-green-600 bg-green-50",
-msg: "Group SE001 submitted GitHub repository",
-time: "5 phút trước"
-},
-{
-icon: CheckCircle,
-color: "text-blue-600 bg-blue-50",
-msg: "GitHub repo connected successfully",
-time: "10 phút trước"
-},
-{
-icon: TrendingUp,
-color: "text-indigo-600 bg-indigo-50",
-msg: "Export report generated",
-time: "1 giờ trước"
-},
-{
-icon: AlertCircle,
-color: "text-red-600 bg-red-50",
-msg: "Webhook sync failed for group SE005",
-time: "2 giờ trước"
-}
-]
 
 
 
@@ -144,14 +77,42 @@ const { data: studentsRaw = [] } = useGetUsers("STUDENT")
 
 const recentCourses = coursesData?.items || []
 
+const { data: adminStats, isLoading: statsLoading } = useAdminStats()
+const { data: integrationStatsData } = useIntegrationStats()
+const { data: teamRankingsData = [] } = useTeamRankings(4)
+const { data: inactiveTeamsData = [] } = useInactiveTeams()
+const { data: activityLogData = [] } = useActivityLog(5)
+const { data: commitTrendsData = [] } = useCommitTrends(7)
+const { data: heatmapData = [] } = useAnalyticsHeatmap(90)
+
 const stats = {
-semesters: semesters.length,
-subjects: subjects.length,
-courses: coursesData?.totalCount || 0,
-lecturers: lecturersRaw.length,
-students: studentsRaw.length,
-projects: projectsData?.totalCount || 0
+  semesters: adminStats?.totalSubjects !== undefined ? adminStats.totalSubjects : semesters.length,
+  subjects: adminStats?.totalSubjects || subjects.length,
+  courses: adminStats?.totalCourses || coursesData?.totalCount || 0,
+  lecturers: lecturersRaw.length,
+  students: adminStats?.totalUsers || studentsRaw.length,
+  projects: adminStats?.totalProjects || projectsData?.totalCount || 0
 }
+
+const integrationStats = {
+  repoConnected: integrationStatsData?.repoConnected || 0,
+  repoMissing: integrationStatsData?.repoMissing || 0,
+  jiraConnected: integrationStatsData?.jiraConnected || 0,
+  syncErrors: integrationStatsData?.syncErrors || 0,
+  reportsExported: integrationStatsData?.reportsExported || 0,
+}
+
+// Dữ liệu biểu đồ: Dữ liệu thật 100% từ Database
+const commitChartData = commitTrendsData || []
+const heatmapChartData = heatmapData || []
+const teamRankings = teamRankingsData || []
+const inactiveTeams = inactiveTeamsData || []
+const systemActivity = activityLogData?.length ? activityLogData.map(a => ({
+  icon: Activity,
+  color: "text-teal-600 bg-teal-50",
+  msg: a.message || a.msg,
+  time: a.time || a.createdAt
+})) : []
 
 const activeSemesters =
 semesters.filter(s=>s.status==="ACTIVE").length
@@ -206,15 +167,15 @@ Tổng quan hệ thống
 
 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
 
-<HeroCard icon={<FolderKanban size={20}/>} color="bg-green-500" label="Repo Connected" value={INTEGRATION_STATS.repoConnected}/>
+<HeroCard icon={<FolderKanban size={20}/>} color="bg-green-500" label="Repo Connected" value={integrationStats.repoConnected}/>
 
-<HeroCard icon={<AlertCircle size={20}/>} color="bg-red-500" label="Missing Repo" value={INTEGRATION_STATS.repoMissing}/>
+<HeroCard icon={<AlertCircle size={20}/>} color="bg-red-500" label="Missing Repo" value={integrationStats.repoMissing}/>
 
-<HeroCard icon={<CheckCircle size={20}/>} color="bg-blue-500" label="Jira Project" value={INTEGRATION_STATS.jiraConnected}/>
+<HeroCard icon={<CheckCircle size={20}/>} color="bg-blue-500" label="Jira Project" value={integrationStats.jiraConnected}/>
 
-<HeroCard icon={<AlertCircle size={20}/>} color="bg-yellow-500" label="Sync Errors" value={INTEGRATION_STATS.syncErrors}/>
+<HeroCard icon={<AlertCircle size={20}/>} color="bg-yellow-500" label="Sync Errors" value={integrationStats.syncErrors}/>
 
-<HeroCard icon={<TrendingUp size={20}/>} color="bg-indigo-500" label="Reports Exported" value={INTEGRATION_STATS.reportsExported}/>
+<HeroCard icon={<TrendingUp size={20}/>} color="bg-indigo-500" label="Reports Exported" value={integrationStats.reportsExported}/>
 
 </div>
 
@@ -223,9 +184,9 @@ Tổng quan hệ thống
 
 <div className="grid lg:grid-cols-2 gap-5">
 
-<GitHubCommitChart/>
+<GitHubCommitChart data={commitChartData}/>
 
-<GitHubHeatmap/>
+<GitHubHeatmap data={heatmapChartData}/>
 
 </div>
 
@@ -234,23 +195,23 @@ Tổng quan hệ thống
 
 <div className="grid lg:grid-cols-2 gap-5">
 
-<TeamContributionRanking/>
+<TeamContributionRanking data={teamRankings}/>
 
-<InactiveTeamsAI/>
+<InactiveTeamsAI data={inactiveTeams}/>
 
 </div>
 
 
 {/* Team Activity */}
 
-<TeamActivityTable/>
+<TeamActivityTable data={[]}/>
 
 
 {/* Activity + Quick Actions */}
 
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-<ActivityLog/>
+<ActivityLog data={systemActivity}/>
 
 <QuickActions navigate={navigate}/>
 
@@ -303,7 +264,7 @@ return(
 
 
 
-function GitHubCommitChart(){
+function GitHubCommitChart({ data = [] }){
 
 return(
 
@@ -316,7 +277,7 @@ return(
 <CardContent style={{height:250}}>
 
 <ResponsiveContainer width="100%" height="100%">
-<LineChart data={COMMIT_DATA}>
+<LineChart data={data}>
 <XAxis dataKey="day"/>
 <YAxis/>
 <Tooltip/>
@@ -334,7 +295,7 @@ return(
 
 
 
-function GitHubHeatmap(){
+function GitHubHeatmap({ data = [] }){
 
 return(
 
@@ -349,7 +310,7 @@ return(
 <CalendarHeatmap
 startDate={subDays(new Date(),90)}
 endDate={new Date()}
-values={HEATMAP_DATA}
+values={data}
 />
 
 </CardContent>
@@ -362,7 +323,7 @@ values={HEATMAP_DATA}
 
 
 
-function TeamContributionRanking(){
+function TeamContributionRanking({ data = [] }){
 
 return(
 
@@ -374,7 +335,7 @@ return(
 
 <CardContent>
 
-{TEAM_RANKING.map((t,i)=>(
+{data.map((t,i)=>(
 <div key={i} className="flex justify-between py-2 border-b text-sm">
 
 <span>{i+1}. {t.team}</span>
@@ -393,7 +354,7 @@ return(
 
 
 
-function InactiveTeamsAI(){
+function InactiveTeamsAI({ data = [] }){
 
 return(
 
@@ -405,7 +366,7 @@ return(
 
 <CardContent>
 
-{INACTIVE_TEAMS.map((t,i)=>(
+{data.map((t,i)=>(
 <div key={i} className="flex justify-between py-2 border-b text-sm">
 
 <span>{t.team}</span>
@@ -424,7 +385,7 @@ return(
 
 
 
-function TeamActivityTable(){
+function TeamActivityTable({ data = [] }){
 
 return(
 
@@ -444,7 +405,7 @@ return(
 <div className="text-center">Status</div>
 </div>
 
-{TEAM_ACTIVITY.map(t=>(
+{data.map((t, i)=>(
 <div key={t.team} className="grid grid-cols-5 py-3 border-b text-sm">
 
 <div className="font-semibold">{t.team}</div>
@@ -487,7 +448,7 @@ t.status==="LOW"?"bg-yellow-50 text-yellow-700":
 
 
 
-function ActivityLog(){
+function ActivityLog({ data = [] }){
 
 return(
 
@@ -501,7 +462,7 @@ return(
 
 <CardContent className="p-0">
 
-{SYSTEM_ACTIVITY.map((act,i)=>(
+{data.map((act,i)=>(
 <div key={i} className="flex gap-3 px-5 py-3 border-b">
 
 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${act.color}`}>

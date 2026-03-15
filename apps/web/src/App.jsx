@@ -51,23 +51,21 @@ export default function App() {
 
   const getDefaultRedirect = () => {
     if (!userRole) return "/login";
-    switch (userRole) {
-      case "ADMIN":
-        return "/admin";
-      case "LECTURER":
-        return "/lecturer";
-      case "STUDENT":
-        return "/student";
-      default:
-        return "/login";
-    }
+    const role = String(userRole).toUpperCase();
+    if (role === "ADMIN") return "/admin";
+    if (role === "LECTURER") return "/lecturer";
+    if (role === "STUDENT") return "/student";
+    return "/login";
   };
 
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/test-ui" element={<TestUI />} />
-      <Route path="/login" element={<Login />} />
+      <Route 
+        path="/login" 
+        element={userRole ? <Navigate to={getDefaultRedirect()} replace /> : <Login />} 
+      />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />

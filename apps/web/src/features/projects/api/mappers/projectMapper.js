@@ -7,7 +7,7 @@ export const mapProject = (project) => {
         status: project.status,
         courseId: project.courseId,
         courseName: project.courseName,
-        team: (project.teamMembers || []).map(member => ({
+        team: (project.members || project.teamMembers || []).map(member => ({
             studentId: member.studentUserId,
             studentName: member.studentName,
             studentCode: member.studentCode,
@@ -15,8 +15,8 @@ export const mapProject = (project) => {
             contributionScore: member.contributionScore
         })),
         integration: project.integration ? {
-            githubUrl: project.integration.githubUrl,
-            jiraUrl: project.integration.jiraUrl,
+            githubUrl: project.githubRepoUrl || project.integration.githubUrl,
+            jiraUrl: project.jiraProjectUrl || project.integration.jiraUrl,
             githubStatus: project.integration.githubStatus,
             jiraStatus: project.integration.jiraStatus,
             lastSyncAt: project.integration.lastSyncAt

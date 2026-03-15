@@ -9,7 +9,8 @@ import {
     enrollStudents,
     removeLecturer,
     unenrollStudent,
-    getEnrolledStudents
+    getEnrolledStudents,
+    importStudents
 } from '../api/courseApi.js';
 
 export const COURSE_KEYS = {
@@ -117,3 +118,13 @@ export const useGetEnrolledStudents = (courseId, params) => {
     });
 };
 
+export const useImportStudents = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ courseId, formData }) => importStudents(courseId, formData),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.courseId) });
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
+        },
+    });
+};

@@ -25,19 +25,7 @@ Line,
 ResponsiveContainer
 } from "recharts"
 
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js"
-
-
-
-/* ---------------- MOCK COMMIT DATA ---------------- */
-
-const MOCK_COMMIT = [
-{ day:"Mon", commits:5 },
-{ day:"Tue", commits:7 },
-{ day:"Wed", commits:3 },
-{ day:"Thu", commits:9 },
-{ day:"Fri", commits:12 }
-]
+import { useLecturerAnalyticsCourses } from "../../features/dashboard/hooks/useDashboard.js"
 
 
 
@@ -52,54 +40,8 @@ const [search,setSearch] = useState("")
 
 /* ---------------- DATA ---------------- */
 
-const { data:coursesData={items:[]}, isLoading }
-= useGetCourses({pageSize:100})
-
-// const courses = coursesData?.items || []
-const MOCK_COURSES = [
-{
-id:1,
-code:"SWD392-SE1831",
-name:"Software Architecture",
-subjectCode:"SWD392",
-semester:"Fall 2025",
-currentStudents:32,
-lastCommit:"2 hours ago",
-projects:[
-{ id:1, repoConnected:true, jiraConnected:true },
-{ id:2, repoConnected:true, jiraConnected:true },
-{ id:3, repoConnected:true, jiraConnected:false },
-{ id:4, repoConnected:false, jiraConnected:false },
-{ id:5, repoConnected:true, jiraConnected:true },
-{ id:6, repoConnected:true, jiraConnected:true },
-{ id:7, repoConnected:false, jiraConnected:false },
-{ id:8, repoConnected:true, jiraConnected:true }
-]
-},
-{
-id:2,
-code:"SWD392-SE1832",
-name:"Software Architecture",
-subjectCode:"SWD392",
-semester:"Fall 2025",
-currentStudents:28,
-lastCommit:"1 day ago",
-projects:[
-{ id:1, repoConnected:true, jiraConnected:true },
-{ id:2, repoConnected:true, jiraConnected:true },
-{ id:3, repoConnected:true, jiraConnected:true },
-{ id:4, repoConnected:true, jiraConnected:true },
-{ id:5, repoConnected:false, jiraConnected:false },
-{ id:6, repoConnected:false, jiraConnected:false },
-{ id:7, repoConnected:true, jiraConnected:true }
-]
-}
-]
-
-const courses =
-coursesData?.items?.length
-? coursesData.items
-: MOCK_COURSES
+const { data: analyticsCourses = [], isLoading } = useLecturerAnalyticsCourses();
+const courses = Array.isArray(analyticsCourses) ? analyticsCourses : (analyticsCourses?.items || []);
 
 
 
@@ -112,9 +54,9 @@ return courses.filter(c=>{
 const keyword = search.toLowerCase()
 
 return (
-c.code?.toLowerCase().includes(keyword) ||
-c.name?.toLowerCase().includes(keyword) ||
-c.subjectName?.toLowerCase().includes(keyword)
+  c.code?.toLowerCase().includes(keyword) ||
+  c.name?.toLowerCase().includes(keyword) ||
+  (c.subject?.name || c.subjectName)?.toLowerCase().includes(keyword)
 )
 
 })
@@ -269,39 +211,26 @@ function CourseCard({course,navigate}){
 
 const groupCount = course.projects?.length || 0
 
-const activeTeams =
-course.projects?.filter(p=>p.repoConnected)?.length || 0
+const activeTeams = course.projects?.filter(p => p.githubUrl)?.length || 0;
+const jiraConnected = course.projects?.filter(p => p.jiraProjectCode)?.length || 0;
+const inactiveTeams = groupCount - activeTeams;
+const alerts = course.alertsCount || 0;
 
-const jiraConnected =
-course.projects?.filter(p=>p.jiraConnected)?.length || 0
+const semester = course.semesterName || course.semester?.name || "N/A";
 
-const inactiveTeams = groupCount - activeTeams
-
-const alerts = course.alertsCount || inactiveTeams
-
-const semester = course.semester || "Fall 2025"
-
-const progress = Math.min(100,
-Math.round((activeTeams / (groupCount || 1)) * 100)
-)
-
-const lastCommit = course.lastCommit || "No activity"
-
-
+const progress = Math.min(100, Math.round((activeTeams / (groupCount || 1)) * 100));
+const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString() : "—";
 
 /* Course health */
-
-let status = "ACTIVE"
-
-if(activeTeams===0){
-status = "NO REPO"
-}
-else if(activeTeams < groupCount/2){
-status = "LOW"
+let status = "ACTIVE";
+if (activeTeams === 0 && groupCount > 0) {
+  status = "NO REPO";
+} else if (activeTeams < groupCount / 2) {
+  status = "LOW";
 }
 
-if(course.archived){
-status="ARCHIVED"
+if (course.status === "COMPLETED") {
+  status = "ARCHIVED";
 }
 
 
@@ -325,7 +254,7 @@ return(
 </div>
 
 <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-{course.subjectCode || "—"}
+{course.subject?.code || course.subjectCode || "—"}
 </span>
 
 </div>
@@ -341,11 +270,11 @@ return(
 </h3>
 
 <p className="text-sm text-gray-500 mt-0.5">
-{course.name || course.subjectName}
+{course.name || course.subject?.name || course.subjectName}
 </p>
 
 <p className="text-xs text-gray-400">
-Semester: {semester}
+Học kỳ: {semester}
 </p>
 
 </div>
@@ -372,7 +301,7 @@ Semester: {semester}
 
 {/* Commit Trend */}
 
-<MiniCommitChart data={MOCK_COMMIT}/>
+<MiniCommitChart data={course.commitTrends || []}/>
 
 
 

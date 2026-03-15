@@ -399,7 +399,11 @@ export default function StudentCoursesPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-2xl bg-gray-50 p-3">
                       <p className="text-[11px] text-gray-500">Học kỳ</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">{course.semester}</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-800">
+                        {typeof course.semester === "object"
+                          ? course.semester?.name
+                          : course.semester || "N/A"}
+                      </p>
                     </div>
                     <div className="rounded-2xl bg-gray-50 p-3">
                       <p className="text-[11px] text-gray-500">Số tín chỉ</p>

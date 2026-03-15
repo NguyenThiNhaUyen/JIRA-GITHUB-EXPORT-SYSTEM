@@ -23,6 +23,11 @@ export async function deleteSemester(id) {
     return unwrap(res);
 }
 
+export async function generateSemesters(year) {
+    const res = await client.post("/semesters/generate", { year });
+    return unwrap(res);
+}
+
 export async function getSubjects() {
     const res = await client.get("/subjects", { params: { pageSize: 100 } });
     const payload = unwrap(res);

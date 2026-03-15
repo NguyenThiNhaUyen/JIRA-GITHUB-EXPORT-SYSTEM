@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -12,7 +14,10 @@ import {
 
 import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  useGetMyPendingInvitations,
+  useGetNotifications,
+  useMarkAsRead
+} from "../../features/notifications/hooks/useNotifications.js";
+import {
   useAcceptInvitation,
   useRejectInvitation
 } from "../../features/projects/hooks/useInvitations.js";
@@ -24,7 +29,8 @@ export function TopHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { success, error } = useToast();
+  const { success, error, info } = useToast();
+  const queryClient = useQueryClient();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -37,37 +43,88 @@ export function TopHeader() {
 
   /* ---------------- API ---------------- */
 
-  const { data: invitations = [], isLoading } = useGetMyPendingInvitations({
-    enabled: isStudent
+  const { data: notificationData = { items: [] }, isLoading } = useGetNotifications({
+    pageSize: 10
   });
+  const notifications = notificationData.items || [];
+  const { mutate: markAsReadMutate } = useMarkAsRead();
 
   const { mutate: acceptMutate } = useAcceptInvitation();
   const { mutate: rejectMutate } = useRejectInvitation();
 
   /* ---------------- HANDLERS ---------------- */
 
-  const handleAccept = (id) => {
-
-    acceptMutate(id, {
-      onSuccess: () => success("Đã chấp nhận lời mời nhóm"),
+  const handleAccept = (invitationId, notificationId) => {
+    acceptMutate(invitationId, {
+      onSuccess: () => {
+        success("Đã chấp nhận lời mời nhóm");
+        markAsReadMutate(notificationId);
+      },
       onError: () => error("Không thể chấp nhận lời mời")
     });
-
   };
 
-  const handleDecline = (id) => {
-
-    rejectMutate(id, {
-      onSuccess: () => success("Đã từ chối lời mời"),
+  const handleDecline = (invitationId, notificationId) => {
+    rejectMutate(invitationId, {
+      onSuccess: () => {
+        success("Đã từ chối lời mời");
+        markAsReadMutate(notificationId);
+      },
       onError: () => error("Không thể từ chối lời mời")
     });
+  };
 
+  const handleMarkRead = (id) => {
+    markAsReadMutate(id);
   };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  /* ---------------- SIGNALR REAL-TIME ---------------- */
+
+  useEffect(() => {
+    if (!user) return;
+
+    const BASE_URL = (import.meta.env.VITE_API_URL ?? "https://jira-github-export-system.onrender.com/api")
+      .replace(/\/api$/, ""); // Strip /api suffix → Hub nằm ở root, không ở /api
+    
+    const connection = new HubConnectionBuilder()
+      .withUrl(`${BASE_URL}/notificationHub`, {
+        // BE v2.1: Hub tại /notificationHub (root, không có /api prefix)
+        accessTokenFactory: () => localStorage.getItem("accessToken") || localStorage.getItem("token")
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
+
+    const startConnection = async () => {
+      try {
+        await connection.start();
+        console.log("[SignalR] Connected to NotificationHub");
+      } catch (err) {
+        console.error("[SignalR] Connection failed: ", err);
+      }
+    };
+
+    connection.on("ReceiveNotification", (notification) => {
+      console.log("[SignalR] Received notification:", notification);
+      
+      // Hiển thị toast nhanh
+      info?.(notification.message || "Bạn có thông báo mới", { title: "Thông báo" });
+      
+      // Invalidate query để cập nhật danh sách và unreadCount
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    });
+
+    startConnection();
+
+    return () => {
+      connection.stop();
+    };
+  }, [user, queryClient, info]);
 
   /* ---------------- CLICK OUTSIDE ---------------- */
 
@@ -127,7 +184,7 @@ export function TopHeader() {
       ? "/lecturer"
       : "/";
 
-  const pendingCount = isStudent ? invitations.length : 0;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   /* ---------------- TIME FORMAT ---------------- */
 
@@ -203,10 +260,10 @@ className="relative p-2 rounded-full hover:bg-gray-100"
 
 <Bell size={20} />
 
-{pendingCount > 0 && (
+{unreadCount > 0 && (
 
 <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
-{pendingCount}
+{unreadCount}
 </span>
 
 )}
@@ -229,33 +286,41 @@ className="relative p-2 rounded-full hover:bg-gray-100"
 </div>
 )}
 
-{!isLoading && invitations.length === 0 && (
-<div className="py-8 text-center text-gray-400">
-Không có thông báo mới
-</div>
-)}
+{notifications.map((notif) => (
 
-{invitations.map((inv) => (
-
-<div key={inv.id} className="px-4 py-3 border-b">
+<div 
+  key={notif.id} 
+  className={`px-4 py-3 border-b hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
+  onClick={() => !notif.isRead && handleMarkRead(notif.id)}
+>
 
 <p className="font-semibold text-sm">
-{inv.projectName}
+{notif.title}
 </p>
 
-<p className="text-xs text-gray-500">
-{inv.invitedByName} mời bạn tham gia
+<p className="text-xs text-gray-600 mt-1">
+{notif.content}
 </p>
 
-<p className="text-[10px] text-gray-400">
-{formatTime(inv.createdAt)}
+{notif.projectName && (
+  <p className="text-[11px] text-teal-600 font-medium mt-1">
+    Dự án: {notif.projectName}
+  </p>
+)}
+
+<p className="text-[10px] text-gray-400 mt-2">
+{formatTime(notif.createdAt)}
 </p>
 
-<div className="flex gap-2 mt-2">
+{notif.type === 'INVITATION' && !notif.isRead && (
+<div className="flex gap-2 mt-3">
 
 <button
-onClick={() => handleAccept(inv.id)}
-className="flex items-center gap-1 text-xs bg-teal-600 text-white px-3 py-1 rounded"
+onClick={(e) => {
+  e.stopPropagation();
+  handleAccept(notif.invitationId, notif.id);
+}}
+className="flex items-center gap-1 text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-teal-700 transition-colors"
 >
 
 <Check size={12} />
@@ -264,8 +329,11 @@ className="flex items-center gap-1 text-xs bg-teal-600 text-white px-3 py-1 roun
 </button>
 
 <button
-onClick={() => handleDecline(inv.id)}
-className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1 rounded"
+onClick={(e) => {
+  e.stopPropagation();
+  handleDecline(notif.invitationId, notif.id);
+}}
+className="flex items-center gap-1 text-xs bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
 >
 
 <X size={12} />
@@ -274,6 +342,7 @@ Từ chối
 </button>
 
 </div>
+)}
 
 </div>
 

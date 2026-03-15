@@ -4,6 +4,7 @@ import {
     submitSrsReport,
     updateSrsStatus,
     provideSrsFeedback,
+    reviewSrs,
     deleteSrsReport,
 } from "../api/srsApi.js";
 
@@ -45,6 +46,21 @@ export const useUpdateSrsStatus = () => {
     return useMutation({
         mutationFn: ({ reportId, newStatus, feedback }) =>
             updateSrsStatus(reportId, newStatus, feedback),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: SRS_KEYS.all });
+        },
+    });
+};
+
+/**
+ * Đánh giá SRS (Giảng viên)
+ * Variables: { reportId, status, feedback, score, metadata? }
+ */
+export const useReviewSrs = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ reportId, status, feedback, score, metadata }) =>
+            reviewSrs(reportId, { status, feedback, score, metadata }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: SRS_KEYS.all });
         },
