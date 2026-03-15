@@ -32,6 +32,8 @@ import '../screens/lecturer/manage_groups_screen.dart';
 import '../screens/lecturer/contributions_screen.dart';
 import '../screens/lecturer/lecturer_alerts_screen.dart';
 import '../screens/lecturer/lecturer_srs_reports_screen.dart';
+import '../screens/lecturer/lecturer_reports_screen.dart';
+
 
 
 final GoRouter router = GoRouter(
@@ -72,7 +74,10 @@ final GoRouter router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
-    
+    GoRoute(
+      path: '/lecturer/reports',
+      builder: (context, state) => const LecturerReportsScreen(),
+    ),
 GoRoute(
       path: '/lecturer/alerts',
       builder: (context, state) => const LecturerAlertsScreen(),

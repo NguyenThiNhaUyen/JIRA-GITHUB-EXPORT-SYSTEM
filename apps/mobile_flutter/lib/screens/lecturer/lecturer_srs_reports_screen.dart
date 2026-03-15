@@ -195,7 +195,7 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
                 ]),
               );
             }),
-          ),
+      
           const SizedBox(height: 14),
           // Filter bar
           _buildFilterBar(),
