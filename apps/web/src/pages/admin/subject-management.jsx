@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Plus, Library, Trash2, Edit2, Search, BookOpen } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Library, Trash2, Edit2, Search, BookOpen, CheckCircle } from "lucide-react";
 
 // Components UI
 import { Button } from "../../components/ui/button.jsx";
@@ -23,12 +23,20 @@ import {
 } from "../../features/system/hooks/useSystem.js";
 
 const DEPARTMENTS = [
-  "Software Engineering",
-  "Artificial Intelligence",
-  "Information Security",
-  "Digital Marketing",
-  "Business Administration"
+    "Software Engineering",
+    "Artificial Intelligence",
+    "Information Security",
+    "Digital Marketing",
+    "Business Administration"
 ];
+
+const departmentPrefix = {
+    "Software Engineering": "SWD",
+    "Artificial Intelligence": "AI",
+    "Information Security": "SEC",
+    "Business Administration": "BUS",
+    "Digital Marketing": "MKT"
+};
 
 export default function SubjectManagement() {
     const { success, error: showError } = useToast();
@@ -44,26 +52,66 @@ export default function SubjectManagement() {
     const [deptFilter, setDeptFilter] = useState("ALL");
 
     const [formData, setFormData] = useState({
-        code: "", name: "", description: "", credits: 3, status: "ACTIVE", department: ""
+        department: "",
+        courseNumber: "",
+        code: "",
+        name: "",
+        description: "",
+        credits: 3,
+        maxStudents: 40,
+        status: "ACTIVE",
     });
+
+    /* Auto generate code */
+    useEffect(() => {
+        if (formData.department && formData.courseNumber) {
+            const prefix = departmentPrefix[formData.department] || "";
+            setFormData(prev => ({
+                ...prev,
+                code: `${prefix}${formData.courseNumber}`
+            }));
+        }
+    }, [formData.department, formData.courseNumber]);
 
     const filteredSubjects = useMemo(() => {
         return subjects.filter(s => {
-            const matchesSearch = s.name?.toLowerCase().includes(search.toLowerCase()) || s.code?.toLowerCase().includes(search.toLowerCase());
+            const name = s.subject_name || s.name || "";
+            const code = s.subject_code || s.code || "";
+            const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) || code.toLowerCase().includes(search.toLowerCase());
             const matchesDept = deptFilter === "ALL" || s.department === deptFilter;
             return matchesSearch && matchesDept;
-        }).sort((a,b) => a.code.localeCompare(b.code));
+        }).sort((a,b) => (a.subject_code || a.code || "").localeCompare(b.subject_code || b.code || ""));
     }, [subjects, search, deptFilter]);
 
     const handleCreate = () => {
         setEditingSubject(null);
-        setFormData({ code: "", name: "", description: "", credits: 3, status: "ACTIVE", department: "" });
+        setFormData({
+            department: "",
+            courseNumber: "",
+            code: "",
+            name: "",
+            description: "",
+            credits: 3,
+            maxStudents: 40,
+            status: "ACTIVE",
+        });
         setShowModal(true);
     };
 
     const handleEdit = (subject) => {
         setEditingSubject(subject);
-        setFormData({ ...subject });
+        const code = subject.subject_code || subject.code || "";
+        const courseNumber = code.replace(/[A-Z]/g, "") || "";
+        setFormData({
+            department: subject.department || "",
+            courseNumber: courseNumber,
+            code: code,
+            name: subject.subject_name || subject.name || "",
+            description: subject.description || "",
+            credits: subject.credits || 3,
+            maxStudents: subject.maxStudents || subject.max_students || 40,
+            status: subject.status || "ACTIVE",
+        });
         setShowModal(true);
     };
 
@@ -72,24 +120,37 @@ export default function SubjectManagement() {
         try {
             await deleteMutation.mutateAsync(id);
             success("Xóa môn học thành công");
-        } catch {
-            showError("Xóa môn học thất bại");
+        } catch (err) {
+            showError(err.message || "Xóa môn học thất bại");
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const payload = {
+                subjectCode: formData.code,
+                subjectName: formData.name,
+                department: formData.department,
+                description: formData.description,
+                credits: Number(formData.credits),
+                maxStudents: Number(formData.maxStudents),
+                status: formData.status
+            };
+
             if (editingSubject) {
-                await updateMutation.mutateAsync({ id: editingSubject.id, updates: formData });
+                await updateMutation.mutateAsync({ 
+                    id: editingSubject.id, 
+                    updates: payload 
+                });
                 success("Cập nhật thành công");
             } else {
-                await createMutation.mutateAsync(formData);
+                await createMutation.mutateAsync(payload);
                 success("Tạo mới thành công");
             }
             setShowModal(false);
-        } catch {
-            showError("Thao tác thất bại");
+        } catch (err) {
+            showError(err.message || "Thao tác thất bại");
         }
     };
 
@@ -108,8 +169,8 @@ export default function SubjectManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatsCard label="Tổng môn học" value={subjects.length} icon={Library} variant="indigo" />
-                <StatsCard label="Đang hoạt động" value={subjects.filter(s => s.status === 'ACTIVE').length} icon={BookOpen} variant="success" />
-                <StatsCard label="Tín chỉ trung bình" value={(subjects.reduce((sum, s) => sum + (s.credits || 0), 0) / (subjects.length || 1)).toFixed(1)} icon={Plus} variant="info" />
+                <StatsCard label="Đang hoạt động" value={subjects.filter(s => s.status === 'ACTIVE').length} icon={CheckCircle} variant="success" />
+                <StatsCard label="Tín chỉ trung bình" value={(subjects.reduce((sum, s) => sum + (s.credits || 0), 0) / (subjects.length || 1)).toFixed(1)} icon={BookOpen} variant="info" />
             </div>
 
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
@@ -133,6 +194,7 @@ export default function SubjectManagement() {
                             <TableRow className="border-b border-gray-100 hover:bg-transparent">
                                 <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mã môn / Tên môn</TableHead>
                                 <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Tín chỉ</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">SV tối đa</TableHead>
                                 <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Trạng thái</TableHead>
                                 <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Thao tác</TableHead>
                             </TableRow>
@@ -143,16 +205,19 @@ export default function SubjectManagement() {
                                     <TableCell className="py-4 px-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-teal-600 font-black text-xs group-hover:bg-white shadow-sm transition-all border border-gray-100">
-                                              {s.code?.substring(0, 3)}
+                                              {(s.subject_code || s.code || "").substring(0, 3)}
                                             </div>
                                             <div className="text-left">
-                                                <p className="font-bold text-gray-800 text-sm leading-tight">{s.code}</p>
-                                                <p className="text-[11px] text-gray-400 font-medium mt-0.5">{s.name}</p>
+                                                <p className="font-bold text-gray-800 text-sm leading-tight">{s.subject_code || s.code}</p>
+                                                <p className="text-[11px] text-gray-400 font-medium mt-0.5">{s.subject_name || s.name}</p>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
                                         <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 uppercase tracking-wider">{s.credits} tín chỉ</span>
+                                    </TableCell>
+                                    <TableCell className="py-4 px-6 text-center">
+                                        <span className="text-xs font-bold text-gray-600">{s.maxStudents || s.max_students || 40}</span>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
                                         <StatusBadge status={s.status} variant={s.status === 'ACTIVE' ? 'success' : 'default'} label={s.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'} />
@@ -165,6 +230,13 @@ export default function SubjectManagement() {
                                     </TableCell>
                                 </TableRow>
                             ))}
+                            {filteredSubjects.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="py-12 text-center text-gray-400">
+                                        Không tìm thấy môn học nào
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -173,14 +245,37 @@ export default function SubjectManagement() {
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingSubject ? "Sửa môn học" : "Thêm môn học mới"}>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <InputField label="Mã môn học" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} placeholder="VD: SWD392" />
-                        <InputField label="Số tín chỉ" type="number" value={formData.credits} onChange={e => setFormData({...formData, credits: e.target.value})} />
+                        <SelectField label="Bộ môn *" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} required>
+                            <option value="">Chọn bộ môn</option>
+                            {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                        </SelectField>
+                        <InputField label="Course Number *" type="number" value={formData.courseNumber} onChange={e => setFormData({...formData, courseNumber: e.target.value})} placeholder="VD: 392" required />
                     </div>
-                    <InputField label="Tên môn học" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: Software Architecture" />
-                    <SelectField label="Khoa/Ngành" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})}>
-                        <option value="">Chọn khoa</option>
-                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                    </SelectField>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="Mã môn học (Tự động)" value={formData.code} readOnly className="bg-gray-50 font-bold" />
+                        <InputField label="Số tín chỉ" type="number" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} />
+                    </div>
+
+                    <InputField label="Tên môn học *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: Software Architecture" required />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="SV tối đa" type="number" value={formData.maxStudents} onChange={e => setFormData({...formData, maxStudents: Number(e.target.value)})} />
+                        <SelectField label="Trạng thái" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                        </SelectField>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Mô tả môn học</label>
+                        <textarea 
+                            className="w-full p-4 rounded-xl border border-gray-100 focus:ring-2 focus:ring-teal-100 outline-none text-sm transition-all min-h-[100px]"
+                            value={formData.description}
+                            onChange={e => setFormData({...formData, description: e.target.value})}
+                        />
+                    </div>
+
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Hủy</Button>
                         <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-11 px-8 font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0">

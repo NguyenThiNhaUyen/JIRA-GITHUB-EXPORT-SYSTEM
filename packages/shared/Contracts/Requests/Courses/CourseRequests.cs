@@ -1,17 +1,53 @@
 using System.ComponentModel.DataAnnotations;
 
+<<<<<<< HEAD
 namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
 
 public class CreateSemesterRequest
+=======
+using System.Text.Json.Serialization;
+
+namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
+
+public class CreateSemesterRequest : IValidatableObject
+>>>>>>> origin
 {
     [Required]
     public string Name { get; set; } = null!;
 
     [Required]
+<<<<<<< HEAD
     public DateTime StartDate { get; set; }
 
     [Required]
     public DateTime EndDate { get; set; }
+=======
+    [JsonPropertyName("startDate")]
+    public DateTime StartDate { get; set; }
+
+    [Required]
+    [JsonPropertyName("endDate")]
+    public DateTime EndDate { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (StartDate == DateTime.MinValue)
+            yield return new ValidationResult("Ngày bắt đầu không hợp lệ (bị bỏ trống hoặc sai định dạng).", new[] { nameof(StartDate) });
+        
+        if (EndDate == DateTime.MinValue)
+            yield return new ValidationResult("Ngày kết thúc không hợp lệ (bị bỏ trống hoặc sai định dạng).", new[] { nameof(EndDate) });
+
+        if (EndDate <= StartDate && StartDate != DateTime.MinValue && EndDate != DateTime.MinValue)
+            yield return new ValidationResult("Ngày kết thúc phải lớn hơn ngày bắt đầu.", new[] { nameof(EndDate) });
+    }
+}
+
+public class GenerateSemestersRequest
+{
+    [Required]
+    [Range(2020, 2100, ErrorMessage = "Năm không hợp lệ (phải từ 2020 đến 2100).")]
+    public int Year { get; set; }
+>>>>>>> origin
 }
 
 public class CreateSubjectRequest
@@ -21,6 +57,23 @@ public class CreateSubjectRequest
 
     [Required]
     public string SubjectName { get; set; } = null!;
+<<<<<<< HEAD
+=======
+
+    [Required]
+    public string Department { get; set; } = null!;
+    
+    public string? Description { get; set; }
+    
+    [Required]
+    public int Credits { get; set; } = 3;
+    
+    [Required]
+    public int MaxStudents { get; set; } = 40;
+    
+    [Required]
+    public string Status { get; set; } = "ACTIVE";
+>>>>>>> origin
 }
 
 public class CreateCourseRequest
@@ -45,6 +98,10 @@ public class CreateCourseRequest
 public class AssignLecturerRequest
 {
     [Required]
+<<<<<<< HEAD
+=======
+    [Range(1, long.MaxValue, ErrorMessage = "Vui lòng chọn giảng viên hợp lệ.")]
+>>>>>>> origin
     public long LecturerUserId { get; set; }
 }
 
@@ -55,6 +112,24 @@ public class EnrollStudentsRequest
     public List<long> StudentUserIds { get; set; } = new();
 }
 
+<<<<<<< HEAD
+=======
+public class BulkAssignRequest
+{
+    [Required]
+    public List<AssignmentItem> Assignments { get; set; } = new();
+}
+
+public class AssignmentItem
+{
+    [Required]
+    public long CourseId { get; set; }
+    
+    [Required]
+    public long LecturerId { get; set; }
+}
+
+>>>>>>> origin
 
 
 

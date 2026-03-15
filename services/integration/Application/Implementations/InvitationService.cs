@@ -7,6 +7,10 @@ using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+<<<<<<< HEAD
+=======
+using Microsoft.AspNetCore.SignalR;
+>>>>>>> origin
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -14,11 +18,24 @@ public class InvitationService : IInvitationService
 {
     private readonly JiraGithubToolDbContext _context;
     private readonly ILogger<InvitationService> _logger;
+<<<<<<< HEAD
 
     public InvitationService(JiraGithubToolDbContext context, ILogger<InvitationService> logger)
     {
         _context = context;
         _logger = logger;
+=======
+    private readonly Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
+
+    public InvitationService(
+        JiraGithubToolDbContext context, 
+        ILogger<InvitationService> logger,
+        Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
+    {
+        _context = context;
+        _logger = logger;
+        _hubContext = hubContext;
+>>>>>>> origin
     }
 
     public async Task<InvitationResponse> SendInvitationAsync(long projectId, long inviterUserId, CreateInvitationRequest request)
@@ -60,6 +77,32 @@ public class InvitationService : IInvitationService
         _context.team_invitations.Add(invitation);
         await _context.SaveChangesAsync();
 
+<<<<<<< HEAD
+=======
+        // Send real-time notification
+        try
+        {
+            await _hubContext.Clients.User(request.StudentUserId.ToString())
+                .SendAsync("ReceiveNotification", new 
+                { 
+                    id = $"INV_{invitation.id}",
+                    type = "INVITATION", 
+                    message = $"Bạn đã nhận được lời mời tham gia dự án {project.name}",
+                    timestamp = DateTime.UtcNow,
+                    isRead = false,
+                    metadata = new Dictionary<string, object> 
+                    { 
+                        { "projectId", projectId }, 
+                        { "invitationId", invitation.id } 
+                    }
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send SignalR notification for invitation {InvitationId}", invitation.id);
+        }
+
+>>>>>>> origin
         _logger.LogInformation("User {InviterId} sent an invitation to student {StudentId} for project {ProjectId}", inviterUserId, request.StudentUserId, projectId);
 
         return await GetInvitationResponseAsync(invitation.id);
@@ -89,7 +132,11 @@ public class InvitationService : IInvitationService
         return new PagedResponse<InvitationResponse>
         {
             Items = mapped,
+<<<<<<< HEAD
             TotalItems = total,
+=======
+            TotalCount = total,
+>>>>>>> origin
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -182,6 +229,7 @@ public class InvitationService : IInvitationService
         return new InvitationResponse
         {
             Id = i.id,
+<<<<<<< HEAD
             ProjectId = i.project_id,
             ProjectName = i.project?.name ?? "",
             InvitedByUserId = i.invited_by_user_id,
@@ -192,6 +240,18 @@ public class InvitationService : IInvitationService
             Message = i.message,
             CreatedAt = i.created_at,
             RespondedAt = i.responded_at
+=======
+            GroupId = i.project_id,
+            GroupName = i.project?.name ?? "",
+            CourseId = i.project?.course_id ?? 0,
+            CourseName = i.project?.course?.course_name ?? "N/A",
+            InvitedByName = i.invited_by_user?.full_name ?? "",
+            InvitedByStudentId = i.invited_by_user_id,
+            InvitedStudentId = i.invited_student_user_id,
+            Status = i.status,
+            Message = i.message,
+            CreatedAt = i.created_at
+>>>>>>> origin
         };
     }
 }

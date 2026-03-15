@@ -41,8 +41,30 @@ public class InvitationsController : ControllerBase
         _invitationService = invitationService;
     }
 
+<<<<<<< HEAD
     [HttpGet("my-pending")]
     [Authorize(Roles = "STUDENT")]
+=======
+    public class SendInvitationFlatRequest
+    {
+        public long GroupId { get; set; }
+        public long InvitedStudentId { get; set; }
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendInvitationFlat([FromBody] SendInvitationFlatRequest request)
+    {
+        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var createRequest = new CreateInvitationRequest { StudentUserId = request.InvitedStudentId };
+        var result = await _invitationService.SendInvitationAsync(request.GroupId, userId, createRequest);
+        return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation sent successfully"));
+    }
+
+    [HttpGet("my-pending")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN")]
+>>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<InvitationResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyPendingInvitations([FromQuery] PagedRequest request)
     {
@@ -52,6 +74,10 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpPatch("{id}/accept")]
+<<<<<<< HEAD
+=======
+    [HttpPut("{id}/accept")]
+>>>>>>> origin
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AcceptInvitation(long id)
@@ -62,6 +88,10 @@ public class InvitationsController : ControllerBase
     }
 
     [HttpPatch("{id}/reject")]
+<<<<<<< HEAD
+=======
+    [HttpPut("{id}/decline")]
+>>>>>>> origin
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectInvitation(long id)

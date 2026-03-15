@@ -956,6 +956,47 @@ namespace JiraGithubExport.Shared.Migrations
                     b.ToTable("lecturers");
                 });
 
+<<<<<<< HEAD
+=======
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.notification", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
+
+                    b.Property<DateTime>("created_at")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("is_read")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("metadata")
+                        .HasColumnType("text");
+
+                    b.Property<long>("recipient_user_id")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("recipient_user_id");
+
+                    b.ToTable("notifications");
+                });
+
+>>>>>>> origin
             modelBuilder.Entity("JiraGithubExport.Shared.Models.project", b =>
                 {
                     b.Property<long>("id")
@@ -1024,6 +1065,12 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
+<<<<<<< HEAD
+=======
+                    b.Property<string>("metadata")
+                        .HasColumnType("text");
+
+>>>>>>> origin
                     b.Property<long>("project_id")
                         .HasColumnType("bigint");
 
@@ -1036,6 +1083,12 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long?>("reviewer_userid")
                         .HasColumnType("bigint");
 
+<<<<<<< HEAD
+=======
+                    b.Property<decimal?>("score")
+                        .HasColumnType("numeric");
+
+>>>>>>> origin
                     b.Property<string>("status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -1401,6 +1454,26 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
+<<<<<<< HEAD
+=======
+                    b.Property<int>("credits")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("department")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("max_students")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+>>>>>>> origin
                     b.Property<string>("subject_code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1958,6 +2031,20 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("user");
                 });
 
+<<<<<<< HEAD
+=======
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.notification", b =>
+                {
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "recipient_user")
+                        .WithMany()
+                        .HasForeignKey("recipient_user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("recipient_user");
+                });
+
+>>>>>>> origin
             modelBuilder.Entity("JiraGithubExport.Shared.Models.project", b =>
                 {
                     b.HasOne("JiraGithubExport.Shared.Models.course", "course")

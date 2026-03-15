@@ -21,7 +21,6 @@ import '../screens/lecturer/my_courses_screen.dart';
 import '../screens/admin/admin_users_screen.dart';
 import '../screens/lecturer/manage_groups_screen.dart';
 
-
 final GoRouter router = GoRouter(
   initialLocation: '/login',
   redirect: (context, state) {
@@ -96,7 +95,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/admin/semesters',
-      builder: (context, state) => const AdminCoursesScreen(),
+      builder: (context, state) => const AdminSemestersScreen(), 
     ),
     GoRoute(
       path: '/admin/subjects',

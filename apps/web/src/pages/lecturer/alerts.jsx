@@ -52,26 +52,39 @@ export default function Alerts() {
   const filtered = useMemo(() => {
     return alertsList.filter(a => {
       const q = search.toLowerCase();
-      const matchesSearch = !search || a.groupName?.toLowerCase().includes(q) || a.targetName?.toLowerCase().includes(q) || a.message?.toLowerCase().includes(q);
+      const matchesSearch = !search || 
+        (a.groupName || "").toLowerCase().includes(q) || 
+        (a.targetName || "").toLowerCase().includes(q) || 
+        (a.message || "").toLowerCase().includes(q);
+      
       if (!matchesSearch) return false;
+      
       if (filter === 'resolved') return a.status === 'RESOLVED';
-      if (filter === 'all') return a.status === 'OPEN';
-      return a.status === 'OPEN' && a.severity?.toLowerCase() === filter;
+      if (filter === 'all') return a.status === 'OPEN' || a.status === null;
+      
+      const severity = (a.severity || "").toUpperCase();
+      return (a.status === 'OPEN' || a.status === null) && severity === filter.toUpperCase();
     });
   }, [alertsList, filter, search]);
 
-  const selectedAlert = useMemo(() => filtered.find(a => String(a.id) === String(selectedId)) || filtered[0], [filtered, selectedId]);
+  const selectedAlert = useMemo(() => {
+    if (!selectedId && filtered.length > 0) return filtered[0];
+    return filtered.find(a => String(a.id) === String(selectedId)) || (filtered.length > 0 ? filtered[0] : null);
+  }, [filtered, selectedId]);
 
   const handleResolve = (id) => {
     resolveMutate(id, {
-      onSuccess: () => { success("Đã xử lý cảnh báo"); refetch(); },
-      onError: (err) => showError(err.message)
+      onSuccess: () => { 
+        success("Đã xử lý cảnh báo"); 
+        refetch(); 
+      },
+      onError: (err) => showError(err.message || "Không thể giải quyết cảnh báo")
     });
   };
 
   const handleRemind = (alert) => {
     setRemindedIds(prev => new Set([...prev, alert.id]));
-    success(`Đã nhắc nhở ${alert.targetName || alert.groupName}`);
+    success(`Đã gửi nhắc nhở đến ${alert.targetName || alert.groupName || 'nhóm'}`);
   };
 
   return (
@@ -89,11 +102,11 @@ export default function Alerts() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <StatsCard label="Chưa xử lý" value={alertsList.filter(a=>a.status==='OPEN').length} icon={AlertTriangle} variant="danger" />
-        <StatsCard label="Nghiêm trọng" value={alertsList.filter(a=>a.severity==='HIGH'&&a.status==='OPEN').length} icon={ShieldAlert} variant="warning" />
+        <StatsCard label="Chưa xử lý" value={alertsList.filter(a=> (a.status === 'OPEN' || a.status === null)).length} icon={AlertTriangle} variant="danger" />
+        <StatsCard label="Nghiêm trọng" value={alertsList.filter(a=>(a.severity || "").toUpperCase()==='HIGH' && (a.status === 'OPEN' || a.status === null)).length} icon={ShieldAlert} variant="warning" />
         <StatsCard label="Đã xử lý" value={alertsList.filter(a=>a.status==='RESOLVED').length} icon={CheckCircle} variant="success" />
         <StatsCard label="Mới (24h)" value={alertsList.filter(a=>Math.abs(Date.now()-new Date(a.createdAt).getTime())<86400000).length} icon={Clock} variant="info" />
-        <StatsCard label="Theo nhóm" value={alertsList.filter(a=>a.severity==='MEDIUM').length} icon={Users} variant="indigo" />
+        <StatsCard label="Theo nhóm" value={new Set(alertsList.map(a => a.groupName)).size} icon={Users} variant="indigo" />
         <StatsCard label="Đã nhắc" value={remindedIds.size} icon={Bell} variant="default" />
       </div>
 
@@ -101,9 +114,19 @@ export default function Alerts() {
       <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
         <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
            <div className="flex items-center gap-2 flex-wrap">
-              {['all', 'high', 'medium', 'low', 'resolved'].map(f => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
-                  {f === 'all' ? 'Tất cả' : f}
+              {[
+                {id: 'all', label: 'Tất cả'}, 
+                {id: 'high', label: 'Nghiêm trọng'}, 
+                {id: 'medium', label: 'Trung bình'}, 
+                {id: 'low', label: 'Nhẹ'}, 
+                {id: 'resolved', label: 'Đã xử lý'}
+              ].map(f => (
+                <button 
+                  key={f.id} 
+                  onClick={() => setFilter(f.id)} 
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f.id ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                >
+                  {f.label}
                 </button>
               ))}
            </div>
@@ -121,35 +144,49 @@ export default function Alerts() {
                </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-               <div className="divide-y divide-gray-50">
-                  {filtered.map((a, idx) => {
-                    const style = SEVERITY_STYLE[a.severity] || SEVERITY_STYLE.MEDIUM;
-                    return (
-                      <div key={a.id || idx} onClick={() => setSelectedId(a.id)} className={`p-6 flex gap-6 cursor-pointer transition-all ${selectedId === a.id ? 'bg-teal-50/30' : 'hover:bg-gray-50/50'}`}>
-                         <div className={`w-3 h-3 rounded-full mt-1 shrink-0 ${style.dot} shadow-lg shadow-current/20`} />
-                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                               <h3 className="font-black text-gray-800 text-sm uppercase tracking-tight">{a.targetName || a.groupName}</h3>
-                               <StatusBadge status={style.variant} label={style.label} variant={style.variant} />
-                               <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest border border-gray-100 px-2 py-0.5 rounded-md">{a.courseCode}</span>
-                            </div>
-                            <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{a.message}</p>
-                            <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
-                               <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Commits: {a.metrics?.commits ?? 0}</span>
-                               <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Jira: {a.metrics?.jiraDone ?? 0}</span>
-                               <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Overdue: {a.metrics?.overdueTasks ?? 0}</span>
-                               {remindedIds.has(a.id) && <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full">Đã nhắc nhở</span>}
-                            </div>
-                         </div>
-                         <div className="flex flex-col gap-2 shrink-0">
-                            <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); handleRemind(a); }} disabled={remindedIds.has(a.id)}><Bell size={12} className="mr-2"/> Nhắc nhở</Button>
-                            <Button size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-teal-600 hover:bg-teal-700 text-white border-0" onClick={(e) => { e.stopPropagation(); handleResolve(a.id); }} disabled={resolving}><CheckCircle size={12} className="mr-2"/> Xong</Button>
-                         </div>
-                      </div>
-                    );
-                  })}
-                  {filtered.length === 0 && <div className="p-20 text-center text-gray-400">Không có cảnh báo nào.</div>}
-               </div>
+               {isLoading ? (
+                 <div className="p-20 text-center space-y-4">
+                   <RefreshCw className="w-8 h-8 animate-spin text-teal-600 mx-auto" />
+                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Đang tải dữ liệu...</p>
+                 </div>
+               ) : (
+                 <div className="divide-y divide-gray-50">
+                    {filtered.map((a, idx) => {
+                      const severity = (a.severity || "MEDIUM").toUpperCase();
+                      const style = SEVERITY_STYLE[severity] || SEVERITY_STYLE.MEDIUM;
+                      return (
+                        <div 
+                          key={a.id || idx} 
+                          onClick={() => setSelectedId(a.id)} 
+                          className={`p-6 flex gap-6 cursor-pointer transition-all ${selectedId === a.id ? 'bg-teal-50/30' : 'hover:bg-gray-50/50'}`}
+                        >
+                           <div className={`w-3 h-3 rounded-full mt-1 shrink-0 ${style.dot} shadow-lg shadow-current/20`} />
+                           <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-2">
+                                 <h3 className="font-black text-gray-800 text-sm uppercase tracking-tight">{a.targetName || a.groupName}</h3>
+                                 <StatusBadge status={style.variant} label={style.label} variant={style.variant} />
+                                 <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest border border-gray-100 px-2 py-0.5 rounded-md">{a.courseCode}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{a.message}</p>
+                              <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                                 <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Commits: {a.metrics?.commits ?? 0}</span>
+                                 <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Jira: {a.metrics?.jiraDone ?? 0}</span>
+                                 <span className="bg-gray-50 text-gray-400 px-3 py-1 rounded-full">Overdue: {a.metrics?.overdueTasks ?? 0}</span>
+                                 {remindedIds.has(a.id) && <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full">Đã nhắc nhở</span>}
+                              </div>
+                           </div>
+                           {a.status !== 'RESOLVED' && (
+                             <div className="flex flex-col gap-2 shrink-0">
+                                <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); handleRemind(a); }} disabled={remindedIds.has(a.id)}><Bell size={12} className="mr-2"/> Nhắc nhở</Button>
+                                <Button size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-teal-600 hover:bg-teal-700 text-white border-0" onClick={(e) => { e.stopPropagation(); handleResolve(a.id); }} disabled={resolving}><CheckCircle size={12} className="mr-2"/> Xong</Button>
+                             </div>
+                           )}
+                        </div>
+                      );
+                    })}
+                    {filtered.length === 0 && <div className="p-20 text-center text-gray-400">Không có cảnh báo nào.</div>}
+                 </div>
+               )}
             </CardContent>
          </Card>
 
@@ -164,7 +201,7 @@ export default function Alerts() {
                        <div className="w-20 h-20 rounded-[32px] bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
                           <AlertTriangle size={32} className="text-red-500" />
                        </div>
-                       <h4 className="font-black text-gray-800 text-base uppercase tracking-widest">{selectedAlert.targetName}</h4>
+                       <h4 className="font-black text-gray-800 text-base uppercase tracking-widest">{selectedAlert.targetName || selectedAlert.groupName}</h4>
                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{selectedAlert.groupName}</p>
                     </div>
 
@@ -176,7 +213,7 @@ export default function Alerts() {
 
                        <div className="grid grid-cols-2 gap-3">
                           <div className="p-4 rounded-2xl border border-gray-100"><p className="text-[9px] font-black text-gray-400 uppercase mb-1">Score</p><p className="text-xl font-black text-gray-800">{selectedAlert.metrics?.score || 0}</p></div>
-                          <div className="p-4 rounded-2xl border border-gray-100"><p className="text-[9px] font-black text-gray-400 uppercase mb-1">Thời gian</p><p className="text-[10px] font-black text-gray-800 uppercase mt-2">10 ngày trước</p></div>
+                          <div className="p-4 rounded-2xl border border-gray-100"><p className="text-[9px] font-black text-gray-400 uppercase mb-1">Thời điểm</p><p className="text-[10px] font-black text-gray-800 uppercase mt-2">{new Date(selectedAlert.createdAt).toLocaleDateString('vi-VN')}</p></div>
                        </div>
                     </div>
 

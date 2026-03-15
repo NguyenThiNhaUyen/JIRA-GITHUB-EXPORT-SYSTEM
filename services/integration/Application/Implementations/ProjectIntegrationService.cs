@@ -230,6 +230,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
 
         return new IntegrationInfo
         {
+<<<<<<< HEAD
             ApprovalStatus = integration.approval_status,
             GithubRepoUrl = integration.github_repo?.repo_url,
             GithubRepoOwner = integration.github_repo?.owner_login,
@@ -242,6 +243,12 @@ public class ProjectIntegrationService : IProjectIntegrationService
             ApprovedByName = integration.approved_by?.full_name,
             ApprovedAt = integration.approved_at,
             RejectedReason = integration.rejected_reason
+=======
+            GithubStatus = integration.approval_status ?? "PENDING",
+            JiraStatus = integration.approval_status ?? "PENDING",
+            GithubUrl = integration.github_repo?.repo_url,
+            JiraUrl = integration.jira_project?.jira_url
+>>>>>>> origin
         };
     }
 

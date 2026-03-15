@@ -12,11 +12,21 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+<<<<<<< HEAD
     private readonly ILogger<ReportsController> _logger;
 
     public ReportsController(IReportService reportService, ILogger<ReportsController> logger)
     {
         _reportService = reportService;
+=======
+    private readonly ISrsService _srsService;
+    private readonly ILogger<ReportsController> _logger;
+
+    public ReportsController(IReportService reportService, ISrsService srsService, ILogger<ReportsController> logger)
+    {
+        _reportService = reportService;
+        _srsService = srsService;
+>>>>>>> origin
         _logger = logger;
     }
 
@@ -27,17 +37,47 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
+<<<<<<< HEAD
     /// Get my reports
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetMyReports()
     {
+=======
+    /// Get my reports or project SRS reports
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetReports([FromQuery] long? projectId, [FromQuery] string? type, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (type == "SRS" && projectId.HasValue)
+        {
+            var pagedRequest = new PagedRequest { Page = page, PageSize = pageSize };
+            var srsResult = await _srsService.GetSrsListAsync(projectId.Value, pagedRequest);
+            return Ok(ApiResponse<PagedResponse<JiraGithubExport.Shared.Contracts.Responses.Projects.SrsDocumentResponse>>.SuccessResponse(srsResult));
+        }
+
+>>>>>>> origin
         var userId = GetCurrentUserId();
         var result = await _reportService.GetUserReportsAsync(userId);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
 
     /// <summary>
+<<<<<<< HEAD
+=======
+    /// Update SRS review status
+    /// </summary>
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    public async Task<IActionResult> ReviewSrsStatus(long id, [FromBody] JiraGithubExport.Shared.Contracts.Requests.Projects.ReviewSrsStatusRequest request)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _srsService.ReviewSrsStatusAsync(id, userId, request);
+        return Ok(ApiResponse<JiraGithubExport.Shared.Contracts.Responses.Projects.SrsDocumentResponse>.SuccessResponse(result, "SRS status updated"));
+    }
+
+    /// <summary>
+>>>>>>> origin
     /// Generate commit statistics report
     /// </summary>
     [HttpPost("commit-statistics")]

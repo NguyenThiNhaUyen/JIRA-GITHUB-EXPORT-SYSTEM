@@ -1,12 +1,5 @@
 /**
  * courseApi.js — API calls cho Courses
- *
- * baseURL đã là /api, nên các path ở đây chỉ cần /courses (KHÔNG có /api)
- *
- * Pipeline:
- *   client.js interceptor → trả về ApiResponse object (response.data của axios)
- *   unwrap()              → lấy payload T từ ApiResponse.data
- *   mapCourseList/mapCourse → convert BE DTO → FE shape
  */
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
@@ -15,24 +8,15 @@ import { mapUserList } from "../../users/api/mappers/userMapper.js";
 
 /**
  * GET /api/courses
- * BE tự filter theo role JWT:
- *   ADMIN    → tất cả khoá học (PagedResponse<CourseDetailResponse>)
- *   LECTURER → khoá dạy của mình
- *   STUDENT  → khoá đã đăng ký
- *
- * @param {{ page?: number, pageSize?: number }} params
- * @returns {Promise<{ items: FECourse[], totalCount: number, page: number, pageSize: number }>}
  */
 export async function getCourses(params = {}) {
     const res = await client.get("/courses", { params });
-    const payload = unwrap(res);          // PagedResponse<CourseDetailResponse>
-    return mapCourseList(payload);        // → { items: FECourse[], totalCount, page, pageSize }
+    const payload = unwrap(res);          
+    return mapCourseList(payload);        
 }
 
 /**
  * GET /api/courses/:id
- * @param {number|string} id
- * @returns {Promise<FECourse>}
  */
 export async function getCourseById(id) {
     const res = await client.get(`/courses/${id}`);
@@ -41,8 +25,6 @@ export async function getCourseById(id) {
 
 /**
  * POST /api/courses  [ADMIN only]
- * @param {{ courseCode: string, courseName: string, subjectId: number, semesterId: number }} body
- * @returns {Promise<FECourse>}
  */
 export async function createCourse(body) {
     const res = await client.post("/courses", body);
@@ -51,9 +33,6 @@ export async function createCourse(body) {
 
 /**
  * PUT /api/courses/:id  [ADMIN only]
- * @param {number|string} id
- * @param {object} body
- * @returns {Promise<FECourse>}
  */
 export async function updateCourse(id, body) {
     const res = await client.put(`/courses/${id}`, body);
@@ -62,17 +41,15 @@ export async function updateCourse(id, body) {
 
 /**
  * DELETE /api/courses/:id  [ADMIN only]
- * @param {number|string} id
  */
 export async function deleteCourse(id) {
-    return client.delete(`/courses/${id}`);
+    const res = await client.delete(`/courses/${id}`);
+    return unwrap(res);
 }
 
 /**
  * POST /api/courses/:id/lecturers  [ADMIN only]
- * Fallback sang API /admin/bulk-assign vì API cũ bị 403 Forbiden bên BE
- * @param {number|string} courseId
- * @param {number} lecturerUserId
+ * Fallback sang API /admin/bulk-assign vì API cũ bị 403 Forbidden bên BE
  */
 export async function assignLecturer(courseId, lecturerUserId) {
     const res = await client.post(`/admin/bulk-assign`, {
@@ -83,24 +60,25 @@ export async function assignLecturer(courseId, lecturerUserId) {
 
 /**
  * POST /api/courses/:id/enrollments  [ADMIN only]
- * @param {number|string} courseId
- * @param {number[]} studentUserIds
  */
 export async function enrollStudents(courseId, studentUserIds) {
-    return client.post(`/courses/${courseId}/enrollments`, { studentUserIds });
+    const res = await client.post(`/courses/${courseId}/enrollments`, { studentUserIds });
+    return unwrap(res);
 }
 
 /**
- * POST /api/courses/:id/import-students  [ADMIN only]
- * @param {number|string} courseId
- * @param {FormData} formData - FormData containing the Excel file
+ * POST /api/courses/:id/enrollments/import  [ADMIN & LECTURER]
+ * Uploads an Excel file (.xlsx) for bulk student enrollment.
  */
-export async function importStudents(courseId, formData) {
-    const res = await client.post(`/courses/${courseId}/enrollments/import`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    });
+export async function importStudents(courseId, fileOrFormData) {
+    let body = fileOrFormData;
+    if (fileOrFormData instanceof File) {
+        body = new FormData();
+        body.append("file", fileOrFormData);
+    }
+    
+    // NOTE: client.js intercepts to handle Content-Type if needed
+    const res = await client.post(`/courses/${courseId}/enrollments/import`, body);
     return unwrap(res);
 }
 
@@ -108,14 +86,16 @@ export async function importStudents(courseId, formData) {
  * DELETE /api/courses/:id/lecturers/:lecturerId  [ADMIN only]
  */
 export async function removeLecturer(courseId, lecturerUserId) {
-    return client.delete(`/courses/${courseId}/lecturers/${lecturerUserId}`);
+    const res = await client.delete(`/courses/${courseId}/lecturers/${lecturerUserId}`);
+    return unwrap(res);
 }
 
 /**
  * DELETE /api/courses/:id/enrollments/:studentId  [ADMIN only]
  */
 export async function unenrollStudent(courseId, studentUserId) {
-    return client.delete(`/courses/${courseId}/enrollments/${studentUserId}`);
+    const res = await client.delete(`/courses/${courseId}/enrollments/${studentUserId}`);
+    return unwrap(res);
 }
 
 /**
@@ -125,4 +105,3 @@ export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
     return mapUserList(unwrap(res));
 }
-

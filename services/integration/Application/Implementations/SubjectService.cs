@@ -34,6 +34,14 @@ public class SubjectService : ISubjectService
         {
             subject_code = request.SubjectCode,
             subject_name = request.SubjectName,
+<<<<<<< HEAD
+=======
+            department = request.Department,
+            description = request.Description,
+            credits = request.Credits,
+            max_students = request.MaxStudents,
+            status = request.Status,
+>>>>>>> origin
             created_at = DateTime.UtcNow
         };
 
@@ -48,7 +56,27 @@ public class SubjectService : ISubjectService
         var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
         if (subject == null) throw new NotFoundException("Subject not found");
 
+<<<<<<< HEAD
         subject.subject_name = request.SubjectName;
+=======
+        if (!string.IsNullOrWhiteSpace(request.SubjectName))
+            subject.subject_name = request.SubjectName;
+            
+        if (!string.IsNullOrWhiteSpace(request.Department))
+            subject.department = request.Department;
+            
+        if (request.Description != null)
+            subject.description = request.Description;
+            
+        if (request.Credits.HasValue)
+            subject.credits = request.Credits.Value;
+            
+        if (request.MaxStudents.HasValue)
+            subject.max_students = request.MaxStudents.Value;
+            
+        if (!string.IsNullOrWhiteSpace(request.Status))
+            subject.status = request.Status;
+>>>>>>> origin
 
         _unitOfWork.Subjects.Update(subject);
         await _unitOfWork.SaveChangesAsync();
@@ -75,4 +103,16 @@ public class SubjectService : ISubjectService
 
         return new PagedResponse<SubjectInfo>(_mapper.Map<List<SubjectInfo>>(items), totalItems, request.Page, request.PageSize);
     }
+<<<<<<< HEAD
+=======
+
+    public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
+    {
+        var items = await _unitOfWork.Subjects.Query()
+            .OrderBy(s => s.subject_name)
+            .ToListAsync();
+
+        return _mapper.Map<List<SubjectInfo>>(items);
+    }
+>>>>>>> origin
 }

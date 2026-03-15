@@ -1,89 +1,73 @@
 /**
- * courseMapper.js — Adapter: BE CourseDetailResponse → FE Mock shape
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │  MAPPING TABLE:  Backend DTO  →  Frontend UI field               │
- * ├────────────────────────────────┬─────────────────────────────────┤
- * │  BE (CourseDetailResponse)     │  FE (mock/db.js course shape)   │
- * ├────────────────────────────────┼─────────────────────────────────┤
- * │  id             (long)         │  id             (string→string) │
- * │  courseCode     (string)       │  code           (string)        │
- * │  courseName     (string)       │  name           (string)        │
- * │  subject.id     (long)         │  subjectId      (string)        │
- * │  subject.subjectCode (string)  │  subject.code   (string)        │
- * │  subject.subjectName (string)  │  subject.name   (string)        │
- * │  semester.id    (long)         │  semesterId     (string)        │
- * │  semester.name  (string)       │  semester.name  (string)        │
- * │  semester.startDate (DateTime) │  semester.startDate             │
- * │  semester.endDate   (DateTime) │  semester.endDate               │
- * │  enrolledStudentsCount (int)   │  currentStudents (number)       │
- * │  projectsCount  (int)          │  projectsCount  (number)        │
- * │  lecturers[].userId (long)     │  lecturers[].id                 │
- * │  lecturers[].fullName (string) │  lecturers[].name               │
- * │  lecturers[].lecturerCode      │  lecturers[].code               │
- * │  lecturers[].officeEmail       │  lecturers[].email              │
- * │  ── (không có trong BE) ──     │  maxStudents    → hardcode 40   │
- * │  ── (không có trong BE) ──     │  status         → "ACTIVE" (default) │
- * └────────────────────────────────┴─────────────────────────────────┘
- *
- * NOTE: BE không trả về maxStudents và status trực tiếp trong CourseDetailResponse.
- * Đây là gap cần báo BE bổ sung. Tạm thời hardcode fallback hợp lý.
+ * courseMapper.js — Adapter: BE CourseDetailResponse → FE shape
  */
+
+import { mapProject } from "../../../projects/api/mappers/projectMapper.js";
 
 /**
  * Map một CourseDetailResponse từ BE sang FE course shape
  * @param {object} beCourse - CourseDetailResponse từ BE
- * @returns {object} - FE course shape tương thích mock/db.js
+ * @returns {object} - FE course shape
  */
 export function mapCourse(beCourse) {
     if (!beCourse) return null;
 
-    const subj = beCourse.subject ?? {};
-    const sem = beCourse.semester ?? {};
-    const lecs = beCourse.lecturers ?? [];
+    const subj = beCourse.subject || {};
+    const sem = beCourse.semester || {};
+    const lecs = beCourse.lecturers || [];
+    const enrs = beCourse.enrollments || beCourse.enrolledStudents || [];
+    const projs = beCourse.projects || beCourse.groups || [];
 
     return {
         // ── Core identity ──────────────────────────────────────────
-        id: String(beCourse.id ?? ""),
-        code: beCourse.courseCode ?? "",
-        name: beCourse.courseName ?? "",
+        id: String(beCourse.id || beCourse.Id || ""),
+        code: beCourse.courseCode || beCourse.course_code || beCourse.CourseCode || "",
+        name: beCourse.courseName || beCourse.course_name || beCourse.CourseName || "",
 
         // ── Subject ───────────────────────────────────────────────
-        subjectId: String(subj.id ?? ""),
+        subjectId: String(subj.id || beCourse.subjectId || beCourse.subject_id || beCourse.SubjectId || ""),
         subject: {
-            id: String(subj.id ?? ""),
-            code: subj.subjectCode ?? "",
-            name: subj.subjectName ?? "",
+            id: String(subj.id || ""),
+            code: subj.subjectCode || subj.subject_code || subj.SubjectCode || beCourse.subject_code || "",
+            name: subj.subjectName || subj.subject_name || subj.SubjectName || beCourse.subject_name || "",
         },
 
         // ── Semester ───────────────────────────────────────────────
-        semesterId: String(sem.id ?? ""),
+        semesterId: String(sem.id || beCourse.semesterId || beCourse.semester_id || beCourse.SemesterId || ""),
         semester: {
-            id: String(sem.id ?? ""),
-            name: sem.name ?? "",
-            code: sem.name ?? "",
-            startDate: sem.startDate ?? null,
-            endDate: sem.endDate ?? null,
+            id: String(sem.id || ""),
+            name: sem.name || sem.Name || beCourse.semester_name || "",
+            code: sem.code || sem.Code || sem.name || sem.Name || "",
+            startDate: sem.startDate || sem.StartDate || sem.start_date || null,
+            endDate: sem.endDate || sem.EndDate || sem.end_date || null,
         },
 
         // ── Students & capacity ────────────────────────────────────
-        // BE v2.1 giờ trả về `currentStudents`
-        currentStudents: beCourse.currentStudents ?? beCourse.enrolledStudentsCount ?? 0,
-        maxStudents: beCourse.maxStudents ?? 40,
+        currentStudents: beCourse.currentStudents || beCourse.enrolledStudentsCount || enrs.length || 0,
+        maxStudents: beCourse.maxStudents || beCourse.max_students || 40,
 
         // ── Status ────────────────────────────────────────────────
-        status: beCourse.status ?? "ACTIVE",
+        status: beCourse.status || beCourse.Status || "ACTIVE",
 
         // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({
-            id: String(l.userId ?? ""),
-            name: l.fullName ?? "",
-            code: l.lecturerCode ?? "",
-            email: l.officeEmail ?? "",
+            id: String(l.userId || l.user_id || l.id || ""),
+            name: l.fullName || l.full_name || l.name || l.FullName || "",
+            code: l.lecturerCode || l.lecturer_code || l.LecturerCode || "",
+            email: l.officeEmail || l.email || l.Email || "",
         })),
 
-        // ── Projects count ─────────────────────────────────────────
-        projectsCount: beCourse.projectsCount ?? 0,
+        // ── Groups/Projects ────────────────────────────────────────
+        groups: projs.map(mapProject),
+        projectsCount: beCourse.projectsCount || beCourse.projects_count || projs.length || 0,
+        
+        // ── Enrollments ───────────────────────────────────────────
+        enrollments: enrs.map(e => ({
+            userId: String(e.userId || e.user_id || e.id || ""),
+            fullName: e.fullName || e.full_name || e.name || "",
+            studentCode: e.studentCode || e.student_code || "",
+            email: e.email || "",
+        })),
     };
 }
 

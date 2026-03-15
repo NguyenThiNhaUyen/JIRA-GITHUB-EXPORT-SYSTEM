@@ -12,7 +12,6 @@ import {
     FileBarChart2,
     Clock3,
     CheckCircle2,
-    ExternalLink,
     Search,
     ChevronRight,
     Filter,
@@ -36,15 +35,17 @@ import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 import { useInactiveTeams } from "../../features/dashboard/hooks/useDashboard.js";
 
 const EXPORT_TYPES = [
-    { id: "by-course", icon: FileSpreadsheet, color: "bg-teal-500", title: "Báo cáo theo Lớp", desc: "Tổng hợp tiến độ toàn lớp", formats: ["PDF", "Excel"] },
-    { id: "by-group", icon: FileText, color: "bg-blue-500", title: "Báo cáo theo Nhóm", desc: "Chi tiết từng nhóm dự án", formats: ["PDF", "Excel"] },
-    { id: "by-student", icon: CheckSquare, color: "bg-indigo-500", title: "Báo cáo Sinh viên", desc: "Đóng góp cá nhân", formats: ["PDF", "CSV"] },
-    { id: "by-warning", icon: AlertTriangle, color: "bg-amber-500", title: "Báo cáo Cảnh báo", desc: "Nhóm/SV có rủi ro cao", formats: ["PDF", "Excel"] },
-    { id: "by-sync", icon: GitBranch, color: "bg-violet-500", title: "Đối chiếu Jira/GH", desc: "Phân tích khớp dữ liệu", formats: ["PDF", "Excel"] }
+    { id: "by-course", icon: FileSpreadsheet, color: "bg-teal-500", title: "Báo cáo theo Lớp", desc: "Tổng hợp tiến độ tất cả nhóm trong một lớp học. Bao gồm: số nhóm, trạng thái GitHub/Jira, cảnh báo.", formats: ["PDF", "Excel"] },
+    { id: "by-group", icon: FileText, color: "bg-blue-500", title: "Báo cáo theo Nhóm", desc: "Chi tiết hoạt động từng nhóm: commit, issue, member, deadline.", formats: ["PDF", "Excel"] },
+    { id: "by-student", icon: CheckSquare, color: "bg-indigo-500", title: "Báo cáo theo Sinh viên", desc: "Đóng góp cá nhân: commits, issues, sprint coverage. Phù hợp dùng cho bảng điểm quá trình.", formats: ["PDF", "CSV"] },
+    { id: "by-warning", icon: AlertTriangle, color: "bg-amber-500", title: "Báo cáo Cảnh báo", desc: "Nhóm/SV có rủi ro cao dựa trên phân tích AI/Hệ thống.", formats: ["PDF", "Excel"] },
+    { id: "by-sync", icon: GitBranch, color: "bg-violet-500", title: "Đối chiếu Jira/GH", desc: "Phân tích khớp dữ liệu giữa Task Jira và Code Commits.", formats: ["PDF", "Excel"] }
 ];
 
 const MOCK_EXPORTS = [
-    { id: 1, type: "Báo cáo theo Lớp", target: "SWD392 - SE1841", format: "PDF", date: "2026-03-01T08:22:00", size: "1.8 MB", createdBy: "Lê Thị Mai", filterSummary: "Spring 2026 • Full" }
+    { id: 1, type: "Báo cáo theo Lớp", target: "SWD392 - SE1841", format: "PDF", date: "2026-03-01T08:22:00", size: "1.8 MB", createdBy: "Lê Thị Mai" },
+    { id: 2, type: "Báo cáo theo Nhóm", target: "Nhóm SE01-G1", format: "Excel", date: "2025-03-03T10:45:00", size: "890 KB" },
+    { id: 3, type: "Báo cáo theo Sinh viên", target: "SE001 - K22", format: "CSV", date: "2025-03-05T14:30:00", size: "240 KB" },
 ];
 
 export default function Reports() {
@@ -88,7 +89,7 @@ export default function Reports() {
             commits: p.totalCommits || 0
         }));
 
-        if (search) teams = teams.filter(t => t.name?.toLowerCase().includes(search.toLowerCase()) || t.project?.toLowerCase().includes(search.toLowerCase()));
+        if (search) teams = teams.filter(t => (t.name || "").toLowerCase().includes(search.toLowerCase()) || (t.project || "").toLowerCase().includes(search.toLowerCase()));
         
         return {
             teams,
@@ -149,7 +150,7 @@ export default function Reports() {
                         {projects.map(t => <option key={t.id} value={t.id}>{t.teamName || t.name}</option>)}
                    </SelectField>
                    <div className="flex items-center justify-center bg-teal-50 rounded-xl text-[10px] font-black text-teal-700 uppercase tracking-widest border border-teal-100">
-                      Found {previewData.teams.length} items
+                      Tìm thấy {previewData.teams.length} mục
                    </div>
                 </CardContent>
             </Card>
@@ -213,6 +214,9 @@ export default function Reports() {
                                      <StatusBadge status={t.riskLevel} variant={t.riskLevel === 'High' ? 'danger' : 'warning'} label={t.riskLevel} />
                                   </div>
                                ))}
+                               {previewData.teams.filter(t => t.riskLevel === 'High' || t.riskLevel === 'Medium').length === 0 && (
+                                 <p className="text-xs text-gray-400 italic">Không có nhóm rủi ro nào</p>
+                               )}
                             </div>
                          </div>
                     </CardContent>
