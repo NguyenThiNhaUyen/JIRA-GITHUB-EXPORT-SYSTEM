@@ -381,7 +381,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            bottom: (MediaQuery.of(context).viewInsets.bottom).clamp(0.0, double.infinity)+ 20,
             top: 16,
             left: 16,
             right: 16),

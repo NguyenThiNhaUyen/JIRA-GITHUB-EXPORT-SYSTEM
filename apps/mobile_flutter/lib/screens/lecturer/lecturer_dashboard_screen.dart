@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 class LecturerDashboardScreen extends StatefulWidget {
   const LecturerDashboardScreen({super.key});
@@ -220,6 +221,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
+      drawer: const LecturerDrawer(),
       appBar: const AppTopHeader(
         title: 'Tổng quan Giảng viên',
         user: AppUser(
