@@ -1,0 +1,951 @@
+// Student Project Screen (Flutter Mobile)
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class StudentProjectScreen extends StatefulWidget {
+  const StudentProjectScreen({super.key});
+
+  @override
+  State<StudentProjectScreen> createState() => _StudentProjectScreenState();
+}
+
+class _StudentProjectScreenState extends State<StudentProjectScreen>
+    with SingleTickerProviderStateMixin {
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color cardBorder = Color(0xFFE2E8F0);
+
+  late TabController _tabController;
+
+  // Mock project data
+  static const Map<String, dynamic> _project = {
+    'title': 'AI Interview System',
+    'description':
+        'Hệ thống phỏng vấn tự động sử dụng AI để đánh giá kỹ năng ứng viên',
+    'courseCode': 'SWD392',
+    'groupName': 'Team Alpha',
+    'role': 'Backend Developer',
+    'status': 'ACTIVE',
+    'repository': 'github.com/team-alpha/ai-interview',
+    'jiraKey': 'AIINT',
+    'branch': 'main',
+    'commits': 34,
+    'issuesDone': 12,
+    'prsMerged': 8,
+    'myContribution': 32,
+    'sprintCompletion': 68,
+    'openIssues': 7,
+    'techStack': ['Spring Boot', 'React', 'Python', 'PostgreSQL', 'Docker'],
+  };
+
+  static const List<Map<String, dynamic>> _milestones = [
+    {'title': 'Requirements Analysis', 'progress': 100, 'status': 'Done'},
+    {'title': 'System Design', 'progress': 100, 'status': 'Done'},
+    {'title': 'Core Backend API', 'progress': 75, 'status': 'In Progress'},
+    {'title': 'Frontend UI', 'progress': 50, 'status': 'In Progress'},
+    {'title': 'AI Integration', 'progress': 20, 'status': 'In Progress'},
+    {'title': 'Testing & QA', 'progress': 0, 'status': 'Not started'},
+  ];
+
+  static const List<Map<String, dynamic>> _personalTasks = [
+    {
+      'key': 'AIINT-45',
+      'title': 'Implement JWT Authentication',
+      'status': 'Done',
+      'priority': 'High',
+      'due': '12/03/2026',
+    },
+    {
+      'key': 'AIINT-62',
+      'title': 'Design Interview Question API',
+      'status': 'In Progress',
+      'priority': 'High',
+      'due': '18/03/2026',
+    },
+    {
+      'key': 'AIINT-71',
+      'title': 'Database Schema Optimization',
+      'status': 'In Progress',
+      'priority': 'Medium',
+      'due': '20/03/2026',
+    },
+    {
+      'key': 'AIINT-80',
+      'title': 'Unit Tests for Auth Module',
+      'status': 'To Do',
+      'priority': 'Low',
+      'due': '25/03/2026',
+    },
+  ];
+
+  static const List<Map<String, dynamic>> _teamMembers = [
+    {
+      'name': 'Nguyễn Văn An',
+      'role': 'Frontend Dev',
+      'commits': 45,
+      'issuesDone': 15,
+      'score': 28,
+    },
+    {
+      'name': 'Trần Thị Bình',
+      'role': 'Backend Dev',
+      'commits': 34,
+      'issuesDone': 12,
+      'score': 32,
+    },
+    {
+      'name': 'Lê Văn Chi',
+      'role': 'AI Engineer',
+      'commits': 28,
+      'issuesDone': 9,
+      'score': 22,
+    },
+    {
+      'name': 'Phạm Thị Dung',
+      'role': 'DevOps',
+      'commits': 38,
+      'issuesDone': 14,
+      'score': 18,
+    },
+  ];
+
+  static const List<Map<String, dynamic>> _srsFiles = [
+    {
+      'version': 'SRS v2.1',
+      'updatedAt': '10/03/2026',
+      'status': 'Approved',
+    },
+    {
+      'version': 'SRS v2.0',
+      'updatedAt': '28/02/2026',
+      'status': 'Archived',
+    },
+    {
+      'version': 'SRS v1.0',
+      'updatedAt': '15/02/2026',
+      'status': 'Archived',
+    },
+  ];
+
+  static const List<int> _weeklyCommits = [5, 12, 8, 18, 6, 14, 9];
+  static const List<String> _weekDays = [
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, _) => [
+          _buildSliverAppBar(),
+        ],
+        body: Column(
+          children: [
+            _buildTabBar(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOverviewTab(),
+                  _buildTasksTab(),
+                  _buildTeamTab(),
+                  _buildSrsTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 200,
+      floating: false,
+      pinned: true,
+      backgroundColor: Colors.white,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            color: textPrimary, size: 18),
+        onPressed: () => context.go('/student'),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.ios_share_outlined, color: textPrimary),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Export báo cáo project thành công'),
+                backgroundColor: Color(0xFF10B981),
+              ),
+            );
+          },
+        ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          padding: const EdgeInsets.fromLTRB(16, 90, 16, 16),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Badges
+              Row(
+                children: [
+                  _buildBadge(_project['role'] as String, Colors.blue),
+                  const SizedBox(width: 6),
+                  _buildBadge(
+                      _project['courseCode'] as String, Colors.purple),
+                  const SizedBox(width: 6),
+                  _buildBadge('ACTIVE', Colors.green),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _project['title'] as String,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _project['groupName'] as String,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(String text, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color.shade200,
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: _tabController,
+        labelColor: const Color(0xFF0F766E),
+        unselectedLabelColor: textSecondary,
+        indicatorColor: const Color(0xFF0F766E),
+        indicatorWeight: 2,
+        labelStyle:
+            const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        tabs: const [
+          Tab(text: 'Tổng quan'),
+          Tab(text: 'Tasks'),
+          Tab(text: 'Team'),
+          Tab(text: 'SRS'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab() {
+    final maxCommit = _weeklyCommits.fold(0, (a, b) => a > b ? a : b);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Stats
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.2,
+            children: [
+              _buildStatCard('Commits', '${_project['commits']}',
+                  Icons.commit, const Color(0xFF3B82F6)),
+              _buildStatCard(
+                  'Issues Done',
+                  '${_project['issuesDone']}',
+                  Icons.task_alt_outlined,
+                  const Color(0xFF10B981)),
+              _buildStatCard(
+                  'PRs Merged',
+                  '${_project['prsMerged']}',
+                  Icons.merge_outlined,
+                  const Color(0xFF6366F1)),
+              _buildStatCard(
+                  'Đóng góp',
+                  '${_project['myContribution']}%',
+                  Icons.pie_chart_outline,
+                  const Color(0xFFF59E0B)),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Milestones
+          _buildCard(
+            title: 'Milestones',
+            child: Column(
+              children: _milestones.map((m) => _buildMilestoneItem(m)).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Commit chart
+          _buildCard(
+            title: 'Weekly Commit Activity',
+            child: SizedBox(
+              height: 140,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(_weeklyCommits.length, (i) {
+                  final h = maxCommit == 0
+                      ? 0.0
+                      : (_weeklyCommits[i] / maxCommit) * 110.0 + 10;
+                  return Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${_weeklyCommits[i]}',
+                          style: const TextStyle(
+                              fontSize: 9, color: textSecondary),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          height: h,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Color(0xFF0F766E),
+                                Color(0xFF14B8A6)
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _weekDays[i],
+                          style: const TextStyle(
+                              fontSize: 9, color: textSecondary),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Project info
+          _buildCard(
+            title: 'Thông tin project',
+            child: Column(
+              children: [
+                _buildInfoRow('Sprint completion',
+                    '${_project['sprintCompletion']}%'),
+                _buildInfoRow('Open issues', '${_project['openIssues']}'),
+                _buildInfoRow('Team size', '${_teamMembers.length}'),
+                _buildInfoRow('Repository', _project['repository'] as String),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children:
+                      (_project['techStack'] as List<String>).map((t) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: cardBorder),
+                      ),
+                      child: Text(t,
+                          style: const TextStyle(
+                              fontSize: 10, color: textPrimary)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Quick actions
+          _buildCard(
+            title: 'Thao tác nhanh',
+            child: Column(
+              children: [
+                _buildActionButton(
+                  'Sync Commits',
+                  Icons.sync_rounded,
+                  const Color(0xFF3B82F6),
+                  () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã đồng bộ commits từ GitHub'),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildActionButton(
+                  'Upload SRS',
+                  Icons.upload_file_outlined,
+                  const Color(0xFF6366F1),
+                  () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Upload SRS thành công'),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildActionButton(
+                  'Open GitHub Repo',
+                  Icons.open_in_new_rounded,
+                  const Color(0xFF0F766E),
+                  () => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Mở repo: ${_project['repository']}'),
+                      backgroundColor: const Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTasksTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _personalTasks.length,
+      itemBuilder: (context, i) {
+        final task = _personalTasks[i];
+        Color statusColor;
+        switch (task['status'] as String) {
+          case 'Done':
+            statusColor = const Color(0xFF10B981);
+            break;
+          case 'In Progress':
+            statusColor = const Color(0xFF3B82F6);
+            break;
+          default:
+            statusColor = textSecondary;
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: cardBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      task['key'] as String,
+                      style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: textPrimary),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      task['status'] as String,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(6),
+                      border:
+                          Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: Text(
+                      task['priority'] as String,
+                      style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF92400E)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                task['title'] as String,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: textPrimary),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today_outlined,
+                      size: 11, color: textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Due: ${task['due']}',
+                    style: const TextStyle(
+                        fontSize: 11, color: textSecondary),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTeamTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _teamMembers.length,
+      itemBuilder: (context, i) {
+        final m = _teamMembers[i];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: cardBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF0F766E).withOpacity(0.8),
+                      const Color(0xFF14B8A6),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    '#${i + 1}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      m['name'] as String,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: textPrimary),
+                    ),
+                    Text(
+                      m['role'] as String,
+                      style: const TextStyle(
+                          fontSize: 11, color: textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      _buildMiniMetric('${m['commits']}', 'Commits'),
+                      const SizedBox(width: 12),
+                      _buildMiniMetric('${m['issuesDone']}', 'Issues'),
+                      const SizedBox(width: 12),
+                      _buildMiniMetric('${m['score']}%', 'Score'),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSrsTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _srsFiles.length,
+      itemBuilder: (context, i) {
+        final f = _srsFiles[i];
+        final isLatest = i == 0;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isLatest
+                  ? const Color(0xFF10B981).withOpacity(0.4)
+                  : cardBorder,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.description_outlined,
+                    color: Color(0xFF3B82F6), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          f['version'] as String,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: textPrimary),
+                        ),
+                        if (isLatest) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD1FAE5),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Latest',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF065F46)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      'Updated: ${f['updatedAt']}',
+                      style: const TextStyle(
+                          fontSize: 11, color: textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: f['status'] == 'Approved'
+                          ? const Color(0xFFD1FAE5)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      f['status'] as String,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: f['status'] == 'Approved'
+                            ? const Color(0xFF065F46)
+                            : textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Mở ${f['version']}'),
+                          backgroundColor: const Color(0xFF10B981),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.open_in_new_rounded,
+                        size: 16, color: Color(0xFF3B82F6)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cardBorder),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: textPrimary,
+                ),
+              ),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 10, color: textSecondary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard({required String title, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMilestoneItem(Map<String, dynamic> m) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  m['title'] as String,
+                  style: const TextStyle(fontSize: 12, color: textPrimary),
+                ),
+              ),
+              Text(
+                '${m['progress']}%',
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: (m['progress'] as int) / 100,
+              minHeight: 6,
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                m['progress'] == 100
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFF3B82F6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 12, color: textSecondary)),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniMetric(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: textPrimary),
+        ),
+        Text(label,
+            style: const TextStyle(fontSize: 9, color: textSecondary)),
+      ],
+    );
+  }
+}
