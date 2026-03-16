@@ -55,11 +55,14 @@ export default function ManageGroups() {
 
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [newGroupTopic, setNewGroupTopic] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [groupSearch, setGroupSearch] = useState("");
+  const [groupFilter, setGroupFilter] = useState("all");
   const [autoGroupSize, setAutoGroupSize] = useState(5);
   
   const [showForceAddModal, setShowForceAddModal] = useState(false);
-  const [targetGroupId, setTargetGroupId] = useState(null);
+  const [forceAddGroupId, setForceAddGroupId] = useState(null);
+  const [forceAddSearch, setForceAddSearch] = useState("");
   const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
 
   // Data Fetching
@@ -79,24 +82,21 @@ export default function ManageGroups() {
 
   const isBusy = createProjectMutation.isPending || deleteProjectMutation.isPending || updateProjectMutation.isPending || addTeamMemberMutation.isPending || removeTeamMemberMutation.isPending;
 
-  const assignedStudentIds = useMemo(() => new Set(groups.flatMap(g => (g.team || []).map(m => Number(m.studentId)))), [groups]);
-  const availableStudents = useMemo(() => students.filter(s => !assignedStudentIds.has(Number(s.id))), [students, assignedStudentIds]);
-
   const assignedStudentIds = useMemo(() => {
-  return new Set(
-    groups.flatMap((group) =>
-      (group.team || []).map((member) =>
-        Number(member.studentId || member.studentUserId)
+    return new Set(
+      groups.flatMap((group) =>
+        (group.team || []).map((member) =>
+          Number(member.studentId || member.studentUserId)
+        )
       )
-    )
-  );
-}, [groups]);
+    );
+  }, [groups]);
 
   const availableStudents = useMemo(() => {
-  return students.filter(
-    (student) => !assignedStudentIds.has(Number(student.id))
-  );
-}, [students, assignedStudentIds]);
+    return students.filter(
+      (student) => !assignedStudentIds.has(Number(student.id))
+    );
+  }, [students, assignedStudentIds]);
 
   const filteredAvailableStudents = useMemo(() => {
   const keyword = studentSearch.trim().toLowerCase();
@@ -545,96 +545,93 @@ export default function ManageGroups() {
            </Card>
         </div>
 
-                        <div>
-                          <div className="mb-2 flex items-center justify-between">
-                            <label className="block text-xs font-medium text-gray-400">
-                              Thành viên ({groupStudents.length})
-                            </label>
+        {/* Group List Panel */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 flex flex-row items-center justify-between p-6">
+              <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Danh Sách Nhóm ({visibleGroups.length})</CardTitle>
+              <div className="flex gap-4">
+                <InputField 
+                   placeholder="Tìm nhóm..." 
+                   value={groupSearch} 
+                   onChange={e => setGroupSearch(e.target.value)}
+                   className="w-48 h-10 text-[10px]"
+                />
+                <SelectField 
+                   value={groupFilter} 
+                   onChange={e => setGroupFilter(e.target.value)}
+                   className="w-40 h-10 text-[10px]"
+                >
+                   <option value="all">Tất cả nhóm</option>
+                   <option value="healthy">Đang ổn định</option>
+                   <option value="critical">Rủi ro cao</option>
+                   <option value="missing-topic">Chưa có đề tài</option>
+                </SelectField>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+               <div className="divide-y divide-gray-50">
+                  {visibleGroups.length === 0 ? (
+                     <div className="py-20 text-center">
+                        <p className="text-[10px] font-black text-gray-300 uppercase italic">Không tìm thấy nhóm nào</p>
+                     </div>
+                  ) : visibleGroups.map((group) => (
+                     <div key={group.id} className="p-8 hover:bg-gray-50/50 transition-all group/item">
+                        <div className="flex items-start justify-between gap-6 mb-6">
+                           <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-2">
+                                 <h4 className="text-lg font-black text-gray-800 uppercase tracking-tight">{group.name}</h4>
+                                 <StatusBadge status={group.state.toUpperCase()} />
+                              </div>
+                              <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 line-clamp-1">
+                                 <PenLine size={12}/> {group.description || "Chưa thiết lập đề tài"}
+                              </p>
+                           </div>
+                           <div className="flex gap-2 shrink-0">
+                              <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-teal-50 hover:text-teal-600 border border-transparent hover:border-teal-100 transition-all" onClick={() => navigate(`/lecturer/group/${group.id}`)}><Eye size={18}/></Button>
+                              <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 transition-all" onClick={() => handleDeleteGroup(group.id)} disabled={isBusy}><Trash2 size={18}/></Button>
+                           </div>
+                        </div>
 
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenForceAdd(group.id)}
-                              className="flex h-6 items-center gap-1 rounded-md border border-teal-200/50 bg-teal-50 px-2.5 text-[10px] text-teal-700 shadow-none hover:bg-teal-100"
-                            >
-                              <UserPlus size={10} />
-                              Thêm SV
-                            </Button>
-                          </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                           <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                              <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Thành viên</p>
+                              <p className="text-xs font-black text-gray-800">{group.memberCount} SV</p>
+                              <Button size="sm" onClick={() => handleOpenForceAdd(group.id)} className="h-5 px-2 mt-2 text-[8px] font-black uppercase tracking-widest bg-teal-50 text-teal-600 hover:bg-teal-100 border-0 rounded-md shadow-none">+ Thêm</Button>
+                           </div>
+                           <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center hover:border-teal-200 transition-all cursor-pointer">
+                              <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Tiến độ</p>
+                              <p className="text-xs font-black text-teal-600">{group.progress}%</p>
+                           </div>
+                           <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                              <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Leader</p>
+                              <p className="text-xs font-black text-gray-800 truncate w-full text-center px-1 uppercase tracking-tighter">{group.leader || "Chưa có"}</p>
+                           </div>
+                           <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                              <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Rủi ro</p>
+                              <p className={`text-xs font-black ${group.riskScore > 50 ? 'text-red-500' : 'text-green-500'} uppercase tracking-widest`}>{group.riskScore}%</p>
+                           </div>
+                        </div>
 
-                          <div className="flex flex-wrap gap-2">
-                            {groupStudents.length === 0 ? (
-                              <span className="text-xs text-gray-400">
-                                Chưa có thành viên
-                              </span>
-                            ) : (
-                              groupStudents.map((member) => (
-                                <div
-                                  key={`${group.id}-${member.studentId ?? member.studentUserId ?? Math.random()}`}
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm"
-                                >
-                                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-100 text-[9px] font-bold text-teal-700">
-                                    {member.studentName?.charAt(0) || "S"}
-                                  </div>
-
-                                  {member.studentName}
-
-                                  {member.role === "LEADER" && (
-                                    <span className="rounded-full border border-amber-100 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-600">
-                                      Leader
-                                    </span>
-                                  )}
-
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveStudentFromGroup(
-                                        group.id,
-                                        member.studentId ?? member.studentUserId
-                                      )
-                                    }
-                                    className="ml-0.5 font-bold text-gray-300 transition-colors hover:text-red-500"
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 line-clamp-1"><PenLine size={12}/> {g.description || "Chưa thiết lập đề tài"}</p>
-                             </div>
-                             <div className="flex gap-2 shrink-0">
-                                <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-teal-50 hover:text-teal-600 border border-transparent hover:border-teal-100 transition-all" onClick={() => navigate(`/lecturer/group/${g.id}`)}><Eye size={18}/></Button>
-                                <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 transition-all" onClick={() => handleDeleteGroup(g.id)} disabled={isBusy}><Trash2 size={18}/></Button>
-                             </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
-                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Thành viên</p>
-                                <p className="text-xs font-black text-gray-800">{g.memberCount} SV</p>
-                                <Button size="sm" onClick={() => {setTargetGroupId(g.id); setShowForceAddModal(true);}} className="h-5 px-2 mt-2 text-[8px] font-black uppercase tracking-widest bg-teal-50 text-teal-600 hover:bg-teal-100 border-0 rounded-md shadow-none">+ Thêm</Button>
-                             </div>
-                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center hover:border-teal-200 transition-all cursor-pointer">
-                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Tiến độ</p>
-                                <p className="text-xs font-black text-teal-600">{g.progress}%</p>
-                             </div>
-                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
-                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Leader</p>
-                                <p className="text-xs font-black text-gray-800 truncate w-full text-center px-1 uppercase tracking-tighter">{g.leader}</p>
-                             </div>
-                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
-                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Health</p>
-                                <p className={`text-xs font-black ${g.riskScore > 50 ? 'text-red-500' : 'text-green-500'} uppercase tracking-widest`}>{g.riskScore > 50 ? 'Critical' : 'Healthy'}</p>
-                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
-                                <div className={`h-full transition-all duration-700 shadow-[0_0_10px_rgba(20,184,166,0.2)] ${g.progress > 70 ? 'bg-teal-500' : g.progress > 30 ? 'bg-indigo-500' : 'bg-orange-400'}`} style={{ width: `${g.progress}%` }}></div>
-                             </div>
-                          </div>
-                       </div>
-                    ))}
-                 </div>
-              </CardContent>
-           </Card>
-
+                        <div className="space-y-4">
+                           <div className="flex flex-wrap gap-2">
+                              {(group.team || []).map(member => (
+                                 <div key={member.studentUserId || member.studentId} className="flex items-center gap-2 px-3 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-black text-gray-600 uppercase tracking-tighter">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                                    {member.studentName}
+                                    {member.role === "LEADER" && <span className="text-[8px] bg-amber-100 text-amber-700 px-1 rounded">L</span>}
+                                 </div>
+                              ))}
+                           </div>
+                           <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                              <div className={`h-full transition-all duration-700 ${group.progress > 70 ? 'bg-teal-500' : group.progress > 30 ? 'bg-indigo-500' : 'bg-orange-400'}`} style={{ width: `${group.progress}%` }}></div>
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </CardContent>
+          </Card>
            <div className="bg-gradient-to-r from-indigo-700 to-blue-600 rounded-[32px] p-8 text-white flex flex-wrap items-center justify-between gap-6 shadow-2xl shadow-indigo-200/50 border border-white/10">
               <div className="flex-1 min-w-[300px]">
                  <h4 className="text-lg font-black uppercase tracking-widest mb-2 flex items-center gap-2"><Monitor size={20}/> Đồng bộ Jira/GitHub</h4>

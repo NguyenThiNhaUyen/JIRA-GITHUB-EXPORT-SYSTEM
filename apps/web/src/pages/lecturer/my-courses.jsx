@@ -7,8 +7,10 @@ import {
   Search,
   AlertTriangle,
   Settings2,
-  BarChart3
+  BarChart3,
+  GitBranch
 } from "lucide-react";
+import { ResponsiveContainer, LineChart, Line } from "recharts";
 
 import { Card, CardContent } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
@@ -18,7 +20,7 @@ import { useToast } from "../../components/ui/toast.jsx";
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
 import { StatsCard } from "../../components/shared/StatsCard.jsx";
 import { InputField } from "../../components/shared/FormFields.jsx";
-import { StatusBadge } from "../../components/shared/Badge.jsx";
+// import { StatusBadge } from "../../components/shared/Badge.jsx";
 
 // Feature Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
