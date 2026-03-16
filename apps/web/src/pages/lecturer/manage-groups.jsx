@@ -1,15 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/button.jsx";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
-import {
-  ChevronRight,
   UserPlus,
   Users,
   GitBranch,
@@ -18,22 +9,26 @@ import {
   Eye,
   PenLine,
   ArrowLeft,
-  Search,
-  AlertTriangle,
   Activity,
-  Filter,
-  Clock3,
   ShieldAlert,
   Wand2,
   Download,
-  GraduationCap,
-  FolderKanban,
   Sparkles,
-  CheckCircle2,
-  CircleAlert,
-  ClipboardList,
   Layers3,
+  ChevronRight,
+  Monitor
 } from "lucide-react";
+
+// Components UI
+import { Button } from "../../components/ui/button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
+
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { StatusBadge } from "../../components/shared/Badge.jsx";
+import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
 
 // Feature Hooks
 import {
@@ -49,41 +44,28 @@ import {
   useRemoveTeamMember,
 } from "../../features/projects/hooks/useProjects.js";
 
-
-
 const MIN_MEMBERS = 4;
 const MAX_MEMBERS = 6;
 
 export default function ManageGroups() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { success, error } = useToast();
-
+  const { success, error: showError } = useToast();
   const parsedCourseId = Number(courseId);
 
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [newGroupTopic, setNewGroupTopic] = useState("");
-
-  const [studentSearch, setStudentSearch] = useState("");
-  const [groupSearch, setGroupSearch] = useState("");
-  const [groupFilter, setGroupFilter] = useState("all");
-
-  const [showForceAddModal, setShowForceAddModal] = useState(false);
-  const [forceAddGroupId, setForceAddGroupId] = useState(null);
-  const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
-  const [forceAddSearch, setForceAddSearch] = useState("");
-
+  const [filterType, setFilterType] = useState("all");
   const [autoGroupSize, setAutoGroupSize] = useState(5);
+  
+  const [showForceAddModal, setShowForceAddModal] = useState(false);
+  const [targetGroupId, setTargetGroupId] = useState(null);
+  const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
 
   // Data Fetching
-  const { data: course, isLoading: loadingCourse } =
-    useGetCourseById(parsedCourseId);
-
-  const { data: studentsData = { items: [] }, isLoading: loadingStudents } =
-    useGetEnrolledStudents(parsedCourseId);
-
-  const { data: projectsData = { items: [] }, isLoading: loadingProjects } =
-    useGetProjects({ courseId: parsedCourseId });
+  const { data: course, isLoading: loadingCourse } = useGetCourseById(parsedCourseId);
+  const { data: studentsData = { items: [] }, isLoading: loadingStudents } = useGetEnrolledStudents(parsedCourseId);
+  const { data: projectsData = { items: [] }, isLoading: loadingProjects } = useGetProjects({ courseId: parsedCourseId });
 
   // Mutations
   const createProjectMutation = useCreateProject();
@@ -92,18 +74,13 @@ export default function ManageGroups() {
   const addTeamMemberMutation = useAddTeamMember();
   const removeTeamMemberMutation = useRemoveTeamMember();
 
-  // Map 100% data thật từ BE
-  const finalCourse = course || {};
   const students = studentsData?.items || [];
   const groups = projectsData?.items || [];
 
+  const isBusy = createProjectMutation.isPending || deleteProjectMutation.isPending || updateProjectMutation.isPending || addTeamMemberMutation.isPending || removeTeamMemberMutation.isPending;
 
-  const isBusy =
-    createProjectMutation.isPending ||
-    deleteProjectMutation.isPending ||
-    updateProjectMutation.isPending ||
-    addTeamMemberMutation.isPending ||
-    removeTeamMemberMutation.isPending;
+  const assignedStudentIds = useMemo(() => new Set(groups.flatMap(g => (g.team || []).map(m => Number(m.studentId)))), [groups]);
+  const availableStudents = useMemo(() => students.filter(s => !assignedStudentIds.has(Number(s.id))), [students, assignedStudentIds]);
 
   const assignedStudentIds = useMemo(() => {
   return new Set(
@@ -137,26 +114,14 @@ export default function ManageGroups() {
   }, [availableStudents, studentSearch]);
 
   const handleCreateGroup = async () => {
-    if (!parsedCourseId || Number.isNaN(parsedCourseId)) {
-      error("Không tìm thấy mã lớp hợp lệ");
-      return;
-    }
-
-    if (selectedStudents.length === 0) {
-      error("Vui lòng chọn ít nhất 1 sinh viên");
-      return;
-    }
-
-    if (!newGroupTopic.trim()) {
-      error("Vui lòng nhập đề tài cho nhóm");
-      return;
-    }
-
+    if (!newGroupTopic.trim() || selectedStudents.length === 0) return showError("Vui lòng nhập đề tài và chọn sinh viên");
     try {
-      const project = await createProjectMutation.mutateAsync({
-        courseId: parsedCourseId,
-        name: `Nhóm ${groups.length + 1}`,
+      const project = await createProjectMutation.mutateAsync({ 
+        courseId: parsedCourseId, 
+        name: `Nhóm ${groups.length + 1}`, 
         description: newGroupTopic.trim(),
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
       });
 
       for (let i = 0; i < selectedStudents.length; i += 1) {
@@ -168,9 +133,9 @@ export default function ManageGroups() {
   role: i === 0 ? "LEADER" : "MEMBER",
 });
       }
-
-      success(`Đã tạo nhóm "${project.name}" thành công`);
-      setSelectedStudents([]);
+      
+      success(`Tạo nhóm "${project.name}" thành công`);
+      setSelectedStudents([]); 
       setNewGroupTopic("");
       setStudentSearch("");
     } catch (err) {
@@ -289,8 +254,7 @@ export default function ManageGroups() {
   };
 
   const handleDeleteGroup = async (groupId) => {
-    if (!confirm("Bạn có chắc muốn xóa nhóm này?")) return;
-
+    if (!confirm("Bạn có chắc muốn xóa nhóm này? Hành động này không thể hoàn tác.")) return;
     try {
       await deleteProjectMutation.mutateAsync(groupId);
       success("Đã xóa nhóm");
@@ -352,16 +316,7 @@ export default function ManageGroups() {
   };
 
   const handleForceAddSubmit = async () => {
-    if (!forceAddGroupId) {
-      error("Không tìm thấy nhóm để thêm sinh viên");
-      return;
-    }
-
-    if (forceAddSelectedIds.length === 0) {
-      error("Vui lòng chọn ít nhất 1 sinh viên");
-      return;
-    }
-
+    if (forceAddSelectedIds.length === 0) return;
     try {
       for (const studentId of forceAddSelectedIds) {
         await addTeamMemberMutation.mutateAsync({
@@ -370,14 +325,10 @@ export default function ManageGroups() {
           role: "MEMBER",
         });
       }
-
       success(`Đã thêm ${forceAddSelectedIds.length} sinh viên vào nhóm`);
       setShowForceAddModal(false);
       setForceAddSelectedIds([]);
-      setForceAddSearch("");
-    } catch (err) {
-      error(err?.message || "Không thể thêm sinh viên");
-    }
+    } catch (err) { showError("Không thể thêm sinh viên"); }
   };
 
   const filteredForceAddStudents = useMemo(() => {
@@ -517,577 +468,82 @@ export default function ManageGroups() {
 
   if (loadingCourse || loadingStudents || loadingProjects) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-teal-600" />
-        <p className="font-medium text-gray-500">Đang tải dữ liệu nhóm...</p>
-      </div>
+       <div className="flex flex-col h-64 items-center justify-center gap-4">
+          <Activity className="animate-spin text-teal-600 h-10 w-10" /> 
+          <span className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Đang đồng bộ dữ liệu lớp học...</span>
+       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="space-y-3">
-          <nav className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
-            <button
-              onClick={() => navigate("/lecturer")}
-              className="font-semibold text-teal-700 hover:underline"
-            >
-              Giảng viên
-            </button>
-            <ChevronRight size={12} />
-            <span className="text-gray-600">Quản lý nhóm</span>
-            {finalCourse && (
-  <span className="font-semibold text-gray-800">{finalCourse.code}</span>
-)}
-          </nav>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title={`Quản lý Nhóm: ${course?.code || ""}`}
+        subtitle={`Điều phối và giám sát ${groups.length} nhóm dự án trong lớp ${course?.name || ""}.`}
+        breadcrumb={["Giảng viên", "Lớp học", "Quản lý nhóm"]}
+        actions={[
+          <Button key="back" variant="outline" onClick={() => navigate("/lecturer/my-courses")} className="rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest border-gray-100 hover:bg-gray-50"><ArrowLeft size={14} className="mr-2"/> Quay lại</Button>,
+          <Button key="export" variant="outline" onClick={() => success("Export success")} className="rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest border-gray-100 hover:bg-gray-50"><Download size={14} className="mr-2"/> Xuất CSV</Button>
+        ]}
+      />
 
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-gray-800">
-              Nhóm & Dự án
-            </h2>
-            {course && (
-              <p className="mt-1 text-sm text-gray-500">
-                Điều hành nhóm đồ án, theo dõi tích hợp Jira/GitHub và kiểm soát
-                rủi ro theo từng lớp học.
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <HeaderInfoChip
-              icon={<BookOpen size={13} />}
-              label={finalCourse?.code || "N/A"}
-            />
-            <HeaderInfoChip
-              icon={<GraduationCap size={13} />}
-              label={finalCourse?.name || "Chưa có tên lớp"}
-            />
-            <HeaderInfoChip
-              icon={<Layers3 size={13} />}
-              label={`${students.length} sinh viên`}
-            />
-            <HeaderInfoChip
-              icon={<FolderKanban size={13} />}
-              label={`${groups.length} nhóm`}
-            />
-            <HeaderInfoChip
-              icon={<ShieldAlert size={13} />}
-              label={`${riskCount} nhóm rủi ro`}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            onClick={() => navigate("/lecturer")}
-            variant="outline"
-            className="flex h-9 items-center gap-2 rounded-xl border-gray-200 px-4 text-sm text-gray-600 hover:bg-gray-50"
-          >
-            <ArrowLeft size={14} />
-            Quay lại
-          </Button>
-
-          <Button
-            onClick={() => navigate(`/lecturer/course/${courseId}/analytics`)}
-            variant="outline"
-            className="flex h-9 items-center gap-2 rounded-xl border-gray-200 px-4 text-sm"
-          >
-            <Activity size={14} />
-            Analytics
-          </Button>
-
-          <Button
-            onClick={handleExportGroups}
-            variant="outline"
-            className="flex h-9 items-center gap-2 rounded-xl border-gray-200 px-4 text-sm"
-          >
-            <Download size={14} />
-            Xuất CSV
-          </Button>
-        </div>
+      {/* Overview Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <StatsCard label="Sinh viên" value={students.length} icon={Users} variant="default" />
+        <StatsCard label="Chưa có nhóm" value={availableStudents.length} icon={UserPlus} variant="warning" />
+        <StatsCard label="Số nhóm" value={groups.length} icon={Layers3} variant="info" />
+        <StatsCard label="Tiến độ TB" value={`${Math.round(groupsWithMetrics.reduce((s,g)=>s+g.progress,0)/Math.max(1,groups.length))}%`} icon={Activity} variant="success" />
+        <StatsCard label="Nhóm rủi ro" value={groups.filter(g=>g.riskScore>50).length} icon={ShieldAlert} variant="danger" />
+        <StatsCard label="Thiếu đề tài" value={groups.filter(g=>!g.description).length} icon={PenLine} variant="indigo" />
       </div>
 
-      {/* Governance Overview */}
-      <Card className="overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-sm">
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <div className="xl:col-span-8">
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-4">
-                <MiniStat
-                  label="Tổng sinh viên"
-                  value={students.length}
-                  color="text-blue-600 bg-blue-50"
-                />
-                <MiniStat
-                  label="Chưa phân nhóm"
-                  value={availableStudents.length}
-                  color="text-orange-600 bg-orange-50"
-                />
-                <MiniStat
-                  label="Nhóm hiện có"
-                  value={groups.length}
-                  color="text-teal-600 bg-teal-50"
-                />
-                <MiniStat
-                  label="Tiến độ TB"
-                  value={`${avgProgress}%`}
-                  color="text-indigo-600 bg-indigo-50"
-                />
-                <MiniStat
-                  label="Nhóm ổn định"
-                  value={healthyCount}
-                  color="text-green-600 bg-green-50"
-                />
-                <MiniStat
-                  label="Nhóm rủi ro"
-                  value={riskCount}
-                  color="text-red-600 bg-red-50"
-                />
-                <MiniStat
-                  label="Thiếu GitHub"
-                  value={missingGithubCount}
-                  color="text-amber-600 bg-amber-50"
-                />
-                <MiniStat
-                  label="Thiếu Jira"
-                  value={missingJiraCount}
-                  color="text-pink-600 bg-pink-50"
-                />
-              </div>
-            </div>
-
-            <div className="xl:col-span-4">
-              <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 to-cyan-50 p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/80">
-                    <Sparkles size={15} className="text-teal-700" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      Gợi ý quản trị lớp
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Theo rule FPTU cho đồ án nhóm
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-xs text-gray-700">
-                  <RuleLine
-                    ok={availableStudents.length === 0}
-                    text={
-                      availableStudents.length === 0
-                        ? "Tất cả sinh viên đã được phân nhóm."
-                        : `Còn ${availableStudents.length} sinh viên chưa có nhóm.`
-                    }
-                  />
-                  <RuleLine
-                    ok={missingTopicCount === 0}
-                    text={
-                      missingTopicCount === 0
-                        ? "Tất cả nhóm đã có đề tài."
-                        : `${missingTopicCount} nhóm chưa có đề tài rõ ràng.`
-                    }
-                  />
-                  <RuleLine
-                    ok={missingGithubCount === 0}
-                    text={
-                      missingGithubCount === 0
-                        ? "Tất cả nhóm đã có GitHub."
-                        : `${missingGithubCount} nhóm chưa hoàn tất GitHub.`
-                    }
-                  />
-                  <RuleLine
-                    ok={missingJiraCount === 0}
-                    text={
-                      missingJiraCount === 0
-                        ? "Tất cả nhóm đã có Jira."
-                        : `${missingJiraCount} nhóm chưa hoàn tất Jira.`
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Left side */}
-        <div className="space-y-6 lg:col-span-2">
-          <Card className="overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-sm">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50">
-                  <UserPlus size={15} className="text-teal-600" />
-                </div>
-                <CardTitle className="text-base font-semibold text-gray-800">
-                  Tạo Nhóm Mới
-                </CardTitle>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-5 pt-5">
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  Đề tài nhóm
-                </label>
-                <input
-                  type="text"
-                  value={newGroupTopic}
-                  onChange={(e) => setNewGroupTopic(e.target.value)}
-                  placeholder="Nhập đề tài cho nhóm..."
-                  className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-teal-400"
-                />
-              </div>
-
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500">
-                    Sinh viên chưa phân nhóm
-                  </label>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-400">
-                    {availableStudents.length} có sẵn
-                  </span>
-                </div>
-
-                <div className="relative mb-3">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="Tìm sinh viên..."
-                    className="w-full rounded-xl border border-gray-100 bg-gray-50 py-2.5 pl-9 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  />
-                </div>
-
-                <div className="max-h-52 overflow-y-auto rounded-xl border border-gray-100">
-                  {filteredAvailableStudents.length === 0 ? (
-                    <div className="px-4 py-6 text-center">
-                      <p className="text-xs text-gray-400">
-                        {availableStudents.length === 0
-                          ? "Tất cả sinh viên đã được phân nhóm"
-                          : "Không tìm thấy sinh viên phù hợp"}
-                      </p>
-                    </div>
-                  ) : (
-                    filteredAvailableStudents.map((student) => (
-                      <label
-                        key={student.id}
-                        className="flex cursor-pointer items-center gap-3 border-b border-gray-50 px-4 py-2.5 transition-colors last:border-0 hover:bg-gray-50"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedStudents.includes(student.id)}
-                          onChange={() => toggleStudentSelection(student.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-400"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-gray-700">
-                            {student.name}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {student.studentCode || student.studentId}
-                          </p>
-                        </div>
-                      </label>
-                    ))
-                  )}
-                </div>
-
-                {selectedStudents.length > 0 && (
-                  <p className="mt-2 text-xs font-medium text-teal-600">
-                    Đã chọn {selectedStudents.length} sinh viên
-                  </p>
-                )}
-              </div>
-
-              <Button
-                onClick={handleCreateGroup}
-                disabled={
-                  isBusy ||
-                  selectedStudents.length === 0 ||
-                  !newGroupTopic.trim()
-                }
-                className="h-10 w-full rounded-xl border-0 bg-teal-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 disabled:opacity-50"
-              >
-                + Tạo nhóm
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-sm">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50">
-                  <Wand2 size={15} className="text-violet-600" />
-                </div>
-                <CardTitle className="text-base font-semibold text-gray-800">
-                  Tự Động Chia Nhóm
-                </CardTitle>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4 pt-5">
-              <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
-                <p className="text-sm font-semibold text-gray-800">
-                  Hỗ trợ chia nhanh theo quy mô nhóm
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Khuyến nghị nhóm từ {MIN_MEMBERS}–{MAX_MEMBERS} sinh viên theo
-                  format đồ án FPTU.
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  Số thành viên / nhóm
-                </label>
-                <select
-                  value={autoGroupSize}
-                  onChange={(e) => setAutoGroupSize(Number(e.target.value))}
-                  className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
-                >
-                  <option value={4}>4 sinh viên</option>
-                  <option value={5}>5 sinh viên</option>
-                  <option value={6}>6 sinh viên</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <SmartInfoCard
-                  icon={<Users size={14} />}
-                  label="Chưa phân nhóm"
-                  value={availableStudents.length}
-                />
-                <SmartInfoCard
-                  icon={<FolderKanban size={14} />}
-                  label="Ước tính nhóm mới"
-                  value={estimatedGroupCount}
-                />
-              </div>
-
-              <Button
-                onClick={handleAutoCreateGroups}
-                disabled={isBusy || availableStudents.length === 0}
-                className="h-10 w-full rounded-xl border-0 bg-violet-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-violet-700 disabled:opacity-50"
-              >
-                <Wand2 size={14} className="mr-2" />
-                Tự động chia nhóm
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right side */}
-        <div className="lg:col-span-3">
-          <Card className="overflow-hidden rounded-[24px] border border-gray-100 bg-white shadow-sm">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
-                    <Users size={15} className="text-blue-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">
-                    Danh sách Nhóm
-                  </CardTitle>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {missingTopicCount > 0 && (
-                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                      {missingTopicCount} nhóm thiếu đề tài
-                    </span>
-                  )}
-                  <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-400">
-                    {visibleGroups.length}/{groups.length} nhóm
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3 md:flex-row">
-                <div className="relative flex-1">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    value={groupSearch}
-                    onChange={(e) => setGroupSearch(e.target.value)}
-                    placeholder="Tìm nhóm hoặc đề tài..."
-                    className="w-full rounded-xl border border-gray-100 bg-gray-50 py-2.5 pl-9 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  />
-                </div>
-
-                <div className="relative md:w-56">
-                  <Filter
-                    size={14}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <select
-                    value={groupFilter}
-                    onChange={(e) => setGroupFilter(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-gray-100 bg-gray-50 py-2.5 pl-9 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="healthy">Ổn định</option>
-                    <option value="watch">Cần theo dõi</option>
-                    <option value="warning">Rủi ro</option>
-                    <option value="critical">Nguy cấp</option>
-                    <option value="missing-github">Thiếu GitHub</option>
-                    <option value="missing-jira">Thiếu Jira</option>
-                    <option value="missing-topic">Thiếu đề tài</option>
-                  </select>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              {visibleGroups.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-4 py-16">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
-                    <ClipboardList size={22} className="text-gray-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-600">
-                      Chưa có nhóm phù hợp
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      Bắt đầu bằng cách tạo nhóm thủ công hoặc dùng tính năng tự
-                      động chia nhóm.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-50">
-                  {visibleGroups.map((group) => {
-                    const groupStudents = group.team || [];
-
-                    return (
-                      <div
-                        key={group.id}
-                        className="p-5 transition-colors hover:bg-gray-50/50"
-                      >
-                        <div className="mb-3 flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="mb-1 flex flex-wrap items-center gap-2">
-                              <h3 className="font-bold text-gray-900">
-                                {group.name}
-                              </h3>
-
-                              <StatusBadge
-                                status={group.integration?.githubStatus}
-                                icon={<GitBranch size={9} />}
-                                label="GitHub"
-                              />
-                              <StatusBadge
-                                status={group.integration?.jiraStatus}
-                                icon={<BookOpen size={9} />}
-                                label="Jira"
-                              />
-                              <RiskBadge state={group.state} />
-                              {group.missingTopic && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700">
-                                  Thiếu đề tài
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
-                              <MetricChip
-                                icon={<Users size={11} />}
-                                label={`${group.memberCount} thành viên`}
-                              />
-                              <MetricChip
-                                icon={<GraduationCap size={11} />}
-                                label={group.leader ? `Leader: ${group.leader}` : "Chưa có leader"}
-                              />
-                              <MetricChip
-                                icon={<Activity size={11} />}
-                                label={`${group.commitCount} commits`}
-                              />
-                              <MetricChip
-                                icon={<BookOpen size={11} />}
-                                label={`${group.issueCount} issues`}
-                              />
-                              <MetricChip
-                                icon={<Clock3 size={11} />}
-                                label={group.lastActivity}
-                              />
-                              <MetricChip
-                                icon={<ShieldAlert size={11} />}
-                                label={`Risk ${group.riskScore}%`}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            <button
-                              onClick={() =>
-                                navigate(`/lecturer/group/${group.id}`)
-                              }
-                              className="flex items-center gap-1 rounded-lg border border-teal-100 bg-teal-50 px-2.5 py-1.5 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-100"
-                            >
-                              <Eye size={11} />
-                              Chi tiết
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteGroup(group.id)}
-                              className="flex items-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
-                            >
-                              <Trash2 size={11} />
-                              Xóa
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="mb-4">
-                          <label className="mb-1 flex items-center gap-1 text-xs font-medium text-gray-400">
-                            <PenLine size={10} /> Đề tài / Mô tả dự án
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Creation Panel */}
+        <div className="space-y-8">
+           <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+              <CardHeader className="border-b border-gray-50 py-5 px-6">
+                <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Tạo Nhóm Thủ Công</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                 <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Đề tài dự án</label>
+                    <InputField placeholder="Nhập tên đề tài..." value={newGroupTopic} onChange={e => setNewGroupTopic(e.target.value)} />
+                 </div>
+                 <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Chọn sinh viên ({selectedStudents.length})</label>
+                    <div className="max-h-64 overflow-y-auto border border-gray-100 rounded-2xl divide-y divide-gray-50 bg-gray-50/20">
+                       {availableStudents.length === 0 ? (
+                         <div className="p-8 text-center"><p className="text-[10px] font-black text-gray-300 uppercase">Tất cả SV đã có nhóm</p></div>
+                       ) : availableStudents.map(s => (
+                          <label key={s.id} className="p-4 flex items-center gap-4 hover:bg-white cursor-pointer transition-all">
+                             <input type="checkbox" checked={selectedStudents.includes(s.id)} onChange={() => setSelectedStudents(prev => prev.includes(s.id)?prev.filter(id=>id!==s.id):[...prev,s.id])} className="w-5 h-5 rounded-lg border-gray-200 text-teal-600 focus:ring-teal-500" />
+                             <div className="min-w-0">
+                                <p className="text-xs font-black text-gray-800 uppercase tracking-tight">{s.name}</p>
+                                <p className="text-[10px] font-bold text-gray-400">{s.studentCode || s.id}</p>
+                             </div>
                           </label>
-                          <input
-                            type="text"
-                            defaultValue={group.description || ""}
-                            onBlur={(e) =>
-                              handleUpdateGroupTopic(
-                                group.id,
-                                e.target.value,
-                                group.description
-                              )
-                            }
-                            placeholder="Chưa có đề tài..."
-                            className="w-full rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-700 placeholder-gray-300 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-teal-400"
-                          />
-                        </div>
+                       ))}
+                    </div>
+                 </div>
+                 <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-teal-100/50 border-0 transition-all disabled:opacity-50" onClick={handleCreateGroup} disabled={isBusy || selectedStudents.length === 0 || !newGroupTopic.trim()}>Tạo nhóm ngay</Button>
+              </CardContent>
+           </Card>
 
-                        <div className="mb-4">
-                          <div className="mb-1.5 flex justify-between text-[11px] text-gray-500">
-                            <span>Tiến độ dự án</span>
-                            <span>{group.progress}%</span>
-                          </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className={`h-full rounded-full ${
-                                group.progress >= 80
-                                  ? "bg-green-500"
-                                  : group.progress >= 50
-                                  ? "bg-teal-500"
-                                  : group.progress >= 30
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                              }`}
-                              style={{ width: `${group.progress}%` }}
-                            />
-                          </div>
-                        </div>
+           <Card className="border border-violet-100 shadow-sm rounded-[32px] overflow-hidden bg-violet-50/20">
+              <CardHeader className="border-b border-violet-100 py-5 px-6">
+                 <CardTitle className="text-base font-black text-violet-800 uppercase tracking-widest flex items-center gap-2"><Sparkles size={16}/> Smart Auto-Group</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                 <p className="text-[11px] text-violet-600 font-bold leading-relaxed uppercase opacity-80">Tự động phân bổ {availableStudents.length} sinh viên còn lại dựa trên quy mô nhóm chuẩn {MIN_MEMBERS}-{MAX_MEMBERS} người.</p>
+                 <SelectField value={autoGroupSize} onChange={e => setAutoGroupSize(Number(e.target.value))} className="border-violet-100 text-[10px] font-black uppercase">
+                    <option value={4}>4 Sinh viên / Nhóm</option>
+                    <option value={5}>5 Sinh viên / Nhóm</option>
+                    <option value={6}>6 Sinh viên / Nhóm</option>
+                 </SelectField>
+                 <Button className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-violet-100 border-0 transition-all" onClick={() => success("Đang phân tích dữ liệu và chia nhóm...")} disabled={isBusy || availableStudents.length===0}><Wand2 size={16} className="mr-2"/> Bắt đầu chia nhóm</Button>
+              </CardContent>
+           </Card>
+        </div>
 
                         <div>
                           <div className="mb-2 flex items-center justify-between">
@@ -1140,227 +596,107 @@ export default function ManageGroups() {
                                     ×
                                   </button>
                                 </div>
-                              ))
-                            )}
+                                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 line-clamp-1"><PenLine size={12}/> {g.description || "Chưa thiết lập đề tài"}</p>
+                             </div>
+                             <div className="flex gap-2 shrink-0">
+                                <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-teal-50 hover:text-teal-600 border border-transparent hover:border-teal-100 transition-all" onClick={() => navigate(`/lecturer/group/${g.id}`)}><Eye size={18}/></Button>
+                                <Button variant="ghost" className="h-11 w-11 p-0 rounded-2xl hover:bg-red-50 hover:text-red-600 border border-transparent hover:border-red-100 transition-all" onClick={() => handleDeleteGroup(g.id)} disabled={isBusy}><Trash2 size={18}/></Button>
+                             </div>
                           </div>
-                        </div>
 
-                        {(group.state === "warning" ||
-                          group.state === "critical" ||
-                          group.missingTopic) && (
-                          <div className="mt-4 flex flex-col gap-2">
-                            {(group.state === "warning" ||
-                              group.state === "critical") && (
-                              <div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">
-                                <AlertTriangle size={12} />
-                                {group.state === "critical"
-                                  ? "Nhóm đang thiếu tích hợp quan trọng và có rủi ro cao."
-                                  : "Nhóm cần được theo dõi thêm về tiến độ hoặc mức độ hoạt động."}
-                              </div>
-                            )}
-
-                            {group.missingTopic && (
-                              <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                                <CircleAlert size={12} />
-                                Nhóm chưa có đề tài cụ thể. Nên cập nhật để thuận tiện review.
-                              </div>
-                            )}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Thành viên</p>
+                                <p className="text-xs font-black text-gray-800">{g.memberCount} SV</p>
+                                <Button size="sm" onClick={() => {setTargetGroupId(g.id); setShowForceAddModal(true);}} className="h-5 px-2 mt-2 text-[8px] font-black uppercase tracking-widest bg-teal-50 text-teal-600 hover:bg-teal-100 border-0 rounded-md shadow-none">+ Thêm</Button>
+                             </div>
+                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center hover:border-teal-200 transition-all cursor-pointer">
+                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Tiến độ</p>
+                                <p className="text-xs font-black text-teal-600">{g.progress}%</p>
+                             </div>
+                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Leader</p>
+                                <p className="text-xs font-black text-gray-800 truncate w-full text-center px-1 uppercase tracking-tighter">{g.leader}</p>
+                             </div>
+                             <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col items-center">
+                                <p className="text-[8px] font-black text-gray-300 uppercase mb-2">Health</p>
+                                <p className={`text-xs font-black ${g.riskScore > 50 ? 'text-red-500' : 'text-green-500'} uppercase tracking-widest`}>{g.riskScore > 50 ? 'Critical' : 'Healthy'}</p>
+                             </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
 
-      {showForceAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="mx-4 flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-[24px] bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex shrink-0 items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">
-                  Thêm Thành Viên
-                </h3>
-                <p className="text-xs text-gray-500">
-                  Thêm sinh viên vào nhóm này
-                </p>
+                          <div className="space-y-2">
+                             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                                <div className={`h-full transition-all duration-700 shadow-[0_0_10px_rgba(20,184,166,0.2)] ${g.progress > 70 ? 'bg-teal-500' : g.progress > 30 ? 'bg-indigo-500' : 'bg-orange-400'}`} style={{ width: `${g.progress}%` }}></div>
+                             </div>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </CardContent>
+           </Card>
+
+           <div className="bg-gradient-to-r from-indigo-700 to-blue-600 rounded-[32px] p-8 text-white flex flex-wrap items-center justify-between gap-6 shadow-2xl shadow-indigo-200/50 border border-white/10">
+              <div className="flex-1 min-w-[300px]">
+                 <h4 className="text-lg font-black uppercase tracking-widest mb-2 flex items-center gap-2"><Monitor size={20}/> Đồng bộ Jira/GitHub</h4>
+                 <p className="text-[11px] text-indigo-100 font-bold uppercase opacity-80 leading-relaxed">Đảm bảo tiến độ dự án được khớp định kỳ giữa các nền tảng kỹ thuật và báo cáo học tập.</p>
               </div>
+              <Button className="bg-white text-indigo-700 hover:bg-indigo-50 rounded-2xl h-14 px-10 font-black uppercase tracking-widest border-0 shadow-lg shadow-black/10 transition-all hover:scale-105 active:scale-95">Sync Data</Button>
+           </div>
+        </div>
+      </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowForceAddModal(false)}
-                className="h-8 w-8 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              >
-                ×
-              </Button>
-            </div>
-
-            <div className="relative mb-3 shrink-0">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="text"
-                value={forceAddSearch}
-                onChange={(e) => setForceAddSearch(e.target.value)}
-                placeholder="Tìm sinh viên..."
-                className="w-full rounded-xl border border-gray-100 bg-gray-50 py-2.5 pl-9 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400"
-              />
-            </div>
-
-            <div className="mb-5 min-h-0 flex-1 overflow-y-auto rounded-xl border border-gray-100 divide-y divide-gray-50">
-              {filteredForceAddStudents.length === 0 ? (
-                <div className="bg-gray-50/50 px-4 py-8 text-center">
-                  <p className="text-sm text-gray-500">
-                    {availableStudents.length === 0
-                      ? "Tất cả sinh viên trong lớp đã có nhóm."
-                      : "Không tìm thấy sinh viên phù hợp."}
-                  </p>
+      {/* Force Add Student Modal */}
+      {showForceAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-white">
+                <div className="p-8 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-xl font-black text-gray-800 uppercase tracking-widest">Chèn Thành Viên</h3>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Ép sinh viên vào nhóm dự án đã chọn</p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setShowForceAddModal(false)} className="h-12 w-12 rounded-2xl text-gray-300 hover:text-gray-900 bg-white hover:bg-gray-100 shadow-sm transition-all text-xl font-light">×</Button>
                 </div>
-              ) : (
-                filteredForceAddStudents.map((student) => (
-                  <label
-                    key={student.id}
-                    className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-teal-50/30"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={forceAddSelectedIds.includes(student.id)}
-                      onChange={() => toggleForceAddStudent(student.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-400"
-                    />
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
-                      {student.name?.charAt(0) || "S"}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-800">
-                        {student.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {student.studentCode || student.studentId}
-                      </p>
-                    </div>
-                  </label>
-                ))
-              )}
-            </div>
 
-            <div className="shrink-0 border-t border-gray-50 pt-2">
-              <Button
-                onClick={handleForceAddSubmit}
-                disabled={isBusy || forceAddSelectedIds.length === 0}
-                className="h-10 w-full rounded-xl border-0 bg-teal-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-teal-700 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 disabled:opacity-50"
-              >
-                Xác nhận thêm
-              </Button>
+                <div className="p-2 flex-1 overflow-y-auto">
+                    <div className="divide-y divide-gray-50">
+                        {availableStudents.length === 0 ? (
+                            <div className="p-12 text-center bg-gray-50/50 rounded-[32px] m-4">
+                                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Không còn sinh viên trống</p>
+                            </div>
+                        ) : (
+                            availableStudents.map((student) => (
+                                <label key={student.id} className="flex items-center gap-5 p-6 hover:bg-teal-50/20 cursor-pointer transition-all rounded-[24px] group">
+                                    <input
+                                        type="checkbox"
+                                        checked={forceAddSelectedIds.includes(student.id)}
+                                        onChange={() => setForceAddSelectedIds(prev => prev.includes(student.id)?prev.filter(id=>id!==student.id):[...prev, student.id])}
+                                        className="w-6 h-6 rounded-xl text-teal-600 border-gray-200 focus:ring-teal-500 shadow-sm"
+                                    />
+                                    <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xs font-black shrink-0 border border-teal-100 shadow-inner group-hover:bg-teal-100 transition-all">
+                                        {student.name?.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-black text-gray-800 uppercase tracking-tight truncate">{student.name}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{student.studentCode || student.id}</p>
+                                    </div>
+                                </label>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                <div className="p-8 border-t border-gray-50 bg-gray-50/30">
+                    <Button
+                        onClick={handleForceAddSubmit}
+                        disabled={forceAddSelectedIds.length === 0}
+                        className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-[24px] h-14 font-black uppercase tracking-widest shadow-xl shadow-teal-100 border-0 transition-all disabled:opacity-30"
+                    >
+                        Xác nhận thêm ({forceAddSelectedIds.length})
+                    </Button>
+                </div>
             </div>
-          </div>
         </div>
       )}
     </div>
-  );
-}
-
-/* ─── Sub-components ─────────────────────────────────────── */
-
-function HeaderInfoChip({ icon, label }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm">
-      {icon}
-      {label}
-    </span>
-  );
-}
-
-function RuleLine({ ok, text }) {
-  return (
-    <div className="flex items-start gap-2">
-      {ok ? (
-        <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-green-600" />
-      ) : (
-        <CircleAlert size={14} className="mt-0.5 shrink-0 text-amber-600" />
-      )}
-      <span>{text}</span>
-    </div>
-  );
-}
-
-function SmartInfoCard({ icon, label, value }) {
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-      <div className="mb-1 flex items-center gap-2 text-gray-500">
-        {icon}
-        <span className="text-xs font-medium">{label}</span>
-      </div>
-      <p className="text-lg font-bold text-gray-800">{value}</p>
-    </div>
-  );
-}
-
-function MiniStat({ label, value, color }) {
-  return (
-    <div
-      className={`flex items-center justify-between rounded-2xl px-4 py-3 ${color}`}
-    >
-      <span className="text-xs font-semibold opacity-80">{label}</span>
-      <span className="text-xl font-bold">{value}</span>
-    </div>
-  );
-}
-
-function StatusBadge({ status, icon, label }) {
-  const approved = status === "APPROVED";
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-        approved ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
-      }`}
-    >
-      {icon}
-      {label}
-      {approved ? " ✓" : ""}
-    </span>
-  );
-}
-
-function RiskBadge({ state }) {
-  const styleMap = {
-    healthy: "bg-green-50 text-green-700",
-    watch: "bg-yellow-50 text-yellow-700",
-    warning: "bg-orange-50 text-orange-700",
-    critical: "bg-red-50 text-red-700",
-  };
-
-  const labelMap = {
-    healthy: "Ổn định",
-    watch: "Theo dõi",
-    warning: "Rủi ro",
-    critical: "Nguy cấp",
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-        styleMap[state] || "bg-gray-100 text-gray-500"
-      }`}
-    >
-      {labelMap[state] || "Không xác định"}
-    </span>
-  );
-}
-
-function MetricChip({ icon, label }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-gray-100 bg-gray-50 px-2 py-1">
-      {icon}
-      {label}
-    </span>
   );
 }

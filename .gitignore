@@ -1,30 +1,23 @@
-
-# Logs
-logs
+# === [1. CHẶN TRIỆT ĐỂ FILE RÁC PHÁT SINH] ===
+# Chặn tất cả các file log và text rác ở bất kỳ đâu
 *.log
 *.txt
+*.binlog
+*.err
+*.out
+*.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Chặn đích danh các file rác cụ thể
+build_output.txt
+final_errors.txt
+build.log
+build_errors.txt
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-=======
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -39,13 +32,18 @@ bld/
 [Oo]bj/
 [Ll]og/
 
-# Visual Studio
+# Visual Studio / VS Code
 .vs/
 .vscode/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.rsuser
 
 # .NET Core
 project.lock.json
@@ -55,13 +53,6 @@ artifacts/
 # NuGet
 *.nupkg
 *.snupkg
-
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
 
 # Rider
 .idea/
@@ -74,7 +65,8 @@ TestResults/
 coveragereport/
 
 # Node
-node_modules
+node_modules/
+package-lock.json
 
 # Flutter generated
 apps/mobile_flutter/windows/
@@ -83,6 +75,5 @@ apps/mobile_flutter/web/
 # Web build output
 apps/web/dist/
 
-# Env files — .env is safe to commit (no secrets), .env.local is personal
+# Env files
 apps/web/.env.local
-

@@ -22,20 +22,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-    var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+var builder = WebApplication.CreateBuilder(args);
 
-    // Forwarded Headers for reverse proxy (Load Balancer)
-    builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    {
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownNetworks.Clear();
-        options.KnownProxies.Clear();
-    });
+// Forwarded Headers for reverse proxy (Load Balancer)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
-            // ============================================
-            // CONFIGURATION
-            // ============================================
+// ============================================
+// CONFIGURATION
+// ============================================
 
             // JWT Settings
             var jwtSection = builder.Configuration.GetSection("JwtSettings");
@@ -47,9 +47,9 @@ using Microsoft.OpenApi.Models;
                 throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
             }
 
-            // ============================================
-            // DATABASE
-            // ============================================
+// ============================================
+// DATABASE
+// ============================================
 
             var connectionString = builder.Configuration.GetConnectionString("Default");
             
@@ -67,12 +67,12 @@ using Microsoft.OpenApi.Models;
                     o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
                 });
 
-                if (builder.Environment.IsDevelopment())
-                {
-                    options.EnableDetailedErrors();
-                    options.EnableSensitiveDataLogging();
-                }
-            });
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
+});
 
 
             // ============================================
@@ -131,21 +131,21 @@ using Microsoft.OpenApi.Models;
                 };
             });
 
-            builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
-            // ============================================
-            // APPLICATION SERVICES
-            // ============================================
-            
-            // AutoMapper
-            builder.Services.AddAutoMapper(typeof(JiraGithubExport.IntegrationService.Application.Mappings.MappingProfile));
+// ============================================
+// APPLICATION SERVICES
+// ============================================
 
-            // Repository & UnitOfWork
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(JiraGithubExport.IntegrationService.Application.Mappings.MappingProfile));
 
-            // Identity services
-            builder.Services.AddScoped<IJwtService, JwtService>();
-            builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+// Repository & UnitOfWork
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Identity services
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             // Tầng Application (Services)
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -167,21 +167,19 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IStudentService, StudentService>();
 
 
-            // Background Services
-            builder.Services.AddHostedService<SyncWorker>();
+// Background Services
+builder.Services.AddHostedService<SyncWorker>();
 
-            // External Services (with HttpClient)
-            builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
-            {
-                client.BaseAddress = new Uri(builder.Configuration["GitHub:ApiBaseUrl"] ?? "https://api.github.com/");
-            });
-            builder.Services.AddHttpClient<IJiraClient, JiraClient>();
+// External Services (with HttpClient)
+builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["GitHub:ApiBaseUrl"] ?? "https://api.github.com/");
+});
+builder.Services.AddHttpClient<IJiraClient, JiraClient>();
 
-
-
-            // ============================================
-            // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
-            // ============================================
+// ============================================
+// API CONTROLLERS, SWAGGER, REDIS & SIGNALR
+// ============================================
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -208,78 +206,73 @@ using Microsoft.OpenApi.Models;
                 // but at least the app won't crash on startup.
             }
 
-            builder.Services.AddStackExchangeRedisCache(options =>
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnection;
+    options.InstanceName = "PBLPlatform_";
+});
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PBL Platform API",
+        Version = "v1",
+        Description = "Project-Based Learning Platform with Jira & GitHub Integration"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
             {
-                options.Configuration = redisConnection;
-                options.InstanceName = "PBLPlatform_";
-            });
-            
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
+                Reference = new OpenApiReference
                 {
-                    Title = "PBL Platform API",
-                    Version = "v1",
-                    Description = "Project-Based Learning Platform with Jira & GitHub Integration"
-                });
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
-                // Add JWT Authentication to Swagger
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
+// ============================================
+// CORS
+// ============================================
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
-                });
-            });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true) 
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); 
+    });
+});
 
-            // ============================================
-            // CORS (for frontend development)
-            // ============================================
-            
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    // For Production, change SetIsOriginAllowed(_ => true) to exact domains
-                    policy.SetIsOriginAllowed(origin => true) // Allow any origin safely with credentials
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials(); // Required for SignalR WebSockets
-                });
-            });
+// ============================================
+// BUILD APP
+// ============================================
 
-            // ============================================
-            // BUILD APP
-            // ============================================
+var app = builder.Build();
 
-            var app = builder.Build();
+// ============================================
+// MIDDLEWARE PIPELINE
+// ============================================
 
-            // ============================================
-            // MIDDLEWARE PIPELINE
-            // ============================================
-            
-            // First middleware: Forwarded headers
-            app.UseForwardedHeaders();
-
-            // Global exception handler
-            app.UseCustomExceptionHandler();
+app.UseForwardedHeaders();
+app.UseCustomExceptionHandler();
 
 
            if (app.Environment.IsDevelopment())
@@ -304,12 +297,10 @@ using Microsoft.OpenApi.Models;
             if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
             app.UseStaticFiles();
 
-            // CORS
-            app.UseCors("AllowAll");
+app.UseCors("AllowAll");
 
-            // Authentication & Authorization
-            app.UseAuthentication();
-            app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
             // Map controllers & SignalR Hubs
             app.MapControllers();

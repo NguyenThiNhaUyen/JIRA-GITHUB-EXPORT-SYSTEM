@@ -1,226 +1,114 @@
-// My Courses — Lecturer "Lớp của tôi"
-
-import { useState, useMemo } from "react"
-import { useNavigate } from "react-router-dom"
-
-import { Card, CardContent } from "../../components/ui/card.jsx"
-import { Button } from "../../components/ui/button.jsx"
-import { useToast } from "../../components/ui/toast.jsx"
-
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-ChevronRight,
-GraduationCap,
-Users,
-BookOpen,
-Settings2,
-Search,
-BarChart3,
-GitBranch,
-AlertTriangle
-} from "lucide-react"
-
-import {
-LineChart,
-Line,
-ResponsiveContainer
-} from "recharts"
-
-import { useLecturerAnalyticsCourses } from "../../features/dashboard/hooks/useDashboard.js"
-
-
-
-export default function MyCourses(){
-
-const navigate = useNavigate()
-const { error: showError } = useToast()
-
-const [search,setSearch] = useState("")
-
-
-
-/* ---------------- DATA ---------------- */
-
-const { data: analyticsCourses = [], isLoading } = useLecturerAnalyticsCourses();
-const courses = Array.isArray(analyticsCourses) ? analyticsCourses : (analyticsCourses?.items || []);
-
-
-
-/* ---------------- FILTER ---------------- */
-
-const filtered = useMemo(()=>{
-
-return courses.filter(c=>{
-
-const keyword = search.toLowerCase()
-
-return (
-  c.code?.toLowerCase().includes(keyword) ||
-  c.name?.toLowerCase().includes(keyword) ||
-  (c.subject?.name || c.subjectName)?.toLowerCase().includes(keyword)
-)
-
-})
-
-},[courses,search])
-
-
-
-/* ---------------- STATS ---------------- */
-
-const totalGroups =
-courses.reduce((a,c)=>a+(c.projects?.length || 0),0)
-
-const totalStudents =
-courses.reduce((a,c)=>a+(c.currentStudents || 0),0)
-
-
-
-return(
-
-<div className="space-y-6">
-
-{/* Breadcrumb */}
-
-<nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-
-<span className="text-teal-700 font-semibold">
-Giảng viên
-</span>
-
-<ChevronRight size={12}/>
-
-<span className="text-gray-800 font-semibold">
-Lớp của tôi
-</span>
-
-</nav>
-
-
-
-{/* Header */}
-
-<div className="flex flex-wrap items-start justify-between gap-4">
-
-<div>
-
-<h2 className="text-2xl font-bold tracking-tight text-gray-800">
-Lớp của tôi
-</h2>
-
-<p className="text-sm text-gray-500 mt-0.5">
-Các lớp học bạn đang giảng dạy
-</p>
-
-</div>
-
-
-
-{/* Search */}
-
-<div className="relative">
-
-<Search
-size={15}
-className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-/>
-
-<input
-value={search}
-onChange={e=>setSearch(e.target.value)}
-placeholder="Tìm kiếm lớp học..."
-className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 w-56 transition-all"
-/>
-
-</div>
-
-</div>
-
-
-
-{/* Stats */}
-
-<div className="grid grid-cols-3 gap-4">
-
-<MiniStat
-label="Tổng lớp"
-value={courses.length}
-color="text-teal-700 bg-teal-50 border-teal-100"
-/>
-
-<MiniStat
-label="Tổng nhóm"
-value={totalGroups}
-color="text-blue-700 bg-blue-50 border-blue-100"
-/>
-
-<MiniStat
-label="Tổng sinh viên"
-value={totalStudents}
-color="text-indigo-700 bg-indigo-50 border-indigo-100"
-/>
-
-</div>
-
-
-
-{/* CONTENT */}
-
-{isLoading ? (
-
-<div className="flex justify-center py-20">
-<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"/>
-</div>
-
-) : filtered.length===0 ? (
-
-<EmptyState
-message={search
-? "Không tìm thấy lớp học phù hợp"
-: "Bạn chưa được giao lớp nào"}
-/>
-
-) : (
-
-<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
-{filtered.map(course=>(
-
-<CourseCard
-key={course.id}
-course={course}
-navigate={navigate}
-/>
-
-))}
-
-</div>
-
-)}
-
-</div>
-
-)
-
+  GraduationCap,
+  Users,
+  BookOpen,
+  Search,
+  AlertTriangle,
+  Settings2,
+  BarChart3
+} from "lucide-react";
+
+import { Card, CardContent } from "../../components/ui/card.jsx";
+import { Button } from "../../components/ui/button.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
+
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { InputField } from "../../components/shared/FormFields.jsx";
+import { StatusBadge } from "../../components/shared/Badge.jsx";
+
+// Feature Hooks
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+
+export default function MyCourses() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  
+  // Data Fetching - Backend automatically filters by lecturer based on token role
+  const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+  const courses = coursesData.items || [];
+
+  const filtered = useMemo(() => {
+    return courses.filter(c => {
+      const keyword = search.toLowerCase();
+      return (
+        c.code?.toLowerCase().includes(keyword) ||
+        c.name?.toLowerCase().includes(keyword) ||
+        (c.subjectName || c.subject?.name)?.toLowerCase().includes(keyword)
+      );
+    });
+  }, [courses, search]);
+
+  const totalGroups = courses.reduce((a, c) => a + (c.projects?.length || 0), 0);
+  const totalStudents = courses.reduce((a, c) => a + (c.currentStudents || 0), 0);
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="Lớp của tôi"
+        subtitle="Quản lý danh sách các lớp học phần bạn đang trực tiếp giảng dạy."
+        breadcrumb={["Giảng viên", "Lớp học"]}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatsCard label="Tổng lớp" value={courses.length} icon={GraduationCap} variant="info" />
+        <StatsCard label="Tổng nhóm" value={totalGroups} icon={BookOpen} variant="indigo" />
+        <StatsCard label="Tổng sinh viên" value={totalStudents} icon={Users} variant="success" />
+      </div>
+
+      <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
+          <InputField 
+            placeholder="Tìm kiếm lớp học, mã môn..." 
+            value={search} 
+            onChange={e => setSearch(e.target.value)}
+            icon={Search}
+            className="max-w-md bg-white border border-gray-100"
+          />
+        </div>
+
+        <div className="p-8">
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"/>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-20 text-center">
+               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-gray-200">
+                <GraduationCap size={24} className="text-gray-300" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{search ? "Không tìm thấy lớp học hợp lệ" : "Bạn chưa được phân công lớp nào"}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filtered.map(course => (
+                 <CourseCard key={course.id} course={course} onNavigate={navigate} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
+function CourseCard({ course, onNavigate }) {
+  const groupCount = course.projects?.length || 0;
+  const alerts = course.alertsCount || 0;
+
+  const activeTeams = course.activeTeams || 0;
+  const jiraConnected = course.jiraConnected || 0;
+
+  const semester =
+    course.semesterName ||
+    course.semester?.name ||
+    course.semester ||
+    "N/A";
 
 
-/* ---------------- COURSE CARD ---------------- */
-
-function CourseCard({course,navigate}){
-
-const groupCount = course.projects?.length || 0
-
-const activeTeams = course.projects?.filter(p => p.githubUrl)?.length || 0;
-const jiraConnected = course.projects?.filter(p => p.jiraProjectCode)?.length || 0;
-const inactiveTeams = groupCount - activeTeams;
-const alerts = course.alertsCount || 0;
-
-const semester =
-  course.semesterName ||
-  course.semester ||
-  course.semester?.name ||
-  "N/A";
 
 const progress = Math.min(100, Math.round((activeTeams / (groupCount || 1)) * 100));
 const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString() : "—";

@@ -22,12 +22,8 @@ import {
   Download,
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card.jsx";
+// Components UI
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";

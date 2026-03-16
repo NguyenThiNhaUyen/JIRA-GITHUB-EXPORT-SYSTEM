@@ -1,8 +1,7 @@
-// My Courses Screen — Lecturer "Lớp của tôi"
-// Based on: my-courses.jsx
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 
 class MyCoursesScreen extends StatefulWidget {
   const MyCoursesScreen({super.key});
@@ -12,18 +11,15 @@ class MyCoursesScreen extends StatefulWidget {
 }
 
 class _MyCoursesScreenState extends State<MyCoursesScreen> {
-  // ─── Colours ──────────────────────────────────────
-  static const Color bgColor      = Color(0xFFF8FAFB);
-  static const Color cardBorder   = Color(0xFFF0F0F0);
-  static const Color textPrimary  = Color(0xFF1A202C);
+  static const Color bgColor = Color(0xFFF8FAFB);
+  static const Color cardBorder = Color(0xFFF0F0F0);
+  static const Color textPrimary = Color(0xFF1A202C);
   static const Color textSecondary = Color(0xFF64748B);
-  static const Color teal         = Color(0xFF0F766E);
-  static const Color tealLight    = Color(0xFF14B8A6);
+  static const Color teal = Color(0xFF0F766E);
+  static const Color tealLight = Color(0xFF14B8A6);
 
-  // ─── Mock commit trend ────────────────────────────
   static const List<int> _mockCommits = [5, 7, 3, 9, 12];
 
-  // ─── Mock courses ─────────────────────────────────
   static const List<Map<String, dynamic>> _mockCourses = [
     {
       'id': '1',
@@ -35,14 +31,14 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
       'lastCommit': '2 hours ago',
       'archived': false,
       'projects': [
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': false},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': false},
         {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
         {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true,  'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
       ],
     },
     {
@@ -55,13 +51,13 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
       'lastCommit': '1 day ago',
       'archived': false,
       'projects': [
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
         {'repoConnected': false, 'jiraConnected': false},
         {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true,  'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
       ],
     },
     {
@@ -74,16 +70,15 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
       'lastCommit': '5 minutes ago',
       'archived': false,
       'projects': [
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
-        {'repoConnected': true,  'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
+        {'repoConnected': true, 'jiraConnected': true},
       ],
     },
   ];
 
-  // ─── State ────────────────────────────────────────
   String _search = '';
   final _searchCtrl = TextEditingController();
 
@@ -93,7 +88,6 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     super.dispose();
   }
 
-  // ─── Derived lists ────────────────────────────────
   List<Map<String, dynamic>> get _filtered {
     final kw = _search.toLowerCase();
     if (kw.isEmpty) return _mockCourses;
@@ -110,23 +104,26 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
   int get _totalStudents =>
       _mockCourses.fold(0, (s, c) => s + (c['currentStudents'] as int));
 
-  // ─── Helpers ──────────────────────────────────────
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: teal,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: teal,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
-  // ─── Build ────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final filtered = _filtered;
+    final width = MediaQuery.of(context).size.width;
+    final isNarrow = width < 760;
 
     return Scaffold(
       backgroundColor: bgColor,
+      drawer: const LecturerDrawer(),
       appBar: const AppTopHeader(
         title: 'Lớp của tôi',
         user: AppUser(
@@ -140,19 +137,12 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Breadcrumb
             _buildBreadcrumb(),
             const SizedBox(height: 16),
-
-            // 2. Header + Search
-            _buildHeader(),
+            _buildHeader(isNarrow),
             const SizedBox(height: 16),
-
-            // 3. Mini stats
-            _buildMiniStats(),
+            _buildMiniStats(isNarrow),
             const SizedBox(height: 16),
-
-            // 4. Course cards / empty
             if (filtered.isEmpty)
               _buildEmptyState(
                 _search.isNotEmpty
@@ -160,105 +150,146 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                     : 'Bạn chưa được giao lớp nào',
               )
             else
-              ...filtered.map((c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _buildCourseCard(c),
-                  )),
+              ...filtered.map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _buildCourseCard(c),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  // ─── 1. Breadcrumb ─────────────────────────────────
   Widget _buildBreadcrumb() {
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 4,
       children: const [
-        Text('Giảng viên',
-            style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600, color: teal)),
+        Text(
+          'Giảng viên',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: teal,
+          ),
+        ),
         Icon(Icons.chevron_right, size: 14, color: Color(0xFF94A3B8)),
-        Text('Lớp của tôi',
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textPrimary)),
+        Text(
+          'Lớp của tôi',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: textPrimary,
+          ),
+        ),
       ],
     );
   }
 
-  // ─── 2. Header + Search ────────────────────────────
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isNarrow) {
+    if (isNarrow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Lớp của tôi',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'Các lớp học bạn đang giảng dạy',
+            style: TextStyle(fontSize: 13, color: textSecondary),
+          ),
+          const SizedBox(height: 12),
+          _buildSearchField(),
+        ],
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Lớp của tôi',
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: textPrimary,
-                      letterSpacing: -0.5)),
+              Text(
+                'Lớp của tôi',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
               SizedBox(height: 2),
-              Text('Các lớp học bạn đang giảng dạy',
-                  style: TextStyle(fontSize: 13, color: textSecondary)),
+              Text(
+                'Các lớp học bạn đang giảng dạy',
+                style: TextStyle(fontSize: 13, color: textSecondary),
+              ),
             ],
           ),
         ),
         const SizedBox(width: 12),
-        // Search
         SizedBox(
-          width: 180,
-          child: TextField(
-            controller: _searchCtrl,
-            onChanged: (v) => setState(() => _search = v),
-            style: const TextStyle(fontSize: 13, color: textPrimary),
-            decoration: InputDecoration(
-              hintText: 'Tìm kiếm lớp học...',
-              hintStyle: const TextStyle(fontSize: 13, color: textSecondary),
-              prefixIcon: const Icon(Icons.search_rounded,
-                  size: 16, color: textSecondary),
-              suffixIcon: _search.isNotEmpty
-                  ? GestureDetector(
-                      onTap: () {
-                        _searchCtrl.clear();
-                        setState(() => _search = '');
-                      },
-                      child: const Icon(Icons.close_rounded,
-                          size: 15, color: textSecondary),
-                    )
-                  : null,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: teal, width: 1.5),
-              ),
-            ),
-          ),
+          width: 220,
+          child: _buildSearchField(),
         ),
       ],
     );
   }
 
-  // ─── 3. Mini Stats ─────────────────────────────────
-  Widget _buildMiniStats() {
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchCtrl,
+      onChanged: (v) => setState(() => _search = v),
+      style: const TextStyle(fontSize: 13, color: textPrimary),
+      decoration: InputDecoration(
+        hintText: 'Tìm kiếm lớp học...',
+        hintStyle: const TextStyle(fontSize: 13, color: textSecondary),
+        prefixIcon:
+            const Icon(Icons.search_rounded, size: 16, color: textSecondary),
+        suffixIcon: _search.isNotEmpty
+            ? GestureDetector(
+                onTap: () {
+                  _searchCtrl.clear();
+                  setState(() => _search = '');
+                },
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 15,
+                  color: textSecondary,
+                ),
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: teal, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniStats(bool isNarrow) {
     final stats = [
       {
         'label': 'Tổng lớp',
@@ -283,35 +314,89 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
       },
     ];
 
-    return Row(
-      children: stats.map((s) {
-        final color   = s['color']  as Color;
-        final bg      = s['bg']     as Color;
-        final border  = s['border'] as Color;
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(
-                right: s == stats.last ? 0 : 10),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 12),
+    if (isNarrow) {
+      return Column(
+        children: List.generate(stats.length, (index) {
+          final s = stats[index];
+          final color = s['color'] as Color;
+          final bg = s['bg'] as Color;
+          final border = s['border'] as Color;
+
+          return Container(
+            width: double.infinity,
+            margin: EdgeInsets.only(bottom: index == stats.length - 1 ? 0 : 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: border),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(s['label'] as String,
+                Expanded(
+                  child: Text(
+                    s['label'] as String,
                     style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: color.withOpacity(0.85))),
-                Text(s['value'] as String,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color.withOpacity(0.85),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  s['value'] as String,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    }
+
+    return Row(
+      children: stats.map((s) {
+        final color = s['color'] as Color;
+        final bg = s['bg'] as Color;
+        final border = s['border'] as Color;
+
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: s == stats.last ? 0 : 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    s['label'] as String,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: color)),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color.withOpacity(0.85),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  s['value'] as String,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
               ],
             ),
           ),
@@ -320,20 +405,20 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     );
   }
 
-  // ─── 4. Course Card ────────────────────────────────
   Widget _buildCourseCard(Map<String, dynamic> course) {
-    final projects     = course['projects'] as List;
-    final groupCount   = projects.length;
-    final activeTeams  = projects.where((p) => p['repoConnected'] == true).length;
-    final jiraConnected= projects.where((p) => p['jiraConnected'] == true).length;
-    final inactiveTeams= groupCount - activeTeams;
-    final alerts       = inactiveTeams;
-    final progress     =
+    final projects = course['projects'] as List;
+    final groupCount = projects.length;
+    final activeTeams =
+        projects.where((p) => p['repoConnected'] == true).length;
+    final jiraConnected =
+        projects.where((p) => p['jiraConnected'] == true).length;
+    final inactiveTeams = groupCount - activeTeams;
+    final alerts = inactiveTeams;
+    final progress =
         groupCount == 0 ? 0 : ((activeTeams / groupCount) * 100).round();
-    final lastCommit   = course['lastCommit'] as String? ?? 'No activity';
-    final isArchived   = course['archived'] as bool? ?? false;
+    final lastCommit = course['lastCommit'] as String? ?? 'No activity';
+    final isArchived = course['archived'] as bool? ?? false;
 
-    // Status
     String status;
     if (isArchived) {
       status = 'ARCHIVED';
@@ -352,31 +437,27 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
         border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4)),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top accent bar
           Container(
             height: 5,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [teal, tealLight],
-              ),
+              gradient: LinearGradient(colors: [teal, tealLight]),
               borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Header row ──
                 Row(
                   children: [
                     Container(
@@ -386,83 +467,131 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                         color: const Color(0xFFF0FDFA),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.school_outlined,
-                          size: 20, color: teal),
+                      child: const Icon(
+                        Icons.school_outlined,
+                        size: 20,
+                        color: teal,
+                      ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDFA),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFCCFBF1)),
-                      ),
-                      child: Text(
-                        course['subjectCode'] as String? ?? '—',
-                        style: const TextStyle(
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDFA),
+                          borderRadius: BorderRadius.circular(20),
+                          border:
+                              Border.all(color: const Color(0xFFCCFBF1)),
+                        ),
+                        child: Text(
+                          course['subjectCode'] as String? ?? '—',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: teal,
-                            letterSpacing: 0.5),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // ── Title ──
-                Text(course['code'] as String,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: textPrimary)),
+                Text(
+                  course['code'] as String,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(course['name'] as String,
-                    style: const TextStyle(
-                        fontSize: 12, color: textSecondary)),
+                Text(
+                  course['name'] as String,
+                  style: const TextStyle(fontSize: 12, color: textSecondary),
+                ),
                 const SizedBox(height: 2),
-                Text('Semester: ${course['semester'] ?? 'Fall 2025'}',
-                    style: const TextStyle(
-                        fontSize: 11, color: Color(0xFF94A3B8))),
+                Text(
+                  'Semester: ${course['semester'] ?? 'Fall 2025'}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
                 const SizedBox(height: 10),
 
-                // ── Students + Groups ──
-                Row(
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Icon(Icons.people_outline_rounded,
-                        size: 13, color: textSecondary),
-                    const SizedBox(width: 4),
-                    Text('${course['currentStudents'] ?? 0} sinh viên',
-                        style: const TextStyle(
-                            fontSize: 11, color: textSecondary)),
-                    const SizedBox(width: 14),
-                    const Icon(Icons.book_outlined,
-                        size: 13, color: textSecondary),
-                    const SizedBox(width: 4),
-                    Text('$groupCount nhóm',
-                        style: const TextStyle(
-                            fontSize: 11, color: textSecondary)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.people_outline_rounded,
+                          size: 13,
+                          color: textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${course['currentStudents'] ?? 0} sinh viên',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.book_outlined,
+                          size: 13,
+                          color: textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$groupCount nhóm',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // ── Mini commit chart ──
                 _buildMiniCommitChart(),
                 const SizedBox(height: 12),
 
-                // ── Progress bar ──
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Project progress',
-                        style: TextStyle(
-                            fontSize: 10, color: textSecondary)),
-                    Text('$progress%',
-                        style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: textSecondary)),
+                    const Expanded(
+                      child: Text(
+                        'Project progress',
+                        style: TextStyle(fontSize: 10, color: textSecondary),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$progress%',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: textSecondary,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 5),
@@ -478,89 +607,119 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // ── Repo + Jira ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 6,
                   children: [
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.account_tree_outlined,
-                            size: 12, color: textSecondary),
+                        const Icon(
+                          Icons.account_tree_outlined,
+                          size: 12,
+                          color: textSecondary,
+                        ),
                         const SizedBox(width: 4),
-                        Text('Repo: $activeTeams/$groupCount',
-                            style: const TextStyle(
-                                fontSize: 11, color: textSecondary)),
+                        Text(
+                          'Repo: $activeTeams/$groupCount',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: textSecondary,
+                          ),
+                        ),
                       ],
                     ),
-                    Text('Jira: $jiraConnected/$groupCount',
-                        style: const TextStyle(
-                            fontSize: 11, color: textSecondary)),
+                    Text(
+                      'Jira: $jiraConnected/$groupCount',
+                      style:
+                          const TextStyle(fontSize: 11, color: textSecondary),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
 
-                // ── Activity ──
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Active teams: $activeTeams/$groupCount',
+                    Expanded(
+                      child: Text(
+                        'Active teams: $activeTeams/$groupCount',
                         style: const TextStyle(
-                            fontSize: 11, color: textSecondary)),
-                    Text('Last activity: $lastCommit',
+                          fontSize: 11,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        'Last activity: $lastCommit',
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 11, color: textSecondary),
-                        overflow: TextOverflow.ellipsis),
+                          fontSize: 11,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
 
-                // ── Alerts ──
                 if (alerts > 0) ...[
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded,
-                          size: 12, color: Color(0xFFEF4444)),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 12,
+                        color: Color(0xFFEF4444),
+                      ),
                       const SizedBox(width: 4),
-                      Text('$alerts alerts detected',
+                      Expanded(
+                        child: Text(
+                          '$alerts alerts detected',
                           style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFFEF4444))),
+                            fontSize: 11,
+                            color: Color(0xFFEF4444),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
+
                 const SizedBox(height: 10),
 
-                // ── Status badge ──
                 Align(
                   alignment: Alignment.centerRight,
                   child: _buildStatusBadge(status),
                 ),
                 const SizedBox(height: 12),
 
-                // ── Action buttons ──
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Dashboard',
-                        () => context.go(
-                            '/lecturer/course/${course['id']}/dashboard'),
+                    _buildActionButton(
+                      label: 'Dashboard',
+                      filled: false,
+                      onTap: () => context.go(
+                        '/lecturer/course/${course['id']}/dashboard',
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildFilledButton(
-                        'Manage',
-                        () => context.go(
-                            '/lecturer/course/${course['id']}/manage-groups'),
+                    _buildActionButton(
+                      label: 'Manage',
+                      filled: true,
+                      onTap: () => context.go(
+                        '/lecturer/course/${course['id']}/manage-groups',
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildOutlineButton(
-                        'Alerts',
-                        () => _showSnack(
-                            'Alerts cho ${course['code']}'),
+                    _buildActionButton(
+                      label: 'Alerts',
+                      filled: false,
+                      onTap: () => _showSnack(
+                        'Alerts cho ${course['code']}',
                       ),
                     ),
                   ],
@@ -573,7 +732,6 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     );
   }
 
-  // ─── Mini Commit Chart (sparkline bars) ───────────
   Widget _buildMiniCommitChart() {
     final max = _mockCommits.reduce((a, b) => a > b ? a : b);
     return SizedBox(
@@ -597,7 +755,6 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     );
   }
 
-  // ─── Status Badge ─────────────────────────────────
   Widget _buildStatusBadge(String status) {
     Color bg, fg;
     switch (status) {
@@ -613,26 +770,42 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
         bg = const Color(0xFFFFF1F2);
         fg = const Color(0xFFE11D48);
         break;
-      default: // ARCHIVED
+      default:
         bg = const Color(0xFFF1F5F9);
         fg = textSecondary;
     }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(status,
-          style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: fg,
-              letterSpacing: 0.6)),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: fg,
+          letterSpacing: 0.6,
+        ),
+      ),
     );
   }
 
-  // ─── Buttons ──────────────────────────────────────
+  Widget _buildActionButton({
+    required String label,
+    required bool filled,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: 110,
+      child: filled
+          ? _buildFilledButton(label, onTap)
+          : _buildOutlineButton(label, onTap),
+    );
+  }
+
   Widget _buildFilledButton(String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -643,11 +816,16 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white)),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -663,16 +841,20 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
           border: Border.all(color: const Color(0xFFD1D5DB)),
         ),
         alignment: Alignment.center,
-        child: Text(label,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textPrimary)),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: textPrimary,
+          ),
+        ),
       ),
     );
   }
 
-  // ─── Empty State ──────────────────────────────────
   Widget _buildEmptyState(String message) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 64),
@@ -686,14 +868,18 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.school_outlined,
-                  size: 28, color: textSecondary),
+              child: const Icon(
+                Icons.school_outlined,
+                size: 28,
+                color: textSecondary,
+              ),
             ),
             const SizedBox(height: 14),
-            Text(message,
-                style:
-                    const TextStyle(fontSize: 13, color: textSecondary),
-                textAlign: TextAlign.center),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 13, color: textSecondary),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

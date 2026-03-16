@@ -16,13 +16,26 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final dynamic rawRoles = json['roles'];
+    final dynamic rawRole = json['role'];
+
+    List<String> parsedRoles = [];
+
+    if (rawRoles is List) {
+      parsedRoles = rawRoles.map((e) => e.toString().toUpperCase()).toList();
+    } else if (rawRole != null && rawRole.toString().trim().isNotEmpty) {
+      parsedRoles = [rawRole.toString().toUpperCase()];
+    }
+
     return User(
-      id: json['id'],
-      email: json['email'],
-      fullName: json['fullName'],
-      roles: List<String>.from(json['roles'] ?? []),
-      studentCode: json['studentCode'],
-      lecturerCode: json['lecturerCode'],
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id'].toString()) ?? 0,
+      email: json['email']?.toString() ?? '',
+      fullName: json['fullName']?.toString() ?? '',
+      roles: parsedRoles,
+      studentCode: json['studentCode']?.toString(),
+      lecturerCode: json['lecturerCode']?.toString(),
     );
   }
 
@@ -33,7 +46,7 @@ class User {
       "fullName": fullName,
       "roles": roles,
       "studentCode": studentCode,
-      "lecturerCode": lecturerCode
+      "lecturerCode": lecturerCode,
     };
   }
 

@@ -1,27 +1,55 @@
-// User Management — Admin Module
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "../../components/ui/card.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
-import { useGetUsers, useUpdateUserRole, useUpdateUserStatus, useResetUserPassword } from "../../features/users/hooks/useUsers.js";
-import {
-    ChevronRight, Users, Search, Filter, MoreHorizontal,
-    Shield, UserX, Key, CheckCircle, XCircle
+import { 
+  Users, 
+  Search, 
+  Shield, 
+  UserX, 
+  Key, 
+  CheckCircle, 
+  UserCheck, 
+  GraduationCap,
+  UserCog,
+  MoreHorizontal,
+  Mail,
+  ShieldAlert,
+  ArrowRight,
+  Filter,
+  XCircle,
+  ChevronRight
 } from "lucide-react";
 
-const ROLE_CFG = {
-    ADMIN: { cls: "bg-purple-50 text-purple-700 border-purple-100", label: "Admin" },
-    LECTURER: { cls: "bg-teal-50 text-teal-700 border-teal-100", label: "Giảng viên" },
-    STUDENT: { cls: "bg-blue-50 text-blue-700 border-blue-100", label: "Sinh viên" },
+// Components UI
+import { Button } from "../../components/ui/button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
+import { Badge } from "../../components/ui/badge.jsx";
+
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { SelectField, InputField } from "../../components/shared/FormFields.jsx";
+
+// Hooks
+import { 
+  useGetUsers, 
+  useUpdateUserRole, 
+  useUpdateUserStatus, 
+  useResetUserPassword 
+} from "../../features/users/hooks/useUsers.js";
+
+const ROLE_MAP = {
+    ADMIN: { label: "Admin", variant: "danger", icon: Shield },
+    LECTURER: { label: "Giảng viên", variant: "indigo", icon: UserCog },
+    STUDENT: { label: "Sinh viên", variant: "info", icon: GraduationCap },
 };
 
 export default function UserManagement() {
     const navigate = useNavigate();
-    const { success } = useToast();
+    const { success, error: showError } = useToast();
 
     const [search, setSearch] = useState("");
     const [filterRole, setFilterRole] = useState("all");
-    const [users, setUsers] = useState([]);
     const [actionMenu, setActionMenu] = useState(null);
 
     const { data: adminsRaw = [], isLoading: load1 } = useGetUsers("ADMIN");
@@ -32,234 +60,208 @@ export default function UserManagement() {
     const statusMutation = useUpdateUserStatus();
     const passMutation = useResetUserPassword();
 
-    useEffect(() => {
-        if (!load1 && !load2 && !load3) {
-            const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN", status: "ACTIVE" }));
-            const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER", status: "ACTIVE" }));
-            const students = studentsRaw.map(u => ({ ...u, role: "STUDENT", status: "ACTIVE" }));
-            setUsers([...admins, ...lects, ...students]);
-        }
+    const users = useMemo(() => {
+        if (load1 || load2 || load3) return [];
+        const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN", status: u.status || "ACTIVE" }));
+        const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER", status: u.status || "ACTIVE" }));
+        const students = studentsRaw.map(u => ({ ...u, role: "STUDENT", status: u.status || "ACTIVE" }));
+        return [...admins, ...lects, ...students];
     }, [adminsRaw, lectsRaw, studentsRaw, load1, load2, load3]);
 
-    const handleChangeRole = async (userId, newRole) => {
+    const filtered = useMemo(() => {
+        return users.filter(u => {
+            const q = search.toLowerCase();
+            const matchSearch = !search ||
+                u.name?.toLowerCase().includes(q) ||
+                u.email?.toLowerCase().includes(q);
+            const matchRole = filterRole === "all" || u.role === filterRole;
+            return matchSearch && matchRole;
+        });
+    }, [users, search, filterRole]);
+
+    const handleAction = async (userId, action, data) => {
         try {
-            await roleMutation.mutateAsync({ id: userId, role: newRole });
-            success(`Đã cập nhật quyền thành ${ROLE_CFG[newRole]?.label}`);
+            if (action === 'role') {
+                await roleMutation.mutateAsync({ id: userId, role: data });
+                success(`Đã cập nhật vai trò người dùng thành ${data}`);
+            } else if (action === 'status') {
+                await statusMutation.mutateAsync({ id: userId, enabled: data });
+                success("Đã cập nhật trạng thái tài khoản");
+            } else if (action === 'reset') {
+                await passMutation.mutateAsync({ id: userId });
+                success("Đã gửi yêu cầu đặt lại mật khẩu đến email người dùng");
+            }
             setActionMenu(null);
         } catch (err) {
-            error(err.message || "Cập nhật quyền thất bại");
+            showError(err.message || "Thao tác thất bại");
         }
     };
 
-    const handleDisable = async (userId, currentStatus) => {
-        try {
-            const newEnabled = currentStatus === "DISABLED";
-            await statusMutation.mutateAsync({ id: userId, enabled: newEnabled });
-            success("Đã cập nhật trạng thái tài khoản");
-            setActionMenu(null);
-        } catch (err) {
-            error(err.message || "Cập nhật trạng thái thất bại");
-        }
-    };
-
-    const handleResetPassword = async (userId, name) => {
-        try {
-            await passMutation.mutateAsync({ id: userId });
-            success(`Đã gửi email đặt lại mật khẩu đến ${name}`);
-            setActionMenu(null);
-        } catch (err) {
-            error(err.message || "Đặt lại mật khẩu thất bại");
-        }
-    };
-
-    const filtered = users.filter(u => {
-        const matchSearch = !search ||
-            u.name?.toLowerCase().includes(search.toLowerCase()) ||
-            u.email?.toLowerCase().includes(search.toLowerCase());
-        const matchRole = filterRole === "all" || u.role === filterRole;
-        return matchSearch && matchRole;
-    });
-
-    const countByRole = (role) => users.filter(u => u.role === role).length;
+    if (load1 || load2 || load3) return (
+      <div className="flex h-screen items-center justify-center p-8 bg-gray-50/50">
+         <div className="text-center">
+           <Users className="animate-pulse text-teal-600 mx-auto mb-4" size={48} /> 
+           <span className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Đang đồng bộ danh sách tài khoản...</span>
+         </div>
+      </div>
+    );
 
     return (
-        <div className="space-y-6" onClick={() => setActionMenu(null)}>
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-                <span
-                    className="text-teal-700 font-semibold cursor-pointer hover:underline"
-                    onClick={() => navigate("/admin")}
-                >
-                    Admin
-                </span>
-                <ChevronRight size={12} />
-                <span className="text-gray-800 font-semibold">Quản lý Tài khoản</span>
-            </nav>
+        <div className="space-y-8 animate-in fade-in duration-500" onClick={() => setActionMenu(null)}>
+            <PageHeader 
+                title="Quản lý Tài khoản"
+                subtitle="Điều chỉnh quyền hạn, trạng thái bảo mật và quyền truy cập cho toàn bộ người dùng hệ thống."
+                breadcrumb={["Admin", "Người dùng", "Danh sách"]}
+                actions={[
+                  <Button key="invite" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-8 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0 transition-all">
+                    <Mail size={16} className="mr-2" /> Gửi lời mời hệ thống
+                  </Button>
+                ]}
+            />
 
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight text-gray-800">Quản lý Tài khoản</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Tài khoản người dùng, phân quyền, và trạng thái</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard label="Tổng tài khoản" value={users.length} icon={Users} variant="indigo" />
+                <StatsCard label="Quản trị viên" value={users.filter(u => u.role === 'ADMIN').length} icon={Shield} variant="danger" />
+                <StatsCard label="Giảng viên" value={users.filter(u => u.role === 'LECTURER').length} icon={UserCog} variant="success" />
+                <StatsCard label="Sinh viên" value={users.filter(u => u.role === 'STUDENT').length} icon={GraduationCap} variant="info" />
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
-                {[
-                    { label: "Tổng", value: users.length, color: "text-gray-700 bg-gray-50 border-gray-200" },
-                    { label: "Admin", value: countByRole("ADMIN"), color: "text-purple-700 bg-purple-50 border-purple-100" },
-                    { label: "Giảng viên", value: countByRole("LECTURER"), color: "text-teal-700 bg-teal-50 border-teal-100" },
-                    { label: "Sinh viên", value: countByRole("STUDENT"), color: "text-blue-700 bg-blue-50 border-blue-100" },
-                ].map(({ label, value, color }) => (
-                    <div key={label} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${color}`}>
-                        <span className="text-xs font-semibold">{label}</span>
-                        <span className="text-xl font-bold">{value}</span>
+            <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+                <CardHeader className="border-b border-gray-50 py-6 px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest leading-none">Cơ sở dữ liệu người dùng</CardTitle>
+                    <div className="flex gap-3 w-full md:w-auto items-center">
+                        <div className="flex-1 md:w-80">
+                            <InputField placeholder="Tìm tên, email hoặc mã số..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <Filter size={14} className="text-gray-300" />
+                           {["all", "ADMIN", "LECTURER", "STUDENT"].map(r => (
+                               <button
+                                   key={r}
+                                   onClick={(e) => { e.stopPropagation(); setFilterRole(r); }}
+                                   className={`text-[9px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl border transition-all ${filterRole === r
+                                       ? "bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-100"
+                                       : "bg-white text-gray-400 border-gray-100 hover:border-teal-400 hover:text-teal-600"
+                                       }`}
+                               >
+                                   {r === "all" ? "Tất cả" : ROLE_MAP[r]?.label}
+                               </button>
+                           ))}
+                        </div>
                     </div>
-                ))}
-            </div>
-
-            {/* Filters bar */}
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                <CardContent className="p-5 flex flex-wrap gap-4 items-center">
-                    <div className="relative flex-1 min-w-[220px]">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Tìm theo tên hoặc email..."
-                            className="pl-9 pr-4 py-2.5 w-full bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Filter size={14} className="text-gray-400 shrink-0" />
-                        {["all", "ADMIN", "LECTURER", "STUDENT"].map(r => (
-                            <button
-                                key={r}
-                                onClick={() => setFilterRole(r)}
-                                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${filterRole === r
-                                    ? "bg-teal-600 text-white border-teal-600"
-                                    : "bg-white text-gray-600 border-gray-200 hover:border-teal-400"
-                                    }`}
-                            >
-                                {r === "all" ? "Tất cả" : ROLE_CFG[r]?.label}
-                            </button>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Users table */}
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                <div className="grid grid-cols-12 gap-3 px-6 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    <div className="col-span-4">Người dùng</div>
-                    <div className="col-span-3 hidden md:block">Email</div>
-                    <div className="col-span-2 text-center">Quyền</div>
-                    <div className="col-span-2 text-center">Trạng thái</div>
-                    <div className="col-span-1 text-right">...</div>
-                </div>
+                </CardHeader>
                 <CardContent className="p-0">
-                    {filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 gap-2">
-                            <Users size={28} className="text-gray-300" />
-                            <p className="text-sm text-gray-400">Không tìm thấy người dùng</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-gray-50">
-                            {filtered.map(u => {
-                                const roleCfg = ROLE_CFG[u.role] || ROLE_CFG.STUDENT;
-                                const isActive = u.status !== "DISABLED";
-                                return (
-                                    <div
-                                        key={u.id}
-                                        className="grid grid-cols-12 gap-3 px-6 py-3.5 items-center hover:bg-gray-50/50 transition-colors relative"
-                                    >
-                                        {/* Name */}
-                                        <div className="col-span-4 flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${u.role === "ADMIN" ? "bg-purple-100 text-purple-700" :
-                                                u.role === "LECTURER" ? "bg-teal-100 text-teal-700" :
-                                                    "bg-blue-100 text-blue-700"
-                                                }`}>
-                                                {u.name?.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-gray-800 truncate">{u.name}</p>
-                                                {u.studentId && <p className="text-[11px] text-gray-400">{u.studentId}</p>}
-                                            </div>
-                                        </div>
-
-                                        {/* Email */}
-                                        <div className="col-span-3 hidden md:block">
-                                            <p className="text-xs text-gray-500 truncate">{u.email || "—"}</p>
-                                        </div>
-
-                                        {/* Role badge */}
-                                        <div className="col-span-2 text-center">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${roleCfg.cls}`}>
-                                                {roleCfg.label}
-                                            </span>
-                                        </div>
-
-                                        {/* Status */}
-                                        <div className="col-span-2 text-center">
-                                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${isActive
-                                                ? "bg-green-50 text-green-700"
-                                                : "bg-gray-100 text-gray-500"
-                                                }`}>
-                                                {isActive ? <CheckCircle size={9} /> : <XCircle size={9} />}
-                                                {isActive ? "Hoạt động" : "Vô hiệu hóa"}
-                                            </span>
-                                        </div>
-
-                                        {/* Action menu */}
-                                        <div className="col-span-1 flex justify-end relative">
-                                            <button
-                                                onClick={e => { e.stopPropagation(); setActionMenu(actionMenu === u.id ? null : u.id); }}
-                                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                                            >
-                                                <MoreHorizontal size={16} />
-                                            </button>
-
-                                            {actionMenu === u.id && (
-                                                <div
-                                                    onClick={e => e.stopPropagation()}
-                                                    className="absolute right-0 top-8 z-30 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 w-52 text-sm"
-                                                >
-                                                    <div className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                                        Đổi quyền
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-gray-50/50">
+                                <tr>
+                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Họ và tên / Email</th>
+                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Vai trò chính</th>
+                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Trạng thái bảo mật</th>
+                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right border-b border-gray-100">Thao tác hồ sơ</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {filtered.map(u => {
+                                    const roleCfg = ROLE_MAP[u.role] || ROLE_MAP.STUDENT;
+                                    const isActive = u.status !== "DISABLED" && u.enabled !== false;
+                                    return (
+                                        <tr key={u.id} className="hover:bg-teal-50/10 transition-all group">
+                                            <td className="py-5 px-8">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white text-xs font-black shadow-md shadow-gray-200 uppercase transition-transform group-hover:scale-110 ${
+                                                      u.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-500 to-red-600' :
+                                                      u.role === 'LECTURER' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' :
+                                                      'bg-gradient-to-br from-indigo-500 to-blue-600'
+                                                    }`}>
+                                                        {u.name?.charAt(0)}
                                                     </div>
-                                                    {["ADMIN", "LECTURER", "STUDENT"]
-                                                        .filter(r => r !== u.role)
-                                                        .map(r => (
-                                                            <button
-                                                                key={r}
-                                                                onClick={() => handleChangeRole(u.id, r)}
-                                                                className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
-                                                            >
-                                                                <Shield size={13} className="text-gray-400" />
-                                                                Đổi thành {ROLE_CFG[r]?.label}
-                                                            </button>
-                                                        ))}
-                                                    <div className="border-t border-gray-50 my-1" />
-                                                    <button
-                                                        onClick={() => handleDisable(u.id, u.status)}
-                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
-                                                    >
-                                                        <UserX size={13} className="text-gray-400" />
-                                                        {isActive ? "Vô hiệu hóa TK" : "Kích hoạt TK"}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleResetPassword(u.id, u.name)}
-                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
-                                                    >
-                                                        <Key size={13} className="text-gray-400" />
-                                                        Đặt lại mật khẩu
-                                                    </button>
+                                                    <div className="flex flex-col">
+                                                        <p className="font-black text-gray-800 text-sm leading-none flex items-center gap-2">
+                                                          {u.name}
+                                                          {u.studentId && <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{u.studentId}</span>}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">{u.email}</p>
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                            </td>
+                                            <td className="py-5 px-8 text-center">
+                                                <Badge 
+                                                    variant="outline"
+                                                    className={`px-3 py-1 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-all ${
+                                                      u.role === 'ADMIN' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                                      u.role === 'LECTURER' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                                                      'bg-indigo-50 border-indigo-100 text-indigo-700'
+                                                    }`}
+                                                >
+                                                    {roleCfg.label}
+                                                </Badge>
+                                            </td>
+                                            <td className="py-5 px-8 text-center">
+                                                {isActive ? (
+                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 uppercase tracking-widest transition-all hover:bg-emerald-100">
+                                                        <CheckCircle size={10} /> Active Profile
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-red-500 bg-red-50 px-3 py-1.5 rounded-full border border-red-100 uppercase tracking-widest transition-all hover:bg-red-100">
+                                                        <ShieldAlert size={10} /> Account Locked
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="py-5 px-8">
+                                                <div className="flex justify-end relative">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="w-10 h-10 rounded-2xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all"
+                                                        onClick={(e) => { e.stopPropagation(); setActionMenu(actionMenu === u.id ? null : u.id); }}
+                                                    >
+                                                        <MoreHorizontal size={18} />
+                                                    </Button>
+
+                                                    {actionMenu === u.id && (
+                                                        <div className="absolute right-0 top-12 z-50 bg-white border border-gray-100 rounded-[24px] shadow-2xl py-3 w-60 animate-in zoom-in duration-200">
+                                                            <div className="px-5 py-2 border-b border-gray-50 mb-2">
+                                                                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Hiệu chỉnh tài khoản</p>
+                                                            </div>
+                                                            <div className="px-5 py-2 space-y-3">
+                                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Phân quyền vai trò</p>
+                                                                {["ADMIN", "LECTURER", "STUDENT"].filter(r => r !== u.role).map(r => (
+                                                                    <button key={r} onClick={() => handleAction(u.id, 'role', r)} className="w-full text-left p-2 hover:bg-teal-50 rounded-xl flex items-center gap-3 transition-colors group/btn">
+                                                                        <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/btn:bg-white group-hover/btn:text-teal-600 shadow-none group-hover/btn:shadow-sm"><Shield size={12}/></div>
+                                                                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-wide">Lên cấp {ROLE_MAP[r]?.label}</span>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                            <div className="border-t border-gray-50 my-2" />
+                                                            <div className="px-5 pb-2 pt-1 space-y-1">
+                                                                <button onClick={() => handleAction(u.id, 'status', !isActive)} className={`w-full text-left p-2 rounded-xl flex items-center gap-3 transition-colors ${isActive ? 'hover:bg-red-50 text-red-500' : 'hover:bg-emerald-50 text-emerald-600'}`}>
+                                                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isActive ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>{isActive ? <UserX size={12}/> : <UserCheck size={12}/>}</div>
+                                                                    <span className="text-[11px] font-black uppercase tracking-wide">{isActive ? "Vô hiệu hóa" : "Kích hoạt"}</span>
+                                                                </button>
+                                                                <button onClick={() => handleAction(u.id, 'reset')} className="w-full text-left p-2 hover:bg-amber-50 rounded-xl flex items-center gap-3 transition-colors text-amber-600">
+                                                                    <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600"><Key size={12}/></div>
+                                                                    <span className="text-[11px] font-black uppercase tracking-wide">Reset Pass</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {filtered.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="py-20 text-center">
+                                            <Search size={48} className="text-gray-100 mx-auto mb-4" />
+                                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Không tìm thấy tài khoản tương ứng</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

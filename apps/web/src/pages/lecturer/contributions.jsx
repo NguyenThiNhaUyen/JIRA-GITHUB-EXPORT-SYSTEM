@@ -1,54 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
 import {
-  ChevronRight,
-  BarChart3,
-  GitBranch,
-  TrendingUp,
   Users,
-  Activity,
-  Filter,
-  AlertTriangle,
-  ShieldAlert,
-  Clock3,
-  Search,
-  LayoutGrid,
-  UserRound,
-  GitPullRequest,
-  CheckCircle2,
   Target,
-  Mail,
-  Send,
-  Eye,
-  X,
-  TriangleAlert,
+  Download,
+  GitBranch,
+  Activity,
+  TrendingUp,
+  Filter
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card.jsx";
+// Components Shared
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { InputField } from "../../components/shared/FormFields.jsx";
+import { useToast } from "../../components/ui/toast.jsx";
 import { Button } from "../../components/ui/button.jsx";
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useCourseCommitHistories } from "../../features/projects/hooks/useProjects.js";
-const WEEKS = [
-  "T1",
-  "T2",
-  "T3",
-  "T4",
-  "T5",
-  "T6",
-  "T7",
-  "T8",
-  "T9",
-  "T10",
-  "T11",
-  "T12",
-];
-const HEATMAP_DAYS = 84;
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 
+// Local Sub-components
+import { ContributionStats } from "../../features/lecturer/components/contributions/ContributionStats.jsx";
+import { StudentContributionTable } from "../../features/lecturer/components/contributions/StudentContributionTable.jsx";
+import { WeeklyActivityChart } from "../../features/lecturer/components/contributions/WeeklyActivityChart.jsx";
+
+// Hooks
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+
+<<<<<<< HEAD
 /* ----------------------------- HELPERS ----------------------------- */
 
 function hashString(str = "") {
@@ -865,431 +842,121 @@ function ActionModal({ open, onClose, actionType, targetStudent, onConfirm }) {
 }
 
 /* ----------------------------- MAIN COMPONENT ----------------------------- */
+=======
+// Constants
+const WEEKS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
 export default function Contributions() {
-    const navigate = useNavigate();
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [actionModal, setActionModal] = useState({
-    open: false,
-    type: "warning",
-    student: null,
-  });
-  const [sentLogs, setSentLogs] = useState([]);
-  const [banner, setBanner] = useState(null);
+    const { success } = useToast();
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [search, setSearch] = useState("");
+    const [commitsByStudent, setCommitsByStudent] = useState({});
+    const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0).map((_, i) => ({ 
+        name: `Tuần ${i + 1}`, 
+        count: 0 
+    })));
 
-  const { data: coursesData = { items: [] }, isLoading } = useGetCourses({
-    pageSize: 100,
-  });
+    const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+    const courses = coursesData.items || [];
 
-  const realCourses = coursesData?.items || [];
-  const usingMockData = realCourses.length === 0;
-  const courses = realCourses.length > 0 ? realCourses : MOCK_COURSES;
-
-  useEffect(() => {
-    if (courses.length > 0 && !selectedCourse) {
-      setSelectedCourse(String(courses[0]?.id));
-    }
-  }, [courses, selectedCourse]);
-
-  useEffect(() => {
-    if (!banner) return;
-    const timer = setTimeout(() => setBanner(null), 2500);
-    return () => clearTimeout(timer);
-  }, [banner]);
-
-  const currentCourse = useMemo(
-    () => courses.find((course) => String(course.id) === String(selectedCourse)),
-    [courses, selectedCourse]
-  );
-
-  const groups = useMemo(() => {
-    const source = currentCourse?.groups || currentCourse?.projects || [];
-    return Array.isArray(source)
-      ? source.map((group, index) => normalizeGroup(group, index))
-      : [];
-  }, [currentCourse]);
-
-  const commitQueries = useCourseCommitHistories(groups.map((g) => g.id));
-
-  const { studentsMap, weeklyCommits, weeklyJira } = useMemo(() => {
-    if (!currentCourse) {
-      return {
-        studentsMap: {},
-        weeklyCommits: new Array(12).fill(0),
-        weeklyJira: new Array(12).fill(0),
-      };
-    }
-    if (usingMockData) {
-      return buildMockContribution(currentCourse.id, groups);
-    }
-
-    const allStudentsMap = {};
-    const weeklyCommitsAgg = new Array(12).fill(0);
-    const weeklyJiraAgg = new Array(12).fill(0);
-
-    groups.forEach((group, gIndex) => {
-      const query = commitQueries[gIndex];
-      const apiStudents = query?.data || [];
-      const apiStudentMap = {};
-      apiStudents.forEach((st) => {
-        apiStudentMap[st.studentId] = st;
-      });
-
-      group.team.forEach((member) => {
-        const studentId = member.studentId;
-        const apiData = apiStudentMap[studentId] || {};
-
-        const commits = apiData.commits ?? apiData.totalCommits ?? 0;
-        const jiraDone = apiData.issuesDone ?? apiData.totalIssues ?? 0;
-        const prs = apiData.pullRequests ?? apiData.totalPrs ?? 0;
-        const reviews = 0; // Not returned directly currently
-        const activeDays = (apiData.heatmapData || []).filter((d) => d.count > 0).length;
-        const overdueTasks = 0; // Not returned directly currently
-        
-        let lastActiveDaysAgo = 14; 
-        if (apiData.lastCommitAt) {
-          const diffMs = new Date() - new Date(apiData.lastCommitAt);
-          lastActiveDaysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        } else if (commits > 0) {
-          lastActiveDaysAgo = 0;
+    // Initialize selected course
+    useEffect(() => {
+        if (courses.length > 0 && !selectedCourse) {
+            setSelectedCourse(String(courses[0].id));
         }
+    }, [courses]);
 
-        let score = apiData.contributionPercent || 0;
-        if (!score && (commits > 0 || jiraDone > 0)) {
-           score = Math.round(commits * 2.2 + jiraDone * 2 + prs * 3);
-        }
-        score = Math.max(0, Math.min(100, Math.round(score)));
+    const currentCourse = courses.find(c => String(c.id) === selectedCourse);
+    const groups = currentCourse?.groups || [];
 
-        let status = "Ổn định";
-        if (commits === 0 && jiraDone === 0) status = "Chưa commit";
-        else if (score >= 82) status = "Rất tốt";
-        else if (score >= 62) status = "Tích cực";
-        else if (score >= 40) status = "Ổn định";
-        else status = "Cần chú ý";
+    // Process data from selected course
+    useEffect(() => {
+        if (!currentCourse) return;
 
-        const dailyActivity = new Array(HEATMAP_DAYS).fill(0);
-        if (apiData.heatmapData) {
-            const totalDays = apiData.heatmapData.length;
-            for (let i = 0; i < HEATMAP_DAYS; i++) {
-                const targetIdx = totalDays - 1 - (HEATMAP_DAYS - 1 - i);
-                if (targetIdx >= 0 && targetIdx < totalDays) {
-                    dailyActivity[i] = apiData.heatmapData[targetIdx].count || 0;
+        // Collect all students in this course from groups
+        const allStudents = [];
+        groups.forEach(g => {
+            (g.team || []).forEach(m => {
+                if (!allStudents.find(s => s.studentId === m.studentId)) {
+                    allStudents.push(m);
                 }
-            }
-        }
+            });
+        });
 
-        allStudentsMap[studentId] = {
-          studentId,
-          name: member.studentName || member.name,
-          studentCode: member.studentCode,
-          email: member.email,
-          groupId: group.id,
-          groupName: group.name,
-          commits,
-          jiraDone,
-          prs,
-          reviews,
-          activeDays,
-          overdueTasks,
-          lastActiveDaysAgo,
-          score,
-          status,
-          dailyActivity,
+        // Mock/Process commits per student
+        const byStudent = {};
+        allStudents.forEach(s => {
+            const mockCommits = Math.floor(Math.random() * 50);
+            byStudent[s.studentId] = {
+                id: s.studentId,
+                name: s.studentName,
+                studentCode: s.studentCode,
+                team: groups.find(g => g.studentIds?.includes(s.studentId))?.name || "No Team",
+                commits: mockCommits,
+                prs: Math.floor(mockCommits / 5),
+                reviews: Math.floor(mockCommits / 4),
+                score: Math.min(100, 40 + mockCommits),
+                status: mockCommits > 10 ? "stable" : "warning"
+            };
+        });
+        setCommitsByStudent(byStudent);
+
+        // Mock weekly data for the current course
+        const mockWeekly = new Array(12).fill(0).map((_, i) => ({
+            name: `W${i + 1}`,
+            count: Math.floor(Math.random() * 50)
+        }));
+        setWeeklyCommits(mockWeekly);
+    }, [selectedCourse, currentCourse, groups]);
+
+    const filteredStudents = useMemo(() => {
+        const studentList = Object.values(commitsByStudent);
+        if (!search) return studentList;
+        
+        const q = search.toLowerCase();
+        return studentList.filter(s => 
+            (s.name || "").toLowerCase().includes(q) || 
+            (s.team || "").toLowerCase().includes(q) ||
+            (s.studentCode || "").toLowerCase().includes(q)
+        );
+    }, [commitsByStudent, search]);
+
+    const stats = useMemo(() => {
+        const list = Object.values(commitsByStudent);
+        return {
+            totalCommits: list.reduce((sum, s) => sum + (s.commits || 0), 0),
+            activeStudents: list.filter(s => s.commits > 0).length,
+            avgScore: list.length > 0 ? Math.round(list.reduce((sum, s) => sum + (s.score || 0), 0) / list.length) : 0,
+            totalPRs: list.reduce((sum, s) => sum + (s.prs || 0), 0),
+            totalReviews: list.reduce((sum, s) => sum + (s.reviews || 0), 0),
+            riskGroupsCount: list.filter(s => s.status === 'warning').length
         };
+    }, [commitsByStudent]);
 
-        const weekData = apiData.weeklyCommits || new Array(12).fill(0);
-        for (let i = 0; i < 12; i++) {
-          weeklyCommitsAgg[i] += weekData[i] || 0;
-          weeklyJiraAgg[i] += Math.ceil((weekData[i] || 0) * 0.4); 
-        }
-      });
-    });
-
-    return {
-      studentsMap: allStudentsMap,
-      weeklyCommits: weeklyCommitsAgg,
-      weeklyJira: weeklyJiraAgg,
-    };
-  }, [currentCourse, groups, commitQueries, usingMockData]);
-
-  const sentMap = useMemo(() => {
-    return sentLogs.reduce((acc, log) => {
-      const current = acc[log.studentId] || {
-        warningCount: 0,
-        emailCount: 0,
-        lastSentAt: null,
-      };
-      if (log.type === "warning") current.warningCount += 1;
-      if (log.type === "email") current.emailCount += 1;
-      current.lastSentAt = log.time;
-      acc[log.studentId] = current;
-      return acc;
-    }, {});
-  }, [sentLogs]);
-
-  const sortedStudents = useMemo(() => {
-    return Object.values(studentsMap).sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return b.commits - a.commits;
-    });
-  }, [studentsMap]);
-
-  const filteredStudents = useMemo(() => {
-    return sortedStudents.filter((student) => {
-      const matchKeyword =
-        !searchKeyword ||
-        student.name?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        student.studentCode?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        student.groupName?.toLowerCase().includes(searchKeyword.toLowerCase());
-
-      const matchStatus =
-        statusFilter === "all" || student.status === statusFilter;
-
-      return matchKeyword && matchStatus;
-    });
-  }, [sortedStudents, searchKeyword, statusFilter]);
-
-  const groupStats = useMemo(() => {
-    return groups.map((group) => {
-      const members = group.team
-        .map((member) => studentsMap[member.studentId])
-        .filter(Boolean);
-
-      const totalCommits = members.reduce((sum, member) => sum + member.commits, 0);
-      const totalJira = members.reduce((sum, member) => sum + member.jiraDone, 0);
-      const totalScore = members.reduce((sum, member) => sum + member.score, 0);
-      const maxMemberCommits = Math.max(...members.map((m) => m.commits), 0);
-      const zeroCommitMembers = members.filter((m) => m.commits === 0).length;
-      const memberCount = members.length;
-
-      const avgCommits = memberCount > 0 ? totalCommits / memberCount : 0;
-      const balancePercent =
-        maxMemberCommits === 0
-          ? 0
-          : Math.max(
-              0,
-              Math.min(100, Math.round((avgCommits / maxMemberCommits) * 100))
-            );
-
-      const risk = getRiskLevel({
-        memberCount,
-        zeroCommitMembers,
-        balancePercent,
-        totalCommits,
-      });
-
-      return {
-        ...group,
-        members,
-        memberCount,
-        totalCommits,
-        totalJira,
-        totalScore,
-        zeroCommitMembers,
-        balancePercent,
-        risk,
-      };
-    });
-  }, [groups, studentsMap]);
-
-  const alerts = useMemo(() => {
-    const result = [];
-
-    sortedStudents.forEach((student) => {
-      if (student.commits === 0) {
-        result.push({
-          id: `student-inactive-${student.studentId}`,
-          severity: "critical",
-          title: `${student.name} chưa có commit`,
-          description: `${student.groupName} • ${student.studentCode} • không có hoạt động code trong giai đoạn theo dõi`,
-        });
-      } else if (student.status === "Cần chú ý") {
-        result.push({
-          id: `student-warning-${student.studentId}`,
-          severity: "warning",
-          title: `${student.name} có mức đóng góp thấp`,
-          description: `${student.groupName} • score ${student.score}/100 • cần giảng viên kiểm tra tiến độ`,
-        });
-      } else if (student.overdueTasks >= 2) {
-        result.push({
-          id: `student-overdue-${student.studentId}`,
-          severity: "info",
-          title: `${student.name} có task quá hạn`,
-          description: `${student.overdueTasks} task overdue • ${student.groupName}`,
-        });
-      }
-    });
-
-    groupStats.forEach((group) => {
-      if (group.risk.level === 3) {
-        result.push({
-          id: `group-critical-${group.id}`,
-          severity: "critical",
-          title: `${group.name} rủi ro cao`,
-          description: `${group.zeroCommitMembers} thành viên chưa commit • balance ${group.balancePercent}% • ${group.totalCommits} commits`,
-        });
-      } else if (group.risk.level === 2) {
-        result.push({
-          id: `group-warning-${group.id}`,
-          severity: "warning",
-          title: `${group.name} cần theo dõi`,
-          description: `Hoạt động chưa đều • balance ${group.balancePercent}% • ${group.memberCount} thành viên`,
-        });
-      }
-    });
-
-    return result.sort((a, b) => {
-      const priority = { critical: 3, warning: 2, info: 1 };
-      return priority[b.severity] - priority[a.severity];
-    });
-  }, [sortedStudents, groupStats]);
-
-  const totalCommits = sortedStudents.reduce((sum, student) => sum + student.commits, 0);
-  const totalJiraDone = sortedStudents.reduce((sum, student) => sum + student.jiraDone, 0);
-  const totalStudents = sortedStudents.length;
-  const totalPRs = sortedStudents.reduce((sum, student) => sum + student.prs, 0);
-  const totalReviews = sortedStudents.reduce((sum, student) => sum + student.reviews, 0);
-  const activeStudents = sortedStudents.filter((student) => student.commits > 0).length;
-  const inactiveStudents = sortedStudents.filter((student) => student.commits === 0).length;
-
-  const avgScore =
-    totalStudents > 0
-      ? Math.round(
-          sortedStudents.reduce((sum, student) => sum + student.score, 0) /
-            totalStudents
-        )
-      : 0;
-
-  const riskGroups = groupStats.filter(
-    (group) =>
-      group.risk.label === "Rủi ro cao" || group.risk.label === "Cần theo dõi"
-  );
-
-  const previewRiskGroups = riskGroups.slice(0, 3);
-
-  const highRiskStudents = useMemo(
-    () => sortedStudents.filter((student) => shouldWarnStudent(student)),
-    [sortedStudents]
-  );
-
-  const maxWeekly = Math.max(...weeklyCommits, 1);
-  const maxGroupCommits = Math.max(...groupStats.map((group) => group.totalCommits), 1);
-
-  const strongestGroup = useMemo(() => {
-    return [...groupStats].sort((a, b) => b.totalCommits - a.totalCommits)[0];
-  }, [groupStats]);
-
-  function openActionModal(type, student) {
-    setActionModal({
-      open: true,
-      type,
-      student,
-    });
-  }
-
-  function closeActionModal() {
-    setActionModal({
-      open: false,
-      type: "warning",
-      student: null,
-    });
-  }
-
-  function handleConfirmAction(message) {
-    const student = actionModal.student;
-    const type = actionModal.type;
-    if (!student) return;
-
-    const newLog = {
-      id: `${type}-${student.studentId}-${Date.now()}`,
-      studentId: student.studentId,
-      studentName: student.name,
-      studentCode: student.studentCode,
-      email: student.email,
-      groupName: student.groupName,
-      type,
-      message,
-      time: timeLabel(),
-    };
-
-    setSentLogs((prev) => [newLog, ...prev]);
-    setBanner(
-      type === "email"
-        ? `Đã gửi email đến ${student.name}`
-        : `Đã gửi cảnh báo đến ${student.name}`
-    );
-    closeActionModal();
-  }
-
-  function handleBulkSend(type) {
-    const targets = highRiskStudents.slice(0, 5);
-
-    if (!targets.length) {
-      setBanner("Không có sinh viên nào cần nhắc trong bộ lọc hiện tại");
-      return;
-    }
-
-    const newLogs = targets.map((student) => ({
-      id: `${type}-${student.studentId}-${Date.now()}-${Math.random()}`,
-      studentId: student.studentId,
-      studentName: student.name,
-      studentCode: student.studentCode,
-      email: student.email,
-      groupName: student.groupName,
-      type,
-      message: getWarningMessage(student, type),
-      time: timeLabel(),
-    }));
-
-    setSentLogs((prev) => [...newLogs, ...prev]);
-    setBanner(
-      type === "email"
-        ? `Đã gửi email hàng loạt cho ${targets.length} sinh viên`
-        : `Đã gửi cảnh báo hàng loạt cho ${targets.length} sinh viên`
-    );
-  }
-
-  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-          <span className="text-teal-700 font-semibold">Giảng viên</span>
-          <ChevronRight size={12} />
-          <span className="text-gray-800 font-semibold">Theo dõi đóng góp</span>
-        </nav>
-
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
-            Theo dõi đóng góp
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">Đang tải dữ liệu lớp học...</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-28 rounded-2xl bg-white border border-gray-100 shadow-sm animate-pulse"
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader 
+                title="Theo dõi Đóng góp"
+                subtitle="Phân tích chi tiết nỗ lực cá nhân của sinh viên qua Commits, Pull Requests và Code Reviews."
+                breadcrumb={["Giảng viên", "Đóng góp"]}
+                actions={[
+                    <Button key="export" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black uppercase tracking-widest border-0 shadow-lg shadow-teal-100">
+                        <Download size={16} className="mr-2" /> Xuất báo cáo
+                    </Button>
+                ]}
             />
-          ))}
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="space-y-6">
-      <ActionModal
-        open={actionModal.open}
-        actionType={actionModal.type}
-        targetStudent={actionModal.student}
-        onClose={closeActionModal}
-        onConfirm={handleConfirmAction}
-      />
+            <ContributionStats 
+                totalCommits={stats.totalCommits}
+                activeStudents={stats.activeStudents}
+                avgScore={stats.avgScore}
+                totalPRs={stats.totalPRs}
+                totalReviews={stats.totalReviews}
+                riskGroupsCount={stats.riskGroupsCount}
+            />
 
+<<<<<<< HEAD
       {banner && (
         <div className="fixed top-5 right-5 z-50 rounded-2xl border border-teal-100 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
@@ -1829,364 +1496,71 @@ export default function Contributions() {
                                   className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(
                                     member.status
                                   )}`}
+=======
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+                        <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Chi tiết sinh viên</h3>
+                            <div className="flex items-center gap-3">
+                                <select 
+                                    className="bg-gray-50 border-none rounded-xl px-4 py-2 text-xs font-bold text-gray-500 outline-none focus:ring-2 focus:ring-teal-100"
+                                    value={selectedCourse}
+                                    onChange={(e) => setSelectedCourse(e.target.value)}
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
                                 >
-                                  {member.status}
-                                </span>
-                              </div>
-                              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-teal-400 to-emerald-500"
-                                  style={{ width: `${percent}%` }}
-                                />
-                              </div>
+                                    {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                                </select>
+                                <div className="w-64">
+                                    <InputField 
+                                        placeholder="Tìm sinh viên, nhóm..." 
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        size="sm"
+                                    />
+                                </div>
                             </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {activeTab === "students" && (
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <Activity size={15} className="text-indigo-600" />
-              </div>
-              <CardTitle className="text-base font-semibold text-gray-800">
-                Xếp hạng đóng góp sinh viên
-              </CardTitle>
-            </div>
-          </CardHeader>
-
-          <div className="hidden xl:grid grid-cols-14 gap-3 px-6 py-3 bg-gray-50/70 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-            <div className="col-span-1">#</div>
-            <div className="col-span-3">Sinh viên</div>
-            <div className="col-span-1 text-right">Nhóm</div>
-            <div className="col-span-1 text-right">MSSV</div>
-            <div className="col-span-1 text-right">Commit</div>
-            <div className="col-span-1 text-right">Jira</div>
-            <div className="col-span-1 text-right">PR</div>
-            <div className="col-span-1 text-right">Review</div>
-            <div className="col-span-1 text-right">Score</div>
-            <div className="col-span-1 text-right">Trạng thái</div>
-            <div className="col-span-2 text-right">Hành động</div>
-          </div>
-
-          <CardContent className="p-0">
-            {filteredStudents.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-10">
-                Không có sinh viên phù hợp bộ lọc
-              </p>
-            ) : (
-              filteredStudents.map((student, index) => (
-                <div
-                  key={student.studentId}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
-                >
-                  <div className="hidden xl:grid grid-cols-14 gap-3 px-6 py-4 items-center">
-                    <div className="col-span-1 text-sm font-bold text-gray-400">
-                      #{index + 1}
-                    </div>
-
-                    <div className="col-span-3 flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-teal-100 flex items-center justify-center text-xs font-bold text-teal-700 shrink-0">
-                        {student.name?.charAt(0)?.toUpperCase() || "S"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
-                          {student.name}
-                        </p>
-                        <div className="flex items-center flex-wrap gap-2 mt-0.5">
-                          <p className="text-xs text-gray-400">
-                            {student.activeDays} ngày hoạt động • hoạt động gần nhất{" "}
-                            {student.lastActiveDaysAgo} ngày trước
-                          </p>
-                          {sentMap?.[student.studentId] && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
-                              Đã nhắc{" "}
-                              {sentMap[student.studentId].warningCount +
-                                sentMap[student.studentId].emailCount}{" "}
-                              lần
-                            </span>
-                          )}
-                          {shouldWarnStudent(student) && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-                              Cần theo dõi
-                            </span>
-                          )}
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm text-gray-700">{student.groupName}</span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-xs font-mono text-gray-500">
-                        {student.studentCode}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-800">
-                        {student.commits}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">
-                        {student.jiraDone}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">
-                        {student.prs}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-semibold text-gray-700">
-                        {student.reviews}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-bold text-indigo-700">
-                        {student.score}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span
-                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(
-                          student.status
-                        )}`}
-                      >
-                        {student.status}
-                      </span>
-                    </div>
-
-                    <div className="col-span-2">
-                      <StudentActionButtons
-                        student={student}
-                        onWarning={(s) => openActionModal("warning", s)}
-                        onEmail={(s) => openActionModal("email", s)}
-                        sentMap={sentMap}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="xl:hidden px-4 py-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-xs font-bold text-teal-700 shrink-0">
-                        {student.name?.charAt(0)?.toUpperCase() || "S"}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">
-                              #{index + 1} • {student.name}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {student.studentCode} • {student.groupName}
-                            </p>
-                          </div>
-                          <span
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${getStatusBadgeClass(
-                              student.status
-                            )}`}
-                          >
-                            {student.status}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-4 gap-2 mt-3 text-xs">
-                          <div className="rounded-xl bg-gray-50 px-3 py-2">
-                            <p className="text-gray-400">Commits</p>
-                            <p className="font-semibold text-gray-700">
-                              {student.commits}
-                            </p>
-                          </div>
-                          <div className="rounded-xl bg-gray-50 px-3 py-2">
-                            <p className="text-gray-400">Jira</p>
-                            <p className="font-semibold text-gray-700">
-                              {student.jiraDone}
-                            </p>
-                          </div>
-                          <div className="rounded-xl bg-gray-50 px-3 py-2">
-                            <p className="text-gray-400">PR</p>
-                            <p className="font-semibold text-gray-700">
-                              {student.prs}
-                            </p>
-                          </div>
-                          <div className="rounded-xl bg-gray-50 px-3 py-2">
-                            <p className="text-gray-400">Score</p>
-                            <p className="font-semibold text-gray-700">
-                              {student.score}
-                            </p>
-                          </div>
-                        </div>
-
-                        <StudentActionButtons
-                          compact
-                          student={student}
-                          onWarning={(s) => openActionModal("warning", s)}
-                          onEmail={(s) => openActionModal("email", s)}
-                          sentMap={sentMap}
+                        <StudentContributionTable 
+                            students={filteredStudents} 
+                            onWarning={(s) => success(`Đã gửi cảnh báo tới ${s.name}`)}
                         />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {activeTab === "overview" && (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Card className="xl:col-span-2 border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
-                    <AlertTriangle size={15} className="text-red-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">
-                    Nhóm cần chú ý
-                  </CardTitle>
+                    </Card>
                 </div>
 
-                <Button
-  variant="outline"
-  className="rounded-xl"
-  onClick={() => navigate("/lecturer/alerts")}
->
-  Xem tất cả cảnh báo
-</Button>
-              </div>
-            </CardHeader>
+                <div className="space-y-8">
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
+                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">Hoạt động trong tuần</h3>
+                        <WeeklyActivityChart weeklyCommits={weeklyCommits} />
+                    </Card>
 
-            <CardContent className="pt-5">
-              {previewRiskGroups.length === 0 ? (
-                <div className="rounded-2xl bg-green-50 border border-green-100 px-4 py-8 text-center">
-                  <p className="text-sm font-semibold text-green-700">
-                    Không có nhóm rủi ro
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    Dữ liệu hiện tại cho thấy các nhóm đang duy trì mức đóng góp khá ổn định.
-                  </p>
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
+                         <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Top Contributors</h3>
+                            <Target size={18} className="text-teal-600" />
+                         </div>
+                         <div className="space-y-6">
+                            {filteredStudents.sort((a,b) => b.commits - a.commits).slice(0, 3).map((s, i) => (
+                               <div key={s.id} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-bold text-gray-400">0{i+1}</div>
+                                     <div>
+                                        <p className="text-sm font-bold text-gray-800 truncate max-w-[120px]">{s.name}</p>
+                                        <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest">{s.team}</p>
+                                     </div>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="text-sm font-black text-gray-800">{s.commits}</p>
+                                     <p className="text-[9px] font-bold text-gray-400 uppercase">Commits</p>
+                                  </div>
+                               </div>
+                            ))}
+                            {filteredStudents.length === 0 && <p className="text-center text-xs text-gray-400">Không có dữ liệu</p>}
+                         </div>
+                         <Button className="w-full mt-8 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl h-11 text-xs font-black uppercase tracking-widest border-0">Xem tất cả</Button>
+                    </Card>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {previewRiskGroups.map((group) => (
-                    <div
-                      key={group.id}
-                      className="rounded-2xl border border-red-100 bg-red-50/60 p-4"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">
-                            {group.name}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {group.memberCount} thành viên • {group.totalCommits} commits •
-                            balance {group.balancePercent}%
-                          </p>
-                        </div>
-                        <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
-                        >
-                          {group.risk.label}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {group.zeroCommitMembers > 0 && (
-                          <span className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-red-100 text-red-600">
-                            {group.zeroCommitMembers} thành viên chưa commit
-                          </span>
-                        )}
-                        {group.balancePercent < 55 && (
-                          <span className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-amber-100 text-amber-700">
-                            Mất cân bằng đóng góp
-                          </span>
-                        )}
-                        {group.totalCommits < 10 && (
-                          <span className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600">
-                            Hoạt động tổng thấp
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-            <CardHeader className="border-b border-gray-50 pb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center">
-                  <CheckCircle2 size={15} className="text-green-600" />
-                </div>
-                <CardTitle className="text-base font-semibold text-gray-800">
-                  Tóm tắt nhanh
-                </CardTitle>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-5 space-y-3">
-              <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                  Sinh viên đứng đầu
-                </p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">
-                  {sortedStudents[0]?.name || "Chưa có dữ liệu"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                  Nhóm mạnh nhất
-                </p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">
-                  {strongestGroup?.name || "Chưa có dữ liệu"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                  Chưa commit
-                </p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">
-                  {inactiveStudents}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                  Tổng cảnh báo
-                </p>
-                <p className="text-sm font-semibold text-gray-800 mt-1">
-                  {alerts.length}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }

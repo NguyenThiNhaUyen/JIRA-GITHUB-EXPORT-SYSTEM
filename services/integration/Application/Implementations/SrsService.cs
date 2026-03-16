@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -19,11 +20,14 @@ public class SrsService : ISrsService
     private readonly ILogger<SrsService> _logger;
     private readonly IAnalyticsService _analyticsService;
 
+
+    
     public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, IAnalyticsService analyticsService)
     {
         _context = context;
         _env = env;
         _logger = logger;
+        _analyticsService = analyticsService;
         _analyticsService = analyticsService;
     }
 
@@ -114,6 +118,8 @@ public class SrsService : ISrsService
         srs.reviewed_at = DateTime.UtcNow;
         srs.score = request.Score; // New field
 
+        srs.score = request.Score; // New field
+
         if (!string.IsNullOrEmpty(request.Feedback))
         {
             srs.feedback = request.Feedback;
@@ -135,6 +141,7 @@ public class SrsService : ISrsService
                 System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.id, projectId = srs.project_id })
             );
         }
+        
 
         _logger.LogInformation("Lecturer {ReviewerId} reviewed SRS {SrsId} with status {Status}", reviewerUserId, srsId, request.Status);
 

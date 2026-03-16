@@ -11,10 +11,10 @@ import {
     linkIntegration,
     approveIntegration,
     rejectIntegration,
-    getProjectMetrics
+    getProjectMetrics,
+    getProjectCommitHistory,
+    syncProjectCommits
 } from '../api/projectApi.js';
-import * as projectApi from '../api/projectApi.js';
-
 
 export const PROJECT_KEYS = {
     all: ['projects'],
@@ -81,7 +81,6 @@ export const useAddTeamMember = () => {
         mutationFn: ({ projectId, studentId, role, responsibility }) =>
             addTeamMember(projectId, studentId, role, responsibility),
         onSuccess: (_, variables) => {
-            // Invalidate cả detail và lists để dashboard cập nhật số thành viên
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
@@ -109,6 +108,7 @@ export const useUpdateTeamMember = () => {
         },
     });
 };
+
 export const useLinkIntegration = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -125,7 +125,7 @@ export const useGetProjectMetrics = (projectId) => {
         queryKey: [...PROJECT_KEYS.detail(projectId), 'metrics'],
         queryFn: () => getProjectMetrics(projectId),
         enabled: !!projectId,
-        refetchInterval: 60000, // Tự reload sau mỗi 1 phút
+        refetchInterval: 60000, 
     });
 };
 
@@ -154,8 +154,19 @@ export const useRejectIntegration = () => {
 export const useProjectCommitHistory = (projectId) => {
     return useQuery({
         queryKey: [...PROJECT_KEYS.detail(projectId), 'commit-history'],
-        queryFn: () => projectApi.getProjectCommitHistory(projectId),
+        queryFn: () => getProjectCommitHistory(projectId),
         enabled: !!projectId
+    });
+};
+
+export const useSyncProjectCommits = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (projectId) => syncProjectCommits(projectId),
+        onSuccess: (_, projectId) => {
+            queryClient.invalidateQueries({ queryKey: [...PROJECT_KEYS.detail(projectId), 'metrics'] });
+            queryClient.invalidateQueries({ queryKey: [...PROJECT_KEYS.detail(projectId), 'commit-history'] });
+        }
     });
 };
 
@@ -163,7 +174,7 @@ export const useCourseCommitHistories = (projectIds) => {
     return useQueries({
         queries: (projectIds || []).map(id => ({
             queryKey: [...PROJECT_KEYS.detail(id), 'commit-history'],
-            queryFn: () => projectApi.getProjectCommitHistory(id),
+            queryFn: () => getProjectCommitHistory(id),
             enabled: !!id,
         }))
     });

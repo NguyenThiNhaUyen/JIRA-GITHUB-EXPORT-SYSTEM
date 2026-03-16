@@ -1,3 +1,4 @@
+// Login Screen
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -778,167 +779,31 @@ class _DemoAccountTile extends StatelessWidget {
                 child: Text(
                   role,
                   style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F2937),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF138D84),
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$email / $password',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF6B7280),
+                  email,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 8),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: Color(0xFF9CA3AF),
+                size: 11,
+                color: Color(0xFFC4D5D3),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BrandPanel extends StatelessWidget {
-  const _BrandPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0E6665),
-            Color(0xFF02505A),
-            Color(0xFF043E49),
-          ],
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -85,
-              bottom: 120,
-              child: Container(
-                width: 290,
-                height: 290,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 100,
-              bottom: -70,
-              child: Container(
-                width: 175,
-                height: 175,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(42, 42, 42, 34),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Hệ thống quản lý\ndự án học tập',
-                    style: TextStyle(
-                      fontSize: 34,
-                      height: 1.08,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 42),
-                  const Icon(
-                    Icons.format_quote,
-                    color: Color(0xFF59E0CF),
-                    size: 44,
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    '"Trải nghiệm phương thức hiện đại,\ntối ưu và hiệu quả cao để quản lý\ncác lớp học và theo dõi tiến trình\ngiáo dục của bạn."',
-                    style: TextStyle(
-                      fontSize: 17,
-                      height: 1.7,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE8FFFF),
-                    ),
-                  ),
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.96),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Color(0xFFE7FAF6),
-                            child: Icon(
-                              Icons.school_outlined,
-                              color: Color(0xFF0B8178),
-                              size: 18,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Education Management System',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  color: Color(0xFF1B2C34),
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Text(
-                                'Nền tảng Quản lý Giáo dục',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF77838F),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -952,35 +817,130 @@ class _MiniBrandBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF0E6665),
-            Color(0xFF044C57),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFF138D84),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF138D84).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hệ thống quản lý\ndự án học tập',
+            'Jira GitHub',
             style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
               color: Colors.white,
-              fontSize: 24,
-              height: 1.15,
-              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
             ),
           ),
-          SizedBox(height: 14),
           Text(
-            'Trải nghiệm hiện đại và hiệu quả để quản lý lớp học.',
+            'Export System',
             style: TextStyle(
-              color: Color(0xFFE6FAF7),
               fontSize: 14,
-              height: 1.5,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFB5E3DF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BrandPanel extends StatelessWidget {
+  const _BrandPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF147D76),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF147D76).withOpacity(0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -40,
+            right: -40,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.04),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 60,
+            left: -30,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.03),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(44),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.auto_graph_rounded,
+                  color: Color(0xFFB5E3DF),
+                  size: 54,
+                ),
+                const SizedBox(height: 38),
+                const Text(
+                  'Jira GitHub\nExport System',
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    height: 1.15,
+                    letterSpacing: -1.2,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8DCFC8),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const Text(
+                  'Hệ thống tối ưu hóa quy trình quản lý và xuất dữ liệu từ Jira và GitHub, hỗ trợ sinh viên và giảng viên theo dõi tiến độ đồ án hiệu quả.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFFB5E3DF),
+                    height: 1.7,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
