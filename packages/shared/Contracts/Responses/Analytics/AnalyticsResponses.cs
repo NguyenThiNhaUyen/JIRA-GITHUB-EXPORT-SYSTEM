@@ -97,3 +97,30 @@ public class LecturerWorkloadResponse
     public int CourseCount { get; set; }
     public int StudentCount { get; set; }
 }
+
+public class CourseContributionStudentResponse
+{
+    public long StudentId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public long GroupId { get; set; }
+    public string GroupName { get; set; } = string.Empty;
+    public int Commits { get; set; }
+    public int JiraDone { get; set; }
+    public int Prs { get; set; }
+    public int Reviews { get; set; }
+    public int ActiveDays { get; set; }
+    public int OverdueTasks { get; set; }
+    public int LastActiveDaysAgo { get; set; }
+    public decimal Score { get; set; }
+    public string Status { get; set; } = "Cần chú ý";
+    public List<int> DailyActivity { get; set; } = new();
+}
+
+public class CourseContributionResponse
+{
+    public List<CourseContributionStudentResponse> Students { get; set; } = new();
+    public List<int> WeeklyCommits { get; set; } = new();
+    public List<int> WeeklyJira { get; set; } = new();
+}

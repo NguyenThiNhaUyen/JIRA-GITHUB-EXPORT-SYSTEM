@@ -1182,4 +1182,124 @@ public class AnalyticsService : IAnalyticsService
             Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
         }).ToList();
     }
+
+    public async Task<CourseContributionResponse> GetCourseContributionsAsync(long courseId)
+    {
+        var response = new CourseContributionResponse();
+
+        // 1. Get all projects and their members in this course
+        var projects = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Where(p => p.course_id == courseId)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(su => su.user)
+            .ToListAsync();
+
+        if (!projects.Any()) return response;
+
+        var projectIds = projects.Select(p => p.id).ToList();
+        var allStudents = projects.SelectMany(p => p.team_members).ToList();
+
+        // 2. Fetch daily activities for the last 12 weeks
+        var twelveWeeksAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-84));
+        var activities = await _unitOfWork.StudentActivityDailies.Query()
+            .AsNoTracking()
+            .Where(a => projectIds.Contains(a.project_id) && a.activity_date >= twelveWeeksAgo)
+            .ToListAsync();
+
+        // 3. Process each student
+        foreach (var member in allStudents)
+        {
+            // student_activity_daily maps to student (id), but member.student_user_id is the user.id.
+            // Let's get the student.id from the DB 
+            var studentObj = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == member.student_user_id);
+            if (studentObj == null) continue;
+
+            var studentActivities = activities
+                .Where(a => a.student_user_id == studentObj.user_id && a.project_id == member.project_id)
+                .ToList();
+
+            int totalCommits = studentActivities.Sum(a => a.commits_count);
+            int totalJiraDone = studentActivities.Sum(a => a.issues_completed);
+            int totalPrs = studentActivities.Sum(a => a.pull_requests_count);
+            int totalReviews = studentActivities.Sum(a => a.code_reviews_count);
+            int activeDays = studentActivities.Count(a => a.commits_count > 0 || a.issues_completed > 0 || a.pull_requests_count > 0);
+
+            // Calculate Score (Simple formula: 40 base + Commits*2 + Jira*3 + PRs*5)
+            decimal calculatedScore = Math.Min(100, 40 + (totalCommits * 2) + (totalJiraDone * 3) + (totalPrs * 5));
+            if (totalCommits == 0 && totalJiraDone == 0) calculatedScore = 0;
+
+            // Use the stored contribution_score from project_team if available, otherwise use calculated
+            decimal finalScore = member.contribution_score ?? calculatedScore;
+
+            string status = finalScore > 75 ? "Tích cực" : finalScore >= 50 ? "Ổn định" : totalCommits == 0 ? "Chưa commit" : "Cần chú ý";
+
+            int lastActiveDaysAgo = 0;
+            var lastActivityDate = studentActivities.OrderByDescending(a => a.activity_date).FirstOrDefault();
+            if (lastActivityDate != null)
+            {
+                lastActiveDaysAgo = (int)(DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - lastActivityDate.activity_date.DayNumber);
+            }
+            else
+            {
+                lastActiveDaysAgo = 99; // Never active
+            }
+
+            // Fill DailyActivity for the heatmap (12 weeks = 84 days)
+            var dailyActivityMap = new List<int>(new int[84]);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            foreach (var act in studentActivities)
+            {
+                int delayDays = today.DayNumber - act.activity_date.DayNumber;
+                if (delayDays >= 0 && delayDays < 84)
+                {
+                    int index = 83 - delayDays; // Array index 0 is 84 days ago, index 83 is today
+                    dailyActivityMap[index] = act.commits_count + act.issues_completed;
+                }
+            }
+
+            response.Students.Add(new CourseContributionStudentResponse
+            {
+                StudentId = member.student_user_id,
+                Name = member.student_user?.user?.full_name ?? "Unknown",
+                StudentCode = member.student_user?.student_code ?? "Unknown",
+                Email = member.student_user?.user?.email ?? "Unknown",
+                GroupId = member.project_id,
+                GroupName = member.project?.name ?? "Unknown",
+                Commits = totalCommits,
+                JiraDone = totalJiraDone,
+                Prs = totalPrs,
+                Reviews = totalReviews,
+                ActiveDays = activeDays,
+                OverdueTasks = 0, // Cannot easily calculate overdue from activity table, would need Jira API query or snapshot
+                LastActiveDaysAgo = lastActiveDaysAgo,
+                Score = finalScore,
+                Status = status,
+                DailyActivity = dailyActivityMap
+            });
+        }
+
+        // 4. Calculate Weekly Aggregates
+        // 12 weeks
+        var wCommits = new int[12];
+        var wJira = new int[12];
+        var currentSysTime = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        foreach (var act in activities)
+        {
+            int daysAgo = currentSysTime.DayNumber - act.activity_date.DayNumber;
+            if (daysAgo >= 0 && daysAgo < 84)
+            {
+                int weekIndex = 11 - (daysAgo / 7); // 11 is current week, 0 is 12 weeks ago
+                wCommits[weekIndex] += act.commits_count;
+                wJira[weekIndex] += act.issues_completed;
+            }
+        }
+
+        response.WeeklyCommits = wCommits.ToList();
+        response.WeeklyJira = wJira.ToList();
+
+        return response;
+    }
 }
