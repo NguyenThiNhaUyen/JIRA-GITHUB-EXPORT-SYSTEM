@@ -7,7 +7,6 @@ import { unwrap } from "../../../api/unwrap.js";
  */
 export async function getProjectCommits(projectId, page = 1, pageSize = 50) {
     const res = await client.get(`/projects/${projectId}/commits`, { params: { page, pageSize } });
-    // Trả về JSON chứa list array
     return unwrap(res);
 }
 
@@ -26,5 +25,10 @@ export async function syncGithubCommits(projectId) {
  */
 export async function getProjectCommitHistory(projectId) {
     const res = await client.get(`/projects/${projectId}/commit-history`);
+    return unwrap(res);
+}
+
+export async function getCommitsStats(courseId, startDate, endDate) {
+    const res = await client.get(`/analytics/commits-stats`, { params: { courseId, startDate, endDate } });
     return unwrap(res);
 }

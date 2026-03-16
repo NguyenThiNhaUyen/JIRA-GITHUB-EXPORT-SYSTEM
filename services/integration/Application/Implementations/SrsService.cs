@@ -19,11 +19,14 @@ public class SrsService : ISrsService
     private readonly ILogger<SrsService> _logger;
     private readonly IAnalyticsService _analyticsService;
 
+
+    
     public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, IAnalyticsService analyticsService)
     {
         _context = context;
         _env = env;
         _logger = logger;
+        _analyticsService = analyticsService;
         _analyticsService = analyticsService;
     }
 
@@ -113,7 +116,6 @@ public class SrsService : ISrsService
         srs.reviewer_user_id = reviewerUserId;
         srs.reviewed_at = DateTime.UtcNow;
         srs.score = request.Score;
-
         if (!string.IsNullOrEmpty(request.Feedback))
         {
             srs.feedback = request.Feedback;
@@ -135,6 +137,7 @@ public class SrsService : ISrsService
                 System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.id, projectId = srs.project_id })
             );
         }
+        
 
         _logger.LogInformation("Lecturer {ReviewerId} reviewed SRS {SrsId} with status {Status}", reviewerUserId, srsId, request.Status);
 
@@ -206,8 +209,30 @@ public class SrsService : ISrsService
 
     public async Task RemindOverdueAsync()
     {
-        _logger.LogInformation("Sent reminders for overdue SRS documents");
-        await Task.CompletedTask;
+        // Find active projects that do not have an SRS document yet
+        var activeProjectsWithoutSrs = await _context.projects
+            .Where(p => p.status == "ACTIVE" && !_context.project_documents.Any(pd => pd.project_id == p.id && pd.doc_type == "SRS"))
+            .ToListAsync();
+
+        foreach (var project in activeProjectsWithoutSrs)
+        {
+            // Get all students in the project
+            var teamMembers = await _context.team_members
+                .Where(tm => tm.project_id == project.id && tm.participation_status == "ACTIVE")
+                .ToListAsync();
+
+            foreach (var member in teamMembers)
+            {
+                await _analyticsService.BuildNotificationAsync(
+                    member.student_user_id,
+                    "WARNING",
+                    $"Nhóm của bạn tại dự án {project.name} chưa nộp tài liệu SRS. Vui lòng nộp sớm để không bị trễ hạn.",
+                    System.Text.Json.JsonSerializer.Serialize(new { projectId = project.id })
+                );
+            }
+        }
+
+        _logger.LogInformation("Sent reminders for {Count} projects missing SRS documents", activeProjectsWithoutSrs.Count);
     }
 
     public async Task DeleteSrsAsync(long srsId, long userId)

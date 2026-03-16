@@ -106,3 +106,4 @@ public class AssignmentItem
     [Required]
     public long LecturerId { get; set; }
 }
+

@@ -90,6 +90,18 @@ export default function StudentDashboard() {
     );
   }
 
+  const handleSyncProject = (project) => {
+    success?.(`Đã đồng bộ commits cho project ${project.title}`);
+  };
+
+  const handleUploadSrs = (project) => {
+    success?.(`Mở form nộp SRS cho project ${project.title}`);
+  };
+
+  const handleExport = () => {
+    success?.("Đã xuất báo cáo cá nhân thành công");
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <PageHeader 

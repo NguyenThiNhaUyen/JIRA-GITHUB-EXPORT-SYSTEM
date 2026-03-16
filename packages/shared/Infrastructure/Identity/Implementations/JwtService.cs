@@ -51,7 +51,6 @@ public class JwtService : IJwtService
                 claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

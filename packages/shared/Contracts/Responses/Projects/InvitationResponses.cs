@@ -3,7 +3,6 @@ namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 public class InvitationResponse
 {
     public long Id { get; set; }
-    
     // Merge Project (HEAD) and Group (origin) terminologies
     public long ProjectId { get; set; }
     public long GroupId 

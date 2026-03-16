@@ -18,7 +18,7 @@ public class MappingProfile : Profile
         // USER MAPPINGS
         // ============================================
 
-        CreateMap<user, UserDetailResponse>() 
+        CreateMap<user, UserDetailResponse>() // FE likely uses UserDetailResponse for details
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => 
                 src.roles.Any(r => r.role_name == "ADMIN" || r.role_name == "SUPER_ADMIN") ? "ADMIN" : 
                 (src.roles.Any(r => r.role_name == "LECTURER") ? "LECTURER" : "STUDENT")))
@@ -85,7 +85,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.team_role))
             .ForMember(dest => dest.ParticipationStatus, opt => opt.MapFrom(src => src.participation_status))
             .ForMember(dest => dest.ContributionScore, opt => opt.MapFrom(src => 90)); // Sample score
-
         CreateMap<project_integration, IntegrationInfo>()
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.repo_url : null))
             .ForMember(dest => dest.GithubRepoOwner, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.owner_login : null))

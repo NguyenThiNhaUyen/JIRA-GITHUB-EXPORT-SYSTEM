@@ -43,11 +43,11 @@ export function mapCourse(beCourse) {
         },
 
         // ── Students & capacity ────────────────────────────────────
-        currentStudents: beCourse.currentStudents || beCourse.enrolledStudentsCount || enrs.length || 0,
-        maxStudents: beCourse.maxStudents || beCourse.max_students || 40,
+        currentStudents: beCourse.currentStudents ?? beCourse.enrolledStudentsCount ?? 0,
+        maxStudents: beCourse.maxStudents ?? 0,
 
         // ── Status ────────────────────────────────────────────────
-        status: beCourse.status || beCourse.Status || "ACTIVE",
+        status: beCourse.status ?? "UNKNOWN",
 
         // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({

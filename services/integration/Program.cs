@@ -37,35 +37,35 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // CONFIGURATION
 // ============================================
 
-// JWT Settings
-var jwtSection = builder.Configuration.GetSection("JwtSettings");
-builder.Services.Configure<JwtSettings>(jwtSection);
-var jwtSettings = jwtSection.Get<JwtSettings>();
+            // JWT Settings
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            builder.Services.Configure<JwtSettings>(jwtSection);
+            var jwtSettings = jwtSection.Get<JwtSettings>();
 
-if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
-{
-    throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
-}
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
+            }
 
 // ============================================
 // DATABASE
 // ============================================
 
-var connectionString = builder.Configuration.GetConnectionString("Default");
+            var connectionString = builder.Configuration.GetConnectionString("Default");
+            
+            // Fix for Supabase MaxClientsInSessionMode: Enforce strict connection pooling limits
+            if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("Max Pool Size", StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = $"{connectionString.TrimEnd(';')};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=5;Connection Idle Lifetime=20;";
+            }
 
-// Fix for Supabase MaxClientsInSessionMode: Enforce strict connection pooling limits
-if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("Max Pool Size", StringComparison.OrdinalIgnoreCase))
-{
-    connectionString = $"{connectionString.TrimEnd(';')};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=5;Connection Idle Lifetime=20;";
-}
-
-// Fix connection exhaustion by pooling DbContext instances
-builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
-{
-    options.UseNpgsql(connectionString, o => 
-    {
-        o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
-    });
+            // Fix connection exhaustion by pooling DbContext instances
+            builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
+            {
+                options.UseNpgsql(connectionString, o => 
+                {
+                    o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
+                });
 
     if (builder.Environment.IsDevelopment())
     {
@@ -75,58 +75,61 @@ builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
 });
 
 
-// ============================================
-// AUTHENTICATION & AUTHORIZATION
-// ============================================
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings!.SecretKey)),
-        ValidateIssuer = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidateAudience = true,
-        ValidAudience = jwtSettings.Audience,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) &&
-                (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
+            // ============================================
+            // AUTHENTICATION & AUTHORIZATION
+            // ============================================
+            
+            builder.Services.AddAuthentication(options =>
             {
-                context.Token = accessToken;
-            }
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            context.HandleResponse();
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/json";
-            var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
-            return context.Response.WriteAsync(result);
-        },
-        OnForbidden = context =>
-        {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            context.Response.ContentType = "application/json";
-            var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
-            return context.Response.WriteAsync(result);
-        }
-    };
-});
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings!.SecretKey)),
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request for the hub
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
+                        return context.Response.WriteAsync(result);
+                    },
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
+                        return context.Response.WriteAsync(result);
+                    }
+                };
+            });
 
 builder.Services.AddAuthorization();
 
@@ -144,24 +147,25 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-// Application Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ISemesterService, SemesterService>();
-builder.Services.AddScoped<ISubjectService, SubjectService>();
-builder.Services.AddScoped<ICourseService, CourseService>();
-builder.Services.AddScoped<IProjectCoreService, ProjectCoreService>();
-builder.Services.AddScoped<IProjectTeamService, ProjectTeamService>();
-builder.Services.AddScoped<IProjectIntegrationService, ProjectIntegrationService>();
-builder.Services.AddScoped<IProjectDashboardService, ProjectDashboardService>();
-builder.Services.AddScoped<IReportService, ReportService>();
-builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
-builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAlertService, AlertService>();
-builder.Services.AddScoped<ISrsService, SrsService>();
-builder.Services.AddScoped<IInvitationService, InvitationService>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IStudentService, StudentService>();
+            // Tầng Application (Services)
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ISemesterService, SemesterService>();
+            builder.Services.AddScoped<ISubjectService, SubjectService>();
+            builder.Services.AddScoped<ICourseService, CourseService>();
+            builder.Services.AddScoped<IProjectCoreService, ProjectCoreService>();
+            builder.Services.AddScoped<IProjectTeamService, ProjectTeamService>();
+            builder.Services.AddScoped<IProjectIntegrationService, ProjectIntegrationService>();
+            builder.Services.AddScoped<IProjectDashboardService, ProjectDashboardService>();
+            builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IExcelReportGenerator, ExcelReportGenerator>();
+            builder.Services.AddScoped<IPdfReportGenerator, PdfReportGenerator>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAlertService, AlertService>();
+            builder.Services.AddScoped<ISrsService, SrsService>();
+            builder.Services.AddScoped<IInvitationService, InvitationService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
+
 
 // Background Services
 builder.Services.AddHostedService<SyncWorker>();
@@ -177,28 +181,30 @@ builder.Services.AddHttpClient<IJiraClient, JiraClient>();
 // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
 // ============================================
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-    });
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSignalR();
-
-// Redis Configuration (Non-blocking Connect)
-var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
-
-try 
-{
-    var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
-    builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
-}
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSignalR();
+            
+            // Redis Configuration (Non-blocking Connect)
+            var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+            
+            try 
+            {
+                var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+                builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
+                // We still register a dummy or handle null in services if needed, 
+                // but at least the app won't crash on startup.
+            }
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -268,64 +274,83 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseCustomExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-        c.RoutePrefix = "swagger"; 
-    });
-}
 
-if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
-{
-    app.UseHttpsRedirection();
-}
+           if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+                c.RoutePrefix = "swagger"; // Swagger at /swagger
+            });
+          }
 
-var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
-app.UseStaticFiles();
+            // Render/Cloud handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-Render environments.
+            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
+            {
+                app.UseHttpsRedirection();
+            }
+
+            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
+            app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
-app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
-app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
+            // Map controllers & SignalR Hubs
+            app.MapControllers();
+            // Mount NotificationHub on both paths to support FE calling /notificationHub
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
 
-// Health Check Endpoint
-app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
-app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
+            // Health Check Endpoint for Render/Deployments
+            app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
+            app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
 
-// ============================================
-// DATABASE SEEDING
-// ============================================
-_ = Task.Run(async () => {
-    try {
-        await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
-    } catch (Exception ex) {
-        Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
-    }
-});
+            // ============================================
+            // DATABASE SEEDING (Background)
+            // ============================================
+            _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
+                }
+            });
 
-// ============================================
-// RUN APPLICATION
-// ============================================
+            // ============================================
+            // RUN APPLICATION
+            // ============================================
+            var envPort = Environment.GetEnvironmentVariable("PORT");
+            if (!string.IsNullOrEmpty(envPort))
+            {
+                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
+                var url = $"http://0.0.0.0:{envPort}";
+                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
+                app.Urls.Clear(); // Clear any pre-configured URLs
+                app.Urls.Add(url);
+                await app.RunAsync();
+            }
+            else
+            {
+                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
+                await app.RunAsync();
+            }
 
-var envPort = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(envPort))
-{
-    var url = $"http://0.0.0.0:{envPort}";
-    Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
-    app.Urls.Clear(); 
-    app.Urls.Add(url);
-    await app.RunAsync();
-}
-else
-{
-    Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
-    await app.RunAsync();
-}
+
+
+
+
+
+
+
+
+
+
+

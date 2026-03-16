@@ -47,8 +47,6 @@ client.interceptors.response.use(
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-            
-            // Redirect to login only if not already there
             if (!window.location.pathname.includes("/login")) {
                 window.location.href = "/login";
             }

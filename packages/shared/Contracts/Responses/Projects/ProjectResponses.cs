@@ -69,7 +69,6 @@ public class IntegrationInfo
     public string? JiraUrl { get; set; }
     public string GithubStatus { get; set; } = "PENDING";
     public string JiraStatus { get; set; } = "PENDING";
-    
     // Detailed HEAD properties
     public string? GithubRepoUrl 
     { 

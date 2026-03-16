@@ -1,4 +1,8 @@
 import { useMemo, useState } from "react";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
+import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -27,12 +31,6 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
 import { StatsCard } from "../../components/shared/StatsCard.jsx";
 import { StatusBadge } from "../../components/shared/Badge.jsx";
-
-// Feature Hooks
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useGetProjects, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
-import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
-import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 
 /* ═══════════ Courses Page ═══════════ */
 export default function StudentCoursesPage() {

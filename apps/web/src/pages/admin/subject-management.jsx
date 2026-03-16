@@ -52,15 +52,15 @@ export default function SubjectManagement() {
     const [deptFilter, setDeptFilter] = useState("ALL");
 
     const [formData, setFormData] = useState({
-        department: "",
-        courseNumber: "",
-        code: "",
-        name: "",
-        description: "",
-        credits: 3,
-        maxStudents: 40,
-        status: "ACTIVE",
-    });
+  department: "",
+  courseNumber: "",
+  code: "",
+  name: "",
+  description: "",
+  credits: 3,
+  maxStudents: 40,
+  status: "ACTIVE",
+});
 
     /* Auto generate code */
     useEffect(() => {
@@ -127,29 +127,29 @@ export default function SubjectManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const payload = {
+            subjectCode: formData.code,
+            subjectName: formData.name,
+            department: formData.department,
+            description: formData.description,
+            credits: Number(formData.credits),
+            maxStudents: Number(formData.maxStudents),
+            status: formData.status
+        };
         try {
-            const payload = {
-                subjectCode: formData.code,
-                subjectName: formData.name,
-                department: formData.department,
-                description: formData.description,
-                credits: Number(formData.credits),
-                maxStudents: Number(formData.maxStudents),
-                status: formData.status
-            };
-
             if (editingSubject) {
-                await updateMutation.mutateAsync({ 
-                    id: editingSubject.id, 
-                    updates: payload 
+                await updateMutation.mutateAsync({
+                    id: editingSubject.id,
+                    updates: payload
                 });
-                success("Cập nhật thành công");
+                success("Cập nhật môn học thành công!");
             } else {
                 await createMutation.mutateAsync(payload);
-                success("Tạo mới thành công");
+                success("Tạo môn học thành công!");
             }
             setShowModal(false);
         } catch (err) {
+            console.error(err);
             showError(err.message || "Thao tác thất bại");
         }
     };

@@ -72,6 +72,7 @@ export default function LecturerDashboard() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
 
+  const { data: semesters = [] } = useGetSemesters();
   const { data: workload } = useLecturerWorkload(user?.id);
   const { data: subjectsData = { items: [] } } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
@@ -101,27 +102,27 @@ export default function LecturerDashboard() {
     alerts: (alertsData?.items || []).filter(a => a.status === "OPEN").length,
   }), [workload, groups, alertsData]);
 
-  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
+  const alertsList = useMemo(() => (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
     id: a.id,
     name: a.groupName || "Hệ thống",
     msg: a.message,
     severity: a.severity?.toLowerCase() === "high" ? "error" : "warning"
-  }));
+  })), [alertsData]);
 
   const pendingIntegrations = groups.filter(
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-  const radarData = radarMetricsData || groups.map(group => ({
+  const radarData = useMemo(() => radarMetricsData || groups.map(group => ({
     groupName: group.name,
     commits: group.stats?.commitsCount || 0,
     srsDone: group.stats?.srsCompletionPercent || 0,
     teamSize: group.team?.length || 0,
     githubLinked: group.integration?.githubStatus === 'APPROVED' ? 100 : 0,
     jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 100 : 0,
-  }));
+  })), [radarMetricsData, groups]);
 
-  const activities = (activityLogsData?.items || []).map(act => {
+  const activities = useMemo(() => (activityLogsData?.items || []).map(act => {
       const { icon, color } = getActivityIconInfo(act.type);
       return {
           id: act.id,
@@ -130,7 +131,7 @@ export default function LecturerDashboard() {
           msg: act.message || act.description || 'Hoạt động ẩn danh',
           time: act.time || new Date(act.timestamp || act.createdAt).toLocaleDateString("vi-VN")
       };
-  });
+  }), [activityLogsData]);
 
   const handleApprovePending = async (groupId) => {
     try {

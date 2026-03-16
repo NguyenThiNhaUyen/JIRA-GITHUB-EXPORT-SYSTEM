@@ -238,12 +238,7 @@ export default function Reports() {
                             <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Lịch sử xuất</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {MOCK_EXPORTS.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                                    <SearchX size={32} className="text-gray-300" />
-                                    <p className="text-sm text-gray-500 font-black uppercase tracking-widest text-[10px]">Chưa có lịch sử</p>
-                                </div>
-                            ) : MOCK_EXPORTS.map(ex => (
+                            {MOCK_EXPORTS.map(ex => (
                                 <div key={ex.id} className="p-5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="text-xs font-black text-gray-800 uppercase tracking-tight">{ex.type}</p>
@@ -255,6 +250,12 @@ export default function Reports() {
                                     </div>
                                 </div>
                             ))}
+                            {MOCK_EXPORTS.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                    <SearchX size={32} className="text-gray-300" />
+                                    <p className="text-sm text-gray-500 font-black uppercase tracking-widest text-[10px]">Chưa có lịch sử</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

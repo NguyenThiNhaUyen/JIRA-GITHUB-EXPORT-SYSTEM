@@ -354,10 +354,10 @@ export default function StudentProject() {
                          </div>
                          <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">{d.due}</p>
                       </div>
-                   </div>
-                 ))}
-              </div>
-           </Card>
+                  </div>
+                ))}
+            </div>
+          </Card>
         </div>
       </div>
 

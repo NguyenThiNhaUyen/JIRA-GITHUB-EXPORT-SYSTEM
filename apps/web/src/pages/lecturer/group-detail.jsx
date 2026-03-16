@@ -10,6 +10,9 @@ import {
     useRejectIntegration,
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
+import { useGenerateSrsReport } from "../../features/projects/hooks/useReports.js";
+import { getDownloadUrl } from "../../features/projects/api/reportApi.js";
+import { useSendAlert } from "../../features/system/hooks/useAlerts.js";
 
 // Shared Components
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
@@ -35,6 +38,8 @@ export default function GroupDetail() {
     const approveMutation = useApproveIntegration();
     const rejectMutation = useRejectIntegration();
     const updateMemberMutation = useUpdateTeamMember();
+    const generateSrsMutation = useGenerateSrsReport();
+    const { mutate: sendAlert, isPending: isSendingAlert } = useSendAlert();
 
     if (isLoading) {
         return (
@@ -112,6 +117,57 @@ export default function GroupDetail() {
             success("Đã xuất danh sách thành viên thành công!");
         } catch (err) {
             showError("Lỗi khi xuất file");
+        }
+    };
+
+    const handleExportSrs = async () => {
+        try {
+            success("Đang tổng hợp dữ liệu từ Jira & GitHub...");
+            
+            // 1. Trigger the backend API to generate SRS
+            const res = await generateSrsMutation.mutateAsync({ projectId: groupId, format: "PDF" });
+            const reportId = res?.reportId || res?.data?.reportId;
+            
+            if (!reportId) {
+                error("Không nhận được mã báo cáo từ server.");
+                return;
+            }
+
+            // 2. Poll the download URL (in a real app, you can use the polling hook, but here we manually retry)
+            success("Đang tạo PDF, vui lòng chờ trong giây lát...");
+            
+            let downloadUrl = null;
+            let attempts = 0;
+            
+            while (!downloadUrl && attempts < 15) { // Try for ~30 seconds
+                await new Promise(r => setTimeout(r, 2000));
+                attempts++;
+                
+                try {
+                    const urlRes = await getDownloadUrl(reportId);
+                    if (urlRes?.downloadUrl || urlRes?.data?.downloadUrl) {
+                        downloadUrl = urlRes.downloadUrl || urlRes.data.downloadUrl;
+                    }
+                } catch (e) {
+                    // API might return 404 while generating, ignore and continue polling
+                }
+            }
+
+            if (downloadUrl) {
+                // 3. Trigger Download
+                const link = document.createElement("a");
+                link.href = downloadUrl;
+                link.setAttribute("download", `SRS_Report_Group_${group.name}.pdf`);
+                link.target = "_blank";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                success("Đã tải xuống báo cáo SRS thành công!");
+            } else {
+                error("Quá trình tạo file đang bị chậm, vui lòng thử lại sau.");
+            }
+        } catch (err) {
+            error(err?.message || "Lỗi khi xuất báo cáo SRS");
         }
     };
 
@@ -233,19 +289,42 @@ export default function GroupDetail() {
                         </CardContent>
                     </Card>
 
+                    {/* Export */}
                     <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white hover:shadow-lg transition-all">
-                        <CardContent className="p-8 flex items-center justify-between gap-6">
-                            <div>
-                                <h4 className="font-black text-gray-800 text-[10px] uppercase tracking-widest mb-1.5">Xuất báo cáo chi tiết</h4>
-                                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80">Kết xuất dữ liệu nhóm bao gồm đánh giá và điểm đóng góp sang định dạng CSV/Excel.</p>
+                        <CardHeader className="border-b border-gray-50 py-5 px-8 flex flex-row items-center justify-between">
+                             <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Báo cáo & Xuất bản</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-8 space-y-4">
+                            <div className="flex items-center justify-between gap-6">
+                                <div>
+                                    <h4 className="font-black text-gray-800 text-[10px] uppercase tracking-widest mb-1.5">Xuất báo cáo SRS</h4>
+                                    <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80">Xuất dữ liệu Jira/GitHub sang PDF chuẩn ISO 29148.</p>
+                                </div>
+                                <Button
+                                    onClick={handleExportSrs}
+                                    disabled={generateSrsMutation.isPending}
+                                    variant="outline"
+                                    className="rounded-2xl h-12 px-8 text-[10px] font-black uppercase tracking-widest border-teal-100 text-teal-600 hover:bg-teal-50 shadow-sm shrink-0"
+                                >
+                                    <FileDown size={16} className="mr-2" /> {generateSrsMutation.isPending ? "Đang tạo..." : "Xuất SRS"}
+                                </Button>
                             </div>
-                            <Button
-                                onClick={handleExport}
-                                variant="outline"
-                                className="rounded-2xl h-12 px-8 text-[10px] font-black uppercase tracking-widest border-teal-100 text-teal-600 hover:bg-teal-50 shadow-sm shrink-0"
-                            >
-                                <FileDown size={16} className="mr-2" /> Tải báo cáo
-                            </Button>
+
+                            <div className="h-px bg-gray-50" />
+
+                            <div className="flex items-center justify-between gap-6">
+                                <div>
+                                    <h4 className="font-black text-gray-800 text-[10px] uppercase tracking-widest mb-1.5">Danh sách Thành viên</h4>
+                                    <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80">Xuất bảng điểm đóng góp của nhóm sang định dạng CSV.</p>
+                                </div>
+                                <Button
+                                    onClick={handleExport}
+                                    variant="outline"
+                                    className="rounded-2xl h-10 px-6 text-[10px] font-black uppercase tracking-widest border-gray-100 text-gray-600 hover:bg-gray-50 shadow-sm shrink-0"
+                                >
+                                    <Users size={14} className="mr-2" /> Xuất CSV
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -262,9 +341,19 @@ export default function GroupDetail() {
                                     </p>
                                     <Button
                                         className="bg-orange-600 hover:bg-orange-700 text-white border-0 rounded-2xl h-11 px-8 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-200"
-                                        onClick={() => success("Đã gửi cảnh báo hệ thống đến tất cả thành viên trong nhóm")}
+                                        disabled={isSendingAlert}
+                                        onClick={() => {
+                                            sendAlert(
+                                                { groupId: Number(groupId), message: "Cảnh báo khẩn: Yêu cầu cập nhật tiến độ nhóm!", severity: "HIGH" },
+                                                {
+                                                    onSuccess: () => success("Đã gửi cảnh báo đến nhóm"),
+                                                    onError: (err) => error("Lỗi khi gửi cảnh báo: " + err.message)
+                                                }
+                                            )
+                                        }}
                                     >
-                                        Gửi cảnh báo ngay
+                                        <AlertTriangle size={13} className="mr-2" />
+                                        {isSendingAlert ? "Đang gửi..." : "Gửi cảnh báo ngay"}
                                     </Button>
                                 </div>
                             </div>

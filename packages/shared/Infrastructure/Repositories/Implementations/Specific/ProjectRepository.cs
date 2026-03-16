@@ -32,7 +32,6 @@ public class ProjectRepository : GenericRepository<project>, IProjectRepository
             .Include(p => p.team_members)
                 .ThenInclude(tm => tm.student_user)
                     .ThenInclude(su => su.user)
-
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

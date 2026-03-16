@@ -118,6 +118,7 @@ public class SyncWorker : BackgroundService
             
         _logger.LogInformation("Found {Count} active integrations to sync. DB Connection released to pool.", integrations.Count);
 
+
         foreach (var integration in integrations)
         {
             if (stoppingToken.IsCancellationRequested) break;
