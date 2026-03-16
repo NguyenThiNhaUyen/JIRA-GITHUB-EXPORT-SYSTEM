@@ -29,15 +29,10 @@ public class UpdateSemesterRequest : IValidatableObject
 public class UpdateSubjectRequest
 {
     public string? SubjectName { get; set; }
-    
     public string? Department { get; set; }
-    
     public string? Description { get; set; }
-    
     public int? Credits { get; set; }
-    
     public int? MaxStudents { get; set; }
-    
     public string? Status { get; set; }
 }
 

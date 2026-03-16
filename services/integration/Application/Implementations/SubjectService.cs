@@ -90,7 +90,7 @@ public class SubjectService : ISubjectService
         var (items, totalItems) = await _unitOfWork.Subjects.GetPagedAsync(
             request.Page, 
             request.PageSize,
-            string.IsNullOrWhiteSpace(request.Q) ? null : s => s.subject_name.ToLower().Contains(request.Q.ToLower()) || s.subject_code.ToLower().Contains(request.Q.ToLower()),
+            string.IsNullOrWhiteSpace(request.Q) ? null : s => (s.subject_name ?? "").ToLower().Contains(request.Q.ToLower()) || (s.subject_code ?? "").ToLower().Contains(request.Q.ToLower()),
             request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.created_at) : q => q.OrderBy(x => x.created_at)
         );
 

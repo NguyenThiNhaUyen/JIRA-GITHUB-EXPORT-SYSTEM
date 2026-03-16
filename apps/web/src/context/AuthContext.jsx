@@ -18,24 +18,23 @@ const ROLE_REDIRECTS = {
  * FE cần:    { id, email, name, role, studentCode?, lecturerCode? }
  */
 function mapBEUserToFEUser(loginResponse) {
-  const beUser = loginResponse.user ?? loginResponse.User; // camelCase hoặc PascalCase
+  const beUser = loginResponse.user ?? loginResponse.User ?? loginResponse; 
   
-  let primaryRole = "STUDENT";
-  if (typeof beUser.role === 'string' && beUser.role) {
-    primaryRole = beUser.role;
-  } else if (typeof beUser.Role === 'string' && beUser.Role) {
-    primaryRole = beUser.Role;
-  } else {
-    // Fallback cho trường hợp trả về mảng rules cũ
-    const roles = beUser.roles ?? beUser.Roles ?? [];
-    primaryRole = roles[0] ?? "STUDENT";
+  // Xử lý linh hoạt: roles (array), Roles (array), role (string), Role (string)
+  const rawRoles = beUser.roles ?? beUser.Roles ?? beUser.role ?? beUser.Role ?? [];
+  const rolesArray = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
+  
+  // Lấy role đầu tiên, handle nếu role là object { name: "..." } hoặc string
+  let primaryRole = rolesArray[0] ?? "STUDENT";
+  if (typeof primaryRole === "object") {
+    primaryRole = primaryRole.name ?? primaryRole.Name ?? primaryRole.roleName ?? "STUDENT";
   }
 
   return {
     id: beUser.id ?? beUser.Id,
     email: beUser.email ?? beUser.Email,
     name: beUser.fullName ?? beUser.FullName,
-    role: primaryRole.toUpperCase(),
+    role: String(primaryRole).toUpperCase(),
     ...(beUser.studentCode && { studentCode: beUser.studentCode }),
     ...(beUser.lecturerCode && { lecturerCode: beUser.lecturerCode }),
   };
@@ -43,10 +42,21 @@ function mapBEUserToFEUser(loginResponse) {
 
 /**
  * Khôi phục user từ localStorage khi load lại trang.
- * Token JWT thật — không cần parse thủ công, chỉ cần kiểm tra tồn tại.
+ * Có kèm logic Auto-Logout: Nếu phiên bản local cache là đời cũ (chưa có cờ v2.1), 
+ * thì lập tức xóa bỏ và bắt đăng nhập lại.
  */
 function restoreUserFromStorage() {
   try {
+    const versionMatch = localStorage.getItem("app_version") === "2.1";
+    if (!versionMatch) {
+      // Ép dọn dẹp cache từ bản cũ (Mock API) để tránh bị kẹt role
+      localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      localStorage.setItem("app_version", "2.1"); // Đánh dấu đã qua bản mới
+      return null;
+    }
+
     const savedUser = localStorage.getItem("user");
     const savedToken = localStorage.getItem("accessToken");
     if (savedUser && savedToken) {
@@ -73,8 +83,6 @@ export function AuthProvider({ children }) {
     try {
       // client.js interceptor đã bóc vỏ ApiResponse<T>
       // loginResponse = { accessToken, tokenType, expiresIn, user: {...} }
-      // Nhưng do interceptor trả về response.data (= toàn bộ ApiResponse),
-      // ta cần bóc thêm tầng .data bên trong nếu BE wrap: { success, data: LoginResponse }
       const apiRes = await loginWithCredentials(email, password);
 
       // apiRes có thể là ApiResponse wrapper { Success, Message, Data }

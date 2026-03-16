@@ -2,8 +2,8 @@ using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using JiraGithubExport.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -64,7 +64,10 @@ public class AlertService : IAlertService
             ProjectName = a.project?.name,
             Severity = a.severity,
             Message = a.message,
+            ThresholdDays = a.threshold_days,
+            LastActivityAt = a.last_activity_at,
             IsResolved = a.is_resolved,
+            ResolvedAt = a.resolved_at,
             CreatedAt = a.created_at
         }).ToList();
 
@@ -72,6 +75,7 @@ public class AlertService : IAlertService
         {
             Items = mapped,
             TotalCount = total,
+            TotalItems = total, // Standardized alias
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)

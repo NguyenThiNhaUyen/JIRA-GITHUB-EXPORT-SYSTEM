@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all users (Admin only). Supports ?role=ADMIN|LECTURER|STUDENT filter.
+    /// Get all users (Admin/Lecturer). Supports ?role=ADMIN|LECTURER|STUDENT filter.
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
@@ -50,7 +50,7 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get user by ID (Admin only)
+    /// Get user by ID (Admin/Lecturer)
     /// </summary>
     [HttpGet("{id}")]
     [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]

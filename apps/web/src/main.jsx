@@ -8,6 +8,7 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import { ToastProvider } from "./components/ui/toast.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // TanStack Query client
 const queryClient = new QueryClient({
@@ -27,7 +28,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <ToastProvider>
           <AuthProvider>
             <AppProvider>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </AppProvider>
           </AuthProvider>
         </ToastProvider>

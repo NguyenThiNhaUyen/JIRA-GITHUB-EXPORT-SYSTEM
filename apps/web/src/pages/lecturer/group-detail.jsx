@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
     useGetProjectById,
@@ -12,17 +11,21 @@ import {
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
 
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { StatusBadge } from "../../components/shared/Badge.jsx";
+
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
     Users, Calendar, CheckCircle, Clock, ExternalLink,
-    FileDown, AlertTriangle, Shield
+    FileDown, AlertTriangle, Shield, Activity
 } from "lucide-react";
 
 export default function GroupDetail() {
     const { groupId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const { success, error } = useToast();
+    const { success, error: showError } = useToast();
 
     // 1. Dữ liệu thực từ useGetProjectById (Project thực chất là Group)
     const { data: group, isLoading, isError } = useGetProjectById(groupId);
@@ -33,23 +36,20 @@ export default function GroupDetail() {
     const rejectMutation = useRejectIntegration();
     const updateMemberMutation = useUpdateTeamMember();
 
-    // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
     if (isLoading) {
         return (
-            <div className="flex h-full items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-                    <p className="text-sm text-gray-400">Đang tải dữ liệu từ API...</p>
-                </div>
+            <div className="flex flex-col h-64 items-center justify-center gap-4">
+                <Activity className="animate-spin text-teal-600 h-10 w-10" /> 
+                <span className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Đang tải dữ liệu từ API...</span>
             </div>
         );
     }
 
     if (isError || !group) {
         return (
-            <div className="flex h-full items-center justify-center flex-col gap-4">
-                <p className="text-red-500 font-semibold">Cảnh báo: Không thể tải dữ liệu nhóm</p>
-                <Button onClick={() => navigate("/lecturer")} variant="outline">Trở về bảng tin</Button>
+            <div className="flex flex-col h-64 items-center justify-center gap-4">
+                <p className="text-red-500 font-black uppercase tracking-widest text-xs">Cảnh báo: Không thể tải dữ liệu nhóm</p>
+                <Button onClick={() => navigate("/lecturer/my-courses")} variant="outline" className="rounded-2xl border-gray-100 uppercase text-[10px] font-black h-11 px-6 tracking-widest">Trở về bảng tin</Button>
             </div>
         );
     }
@@ -76,7 +76,7 @@ export default function GroupDetail() {
     const handleUpdateScore = (studentId, score) => {
         const numScore = parseInt(score, 10);
         if (isNaN(numScore) || numScore < 0 || numScore > 100) {
-            error("Điểm phải từ 0 đến 100");
+            showError("Điểm phải từ 0 đến 100");
             return;
         }
 
@@ -90,10 +90,7 @@ export default function GroupDetail() {
 
     const handleExport = () => {
         try {
-            // 1. Prepare CSV headers
             const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp"];
-
-            // 2. Prepare CSV rows from students data
             const rows = students.map(student => {
                 return [
                     student.studentCode,
@@ -103,10 +100,7 @@ export default function GroupDetail() {
                 ].map(val => `"${val}"`).join(",");
             });
 
-            // 3. Combine headers and rows
             const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
-
-            // 4. Create Blob and trigger download
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -115,154 +109,90 @@ export default function GroupDetail() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             success("Đã xuất danh sách thành viên thành công!");
         } catch (err) {
-            error("Lỗi khi xuất file");
+            showError("Lỗi khi xuất file");
         }
     };
 
     const githubApproved = group.integration?.githubStatus === "APPROVED";
     const jiraApproved = group.integration?.jiraStatus === "APPROVED";
-    const fullyApproved = githubApproved && jiraApproved;
-
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader 
+                title={group.name}
+                subtitle={`${course?.code || ''} — ${course?.name || ''}. Quản lý trạng thái và thành viên của nhóm dự án.`}
+                breadcrumb={["Giảng viên", "Nhóm", group.name]}
+                actions={[
+                    <Button 
+                        key="back"
+                        variant="outline" 
+                        onClick={() => navigate(-1)}
+                        className="rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest border-gray-100 hover:bg-gray-50 shadow-sm"
+                    >
+                        <ArrowLeft size={14} className="mr-2"/> Quay lại
+                    </Button>
+                ]}
+            />
 
-            {/* ── Breadcrumb + Page Header ─────────────── */}
-            <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2 min-w-0">
-                    <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-                        <button
-                            onClick={() => navigate("/lecturer")}
-                            className="text-teal-700 font-semibold hover:underline"
-                        >Giảng viên</button>
-                        <ChevronRight size={12} />
-                        <button
-                            onClick={() => navigate(`/lecturer/course/${group.courseId}/manage-groups`)}
-                            className="text-gray-600 hover:underline"
-                        >Quản lý Nhóm</button>
-                        <ChevronRight size={12} />
-                        <span className="text-gray-800 font-semibold truncate">{group.name}</span>
-                    </nav>
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">{group.name}</h2>
-                        {fullyApproved ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-100 px-3 py-1 rounded-full">
-                                <CheckCircle size={12} /> Hoàn thành
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full">
-                                <Clock size={12} /> Chờ duyệt
-                            </span>
-                        )}
-                    </div>
-                    {course && (
-                        <p className="text-sm text-gray-400">{course.code} — {course.name}</p>
-                    )}
-                </div>
-                <Button
-                    onClick={() => navigate(`/lecturer/course/${group.courseId}/manage-groups`)}
-                    variant="outline"
-                    className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm shrink-0"
-                >
-                    <ArrowLeft size={14} />
-                    Quay lại
-                </Button>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard label="Thành viên" value={students.length} icon={Users} variant="info" />
+                <StatsCard label="GitHub" value={githubApproved ? "Ổn định" : "Chờ duyệt"} icon={GitBranch} variant={githubApproved ? "success" : "warning"} />
+                <StatsCard label="Jira" value={jiraApproved ? "Ổn định" : "Chờ duyệt"} icon={BookOpen} variant={jiraApproved ? "success" : "warning"} />
+                <StatsCard label="Ngày tạo" value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "N/A"} icon={Calendar} variant="indigo" />
             </div>
 
-            {/* ── Quick Status Bar ─────────────────────── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <QuickStat
-                    icon={<Users size={15} />}
-                    label="Thành viên"
-                    value={students.length}
-                    color="text-blue-600 bg-blue-50 border-blue-100"
-                />
-                <QuickStat
-                    icon={<GitBranch size={15} />}
-                    label="GitHub"
-                    value={githubApproved ? "Đã duyệt" : "Chờ duyệt"}
-                    color={githubApproved ? "text-green-700 bg-green-50 border-green-100" : "text-gray-500 bg-gray-50 border-gray-100"}
-                />
-                <QuickStat
-                    icon={<BookOpen size={15} />}
-                    label="Jira"
-                    value={jiraApproved ? "Đã duyệt" : "Chờ duyệt"}
-                    color={jiraApproved ? "text-green-700 bg-green-50 border-green-100" : "text-gray-500 bg-gray-50 border-gray-100"}
-                />
-                <QuickStat
-                    icon={<Calendar size={15} />}
-                    label="Ngày tạo"
-                    value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") : "N/A"}
-                    color="text-gray-600 bg-gray-50 border-gray-100"
-                />
-            </div>
-
-            {/* ── Main Content Grid ────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-                {/* Left: Group Info */}
-                <div className="lg:col-span-2 space-y-6">
-
-                    {/* Group info card */}
-                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <CardHeader className="border-b border-gray-50 pb-4">
-                            <CardTitle className="text-base font-semibold text-gray-800">Thông tin Nhóm</CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                {/* Left Column: Info & Members */}
+                <div className="lg:col-span-2 space-y-8">
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+                        <CardHeader className="border-b border-gray-50 py-5 px-8">
+                            <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Thông tin Nhóm</CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-5 space-y-5">
-                            <InfoRow label="Tên nhóm" value={<span className="font-semibold text-gray-900">{group.name}</span>} />
+                        <CardContent className="p-8 space-y-6">
+                            <InfoRow label="Tên định danh" value={<span className="font-black text-gray-800 uppercase tracking-tight text-base">{group.name}</span>} />
                             <InfoRow
-                                label="Đề tài"
+                                label="Đề tài đăng ký"
                                 value={
                                     group.description
-                                        ? <span className="text-gray-800">{group.description}</span>
-                                        : <span className="text-gray-400 italic text-sm">Chưa có đề tài</span>
+                                        ? <span className="text-sm font-bold text-gray-600 leading-relaxed block">{group.description}</span>
+                                        : <span className="text-[10px] font-black text-gray-300 uppercase italic">Chưa xác định đề tài</span>
                                 }
                             />
                         </CardContent>
                     </Card>
 
-                    {/* Members card */}
-                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <CardHeader className="border-b border-gray-50 pb-4">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-base font-semibold text-gray-800">Thành viên</CardTitle>
-                                <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-2.5 py-1 font-medium border border-gray-100">
-                                    {students.length} người
-                                </span>
-                            </div>
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+                        <CardHeader className="border-b border-gray-50 py-5 px-8 flex flex-row items-center justify-between">
+                            <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Thành viên</CardTitle>
+                            <span className="text-[10px] font-black text-teal-600 bg-teal-50 rounded-full px-3 py-1 border border-teal-100 uppercase tracking-widest">
+                                {students.length} Student
+                            </span>
                         </CardHeader>
-                        <CardContent className="pt-4 space-y-3 p-4">
+                        <CardContent className="p-4 space-y-2">
                             {students.map((student) => (
-                                <div key={student.studentId} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                                    <div className="w-10 h-10 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                                <div key={student.studentId} className="flex items-center gap-4 p-4 rounded-[24px] hover:bg-gray-50/50 transition-all border border-transparent hover:border-gray-50">
+                                    <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-xs font-black text-teal-700 shadow-sm shrink-0">
                                         {student.studentName?.charAt(0)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{student.studentName}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <p className="text-sm font-black text-gray-800 uppercase tracking-tight truncate">{student.studentName}</p>
                                             {student.role === "LEADER" && (
-                                                <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                                    Leader
-                                                </span>
+                                                <StatusBadge status="info" label="Leader" variant="info" />
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400">{student.studentCode}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{student.studentCode}</p>
                                     </div>
-                                    <div className="shrink-0 flex items-center gap-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm</label>
+                                    <div className="shrink-0 flex items-center gap-3">
+                                        <label className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Score</label>
                                         <input
                                             type="number"
                                             min="0" max="100"
-                                            placeholder="--"
                                             defaultValue={student.contributionScore}
-                                            onBlur={(e) => {
-                                                if (e.target.value !== "" && e.target.value !== String(student.contributionScore))
-                                                    handleUpdateScore(student.studentId, e.target.value);
-                                            }}
-                                            className="w-14 px-2 py-1.5 text-sm text-center font-bold text-teal-700 bg-teal-50/50 border border-teal-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                            onBlur={(e) => handleUpdateScore(student.studentId, e.target.value)}
+                                            className="w-16 h-10 px-0 text-center font-black text-teal-600 bg-gray-50/50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all text-xs"
                                         />
                                     </div>
                                 </div>
@@ -271,87 +201,70 @@ export default function GroupDetail() {
                     </Card>
                 </div>
 
-                {/* Right: Links + Export + Warning */}
-                <div className="lg:col-span-3 space-y-6">
-
-                    {/* Link Approval */}
-                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <CardHeader className="border-b border-gray-50 pb-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
-                                    <Shield size={15} className="text-indigo-600" />
-                                </div>
-                                <CardTitle className="text-base font-semibold text-gray-800">Liên kết Dự án</CardTitle>
+                {/* Right Column: Links & Controls */}
+                <div className="lg:col-span-3 space-y-8">
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+                        <CardHeader className="border-b border-gray-50 py-5 px-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm"><Shield size={20} /></div>
+                                <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Tích hợp Kỹ thuật</CardTitle>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-5 space-y-5">
-
-                            {/* GitHub */}
+                        <CardContent className="p-8 space-y-8">
                             <LinkApprovalSection
-                                icon={<GitBranch size={15} className="text-gray-700" />}
-                                label="GitHub Repository"
+                                icon={<GitBranch size={16} className="text-gray-400" />}
+                                label="Repository GitHub"
                                 url={group.integration?.githubUrl}
                                 status={group.integration?.githubStatus}
-                                onApprove={() => handleApproveLink()}
-                                onReject={() => handleRejectLink()}
+                                onApprove={handleApproveLink}
+                                onReject={handleRejectLink}
                             />
 
-                            <div className="border-t border-gray-50" />
+                            <div className="h-px bg-gray-50" />
 
-                            {/* Jira */}
                             <LinkApprovalSection
-                                icon={<BookOpen size={15} className="text-gray-700" />}
-                                label="Jira Project"
+                                icon={<BookOpen size={16} className="text-gray-400" />}
+                                label="Dự án Jira Software"
                                 url={group.integration?.jiraUrl}
                                 status={group.integration?.jiraStatus}
-                                onApprove={() => handleApproveLink()}
-                                onReject={() => handleRejectLink()}
+                                onApprove={handleApproveLink}
+                                onReject={handleRejectLink}
                             />
                         </CardContent>
                     </Card>
 
-
-                    {/* Export */}
-                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <CardContent className="p-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="font-semibold text-gray-800 text-sm">Xuất báo cáo</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">Xuất dữ liệu nhóm sang Word/PDF</p>
-                                </div>
-                                <Button
-                                    onClick={handleExport}
-                                    variant="outline"
-                                    className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm"
-                                >
-                                    <FileDown size={14} />
-                                    Xuất file
-                                </Button>
+                    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white hover:shadow-lg transition-all">
+                        <CardContent className="p-8 flex items-center justify-between gap-6">
+                            <div>
+                                <h4 className="font-black text-gray-800 text-[10px] uppercase tracking-widest mb-1.5">Xuất báo cáo chi tiết</h4>
+                                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest opacity-80">Kết xuất dữ liệu nhóm bao gồm đánh giá và điểm đóng góp sang định dạng CSV/Excel.</p>
                             </div>
-                            <p className="text-[11px] text-gray-300 mt-3">
-                                * Tính năng đang phát triển — sẽ gọi API GitHub & Jira để lấy dữ liệu thực tế.
-                            </p>
+                            <Button
+                                onClick={handleExport}
+                                variant="outline"
+                                className="rounded-2xl h-12 px-8 text-[10px] font-black uppercase tracking-widest border-teal-100 text-teal-600 hover:bg-teal-50 shadow-sm shrink-0"
+                            >
+                                <FileDown size={16} className="mr-2" /> Tải báo cáo
+                            </Button>
                         </CardContent>
                     </Card>
 
-                    {/* Warning section */}
-                    <Card className="border border-orange-100 shadow-sm rounded-[24px] overflow-hidden bg-orange-50">
-                        <CardContent className="p-5">
-                            <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0">
-                                    <AlertTriangle size={18} className="text-orange-600" />
+                    <Card className="border border-orange-100 shadow-sm rounded-[32px] overflow-hidden bg-orange-50/20">
+                        <CardContent className="p-8">
+                            <div className="flex items-start gap-6">
+                                <div className="w-14 h-14 rounded-[24px] bg-orange-100 flex items-center justify-center shrink-0 shadow-sm">
+                                    <AlertTriangle size={24} className="text-orange-600" />
                                 </div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-gray-800 mb-1">Gửi cảnh báo nhóm</p>
-                                    <p className="text-xs text-gray-500 mb-3">
-                                        Gửi email cảnh báo đến các thành viên có ít hoạt động commit hoặc task Jira.
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-black text-orange-900 text-sm uppercase tracking-widest mb-2">Trung tâm Cảnh báo</h4>
+                                    <p className="text-[11px] text-orange-700 font-bold uppercase tracking-wider leading-relaxed mb-6 opacity-70">
+                                        Gửi lời nhắc nhở trực tiếp đến hệ thống thông báo của sinh viên đối với các nhóm có tiến độ chậm hoặc thiếu hụt commit/task Jira.
                                     </p>
                                     <Button
-                                        className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-xl h-9 px-4 text-sm shadow-sm"
-                                        onClick={() => success("Đã gửi cảnh báo đến nhóm (chức năng demo)")}
+                                        className="bg-orange-600 hover:bg-orange-700 text-white border-0 rounded-2xl h-11 px-8 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-200"
+                                        onClick={() => success("Đã gửi cảnh báo hệ thống đến tất cả thành viên trong nhóm")}
                                     >
-                                        <AlertTriangle size={13} />
-                                        Gửi cảnh báo
+                                        Gửi cảnh báo ngay
                                     </Button>
                                 </div>
                             </div>
@@ -363,99 +276,56 @@ export default function GroupDetail() {
     );
 }
 
-/* ─── Sub-components ─────────────────────────────────────────── */
-
-function QuickStat({ icon, label, value, color }) {
-    return (
-        <div className={`rounded-2xl px-4 py-3 border flex items-center gap-3 ${color}`}>
-            <div className="shrink-0">{icon}</div>
-            <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
-                <p className="text-sm font-bold truncate">{value}</p>
-            </div>
-        </div>
-    );
-}
-
 function InfoRow({ label, value }) {
     return (
-        <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
-            <div className="text-sm">{value}</div>
+        <div className="space-y-2">
+            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">{label}</label>
+            <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 shadow-inner">{value}</div>
         </div>
     );
 }
 
-function LinkApprovalSection({ icon, label, url, status, approvedAt, onApprove, onReject }) {
+function LinkApprovalSection({ icon, label, url, status, onApprove, onReject }) {
     const isApproved = status === "APPROVED";
     const isRejected = status === "REJECTED";
     const isPending = status === "PENDING";
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                    {icon}
-                    <span className="text-sm font-semibold text-gray-700">{label}</span>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gray-50 border border-gray-100">{icon}</div>
+                    <span className="text-[10px] font-black text-gray-800 uppercase tracking-widest">{label}</span>
                 </div>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${isApproved ? "bg-green-50 text-green-700 border border-green-100" : isRejected ? "bg-red-50 text-red-700 border border-red-100" : "bg-gray-100 text-gray-500 border border-gray-200"
-                    }`}>
-                    {isApproved ? <><CheckCircle size={10} /> Đã duyệt</> : isRejected ? <><Shield size={10} /> Đã từ chối</> : <><Clock size={10} /> Chờ duyệt</>}
-                </span>
+                <StatusBadge 
+                    status={isApproved ? 'success' : isRejected ? 'danger' : 'warning'} 
+                    label={isApproved ? 'Đã duyệt' : isRejected ? 'Từ chối' : 'Chờ duyệt'} 
+                />
             </div>
 
-            <div className="flex gap-2">
-                <div className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm border ${url
-                    ? isApproved
-                        ? "bg-white border-green-200 text-gray-800"
-                        : isRejected
-                            ? "bg-red-50 border-red-200 text-red-800"
-                            : "bg-gray-50 border-gray-100 text-gray-600"
-                    : "bg-gray-50 border-gray-100 text-gray-300 italic"
-                    }`}>
+            <div className="flex gap-3">
+                <div className={`flex-1 flex items-center gap-3 px-5 py-4 rounded-2xl border transition-all ${
+                    url ? isApproved ? "bg-white border-green-200 shadow-sm" : isRejected ? "bg-red-50 border-red-200" : "bg-gray-50/50 border-gray-100" : "bg-gray-50 border-gray-50 italic"
+                }`}>
                     {url ? (
                         <>
-                            <span className="truncate flex-1">{url}</span>
-                            <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`shrink-0 ${isRejected ? 'text-red-500 hover:text-red-700' : 'text-blue-500 hover:text-blue-700'}`}
-                            >
-                                <ExternalLink size={13} />
+                            <span className="truncate flex-1 text-xs font-bold text-gray-600">{url}</span>
+                            <a href={url} target="_blank" rel="noopener noreferrer" className={`hover:scale-110 transition-transform ${isRejected ? 'text-red-400' : 'text-teal-500'}`}>
+                                <ExternalLink size={16} />
                             </a>
                         </>
                     ) : (
-                        <span>Chưa có link</span>
+                        <span className="text-[10px] font-black text-gray-300 uppercase">Chưa cung cấp liên kết</span>
                     )}
                 </div>
+                
                 {url && (isPending || isRejected) && (
-                    <Button
-                        size="sm"
-                        onClick={onApprove}
-                        className="shrink-0 bg-teal-600 hover:bg-teal-700 text-white rounded-xl border-0 px-4 shadow-sm transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-1"
-                    >
-                        Duyệt
-                    </Button>
+                    <Button onClick={onApprove} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl px-6 h-12 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0 transition-all">Duyệt</Button>
                 )}
                 {url && (isPending || isApproved) && (
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={onReject}
-                        className="shrink-0 bg-white hover:bg-red-50 text-red-600 border border-red-200 hover:border-red-300 rounded-xl px-4 shadow-sm transition-all"
-                    >
-                        Từ chối
-                    </Button>
+                    <Button onClick={onReject} variant="outline" className="bg-white hover:bg-red-50 text-red-600 border border-red-100 hover:border-red-200 rounded-2xl px-6 h-12 text-[10px] font-black uppercase tracking-widest shadow-sm transition-all">Từ chối</Button>
                 )}
             </div>
-
-            {isApproved && approvedAt && (
-                <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
-                    <CheckCircle size={10} />
-                    Đã duyệt lúc {new Date(approvedAt).toLocaleString("vi-VN")}
-                </p>
-            )}
         </div>
     );
 }

@@ -609,6 +609,3 @@ public class CourseService : ICourseService
         }
     }
 }
-
-
-

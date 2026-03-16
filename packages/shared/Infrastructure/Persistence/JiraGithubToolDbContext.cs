@@ -805,7 +805,6 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasForeignKey(d => d.recipient_user_id)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-
         // HACK for SQLite testing compatibility: Ignore PostgreSQL specific default SQL
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {

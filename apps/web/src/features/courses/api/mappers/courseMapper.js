@@ -1,33 +1,5 @@
 /**
- * courseMapper.js — Adapter: BE CourseDetailResponse → FE Mock shape
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │  MAPPING TABLE:  Backend DTO  →  Frontend UI field               │
- * ├────────────────────────────────┬─────────────────────────────────┤
- * │  BE (CourseDetailResponse)     │  FE (mock/db.js course shape)   │
- * ├────────────────────────────────┼─────────────────────────────────┤
- * │  id             (long)         │  id             (string→string) │
- * │  courseCode     (string)       │  code           (string)        │
- * │  courseName     (string)       │  name           (string)        │
- * │  subject.id     (long)         │  subjectId      (string)        │
- * │  subject.subjectCode (string)  │  subject.code   (string)        │
- * │  subject.subjectName (string)  │  subject.name   (string)        │
- * │  semester.id    (long)         │  semesterId     (string)        │
- * │  semester.name  (string)       │  semester.name  (string)        │
- * │  semester.startDate (DateTime) │  semester.startDate             │
- * │  semester.endDate   (DateTime) │  semester.endDate               │
- * │  enrolledStudentsCount (int)   │  currentStudents (number)       │
- * │  projectsCount  (int)          │  projectsCount  (number)        │
- * │  lecturers[].userId (long)     │  lecturers[].id                 │
- * │  lecturers[].fullName (string) │  lecturers[].name               │
- * │  lecturers[].lecturerCode      │  lecturers[].code               │
- * │  lecturers[].officeEmail       │  lecturers[].email              │
- * │  ── (không có trong BE) ──     │  maxStudents    → hardcode 40   │
- * │  ── (không có trong BE) ──     │  status         → "ACTIVE" (default) │
- * └────────────────────────────────┴─────────────────────────────────┘
- *
- * NOTE: BE không trả về maxStudents và status trực tiếp trong CourseDetailResponse.
- * Đây là gap cần báo BE bổ sung. Tạm thời hardcode fallback hợp lý.
+ * courseMapper.js — Adapter: BE CourseDetailResponse → FE shape
  */
 
 import { mapProject } from "../../../projects/api/mappers/projectMapper.js";
@@ -35,61 +7,67 @@ import { mapProject } from "../../../projects/api/mappers/projectMapper.js";
 /**
  * Map một CourseDetailResponse từ BE sang FE course shape
  * @param {object} beCourse - CourseDetailResponse từ BE
- * @returns {object} - FE course shape tương thích mock/db.js
+ * @returns {object} - FE course shape
  */
 export function mapCourse(beCourse) {
     if (!beCourse) return null;
 
+    const subj = beCourse.subject || {};
+    const sem = beCourse.semester || {};
     const lecs = beCourse.lecturers || [];
-    const enrs = beCourse.enrollments || [];
-    const projs = beCourse.projects || [];
+    const enrs = beCourse.enrollments || beCourse.enrolledStudents || [];
+    const projs = beCourse.projects || beCourse.groups || [];
 
     return {
-        id: String(beCourse.id || ""),
-        course_code: beCourse.course_code || "",
-        course_name: beCourse.course_name || "",
+        // ── Core identity ──────────────────────────────────────────
+        id: String(beCourse.id || beCourse.Id || ""),
+        code: beCourse.courseCode || beCourse.course_code || beCourse.CourseCode || "",
+        name: beCourse.courseName || beCourse.course_name || beCourse.CourseName || "",
 
-        // Top level IDs for filtering and form handling
-        subjectId: String(beCourse.subject_id || beCourse.subject?.id || ""),
-        semesterId: String(beCourse.semester_id || beCourse.semester?.id || ""),
-
-        // Flattened fields from new contract
-        subject_code: beCourse.subject_code || beCourse.subject?.subject_code || "",
-        semester_name: beCourse.semester_name || beCourse.semester?.name || "",
-
-        // Keep nested for backward compatibility
+        // ── Subject ───────────────────────────────────────────────
+        subjectId: String(subj.id || beCourse.subjectId || beCourse.subject_id || beCourse.SubjectId || ""),
         subject: {
-            id: String(beCourse.subject_id || ""),
-            subject_code: beCourse.subject_code || "",
-            subject_name: beCourse.subject_name || beCourse.subject_code || "",
+            id: String(subj.id || ""),
+            code: subj.subjectCode || subj.subject_code || subj.SubjectCode || beCourse.subject_code || "",
+            name: subj.subjectName || subj.subject_name || subj.SubjectName || beCourse.subject_name || "",
         },
+
+        // ── Semester ───────────────────────────────────────────────
+        semesterId: String(sem.id || beCourse.semesterId || beCourse.semester_id || beCourse.SemesterId || ""),
         semester: {
-            id: String(beCourse.semester_id || ""),
-            name: beCourse.semester_name || "",
-            code: beCourse.semester_name || "",
+            id: String(sem.id || ""),
+            name: sem.name || sem.Name || beCourse.semester_name || "",
+            code: sem.code || sem.Code || sem.name || sem.Name || "",
+            startDate: sem.startDate || sem.StartDate || sem.start_date || null,
+            endDate: sem.endDate || sem.EndDate || sem.end_date || null,
         },
 
-        currentStudents: enrs.length || 0,
-        max_students: beCourse.max_students || 40,
-        status: beCourse.status || "ACTIVE",
+        // ── Students & capacity ────────────────────────────────────
+        currentStudents: beCourse.currentStudents || beCourse.enrolledStudentsCount || enrs.length || 0,
+        maxStudents: beCourse.maxStudents || beCourse.max_students || 40,
 
+        // ── Status ────────────────────────────────────────────────
+        status: beCourse.status || beCourse.Status || "ACTIVE",
+
+        // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({
-            id: String(l.user_id || l.id || ""),
-            name: l.full_name || l.name || "",
-            email: l.email || "",
+            id: String(l.userId || l.user_id || l.id || ""),
+            name: l.fullName || l.full_name || l.name || l.FullName || "",
+            code: l.lecturerCode || l.lecturer_code || l.LecturerCode || "",
+            email: l.officeEmail || l.email || l.Email || "",
         })),
 
+        // ── Groups/Projects ────────────────────────────────────────
+        groups: projs.map(mapProject),
+        projectsCount: beCourse.projectsCount || beCourse.projects_count || projs.length || 0,
+        
+        // ── Enrollments ───────────────────────────────────────────
         enrollments: enrs.map(e => ({
-            user_id: String(e.user_id || ""),
-            full_name: e.full_name || "",
-            student_code: e.student_code || "",
+            userId: String(e.userId || e.user_id || e.id || ""),
+            fullName: e.fullName || e.full_name || e.name || "",
+            studentCode: e.studentCode || e.student_code || "",
             email: e.email || "",
         })),
-
-        // Map groups for lecturer manage groups page
-        groups: projs.map(mapProject),
-
-        projects_count: beCourse.projects_count || projs.length || 0,
     };
 }
 
@@ -99,12 +77,12 @@ export function mapCourse(beCourse) {
  * @returns {{ items: object[], totalCount: number, page: number, pageSize: number }}
  */
 export function mapCourseList(beData) {
-    // PagedResponse shape: { results: [] or items: [], totalCount, page, pageSize }
-    if (beData && (beData.results !== undefined || beData.Results !== undefined || beData.items !== undefined || beData.Items !== undefined)) {
+    // PagedResponse shape: { items: [], totalCount, page, pageSize }
+    if (beData && (beData.items !== undefined || beData.Items !== undefined || beData.results !== undefined || beData.Results !== undefined)) {
         const results = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
         return {
             items: results.map(mapCourse),
-            totalCount: beData.totalCount ?? beData.TotalCount ?? results.length,
+            totalCount: beData.totalCount ?? beData.TotalCount ?? beData.totalItems ?? beData.TotalItems ?? results.length,
             page: beData.page ?? beData.Page ?? 1,
             pageSize: beData.pageSize ?? beData.PageSize ?? results.length,
         };

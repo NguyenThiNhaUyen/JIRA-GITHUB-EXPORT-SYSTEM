@@ -29,9 +29,9 @@ COPY --from=build /app/publish .
 # DO NOT set ASPNETCORE_URLS here - let Program.cs handle port binding via PORT env var from Render
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Expose port (Render assigns PORT dynamically, default 10000)
+# Expose port (Render assigns PORT dynamically, default 10000/8080)
+EXPOSE 8080
 EXPOSE 10000
 
 # Run the app
 ENTRYPOINT ["dotnet", "IntegrationService.dll"]
-

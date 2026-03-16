@@ -30,8 +30,8 @@ export default function Login() {
     // Tài khoản mặc định BE seed — xem Program.cs
     const QUICK_CREDS = {
       admin: { email: "admin@truonghoc.com", password: "Admin@123" },
-      lecturer: { email: "lecturer@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
-      student: { email: "student@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
+      lecturer: { email: "gv@fpt.edu.vn", password: "Lecturer@123" }, 
+      student: { email: "sv@fpt.edu.vn", password: "Student@123" }, 
     };
     const creds = QUICK_CREDS[role];
     const result = await login(creds.email, creds.password);
@@ -101,7 +101,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 focus:outline-none p-1 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors bg-transparent border-none outline-none p-1"
                     tabIndex="-1"
                   >
                     {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}

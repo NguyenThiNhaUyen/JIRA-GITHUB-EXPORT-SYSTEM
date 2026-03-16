@@ -12,7 +12,7 @@ public class UploadSrsRequest
 public class ReviewSrsStatusRequest
 {
     [Required]
-    [RegularExpression("^(APPROVED|REJECTED|NEED_REVISION|UNDER_REVIEW)$", ErrorMessage = "Status must be APPROVED, REJECTED, UNDER_REVIEW or NEED_REVISION")]
+    [RegularExpression("^(APPROVED|REJECTED|NEED_REVISION|UNDER_REVIEW|FINAL|DRAFT)$", ErrorMessage = "Status must be APPROVED, REJECTED, UNDER_REVIEW, NEED_REVISION, FINAL or DRAFT")]
     public string Status { get; set; } = null!;
     
     public string? Feedback { get; set; }
