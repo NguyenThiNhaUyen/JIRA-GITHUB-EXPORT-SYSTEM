@@ -52,15 +52,15 @@ export default function SubjectManagement() {
     const [deptFilter, setDeptFilter] = useState("ALL");
 
     const [formData, setFormData] = useState({
-        department: "",
-        courseNumber: "",
-        code: "",
-        name: "",
-        description: "",
-        credits: 3,
-        maxStudents: 40,
-        status: "ACTIVE",
-    });
+  department: "",
+  courseNumber: "",
+  code: "",
+  name: "",
+  description: "",
+  credits: 3,
+  maxStudents: 40,
+  status: "ACTIVE",
+});
 
     /* Auto generate code */
     useEffect(() => {
@@ -127,6 +127,20 @@ export default function SubjectManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
+
+        const payload = {
+        subjectCode: formData.code,
+        subjectName: formData.name,
+        department: formData.department,
+        description: formData.description,
+        credits: Number(formData.credits),
+        maxStudents: Number(formData.maxStudents),
+        status: formData.status
+};
+
+=======
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
         try {
             const payload = {
                 subjectCode: formData.code,
@@ -139,6 +153,22 @@ export default function SubjectManagement() {
             };
 
             if (editingSubject) {
+<<<<<<< HEAD
+
+                await updateMutation.mutateAsync({
+                    id: editingSubject.id,
+                    updates: payload
+            });
+
+                success("Cập nhật môn học thành công!");
+
+            } else {
+
+                await createMutation.mutateAsync(payload);
+
+                success("Tạo môn học thành công!");
+
+=======
                 await updateMutation.mutateAsync({ 
                     id: editingSubject.id, 
                     updates: payload 
@@ -147,10 +177,17 @@ export default function SubjectManagement() {
             } else {
                 await createMutation.mutateAsync(payload);
                 success("Tạo mới thành công");
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
             }
             setShowModal(false);
         } catch (err) {
+<<<<<<< HEAD
+            console.log(err.response?.data);
+            error(err.message || "Thao tác thất bại");
+
+=======
             showError(err.message || "Thao tác thất bại");
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
         }
     };
 

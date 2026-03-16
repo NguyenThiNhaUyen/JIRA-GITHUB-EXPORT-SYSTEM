@@ -44,8 +44,6 @@ public class SemesterService : ISemesterService
         return _mapper.Map<SemesterInfo>(semester);
     }
 
-<<<<<<< HEAD
-=======
     public async Task<List<SemesterInfo>> GenerateSemestersAsync(GenerateSemestersRequest request)
     {
         int year = request.Year;
@@ -85,18 +83,14 @@ public class SemesterService : ISemesterService
         return _mapper.Map<List<SemesterInfo>>(createdSemesters);
     }
 
->>>>>>> origin
     public async Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request)
     {
         var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
         if (semester == null) throw new NotFoundException("Semester not found");
 
-<<<<<<< HEAD
-=======
         var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name && s.id != semesterId);
         if (existing != null) throw new BusinessException("Semester with this name already exists");
 
->>>>>>> origin
         semester.name = request.Name;
         semester.start_date = DateOnly.FromDateTime(request.StartDate);
         semester.end_date = DateOnly.FromDateTime(request.EndDate);
@@ -108,11 +102,6 @@ public class SemesterService : ISemesterService
 
     public async Task DeleteSemesterAsync(long semesterId)
     {
-<<<<<<< HEAD
-        var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
-        if (semester == null) throw new NotFoundException("Semester not found");
-
-=======
         var semester = await _unitOfWork.Semesters.Query()
             .Include(s => s.courses)
             .FirstOrDefaultAsync(s => s.id == semesterId);
@@ -124,20 +113,16 @@ public class SemesterService : ISemesterService
             throw new BusinessException("Không thể xóa học kỳ vì đã có lớp học (Course) đang diễn ra trong học kỳ này. Vui lòng xóa các lớp học trước.");
         }
 
->>>>>>> origin
         _unitOfWork.Semesters.Remove(semester);
         await _unitOfWork.SaveChangesAsync();
     }
 
-<<<<<<< HEAD
-=======
     public async Task<List<SemesterInfo>> GetAllSemestersAsync()
     {
         var semesters = await _unitOfWork.Semesters.GetAllAsync();
         return _mapper.Map<List<SemesterInfo>>(semesters);
     }
 
->>>>>>> origin
     public async Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request)
     {
         var (items, totalItems) = await _unitOfWork.Semesters.GetPagedAsync(

@@ -77,10 +77,7 @@ public partial class JiraGithubToolDbContext : DbContext
     public virtual DbSet<report_export> report_exports { get; set; }
 
     public virtual DbSet<audit_log> audit_logs { get; set; }
-<<<<<<< HEAD
-=======
     public virtual DbSet<notification> notifications { get; set; }
->>>>>>> origin
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -799,8 +796,6 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasConstraintName("fk_audit_logs_performed_by");
         });
 
-<<<<<<< HEAD
-=======
         modelBuilder.Entity<notification>(entity =>
         {
             entity.HasKey(e => e.id);
@@ -811,7 +806,6 @@ public partial class JiraGithubToolDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
->>>>>>> origin
         // HACK for SQLite testing compatibility: Ignore PostgreSQL specific default SQL
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
         {

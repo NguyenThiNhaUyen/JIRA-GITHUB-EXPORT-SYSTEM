@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-=======
 using System.Collections.Generic;
->>>>>>> origin
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -20,22 +18,17 @@ public class SrsService : ISrsService
     private readonly JiraGithubToolDbContext _context;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<SrsService> _logger;
-<<<<<<< HEAD
-
-    public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger)
-=======
     private readonly IAnalyticsService _analyticsService;
 
+
+    
     public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, IAnalyticsService analyticsService)
->>>>>>> origin
     {
         _context = context;
         _env = env;
         _logger = logger;
-<<<<<<< HEAD
-=======
         _analyticsService = analyticsService;
->>>>>>> origin
+        _analyticsService = analyticsService;
     }
 
     public async Task<SrsDocumentResponse> UploadSrsAsync(long projectId, long uploaderUserId, UploadSrsRequest request)
@@ -107,11 +100,7 @@ public class SrsService : ISrsService
         return new PagedResponse<SrsDocumentResponse>
         {
             Items = mapped,
-<<<<<<< HEAD
-            TotalItems = total,
-=======
             TotalCount = total,
->>>>>>> origin
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -127,12 +116,10 @@ public class SrsService : ISrsService
         srs.status = request.Status;
         srs.reviewer_user_id = reviewerUserId;
         srs.reviewed_at = DateTime.UtcNow;
-<<<<<<< HEAD
-        
-=======
         srs.score = request.Score; // New field
 
->>>>>>> origin
+        srs.score = request.Score; // New field
+
         if (!string.IsNullOrEmpty(request.Feedback))
         {
             srs.feedback = request.Feedback;
@@ -140,8 +127,6 @@ public class SrsService : ISrsService
 
         await _context.SaveChangesAsync();
 
-<<<<<<< HEAD
-=======
         // Notify Team Members
         var teamMembers = await _context.team_members
             .Where(tm => tm.project_id == srs.project_id)
@@ -156,8 +141,8 @@ public class SrsService : ISrsService
                 System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.id, projectId = srs.project_id })
             );
         }
+        
 
->>>>>>> origin
         _logger.LogInformation("Lecturer {ReviewerId} reviewed SRS {SrsId} with status {Status}", reviewerUserId, srsId, request.Status);
 
         return await GetSrsResponseAsync(srsId);
@@ -177,8 +162,6 @@ public class SrsService : ISrsService
         return await GetSrsResponseAsync(srsId);
     }
 
-<<<<<<< HEAD
-=======
     public async Task<PagedResponse<SrsDocumentResponse>> GetSrsListByCourseAsync(long? courseId, long? projectId, string? status, string? milestone, int page, int pageSize)
     {
         var query = _context.project_documents
@@ -231,12 +214,32 @@ public class SrsService : ISrsService
 
     public async Task RemindOverdueAsync()
     {
-        // Simple mock method for sending overdue reminders
-        _logger.LogInformation("Sent reminders for overdue SRS documents");
-        await Task.CompletedTask;
+        // Find active projects that do not have an SRS document yet
+        var activeProjectsWithoutSrs = await _context.projects
+            .Where(p => p.status == "ACTIVE" && !_context.project_documents.Any(pd => pd.project_id == p.id && pd.doc_type == "SRS"))
+            .ToListAsync();
+
+        foreach (var project in activeProjectsWithoutSrs)
+        {
+            // Get all students in the project
+            var teamMembers = await _context.team_members
+                .Where(tm => tm.project_id == project.id && tm.participation_status == "ACTIVE")
+                .ToListAsync();
+
+            foreach (var member in teamMembers)
+            {
+                await _analyticsService.BuildNotificationAsync(
+                    member.student_user_id,
+                    "WARNING",
+                    $"Nhóm của bạn tại dự án {project.name} chưa nộp tài liệu SRS. Vui lòng nộp sớm để không bị trễ hạn.",
+                    System.Text.Json.JsonSerializer.Serialize(new { projectId = project.id })
+                );
+            }
+        }
+
+        _logger.LogInformation("Sent reminders for {Count} projects missing SRS documents", activeProjectsWithoutSrs.Count);
     }
 
->>>>>>> origin
     public async Task DeleteSrsAsync(long srsId, long userId)
     {
         var srs = await _context.project_documents.FindAsync(srsId)
@@ -280,21 +283,12 @@ public class SrsService : ISrsService
             VersionNo = d.version_no,
             Status = d.status,
             FileUrl = d.file_url,
-<<<<<<< HEAD
-            SubmittedByUserId = d.submitted_by_user_id,
-            SubmittedByName = d.submitted_by_user?.full_name,
-            SubmittedAt = d.submitted_at,
-            ReviewerUserId = d.reviewer_user_id,
-            ReviewerName = d.reviewer_user?.full_name,
-            Feedback = d.feedback,
-=======
             SubmittedByName = d.submitted_by_user?.full_name,
             SubmittedAt = d.submitted_at,
             ReviewerName = d.reviewer_user?.full_name,
             Feedback = d.feedback,
             Score = d.score,
             Metadata = d.metadata,
->>>>>>> origin
             ReviewedAt = d.reviewed_at
         };
     }

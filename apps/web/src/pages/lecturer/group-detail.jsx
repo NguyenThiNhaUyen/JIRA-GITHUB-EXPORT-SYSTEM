@@ -10,6 +10,9 @@ import {
     useRejectIntegration,
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
+import { useGenerateSrsReport } from "../../features/projects/hooks/useReports.js";
+import { getDownloadUrl } from "../../features/projects/api/reportApi.js";
+import { useSendAlert } from "../../features/system/hooks/useAlerts.js";
 
 // Shared Components
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
@@ -35,6 +38,8 @@ export default function GroupDetail() {
     const approveMutation = useApproveIntegration();
     const rejectMutation = useRejectIntegration();
     const updateMemberMutation = useUpdateTeamMember();
+    const generateSrsMutation = useGenerateSrsReport();
+    const { mutate: sendAlert, isPending: isSendingAlert } = useSendAlert();
 
     if (isLoading) {
         return (
@@ -112,6 +117,57 @@ export default function GroupDetail() {
             success("Đã xuất danh sách thành viên thành công!");
         } catch (err) {
             showError("Lỗi khi xuất file");
+        }
+    };
+
+    const handleExportSrs = async () => {
+        try {
+            success("Đang tổng hợp dữ liệu từ Jira & GitHub...");
+            
+            // 1. Trigger the backend API to generate SRS
+            const res = await generateSrsMutation.mutateAsync({ projectId: groupId, format: "PDF" });
+            const reportId = res?.reportId || res?.data?.reportId;
+            
+            if (!reportId) {
+                error("Không nhận được mã báo cáo từ server.");
+                return;
+            }
+
+            // 2. Poll the download URL (in a real app, you can use the polling hook, but here we manually retry)
+            success("Đang tạo PDF, vui lòng chờ trong giây lát...");
+            
+            let downloadUrl = null;
+            let attempts = 0;
+            
+            while (!downloadUrl && attempts < 15) { // Try for ~30 seconds
+                await new Promise(r => setTimeout(r, 2000));
+                attempts++;
+                
+                try {
+                    const urlRes = await getDownloadUrl(reportId);
+                    if (urlRes?.downloadUrl || urlRes?.data?.downloadUrl) {
+                        downloadUrl = urlRes.downloadUrl || urlRes.data.downloadUrl;
+                    }
+                } catch (e) {
+                    // API might return 404 while generating, ignore and continue polling
+                }
+            }
+
+            if (downloadUrl) {
+                // 3. Trigger Download
+                const link = document.createElement("a");
+                link.href = downloadUrl;
+                link.setAttribute("download", `SRS_Report_Group_${group.name}.pdf`);
+                link.target = "_blank";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                success("Đã tải xuống báo cáo SRS thành công!");
+            } else {
+                error("Quá trình tạo file đang bị chậm, vui lòng thử lại sau.");
+            }
+        } catch (err) {
+            error(err?.message || "Lỗi khi xuất báo cáo SRS");
         }
     };
 
@@ -233,6 +289,40 @@ export default function GroupDetail() {
                         </CardContent>
                     </Card>
 
+<<<<<<< HEAD
+
+                    {/* Export */}
+                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                        <CardContent className="p-5">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-semibold text-gray-800 text-sm">Xuất báo cáo</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Xuất dữ liệu Jira/GitHub sang PDF</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        onClick={handleExportSrs}
+                                        disabled={generateSrsMutation.isPending}
+                                        variant="outline"
+                                        className="flex items-center gap-2 border-gray-200 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl h-9 px-4 text-sm"
+                                    >
+                                        <FileDown size={14} />
+                                        {generateSrsMutation.isPending ? "Đang tạo..." : "Xuất báo cáo SRS"}
+                                    </Button>
+                                    <Button
+                                        onClick={handleExport}
+                                        title="Xuất danh sách sinh viên"
+                                        variant="outline"
+                                        className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-9 px-3 text-sm"
+                                    >
+                                        <Users size={14} />
+                                    </Button>
+                                </div>
+                            </div>
+                            <p className="text-[11px] text-gray-300 mt-3">
+                                * Báo cáo SRS được tổng hợp tự động từ Epic/Story theo chuẩn ISO 29148.
+                            </p>
+=======
                     <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white hover:shadow-lg transition-all">
                         <CardContent className="p-8 flex items-center justify-between gap-6">
                             <div>
@@ -246,6 +336,7 @@ export default function GroupDetail() {
                             >
                                 <FileDown size={16} className="mr-2" /> Tải báo cáo
                             </Button>
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
                         </CardContent>
                     </Card>
 
@@ -261,10 +352,27 @@ export default function GroupDetail() {
                                         Gửi lời nhắc nhở trực tiếp đến hệ thống thông báo của sinh viên đối với các nhóm có tiến độ chậm hoặc thiếu hụt commit/task Jira.
                                     </p>
                                     <Button
+<<<<<<< HEAD
+                                        className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-xl h-9 px-4 text-sm shadow-sm"
+                                        disabled={isSendingAlert}
+                                        onClick={() => {
+                                            sendAlert(
+                                                { groupId: Number(groupId), message: "Cảnh báo khẩn: Yêu cầu cập nhật tiến độ nhóm!", severity: "HIGH" },
+                                                {
+                                                    onSuccess: () => success("Đã gửi cảnh báo đến nhóm"),
+                                                    onError: (err) => error("Lỗi khi gửi cảnh báo: " + err.message)
+                                                }
+                                            )
+                                        }}
+                                    >
+                                        <AlertTriangle size={13} />
+                                        {isSendingAlert ? "Đang gửi..." : "Gửi cảnh báo"}
+=======
                                         className="bg-orange-600 hover:bg-orange-700 text-white border-0 rounded-2xl h-11 px-8 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-200"
                                         onClick={() => success("Đã gửi cảnh báo hệ thống đến tất cả thành viên trong nhóm")}
                                     >
                                         Gửi cảnh báo ngay
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
                                     </Button>
                                 </div>
                             </div>

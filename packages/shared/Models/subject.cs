@@ -11,8 +11,6 @@ public partial class subject
 
     public string subject_name { get; set; } = null!;
 
-<<<<<<< HEAD
-=======
     public string department { get; set; } = null!;
 
     public string? description { get; set; }
@@ -23,7 +21,6 @@ public partial class subject
 
     public string status { get; set; } = "ACTIVE";
 
->>>>>>> origin
     public DateTime created_at { get; set; }
 
     public virtual ICollection<course> courses { get; set; } = new List<course>();

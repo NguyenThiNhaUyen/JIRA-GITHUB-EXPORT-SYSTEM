@@ -97,65 +97,319 @@ export default function MyCourses() {
 
 function CourseCard({ course, onNavigate }) {
   const groupCount = course.projects?.length || 0;
-  const progress = course.progress || 0;
   const alerts = course.alertsCount || 0;
 
-  return (
-    <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white hover:shadow-xl hover:shadow-teal-100/20 transition-all group border-t-4 border-t-teal-500">
-      <CardContent className="p-8 space-y-6">
-        <div className="flex justify-between items-start">
-           <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 shadow-sm">
-              <GraduationCap size={22} />
-           </div>
-           <StatusBadge 
-              status={course.status === 'COMPLETED' ? 'default' : 'success'} 
-              label={course.status || 'ACTIVE'} 
-           />
-        </div>
+  const activeTeams = course.activeTeams || 0;
+  const jiraConnected = course.jiraConnected || 0;
 
-        <div>
-           <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest">{course.subjectCode || "N/A"}</p>
-           <h3 className="font-black text-gray-800 text-lg leading-tight mt-1.5">{course.code}</h3>
-           <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 line-clamp-1 h-4">{course.name || course.subjectName}</p>
-        </div>
+  const semester =
+    course.semesterName ||
+    course.semester?.name ||
+    course.semester ||
+    "N/A";
 
-        <div className="flex items-center gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-y border-gray-50 py-4">
-           <span className="flex items-center gap-1.5"><Users size={12}/> {course.currentStudents || 0} SV</span>
-           <span className="flex items-center gap-1.5"><BookOpen size={12}/> {groupCount} NHÓM</span>
-        </div>
 
-        <div className="space-y-2">
-           <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-              <span className="text-gray-400">Tiến độ giai đoạn</span>
-              <span className="text-teal-600">{progress}%</span>
-           </div>
-           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.4)] transition-all" style={{width: `${progress}%`}} />
-           </div>
-        </div>
 
-        {alerts > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 text-orange-600 text-[9px] font-black uppercase border border-orange-100">
-             <AlertTriangle size={12} />
-             {alerts} cảnh báo cần xử lý
-          </div>
-        )}
+const progress = Math.min(100, Math.round((activeTeams / (groupCount || 1)) * 100));
+const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString() : "—";
 
-        <div className="grid grid-cols-2 gap-3 pt-2">
-           <Button 
-            className="bg-gray-50 hover:bg-teal-600 hover:text-white text-gray-400 border-0 rounded-2xl h-11 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
-            onClick={() => onNavigate(`/lecturer/course/${course.id}/manage-groups`)}
-           >
-              <Settings2 size={14} className="mr-2" /> Quản lý
-           </Button>
-           <Button 
-            className="bg-gray-50 hover:bg-indigo-600 hover:text-white text-gray-400 border-0 rounded-2xl h-11 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
-            onClick={() => onNavigate(`/lecturer/course/${course.id}/analytics`)}
-           >
-              <BarChart3 size={14} className="mr-2" /> Thống kê
-           </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+/* Course health */
+let status = "ACTIVE";
+if (activeTeams === 0 && groupCount > 0) {
+  status = "NO REPO";
+} else if (activeTeams < groupCount / 2) {
+  status = "LOW";
+}
+
+if (course.status === "COMPLETED") {
+  status = "ARCHIVED";
+}
+
+
+
+return(
+
+<Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all duration-200 group">
+
+<div className="h-1.5 bg-gradient-to-r from-teal-500 to-teal-600"/>
+
+<CardContent className="p-5 space-y-4">
+
+
+
+{/* Header */}
+
+<div className="flex items-start justify-between gap-2">
+
+<div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+<GraduationCap size={18} className="text-teal-700"/>
+</div>
+
+<span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+{course.subject?.code || course.subjectCode || "—"}
+</span>
+
+</div>
+
+
+
+{/* Title */}
+
+<div>
+
+<h3 className="font-bold text-gray-800 leading-snug">
+{course.code}
+</h3>
+
+<p className="text-sm text-gray-500 mt-0.5">
+{course.name || course.subject?.name || course.subjectName}
+</p>
+
+<p className="text-xs text-gray-400">
+Học kỳ: {semester}
+</p>
+
+</div>
+
+
+
+{/* Students + Teams */}
+
+<div className="flex items-center gap-4 text-xs text-gray-500">
+
+<span className="flex items-center gap-1">
+<Users size={11}/>
+{course.currentStudents || 0} sinh viên
+</span>
+
+<span className="flex items-center gap-1">
+<BookOpen size={11}/>
+{groupCount} nhóm
+</span>
+
+</div>
+
+
+
+{/* Commit Trend */}
+
+<MiniCommitChart data={course.commitTrends || []}/>
+
+
+
+{/* Progress */}
+
+<div className="space-y-1">
+
+<div className="flex justify-between text-[11px] text-gray-500">
+<span>Project progress</span>
+<span>{progress}%</span>
+</div>
+
+<div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+<div
+className="h-full bg-teal-500"
+style={{width:`${progress}%`}}
+/>
+</div>
+
+</div>
+
+
+
+{/* Repo + Jira */}
+
+<div className="flex justify-between text-xs text-gray-500">
+
+<span className="flex items-center gap-1">
+<GitBranch size={12}/>
+Repo: {activeTeams}/{groupCount}
+</span>
+
+<span>
+Jira: {jiraConnected}/{groupCount}
+</span>
+
+</div>
+
+
+
+{/* Activity */}
+
+<div className="text-xs text-gray-500 flex justify-between">
+
+<span>
+Active teams: {activeTeams}/{groupCount}
+</span>
+
+<span>
+Last activity: {lastCommit}
+</span>
+
+</div>
+
+
+
+{/* Alerts */}
+
+{alerts>0 && (
+
+<div className="text-xs text-red-500 flex items-center gap-1">
+
+<AlertTriangle size={12}/>
+{alerts} alerts detected
+
+</div>
+
+)}
+
+
+
+<StatusBadge status={status}/>
+
+
+
+{/* Buttons */}
+
+<div className="grid grid-cols-3 gap-2">
+
+<Button
+onClick={()=>navigate(`/lecturer/course/${course.id}/dashboard`)}
+variant="outline"
+className="text-sm h-9 rounded-xl"
+>
+Dashboard
+</Button>
+
+<Button
+onClick={()=>navigate(`/lecturer/course/${course.id}/manage-groups`)}
+className="bg-teal-600 hover:bg-teal-700 text-white text-sm h-9 rounded-xl"
+>
+Manage
+</Button>
+
+<Button
+onClick={()=>navigate(`/lecturer/course/${course.id}/alerts`)}
+variant="outline"
+className="text-sm h-9 rounded-xl"
+>
+Alerts
+</Button>
+
+</div>
+
+</CardContent>
+
+</Card>
+
+)
+
+}
+
+
+
+/* ---------------- MINI CHART ---------------- */
+
+function MiniCommitChart({ data }) {
+
+if (!data || data.length === 0) {
+  return <div className="h-10 w-full" />
+}
+
+return (
+  <div className="w-full h-[40px]">
+
+    <ResponsiveContainer width="100%" aspect={4}>
+
+      <LineChart data={data}>
+
+        <Line
+          type="monotone"
+          dataKey="commits"
+          stroke="#14b8a6"
+          strokeWidth={2}
+          dot={false}
+        />
+
+      </LineChart>
+
+    </ResponsiveContainer>
+
+  </div>
+)
+}
+
+
+
+/* ---------------- STATUS BADGE ---------------- */
+
+function StatusBadge({status}){
+
+const map={
+ACTIVE:"bg-green-50 text-green-700",
+LOW:"bg-yellow-50 text-yellow-700",
+"NO REPO":"bg-red-50 text-red-600",
+ARCHIVED:"bg-gray-100 text-gray-600"
+}
+
+return(
+
+<div className="flex justify-end">
+
+<span className={`text-[10px] px-2 py-1 rounded ${map[status]}`}>
+{status}
+</span>
+
+</div>
+
+)
+
+}
+
+
+
+/* ---------------- MINI STATS ---------------- */
+
+function MiniStat({label,value,color}){
+
+return(
+
+<div className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${color}`}>
+
+<span className="text-xs font-semibold opacity-80">
+{label}
+</span>
+
+<span className="text-xl font-bold">
+{value}
+</span>
+
+</div>
+
+)
+
+}
+
+
+
+/* ---------------- EMPTY STATE ---------------- */
+
+function EmptyState({message}){
+
+return(
+
+<div className="flex flex-col items-center justify-center py-20 gap-3">
+
+<div className="w-16 h-16 rounded-3xl bg-gray-100 flex items-center justify-center">
+<GraduationCap size={28} className="text-gray-400"/>
+</div>
+
+<p className="text-sm text-gray-500">
+{message}
+</p>
+
+</div>
+
+)
+
 }

@@ -50,12 +50,21 @@ import {
   useResolveAlert 
 } from "../../features/system/hooks/useAlerts.js";
 
+<<<<<<< HEAD
+// Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
+
+
+/* ─── Derived mock recent activity (keep for UI) ────────────────── */
+// hoặc useGetGroups nếu có
+const MOCK_ACTIVITY = [];
+=======
 const MOCK_ACTIVITY = [
   { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm Alpha đã submit GitHub repo", time: "5 phút trước" },
   { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm Beta đã kết nối Jira project", time: "1 giờ trước" },
   { id: 3, icon: FileText, color: "text-indigo-600 bg-indigo-50", msg: "SRS Draft từ Nhóm Gamma đang chờ review", time: "3 giờ trước" },
   { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm Delta: Tích hợp đã được phê duyệt", time: "Hôm qua" },
 ];
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
 export default function LecturerDashboard() {
   const navigate = useNavigate();
@@ -66,11 +75,62 @@ export default function LecturerDashboard() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
 
+<<<<<<< HEAD
+const { user } = useAuth();
+const { data: semesters = [] } = useGetSemesters();
+const { data: workload } = useLecturerWorkload(user?.id);
+const { data: projects = [] } = useGetProjects(); 
+
+
+const [selectedSubject, setSelectedSubject] = useState("");
+const [selectedCourse, setSelectedCourse] = useState("");
+const [filter, setFilter] = useState("all");
+
+const { data: subjectsData = { items: [] } } = useGetSubjects();
+const { data: coursesData = { items: [] } } = useGetCourses();
+const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
+const { data: alertsData } = useGetAlerts({ pageSize: 5 });
+
+/* ───── Demo fallback data (when API empty) ───── */
+
+
+
+
+
+/* ───── Merge API + demo ───── */
+
+const subjects = subjectsData?.items || [];
+
+const coursesRaw = coursesData?.items || [];
+
+/* ───── Auto select subject ───── */
+
+useEffect(() => {
+  if (!selectedSubject && subjects.length) {
+    setSelectedSubject(subjects[0].id);
+  }
+}, [subjects]);
+
+/* ───── Filter course by subject ───── */
+
+const courses = coursesRaw.filter(
+  c => !selectedSubject || c.subjectId === parseInt(selectedSubject)
+);
+
+/* ───── Auto select course ───── */
+
+useEffect(() => {
+  if (!selectedCourse && courses.length) {
+    setSelectedCourse(courses[0].id);
+  }
+}, [courses]);
+=======
   const { data: workload } = useLecturerWorkload(user?.id);
   const { data: subjectsData = { items: [] } } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
   const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   const approveIntMutation = useApproveIntegration();
   const rejectIntMutation = useRejectIntegration();
@@ -91,17 +151,24 @@ export default function LecturerDashboard() {
     alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
   }), [workload, groups]);
 
+<<<<<<< HEAD
+  
+=======
   const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
     id: a.id,
     name: a.groupName,
     msg: a.message,
     severity: a.severity?.toLowerCase() === "high" ? "error" : "warning"
   }));
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   const pendingIntegrations = groups.filter(
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
+<<<<<<< HEAD
+   const groups = course?.groups || [];
+=======
   const radarData = useMemo(() => groups.map(group => ({
     groupName: group.name,
     commits: group.stats?.commitsCount || 0,
@@ -110,6 +177,7 @@ export default function LecturerDashboard() {
     githubLinked: group.integration?.githubStatus === 'APPROVED' ? 100 : 0,
     jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 100 : 0,
   })), [groups]);
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   const handleApprovePending = async (groupId) => {
     try {

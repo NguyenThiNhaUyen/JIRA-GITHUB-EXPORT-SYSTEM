@@ -154,6 +154,29 @@ export default function AdminReports() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Commit Trends */}
+<<<<<<< HEAD
+        {commitChartData.length > 0 && (
+          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 pb-4">
+              <CardTitle className="text-lg text-gray-800 font-bold">Lịch sử Commit (30 ngày qua)</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="h-64">
+                <WeeklyTrendsChart data={commitChartData} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* SRS Status Distribution */}
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="border-b border-gray-50 pb-4">
+            <CardTitle className="text-lg text-gray-800 font-bold">Tình trạng Báo cáo SRS</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-64">
+              <ContributorsChart data={srsStatusData} />
+=======
         <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 py-5 px-6 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
@@ -164,11 +187,152 @@ export default function AdminReports() {
           <CardContent className="p-8">
             <div className="h-64">
               <WeeklyTrendsChart data={[]} />
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
             </div>
           </CardContent>
         </Card>
 
         {/* Project Distribution */}
+<<<<<<< HEAD
+        {projectDistribution.length > 0 && (
+          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 pb-4">
+              <CardTitle className="text-lg text-gray-800 font-bold">Dự án theo Lớp học</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="h-64">
+                <CommitFrequencyChart data={projectDistribution} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Detailed Tables */}
+      <div className="grid grid-cols-1 gap-6 pb-8">
+        {/* Course Details */}
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white h-full">
+          <CardHeader className="border-b border-gray-50 pb-4 flex flex-row items-center justify-between">
+            <CardTitle className="text-lg text-gray-800 font-bold">Thông tin Lớp học & Báo cáo</CardTitle>
+            <Button variant="outline" className="rounded-xl" onClick={() => navigate('/admin/my-reports')}>
+              <FileText size={16} className="mr-2" />
+              Xem LS Báo cáo
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50/50">
+                  <tr>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lớp học</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Sinh viên</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Dự án</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng thái</th>
+                    <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Xuất Báo cáo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredCourses.map((course) => (
+                    <tr key={course.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-gray-800">{course.code}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course.name}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="font-medium text-gray-700">{course.currentStudents || 0}</span>
+                        <span className="text-gray-400 text-xs ml-1">/{course.maxStudents || 0}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="font-medium text-gray-700">{course.projectsCount || 0}</span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                          course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                            'text-gray-600 bg-gray-100'
+                          }`}>
+                          {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50"
+                          title="Báo cáo Commit"
+                          onClick={() => handleGenerateReport('COMMIT', course.id)}
+                        >
+                          <Printer size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+                          title="Báo cáo Team Roster"
+                          onClick={() => handleGenerateReport('ROSTER', course.id)}
+                        >
+                          <Users size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
+                          title="Xuất SRS ISO (Giả lập)"
+                          onClick={() => handleGenerateReport('SRS', course.id)}
+                        >
+                          <FileText size={16} />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredCourses.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-10 text-center text-gray-500">
+                        Không có dữ liệu lớp học phù hợp.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Silent Projects Alert */}
+      {projectStats.silentProjects > 0 ? (
+        <Card className="border border-red-100 shadow-sm rounded-[24px] overflow-hidden bg-red-50/30">
+          <CardHeader className="border-b border-red-100 pb-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="text-red-500" size={20} />
+              <CardTitle className="text-lg text-red-700 font-bold">Cảnh báo Dự án</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center text-center space-y-4 h-full py-4">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
+                <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800 text-lg">Dự án chưa hoạt động</h4>
+                <p className="text-sm text-gray-600 mt-1 max-w-xs mx-auto">
+                  Các dự án này không có hoạt động cập nhật mã nguồn (commits) trong 7 ngày qua.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border border-green-100 shadow-sm rounded-[24px] overflow-hidden bg-green-50/30 flex items-center justify-center min-h-[250px]">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} />
+            </div>
+            <h4 className="font-semibold text-gray-800 text-lg">Tất cả dự án đang hoạt động</h4>
+            <p className="text-sm text-gray-600 mt-1">Không có dự án nào bị bỏ trống tuần này</p>
+          </div>
+        </Card>
+      )}
+=======
         <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 py-5 px-6 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
@@ -259,6 +423,7 @@ export default function AdminReports() {
           </table>
         </div>
       </Card>
+>>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
     </div>
   );
 }

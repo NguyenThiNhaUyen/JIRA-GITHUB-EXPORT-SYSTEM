@@ -82,19 +82,36 @@ export default function ManageGroups() {
   const assignedStudentIds = useMemo(() => new Set(groups.flatMap(g => (g.team || []).map(m => Number(m.studentId)))), [groups]);
   const availableStudents = useMemo(() => students.filter(s => !assignedStudentIds.has(Number(s.id))), [students, assignedStudentIds]);
 
-  const groupsWithMetrics = useMemo(() => {
-     return groups.map((g) => ({
-        ...g,
-        memberCount: g.team?.length || 0,
-        progress: g.progressPercent || 0,
-        riskScore: g.riskScore || 0,
-        leader: (g.team || []).find(m => m.role === 'LEADER')?.studentName || "N/A"
-     })).filter(g => {
-        if (filterType === 'risk') return g.riskScore > 50;
-        if (filterType === 'healthy') return g.riskScore <= 50;
-        return true;
-     });
-  }, [groups, filterType]);
+  const assignedStudentIds = useMemo(() => {
+  return new Set(
+    groups.flatMap((group) =>
+      (group.team || []).map((member) =>
+        Number(member.studentId || member.studentUserId)
+      )
+    )
+  );
+}, [groups]);
+
+  const availableStudents = useMemo(() => {
+  return students.filter(
+    (student) => !assignedStudentIds.has(Number(student.id))
+  );
+}, [students, assignedStudentIds]);
+
+  const filteredAvailableStudents = useMemo(() => {
+  const keyword = studentSearch.trim().toLowerCase();
+  if (!keyword) return availableStudents;
+
+  return availableStudents.filter((student) => {
+    const name = student.name?.toLowerCase() || "";
+    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
+
+      return (
+        name.includes(keyword) ||
+        studentId.includes(keyword)
+      );
+    });
+  }, [availableStudents, studentSearch]);
 
   const handleCreateGroup = async () => {
     if (!newGroupTopic.trim() || selectedStudents.length === 0) return showError("Vui lòng nhập đề tài và chọn sinh viên");
@@ -106,40 +123,348 @@ export default function ManageGroups() {
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
       });
-      
-      for (const studentId of selectedStudents) {
-        await addTeamMemberMutation.mutateAsync({ 
-          projectId: project.id, 
-          studentId, 
-          role: studentId === selectedStudents[0] ? "LEADER" : "MEMBER" 
-        });
+
+      for (let i = 0; i < selectedStudents.length; i += 1) {
+        const studentId = Number(selectedStudents[i]);
+
+        await addTeamMemberMutation.mutateAsync({
+  projectId: project.id,
+  studentId: studentId,
+  role: i === 0 ? "LEADER" : "MEMBER",
+});
       }
       
       success(`Tạo nhóm "${project.name}" thành công`);
       setSelectedStudents([]); 
       setNewGroupTopic("");
-    } catch (err) { showError(err.message || "Không thể tạo nhóm"); }
+      setStudentSearch("");
+    } catch (err) {
+      error("Không thể tạo nhóm: " + (err?.message || "Lỗi hệ thống"));
+    }
+  };
+
+  const handleAutoCreateGroups = async () => {
+    if (!parsedCourseId || Number.isNaN(parsedCourseId)) {
+      error("Không tìm thấy mã lớp hợp lệ");
+      return;
+    }
+
+    if (availableStudents.length === 0) {
+      error("Không còn sinh viên chưa phân nhóm");
+      return;
+    }
+
+    if (autoGroupSize < MIN_MEMBERS || autoGroupSize > MAX_MEMBERS) {
+      error(`Số thành viên mỗi nhóm phải từ ${MIN_MEMBERS} đến ${MAX_MEMBERS}`);
+      return;
+    }
+
+    if (
+      !confirm(
+        `Tự động chia ${availableStudents.length} sinh viên chưa có nhóm thành các nhóm khoảng ${autoGroupSize} người?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const shuffled = [...availableStudents].sort(() => Math.random() - 0.5);
+
+      const chunks = [];
+      for (let i = 0; i < shuffled.length; i += autoGroupSize) {
+        chunks.push(shuffled.slice(i, i + autoGroupSize));
+      }
+
+      for (let i = 0; i < chunks.length; i += 1) {
+        const members = chunks[i];
+
+        const project = await createProjectMutation.mutateAsync({
+          courseId: parsedCourseId,
+          name: `Nhóm ${groups.length + i + 1}`,
+          description: `Đề tài nhóm ${groups.length + i + 1}`,
+        });
+
+        for (let j = 0; j < members.length; j += 1) {
+          const student = members[j];
+          await addTeamMemberMutation.mutateAsync({
+            projectId: project.id,
+            studentId: Number(student.id),
+            role: j === 0 ? "LEADER" : "MEMBER",
+          });
+        }
+      }
+
+      success(`Đã tự động tạo ${chunks.length} nhóm mới`);
+    } catch (err) {
+      error(err?.message || "Không thể tự động chia nhóm");
+    }
+  };
+
+  const handleExportGroups = () => {
+    try {
+      const headers = [
+        "Tên nhóm",
+        "Đề tài",
+        "Số thành viên",
+        "Leader",
+        "GitHub",
+        "Jira",
+        "Tiến độ",
+        "Rủi ro",
+      ];
+
+      const rows = groupsWithMetrics.map((group) => {
+        const leader =
+          (group.team || []).find((m) => m.role === "LEADER")?.studentName ||
+          "Chưa có";
+
+        return [
+          group.name || "",
+          group.description || "",
+          group.memberCount || 0,
+          leader,
+          group.githubApproved ? "Approved" : "Missing",
+          group.jiraApproved ? "Approved" : "Missing",
+          `${group.progress}%`,
+          `${group.riskScore}%`,
+        ]
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",");
+      });
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `NhomDuAn_${finalCourse?.code || "course"}_${Date.now()}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      success("Đã xuất danh sách nhóm thành công");
+    } catch {
+      error("Không thể xuất danh sách nhóm");
+    }
   };
 
   const handleDeleteGroup = async (groupId) => {
     if (!confirm("Bạn có chắc muốn xóa nhóm này? Hành động này không thể hoàn tác.")) return;
     try {
       await deleteProjectMutation.mutateAsync(groupId);
-      success("Đã xóa nhóm thành công");
-    } catch (err) { showError("Không thể xóa nhóm"); }
+      success("Đã xóa nhóm");
+    } catch (err) {
+      error(err?.message || "Không thể xóa nhóm");
+    }
+  };
+
+  const handleUpdateGroupTopic = async (groupId, newTopic, oldTopic) => {
+    const normalizedNewTopic = (newTopic || "").trim();
+    const normalizedOldTopic = (oldTopic || "").trim();
+
+    if (normalizedNewTopic === normalizedOldTopic) return;
+
+    try {
+      await updateProjectMutation.mutateAsync({
+        id: groupId,
+        body: { description: normalizedNewTopic },
+      });
+      success("Đã cập nhật đề tài");
+    } catch (err) {
+      error(err?.message || "Không thể cập nhật đề tài");
+    }
+  };
+
+  const handleRemoveStudentFromGroup = async (groupId, studentId) => {
+    try {
+      await removeTeamMemberMutation.mutateAsync({
+        projectId: groupId,
+        studentId: studentId
+      });
+      success("Đã xóa sinh viên khỏi nhóm");
+    } catch (err) {
+      error(err?.message || "Không thể xóa sinh viên");
+    }
+  };
+
+  const toggleStudentSelection = (studentId) => {
+    setSelectedStudents((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const handleOpenForceAdd = (groupId) => {
+    setForceAddGroupId(groupId);
+    setForceAddSelectedIds([]);
+    setForceAddSearch("");
+    setShowForceAddModal(true);
+  };
+
+  const toggleForceAddStudent = (studentId) => {
+    setForceAddSelectedIds((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
   };
 
   const handleForceAddSubmit = async () => {
     if (forceAddSelectedIds.length === 0) return;
     try {
       for (const studentId of forceAddSelectedIds) {
-        await addTeamMemberMutation.mutateAsync({ projectId: targetGroupId, studentId, role: "MEMBER" });
+        await addTeamMemberMutation.mutateAsync({
+          projectId: forceAddGroupId,
+          studentId: Number(studentId),
+          role: "MEMBER",
+        });
       }
       success(`Đã thêm ${forceAddSelectedIds.length} sinh viên vào nhóm`);
       setShowForceAddModal(false);
       setForceAddSelectedIds([]);
     } catch (err) { showError("Không thể thêm sinh viên"); }
   };
+
+  const filteredForceAddStudents = useMemo(() => {
+  const keyword = forceAddSearch.trim().toLowerCase();
+  if (!keyword) return availableStudents;
+
+  return availableStudents.filter((student) => {
+    const name = student.name?.toLowerCase() || "";
+    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
+
+      return (
+        name.includes(keyword) ||
+        studentId.includes(keyword)
+      );
+    });
+  }, [availableStudents, forceAddSearch]);
+
+  const groupsWithMetrics = useMemo(() => {
+    return groups.map((group, index) => {
+      const integration = group.integration || {};
+      const memberCount = group.team?.length || 0;
+      const githubApproved = integration.githubStatus === "APPROVED";
+      const jiraApproved = integration.jiraStatus === "APPROVED";
+
+      const commitCount =
+        group.commitCount ?? memberCount * 6 + (index + 1) * 3;
+      const issueCount = group.issueCount ?? memberCount * 2 + index;
+      const lastActivity =
+        group.lastActivity ??
+        (index === 0
+          ? "2 giờ trước"
+          : index === 1
+          ? "1 ngày trước"
+          : "3 ngày trước");
+
+      let progress = group.progressPercent;
+      if (progress == null) {
+        progress = 0;
+        if (githubApproved) progress += 35;
+        if (jiraApproved) progress += 25;
+        progress += Math.min(40, memberCount * 8);
+      }
+      progress = Math.min(100, Math.max(0, progress));
+
+      let riskScore = group.riskScore;
+      if (riskScore == null) {
+        riskScore = 100 - progress;
+        if (!githubApproved) riskScore += 15;
+        if (!jiraApproved) riskScore += 10;
+      }
+      riskScore = Math.max(0, Math.min(100, riskScore));
+
+      const leader =
+        (group.team || []).find((member) => member.role === "LEADER")
+          ?.studentName || null;
+
+      let state = "healthy";
+      if (!githubApproved && !jiraApproved) state = "critical";
+      else if (riskScore >= 55) state = "warning";
+      else if (riskScore >= 30) state = "watch";
+
+      return {
+        ...group,
+        integration,
+        memberCount,
+        githubApproved,
+        jiraApproved,
+        commitCount,
+        issueCount,
+        lastActivity,
+        progress,
+        riskScore,
+        state,
+        leader,
+        missingTopic: !(group.description || "").trim(),
+      };
+    });
+  }, [groups]);
+
+  const visibleGroups = useMemo(() => {
+    const keyword = groupSearch.trim().toLowerCase();
+
+    return groupsWithMetrics.filter((group) => {
+      const groupName = group.name?.toLowerCase() || "";
+      const groupDescription = group.description?.toLowerCase() || "";
+
+      const matchesSearch =
+        !keyword ||
+        groupName.includes(keyword) ||
+        groupDescription.includes(keyword);
+
+      const matchesFilter =
+        groupFilter === "all" ||
+        (groupFilter === "healthy" && group.state === "healthy") ||
+        (groupFilter === "watch" && group.state === "watch") ||
+        (groupFilter === "warning" && group.state === "warning") ||
+        (groupFilter === "critical" && group.state === "critical") ||
+        (groupFilter === "missing-github" && !group.githubApproved) ||
+        (groupFilter === "missing-jira" && !group.jiraApproved) ||
+        (groupFilter === "missing-topic" && group.missingTopic);
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [groupsWithMetrics, groupSearch, groupFilter]);
+
+  const healthyCount = groupsWithMetrics.filter(
+    (group) => group.state === "healthy"
+  ).length;
+
+  const riskCount = groupsWithMetrics.filter(
+    (group) => group.state === "warning" || group.state === "critical"
+  ).length;
+
+  const missingGithubCount = groupsWithMetrics.filter(
+    (group) => !group.githubApproved
+  ).length;
+
+  const missingJiraCount = groupsWithMetrics.filter(
+    (group) => !group.jiraApproved
+  ).length;
+
+  const missingTopicCount = groupsWithMetrics.filter(
+    (group) => group.missingTopic
+  ).length;
+
+  const avgProgress = groupsWithMetrics.length
+    ? Math.round(
+        groupsWithMetrics.reduce((sum, group) => sum + group.progress, 0) /
+          groupsWithMetrics.length
+      )
+    : 0;
+
+  const estimatedGroupCount =
+    availableStudents.length > 0
+      ? Math.ceil(availableStudents.length / autoGroupSize)
+      : 0;
 
   if (loadingCourse || loadingStudents || loadingProjects) {
     return (
@@ -220,33 +545,56 @@ export default function ManageGroups() {
            </Card>
         </div>
 
-        {/* Group List */}
-        <div className="lg:col-span-2 space-y-6">
-           <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 py-5 px-8 flex flex-row items-center justify-between">
-                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600"><Users size={20}/></div>
-                    <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Danh sách Nhóm Dự án</CardTitle>
-                 </div>
-                 <div className="flex gap-2">
-                    <SelectField value={filterType} onChange={e => setFilterType(e.target.value)} className="h-9 text-[10px] font-black uppercase py-0 min-w-[170px] border-gray-100">
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="healthy">Đang ổn định</option>
-                        <option value="risk">Có rủi ro cao</option>
-                    </SelectField>
-                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                 <div className="divide-y divide-gray-50">
-                    {groupsWithMetrics.length === 0 ? (
-                      <div className="p-20 text-center"><p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Không có dữ liệu phù hợp</p></div>
-                    ) : groupsWithMetrics.map((g) => (
-                       <div key={g.id} className="p-8 hover:bg-gray-50/50 transition-all group relative">
-                          <div className="flex justify-between items-start mb-6">
-                             <div className="flex-1 min-w-0 pr-12">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="font-black text-gray-800 text-base uppercase tracking-tight">{g.name}</h3>
-                                    <StatusBadge status={g.riskScore > 50 ? 'danger' : 'success'} label={g.riskScore > 50 ? 'Rủi ro' : 'Tốt'} variant={g.riskScore > 50 ? 'danger' : 'success'} />
+                        <div>
+                          <div className="mb-2 flex items-center justify-between">
+                            <label className="block text-xs font-medium text-gray-400">
+                              Thành viên ({groupStudents.length})
+                            </label>
+
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenForceAdd(group.id)}
+                              className="flex h-6 items-center gap-1 rounded-md border border-teal-200/50 bg-teal-50 px-2.5 text-[10px] text-teal-700 shadow-none hover:bg-teal-100"
+                            >
+                              <UserPlus size={10} />
+                              Thêm SV
+                            </Button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {groupStudents.length === 0 ? (
+                              <span className="text-xs text-gray-400">
+                                Chưa có thành viên
+                              </span>
+                            ) : (
+                              groupStudents.map((member) => (
+                                <div
+                                  key={`${group.id}-${member.studentId ?? member.studentUserId ?? Math.random()}`}
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm"
+                                >
+                                  <div className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-100 text-[9px] font-bold text-teal-700">
+                                    {member.studentName?.charAt(0) || "S"}
+                                  </div>
+
+                                  {member.studentName}
+
+                                  {member.role === "LEADER" && (
+                                    <span className="rounded-full border border-amber-100 bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-600">
+                                      Leader
+                                    </span>
+                                  )}
+
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveStudentFromGroup(
+                                        group.id,
+                                        member.studentId ?? member.studentUserId
+                                      )
+                                    }
+                                    className="ml-0.5 font-bold text-gray-300 transition-colors hover:text-red-500"
+                                  >
+                                    ×
+                                  </button>
                                 </div>
                                 <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 line-clamp-1"><PenLine size={12}/> {g.description || "Chưa thiết lập đề tài"}</p>
                              </div>

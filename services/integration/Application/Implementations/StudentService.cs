@@ -86,44 +86,130 @@ public class StudentService : IStudentService
 
     public async Task<PagedResponse<object>> GetStudentCommitsAsync(long userId, PagedRequest request)
     {
-        await Task.CompletedTask;
-        // Mock data
-        var commits = new List<object>
-        {
-            new { id = "abc1234", message = "Fix login bug", createdAt = DateTime.UtcNow.AddDays(-1), additions = 50, deletions = 10 }
-        };
-        return new PagedResponse<object>(commits, 1, 1, 10);
+        var githubUsernames = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "GITHUB")
+            .Select(ea => ea.username ?? ea.external_user_key)
+            .ToListAsync();
+
+        var query = _unitOfWork.GitHubCommits.Query()
+            .Where(c => githubUsernames.Contains(c.author_github_user.login));
+
+        var totalCount = await query.CountAsync();
+        
+        var page = request.Page > 0 ? request.Page : 1;
+        var pageSize = request.PageSize > 0 ? request.PageSize : 10;
+
+        var commits = await query
+            .OrderByDescending(c => c.committed_at)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new
+            {
+                id = c.commit_sha,
+                message = c.message,
+                createdAt = c.committed_at,
+                additions = c.additions ?? 0,
+                deletions = c.deletions ?? 0
+            })
+            .ToListAsync();
+
+        return new PagedResponse<object>(commits.Cast<object>().ToList(), totalCount, page, pageSize);
     }
 
     public async Task<PagedResponse<object>> GetStudentTasksAsync(long userId, PagedRequest request)
     {
-        await Task.CompletedTask;
-        // Mock data
-        var tasks = new List<object>
-        {
-            new { id = "TASK-1", title = "Implement API", status = "In Progress", type = "Task", priority = "High" }
-        };
-        return new PagedResponse<object>(tasks, 1, 1, 10);
+        var jiraAccountIds = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "JIRA")
+            .Select(ea => ea.external_user_key)
+            .ToListAsync();
+
+        var query = _unitOfWork.JiraIssues.Query()
+            .Where(i => jiraAccountIds.Contains(i.assignee_jira_account_id));
+
+        var totalCount = await query.CountAsync();
+        
+        var page = request.Page > 0 ? request.Page : 1;
+        var pageSize = request.PageSize > 0 ? request.PageSize : 10;
+
+        var tasks = await query
+            .OrderByDescending(i => i.updated_at)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(i => new
+            {
+                id = i.jira_issue_key,
+                title = i.title,
+                status = i.status,
+                type = i.issue_type,
+                priority = i.priority
+            })
+            .ToListAsync();
+
+        return new PagedResponse<object>(tasks.Cast<object>().ToList(), totalCount, page, pageSize);
     }
 
     public async Task<PagedResponse<object>> GetStudentGradesAsync(long userId, PagedRequest request)
     {
-        await Task.CompletedTask;
-        // Mock data
-        var grades = new List<object>
-        {
-            new { courseName = "PRN222", srsVersion = 1, score = 8.5, feedback = "Good job" }
-        };
-        return new PagedResponse<object>(grades, 1, 1, 10);
+        var activeProjects = await _unitOfWork.TeamMembers.Query()
+            .Include(t => t.project).ThenInclude(p => p.course)
+            .Where(t => t.student_user_id == userId && t.participation_status == "ACTIVE")
+            .Select(t => t.project_id)
+            .ToListAsync();
+
+        var query = _unitOfWork.ProjectDocuments.Query()
+            .Include(pd => pd.project).ThenInclude(p => p.course)
+            .Where(pd => activeProjects.Contains(pd.project_id) && pd.status == "FINAL");
+
+        var totalCount = await query.CountAsync();
+        
+        var page = request.Page > 0 ? request.Page : 1;
+        var pageSize = request.PageSize > 0 ? request.PageSize : 10;
+
+        var grades = await query
+            .OrderByDescending(pd => pd.reviewed_at)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(pd => new
+            {
+                courseName = pd.project.course.course_name,
+                srsVersion = pd.version_no,
+                score = pd.score ?? 0,
+                feedback = pd.feedback
+            })
+            .ToListAsync();
+
+        return new PagedResponse<object>(grades.Cast<object>().ToList(), totalCount, page, pageSize);
     }
 
     public async Task<List<object>> GetStudentWarningsAsync(long userId)
     {
-        await Task.CompletedTask;
-        return new List<object>
+        var warnings = new List<object>();
+
+        // Check for no commits in the last 7 days
+        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+        var githubUsernames = await _unitOfWork.ExternalAccounts.Query()
+            .Where(ea => ea.user_id == userId && ea.provider == "GITHUB")
+            .Select(ea => ea.username ?? ea.external_user_key)
+            .ToListAsync();
+
+        var hasRecentCommits = await _unitOfWork.GitHubCommits.Query()
+            .AnyAsync(c => githubUsernames.Contains(c.author_github_user.login) && c.committed_at >= sevenDaysAgo);
+
+        if (githubUsernames.Any() && !hasRecentCommits)
         {
-            new { message = "You have not committed to the Github Repo for 7 days.", severity = "HIGH", courseCode = "PRN222" }
-        };
+            var activeCourses = await _unitOfWork.CourseEnrollments.Query()
+                .Include(ce => ce.course)
+                .Where(ce => ce.student_user_id == userId && ce.status == "ACTIVE")
+                .Select(ce => ce.course.course_code)
+                .ToListAsync();
+
+            if (activeCourses.Any())
+            {
+                 warnings.Add(new { message = "Bạn chưa có commit nào trên Github trong 7 ngày qua.", severity = "HIGH", courseCode = string.Join(", ", activeCourses) });
+            }
+        }
+
+        return warnings;
     }
 
     public async Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>> GetStudentHeatmapAsync(long userId, int days = 35)

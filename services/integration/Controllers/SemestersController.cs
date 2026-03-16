@@ -31,12 +31,6 @@ public class SemestersController : ControllerBase
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Create a new semester (Admin only)
-    /// </summary>
-    [HttpPost]
-    [Authorize(Roles = "ADMIN")]
-=======
     /// Get all semesters (unpaged)
     /// </summary>
     [HttpGet("all")]
@@ -52,7 +46,6 @@ public class SemestersController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<SemesterInfo>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateSemesterRequest request)
     {
@@ -61,12 +54,6 @@ public class SemestersController : ControllerBase
     }
 
     /// <summary>
-<<<<<<< HEAD
-    /// Update a semester (Admin only)
-    /// </summary>
-    [HttpPut("{id}")]
-    [Authorize(Roles = "ADMIN")]
-=======
     /// Auto-generate Spring, Summer, and Fall semesters for a given year (Admin only)
     /// </summary>
     [HttpPost("generate")]
@@ -83,7 +70,6 @@ public class SemestersController : ControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse<SemesterInfo>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateSemesterRequest request)
     {
@@ -95,11 +81,7 @@ public class SemestersController : ControllerBase
     /// Delete a semester (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
-<<<<<<< HEAD
-    [Authorize(Roles = "ADMIN")]
-=======
     [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
->>>>>>> origin
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete(long id)
     {
