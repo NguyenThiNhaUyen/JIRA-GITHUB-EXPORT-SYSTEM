@@ -361,7 +361,7 @@ export default function AdminReports() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center text-center space-y-4 h-full py-4">
               <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
-                <span className="text-2xl font-bold">{data.projectStats.silentProjects}</span>
+                <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 text-lg">Dự án chưa hoạt động</h4>

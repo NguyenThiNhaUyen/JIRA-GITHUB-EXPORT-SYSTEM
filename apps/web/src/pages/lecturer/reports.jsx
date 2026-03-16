@@ -1,5 +1,5 @@
 // Reports & Export — Lecturer
-import { ChevronRight, Download, FileSpreadsheet, FileText, Filter, CheckSquare } from "lucide-react";
+import { ChevronRight, Download, FileSpreadsheet, FileText, CheckSquare, SearchX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
@@ -31,14 +31,16 @@ const EXPORT_TYPES = [
     },
 ];
 
-const MOCK_EXPORTS = [
-    { id: 1, type: "Báo cáo theo Lớp", target: "SE001 - K22", format: "PDF", date: "2025-03-01", size: "1.2 MB" },
-    { id: 2, type: "Báo cáo theo Nhóm", target: "Nhóm SE01-G1", format: "Excel", date: "2025-03-03", size: "890 KB" },
-    { id: 3, type: "Báo cáo theo Sinh viên", target: "SE001 - K22", format: "CSV", date: "2025-03-05", size: "240 KB" },
-];
-
 export default function Reports() {
-    const { success } = useToast();
+    const { success, info } = useToast();
+
+    // Trong tương lai, real history sẽ fetch từ backend (VD: useExportHistory())
+    const exportHistory = [];
+
+    const handleExport = (format, typeTitle) => {
+        info(`Đang yêu cầu tạo file ${format} cho "${typeTitle}"...`);
+        // TODO: Gọi API xuất file tương ứng
+    }
 
     return (
         <div className="space-y-6">
@@ -73,7 +75,7 @@ export default function Reports() {
                                     {et.formats.map(f => (
                                         <button
                                             key={f}
-                                            onClick={() => success(`Đang tạo file ${f}... (chức năng demo)`)}
+                                            onClick={() => handleExport(f, et.title)}
                                             className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 rounded-xl px-3 py-1.5 transition-colors"
                                         >
                                             <Download size={11} />{f}
@@ -106,33 +108,40 @@ export default function Reports() {
                 </div>
 
                 <CardContent className="p-0">
-                    {MOCK_EXPORTS.map(ex => (
-                        <div key={ex.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
-                            <div className="col-span-4 text-sm font-medium text-gray-700">{ex.type}</div>
-                            <div className="col-span-3 text-sm text-gray-600">{ex.target}</div>
-                            <div className="col-span-1 text-center">
-                                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
-                                    {ex.format}
-                                </span>
-                            </div>
-                            <div className="col-span-2 text-center text-xs text-gray-500">
-                                {new Date(ex.date).toLocaleDateString("vi-VN")}
-                            </div>
-                            <div className="col-span-2 text-right">
-                                <button
-                                    onClick={() => success(`Đang tải ${ex.format}... (demo)`)}
-                                    className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-3 py-1.5 border border-teal-100 transition-colors ml-auto"
-                                >
-                                    <Download size={11} />Tải lại
-                                </button>
-                            </div>
+                    {exportHistory.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <SearchX size={32} className="text-gray-300" />
+                            <p className="text-sm text-gray-500">Chưa có lịch sử xuất báo cáo nào</p>
                         </div>
-                    ))}
+                    ) : (
+                        exportHistory.map(ex => (
+                            <div key={ex.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                                <div className="col-span-4 text-sm font-medium text-gray-700">{ex.type}</div>
+                                <div className="col-span-3 text-sm text-gray-600">{ex.target}</div>
+                                <div className="col-span-1 text-center">
+                                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                                        {ex.format}
+                                    </span>
+                                </div>
+                                <div className="col-span-2 text-center text-xs text-gray-500">
+                                    {new Date(ex.date).toLocaleDateString("vi-VN")}
+                                </div>
+                                <div className="col-span-2 text-right">
+                                    <button
+                                        onClick={() => success(`Đang tải log ${ex.id}...`)}
+                                        className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-3 py-1.5 border border-teal-100 transition-colors ml-auto"
+                                    >
+                                        <Download size={11} />Tải lại
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </CardContent>
             </Card>
 
             <p className="text-xs text-gray-400 text-center pt-2">
-                * Chức năng export đang phát triển. Demo hiển thị toast thay vì tải file thực.
+                * Chức năng API Export History đang được phát triển ở backend.
             </p>
         </div>
     );

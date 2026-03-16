@@ -19,8 +19,17 @@ const ROLE_REDIRECTS = {
  */
 function mapBEUserToFEUser(loginResponse) {
   const beUser = loginResponse.user ?? loginResponse.User; // camelCase hoặc PascalCase
-  const roles = beUser.roles ?? beUser.Roles ?? [];
-  const primaryRole = roles[0] ?? "STUDENT"; // Lấy role đầu tiên (BE trả array)
+  
+  let primaryRole = "STUDENT";
+  if (typeof beUser.role === 'string' && beUser.role) {
+    primaryRole = beUser.role;
+  } else if (typeof beUser.Role === 'string' && beUser.Role) {
+    primaryRole = beUser.Role;
+  } else {
+    // Fallback cho trường hợp trả về mảng rules cũ
+    const roles = beUser.roles ?? beUser.Roles ?? [];
+    primaryRole = roles[0] ?? "STUDENT";
+  }
 
   return {
     id: beUser.id ?? beUser.Id,

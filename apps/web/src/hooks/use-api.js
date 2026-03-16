@@ -1,133 +1,73 @@
 // Custom hooks cho API calls với TanStack Query
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../api/mock-client.js";
 import { useApp } from "../context/AppContext.jsx";
+import { getStudentDashboardStats, getLecturerCoursesStats, getLecturerActivityLogs, getGroupRadarMetrics } from "../features/analytics/api/analyticsApi.js";
+import { getProjectCommits, getProjectCommitHistory } from "../features/github/api/githubApi.js";
+import { getProjectMetrics } from "../features/projects/api/projectApi.js";
 
+
+// TODO: context backend API endpoint implementation for context hooks
 export function useContext() {
   return useQuery({
     queryKey: ["context"],
-    queryFn: () => api.getContext(),
+    queryFn: () => ({ /* Placeholder for Context API implementation */ }),
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useDashboardSummary() {
-  const { weekId, repoId } = useApp();
-  return useQuery({
-    queryKey: ["dashboard", "summary", weekId, repoId],
-    queryFn: () => api.getDashboardSummary({ weekId, repoId }),
-  });
+// Analytics and Dashboard Hooks
+export function useStudentDashboardStats() {
+    return useQuery({
+        queryKey: ["analytics", "student", "stats"],
+        queryFn: () => getStudentDashboardStats(),
+    });
 }
 
-export function useDashboardTrends() {
-  const { weekId, repoId } = useApp();
-  return useQuery({
-    queryKey: ["dashboard", "trends", weekId, repoId],
-    queryFn: () => api.getDashboardTrends({ weekId, repoId }),
-  });
+export function useLecturerCoursesStats() {
+    return useQuery({
+        queryKey: ["analytics", "lecturer", "courses"],
+        queryFn: () => getLecturerCoursesStats(),
+    });
 }
 
-export function useHeatmap(memberId) {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["dashboard", "heatmap", repoId, memberId],
-    queryFn: () => api.getHeatmap({ repoId, memberId }),
-  });
+export function useLecturerActivityLogs(limit = 10) {
+    return useQuery({
+        queryKey: ["analytics", "lecturer", "activity-logs", limit],
+        queryFn: () => getLecturerActivityLogs(limit),
+    });
 }
 
-export function useTasksBoard() {
-  const { weekId, repoId } = useApp();
-  return useQuery({
-    queryKey: ["tasks", "board", weekId, repoId],
-    queryFn: () => api.getTasksBoard({ weekId, repoId }),
-  });
+export function useGroupRadarMetrics(courseId) {
+    return useQuery({
+        queryKey: ["analytics", "radar", courseId],
+        queryFn: () => getGroupRadarMetrics(courseId),
+        enabled: !!courseId
+    });
 }
 
-export function useCfd() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["tasks", "cfd", repoId],
-    queryFn: () => api.getCfd({ repoId }),
-  });
+// GitHub & Project Hooks
+export function useProjectCommits(projectId, page = 1, pageSize = 50) {
+    return useQuery({
+        queryKey: ["github", "commits", projectId, page, pageSize],
+        queryFn: () => getProjectCommits(projectId, page, pageSize),
+        enabled: !!projectId
+    });
 }
 
-export function useCycleTime() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["tasks", "cycle-time", repoId],
-    queryFn: () => api.getCycleTime({ repoId }),
-  });
+export function useProjectCommitHistory(projectId) {
+    return useQuery({
+        queryKey: ["github", "commit-history", projectId],
+        queryFn: () => getProjectCommitHistory(projectId),
+        enabled: !!projectId
+    });
 }
 
-export function useAgingWip(limit = 5) {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["tasks", "aging-wip", repoId, limit],
-    queryFn: () => api.getAgingWip({ repoId, limit }),
-  });
-}
-
-export function useCommitsList(params = {}) {
-  return useQuery({
-    queryKey: ["commits", "list", params],
-    queryFn: () => api.getCommitsList(params),
-  });
-}
-
-export function useCommitsFrequency() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["commits", "frequency", repoId],
-    queryFn: () => api.getCommitsFrequency({ repoId }),
-  });
-}
-
-export function useCodeChanges() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["commits", "code-changes", repoId],
-    queryFn: () => api.getCodeChanges({ repoId }),
-  });
-}
-
-export function useDeadlinesRoadmap() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["deadlines", "roadmap", repoId],
-    queryFn: () => api.getDeadlinesRoadmap({ repoId }),
-  });
-}
-
-export function useDeadlinesDistribution() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["deadlines", "distribution", repoId],
-    queryFn: () => api.getDeadlinesDistribution({ repoId }),
-  });
-}
-
-export function usePerformanceSummary() {
-  const { weekId, repoId } = useApp();
-  return useQuery({
-    queryKey: ["performance", "summary", weekId, repoId],
-    queryFn: () => api.getPerformanceSummary({ weekId, repoId }),
-  });
-}
-
-export function usePerformanceMembers() {
-  const { weekId, repoId } = useApp();
-  return useQuery({
-    queryKey: ["performance", "members", weekId, repoId],
-    queryFn: () => api.getPerformanceMembers({ weekId, repoId }),
-  });
-}
-
-export function usePerformanceTrends() {
-  const { repoId } = useApp();
-  return useQuery({
-    queryKey: ["performance", "trends", repoId],
-    queryFn: () => api.getPerformanceTrends({ repoId }),
-  });
+export function useProjectMetrics(projectId) {
+    return useQuery({
+        queryKey: ["projects", "metrics", projectId],
+        queryFn: () => getProjectMetrics(projectId),
+        enabled: !!projectId
+    });
 }
 
 

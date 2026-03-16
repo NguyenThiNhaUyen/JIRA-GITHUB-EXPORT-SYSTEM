@@ -16,17 +16,19 @@ import { useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetCourses, useGetCourseById } from "../../features/courses/hooks/useCourses.js";
 import { useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
+import { useGroupRadarMetrics, useLecturerActivityLogs } from "../../hooks/use-api.js";
 
-// Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
 
-
-/* ─── Derived mock recent activity (keep for UI) ────────────────── */
-const MOCK_ACTIVITY = [
-  { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
-  { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
-  { id: 3, icon: FileText, color: "text-indigo-600 bg-indigo-50", msg: "SRS Draft từ Nhóm C đang chờ review", time: "3 giờ trước" },
-  { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm D: GitHub đã được phê duyệt", time: "Hôm qua" },
-];
+/* ─── Static icon definitions ────────────────── */
+const getActivityIconInfo = (type) => {
+    switch (type) {
+        case 'GITHUB_SYNC': return { icon: GitBranch, color: "text-teal-600 bg-teal-50" };
+        case 'JIRA_SYNC': return { icon: BookOpen, color: "text-blue-600 bg-blue-50" };
+        case 'SRS_SUBMIT': return { icon: FileText, color: "text-indigo-600 bg-indigo-50" };
+        case 'INTEGRATION_APPROVED': return { icon: CheckCircle, color: "text-green-600 bg-green-50" };
+        default: return { icon: CheckCircle, color: "text-gray-600 bg-gray-50" };
+    }
+}
 
 export default function LecturerDashboard() {
   const navigate = useNavigate();
@@ -40,6 +42,10 @@ export default function LecturerDashboard() {
   const { data: coursesData = { items: [] } } = useGetCourses();
   const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
+
+  // Fetch real analytics data
+  const { data: radarMetricsData } = useGroupRadarMetrics(selectedCourse);
+  const { data: activityLogsData } = useLecturerActivityLogs(5);
 
   const approveIntMutation = useApproveIntegration();
   const rejectIntMutation = useRejectIntegration();
@@ -105,18 +111,21 @@ export default function LecturerDashboard() {
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-  // Build RadarChart data from groups
-  const radarData = groups.map(group => {
+  // Build RadarChart data from real request
+  const radarData = radarMetricsData || groups.map(group => {
+    // Fallback while API is loading / unavailable
     const teamSize = group.team?.length || 0;
     return {
       groupName: group.name,
-      commits: Math.floor(Math.random() * 20) + 1, // Mock commits for now
-      srsDone: Math.floor(Math.random() * 3), // Mock SRS for now
+      commits: 0,
+      srsDone: 0,
       teamSize,
       githubLinked: group.integration?.githubStatus === 'APPROVED' ? 1 : 0,
       jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 1 : 0,
     };
   });
+  
+  const activities = (activityLogsData?.items) || [];
 
 
   return (
@@ -232,23 +241,32 @@ export default function LecturerDashboard() {
               <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
                 <Activity size={15} className="text-teal-600" />
               </div>
-              <CardTitle className="text-base font-semibold text-gray-800">Hoạt động gần đây</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-800">Hoạt động hệ thống</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {MOCK_ACTIVITY.map(act => (
-              <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${act.color}`}>
-                  <act.icon size={14} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 leading-snug">{act.msg}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                    <Clock size={10} />{act.time}
-                  </p>
-                </div>
-              </div>
-            ))}
+             {activities.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <Activity size={28} className="text-gray-300" />
+                    <p className="text-sm text-gray-400">Chưa có hoạt động nào được ghi nhận</p>
+                 </div>
+             ) : (
+                activities.map(act => {
+                    const { icon: ActIcon, color } = getActivityIconInfo(act.type);
+                    return (
+                    <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+                        <ActIcon size={14} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 leading-snug">{act.msg || act.description || 'Hoạt động ẩn danh'}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                            <Clock size={10} />{act.time || new Date(act.timestamp || act.createdAt).toLocaleDateString("vi-VN")}
+                        </p>
+                        </div>
+                    </div>
+                )})
+             )}
           </CardContent>
         </Card>
       </div>
@@ -371,7 +389,7 @@ export default function LecturerDashboard() {
 
 
       {/* ── E. RadarChart — So sánh Nhóm ──────── */}
-      {selectedCourse && radarData.length > 0 && (
+      {selectedCourse && radarData && radarData.length > 0 && (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 pb-4">
             <div className="flex items-center gap-2">
@@ -449,8 +467,8 @@ function GroupRow({ group, students, githubOk, jiraOk, onDetail, onWarn }) {
       <div className="col-span-3 hidden md:flex items-center justify-center gap-1">
         <div className="flex -space-x-2">
           {students.slice(0, 3).map(s => (
-            <div key={s.id} className="w-7 h-7 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-teal-700" title={s.name}>
-              {s.name?.charAt(0)}
+            <div key={s.id || s.studentUserId} className="w-7 h-7 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-teal-700" title={s.name}>
+              {(s.name || s.studentName)?.charAt(0)}
             </div>
           ))}
           {students.length > 3 && (

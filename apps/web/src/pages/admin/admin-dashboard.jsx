@@ -15,15 +15,23 @@ import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+import { useLecturerActivityLogs } from "../../hooks/use-api.js";
+import { GitBranch, FileText } from "lucide-react";
 
-// Mock recent system activity (static — không cần API)
-const SYSTEM_ACTIVITY = [
-  { icon: Users, color: "text-blue-600 bg-blue-50", msg: "Sinh viên mới đăng ký lớp SE001", time: "5 phút trước" },
-  { icon: UserCog, color: "text-teal-600 bg-teal-50", msg: "GV. Nguyễn được phân công SE002", time: "30 phút trước" },
-  { icon: BookOpen, color: "text-indigo-600 bg-indigo-50", msg: "Lớp học phần SE003-K22 được tạo mới", time: "2 giờ trước" },
-  { icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Học kỳ 2024-2 đã được kích hoạt", time: "Hôm qua" },
-  { icon: AlertCircle, color: "text-orange-600 bg-orange-50", msg: "5 nhóm chưa submit GitHub link", time: "Hôm qua" },
-];
+
+/* ─── Static icon definitions ────────────────── */
+const getActivityIconInfo = (type) => {
+    switch (type) {
+        case 'GITHUB_SYNC': return { icon: GitBranch, color: "text-teal-600 bg-teal-50" };
+        case 'JIRA_SYNC': return { icon: BookOpen, color: "text-blue-600 bg-blue-50" };
+        case 'SRS_SUBMIT': return { icon: FileText, color: "text-indigo-600 bg-indigo-50" };
+        case 'INTEGRATION_APPROVED': return { icon: CheckCircle, color: "text-green-600 bg-green-50" };
+        case 'NEW_USER': return { icon: Users, color: "text-blue-600 bg-blue-50" };
+        case 'NEW_COURSE': return { icon: BookOpen, color: "text-indigo-600 bg-indigo-50" };
+        case 'ALERT': return { icon: AlertCircle, color: "text-orange-600 bg-orange-50" };
+        default: return { icon: CheckCircle, color: "text-gray-600 bg-gray-50" };
+    }
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -33,7 +41,7 @@ export default function AdminDashboard() {
   const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
   const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
   const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ pageSize: 1 });
-
+  const { data: activityLogsData, isLoading: loadingLogs } = useLecturerActivityLogs(5); // Admin can see general logs as well
 
   // For counts, we could have a stats API, but for now fetch summaries
   const { data: lecturersRaw = [], isLoading: loadingLects } = useGetUsers("LECTURER");
@@ -41,6 +49,8 @@ export default function AdminDashboard() {
 
   const recentCourses = coursesData?.items || [];
   const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus || loadingProjects;
+  
+  const activities = (activityLogsData?.items) || [];
 
   const stats = {
     semesters: semesters.length,
@@ -98,19 +108,32 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {SYSTEM_ACTIVITY.map((act, i) => (
-              <div key={i} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${act.color}`}>
-                  <act.icon size={14} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 leading-snug">{act.msg}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                    <Clock size={10} />{act.time}
-                  </p>
-                </div>
-              </div>
-            ))}
+             {loadingLogs ? (
+                 <div className="flex justify-center items-center py-10">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600" />
+                 </div>
+             ) : activities.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <Activity size={28} className="text-gray-300" />
+                    <p className="text-sm text-gray-400">Chưa có hoạt động nào được ghi nhận</p>
+                 </div>
+             ) : (
+                activities.map(act => {
+                    const { icon: ActIcon, color } = getActivityIconInfo(act.type);
+                    return (
+                    <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+                        <ActIcon size={14} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 leading-snug">{act.msg || act.description || 'Hoạt động ẩn danh'}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                            <Clock size={10} />{act.time || new Date(act.timestamp || act.createdAt).toLocaleDateString("vi-VN")}
+                        </p>
+                        </div>
+                    </div>
+                )})
+             )}
           </CardContent>
         </Card>
 

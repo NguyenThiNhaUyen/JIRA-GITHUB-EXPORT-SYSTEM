@@ -12,7 +12,7 @@ export default function Contributions() {
     const [commitsByStudent, setCommitsByStudent] = useState({});
     const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0));
 
-    const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const courses = coursesData.items || [];
 
     useEffect(() => {
@@ -37,21 +37,19 @@ export default function Contributions() {
             });
         });
 
-        // Mock commits per student (since no real API yet)
+        // Initialize with default 0 commits or minimal logic since API might not provide per-student real commits yet.
         const byStudent = {};
         for (const s of allStudents) {
-            const mockCommits = Math.floor(Math.random() * 15);
             byStudent[s.studentId] = {
                 name: s.studentName,
-                studentCode: s.studentCode,
-                commits: mockCommits,
+                studentCode: s.studentCode || s.studentId,
+                commits: 0, // Fallback to 0 if no real data
             };
         }
         setCommitsByStudent(byStudent);
 
-        // Mock weekly data
-        const mockWeekly = new Array(12).fill(0).map(() => Math.floor(Math.random() * 20));
-        setWeeklyCommits(mockWeekly);
+        // Reset weekly data
+        setWeeklyCommits(new Array(12).fill(0));
     }, [selectedCourse, currentCourse, groups]);
 
 
@@ -61,8 +59,8 @@ export default function Contributions() {
 
     // Group-level stats
     const groupStats = groups.map((g) => {
-        const memberCommits = g.studentIds.reduce(
-            (sum, sid) => sum + (commitsByStudent[sid]?.commits || 0),
+        const memberCommits = (g.team || []).reduce(
+            (sum, m) => sum + (commitsByStudent[m.studentId]?.commits || 0),
             0
         );
         return { ...g, totalCommits: memberCommits };
@@ -71,6 +69,15 @@ export default function Contributions() {
     const totalCommits = sortedStudents.reduce((s, st) => s + st.commits, 0);
     const activeStudents = sortedStudents.filter((s) => s.commits > 0).length;
     const inactiveStudents = sortedStudents.filter((s) => s.commits === 0).length;
+
+    if (loadingCourses) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
+                <p className="text-gray-500 font-medium">Đang tải biểu đồ...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -151,9 +158,8 @@ export default function Contributions() {
                                 <span key={w} className="text-[9px] text-gray-400 flex-1 text-center">{w}</span>
                             ))}
                         </div>
-                        <p className="text-[10px] text-gray-400 mt-3">
-                            {/* TODO: Connect to real GitHub API for live commit data */}
-                            * Dữ liệu từ mock DB. Sẽ kết nối GitHub API sau khi tích hợp.
+                        <p className="text-[10px] text-orange-500 mt-3 bg-orange-50 p-2 rounded-md">
+                            ⚠️ Dữ liệu hiện tại hiển thị bằng 0. API Backend chưa hỗ trợ lấy lịch sử commit theo cá nhân trong khoá học.
                         </p>
                     </CardContent>
                 </Card>
@@ -174,7 +180,7 @@ export default function Contributions() {
                         ) : (
                             groupStats.map((g) => {
                                 const maxInGroup = Math.max(...groupStats.map((x) => x.totalCommits), 1);
-                                const pct = Math.round((g.totalCommits / maxInGroup) * 100);
+                                const pct = maxInGroup > 0 ? Math.round((g.totalCommits / maxInGroup) * 100) : 0;
                                 return (
                                     <div key={g.id}>
                                         <div className="flex justify-between items-center mb-1">
@@ -217,7 +223,7 @@ export default function Contributions() {
                         <p className="text-sm text-gray-400 text-center py-10">Không có dữ liệu đóng góp</p>
                     ) : (
                         sortedStudents.map((s, i) => (
-                            <div key={s.studentCode} className="grid grid-cols-12 gap-3 px-6 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                            <div key={s.studentCode || `student-key-${i}`} className="grid grid-cols-12 gap-3 px-6 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
                                 <div className="col-span-1 text-sm font-bold text-gray-400">#{i + 1}</div>
                                 <div className="col-span-5 flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-xs font-bold text-teal-700">

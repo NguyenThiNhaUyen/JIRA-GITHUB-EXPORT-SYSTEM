@@ -1,23 +1,19 @@
 // student-project.jsx — Enterprise SaaS Project Workspace
-// Logic: giữ nguyên (useParams, useAuth, getProjectById, getCommitsByProject, getSrsReportsByProject...)
+// Logic: Fetch API using Feature APIs via React Query
 // UI: redesign theo design system Admin/Lecturer
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import {
-  getProjectById,
-  getCommitsByProject,
-  getSrsReportsByProject,
-  getCommitsByStudent,
-  mockUsers,
-  mockJiraProjects,
-} from "../../mock/data.js";
+import { getProjectById } from "../../features/projects/api/projectApi.js";
+import { getProjectSrs } from "../../features/srs/api/srsApi.js";
+import { useProjectCommits } from "../../hooks/use-api.js";
 import {
   ChevronRight, GitCommit, Link2, BarChart2,
   Users, FileText, ArrowLeft, Github, Upload,
@@ -32,18 +28,35 @@ export default function StudentProject() {
   const [activeTab, setActiveTab] = useState("commits");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  /* ── Data (logic unchanged) ── */
-  const project = getProjectById(projectId);
-  const allCommits = getCommitsByProject(projectId);
-  const myCommits = getCommitsByStudent(user?.id).filter(c => c.projectId === projectId);
-  const srsReports = getSrsReportsByProject(projectId);
-  const jiraProject = mockJiraProjects.find(jp => jp.projectId === projectId);
+  /* ── Data Fetching via React Query ── */
+  const { data: project, isLoading: isProjectLoading } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => getProjectById(projectId),
+    enabled: !!projectId,
+  });
 
-  const myTeamMember = project?.teamMembers?.find(m => m.studentId === user?.id);
-  const myRole = myTeamMember?.roleInTeam || "MEMBER";
-  const isLeader = myRole === "LEADER";
+  const { data: commitsResponse, isLoading: isCommitsLoading } = useProjectCommits(projectId, 1, 100);
+  const allCommits = commitsResponse?.items || [];
+  
+  // Filter my commits from all project commits based on user ID or student Code mapping
+  const myCommits = allCommits.filter(c => c.authorStudentId === user?.id || c.authorStudentId === user?.studentCode);
 
-  /* ── Not found ── */
+  const { data: srsReports = [], isLoading: isSrsLoading } = useQuery({
+    queryKey: ["project", projectId, "srs"],
+    queryFn: () => getProjectSrs(projectId),
+    enabled: !!projectId,
+  });
+
+  // TODO: Implement Jira Dashboard metrics fetching if Backend supports it. Currently mocking empty or generic structure.
+  const jiraProject = project?.jiraProjectKey ? {
+      issueCount: 0, completedIssues: 0, sprintCount: 0, currentSprint: "N/A", sprintStatus: "INACTIVE"
+  } : null;
+
+  /* ── Not found / Loading ── */
+  if (isProjectLoading) {
+    return <div className="flex justify-center items-center h-64 text-teal-600 font-semibold">Đang tải dữ liệu dự án...</div>;
+  }
+
   if (!project) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -55,6 +68,10 @@ export default function StudentProject() {
       </div>
     );
   }
+
+  const myTeamMember = project.teamMembers?.find(m => m.studentId === user?.id || String(m.studentUserId) === String(user?.id));
+  const myRole = myTeamMember?.roleInTeam || myTeamMember?.role || "MEMBER";
+  const isLeader = myRole === "LEADER";
 
   /* ── Status helpers ── */
   const ghStatus = project.githubRepo
@@ -70,7 +87,7 @@ export default function StudentProject() {
       <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
         <span className="text-teal-700 font-semibold cursor-pointer hover:underline" onClick={() => navigate("/student")}>Sinh viên</span>
         <ChevronRight size={12} />
-        <span className="text-gray-800 font-semibold truncate">{project.name}</span>
+        <span className="text-gray-800 font-semibold truncate">{project.groupName || project.name || `Dự án ${project.id}`}</span>
       </nav>
 
       {/* ── A. Project Header ── */}
@@ -85,7 +102,7 @@ export default function StudentProject() {
                   {isLeader ? "⭐ Team Leader" : "Team Member"}
                 </span>
               </div>
-              <h2 className="text-xl font-black tracking-tight text-gray-800">{project.name}</h2>
+              <h2 className="text-xl font-black tracking-tight text-gray-800">{project.groupName || project.name || `Dự án ${project.id}`}</h2>
               {project.description && <p className="text-sm text-gray-500 mt-0.5">{project.description}</p>}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -156,19 +173,19 @@ export default function StudentProject() {
                   </div>
                   <div className="divide-y divide-gray-50">
                     {myCommits.map(commit => (
-                      <div key={commit.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors">
+                      <div key={commit.id || commit.sha} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors">
                         <div className="col-span-2 font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md w-fit">
                           {commit.sha?.substring(0, 7)}
                         </div>
                         <div className="col-span-5 text-sm text-gray-700 font-medium truncate">{commit.message}</div>
                         <div className="col-span-2 text-center text-xs text-gray-500">
-                          {new Date(commit.date).toLocaleDateString("vi-VN")}
+                          {new Date(commit.committedAt || commit.date).toLocaleDateString("vi-VN")}
                         </div>
                         <div className="col-span-2 text-center text-xs">
-                          <span className="text-green-600 font-semibold">+{commit.additions}</span>
-                          <span className="text-red-500 font-semibold ml-1">-{commit.deletions}</span>
+                          <span className="text-green-600 font-semibold">+{(commit.stats?.additions) || commit.additions || 0}</span>
+                          <span className="text-red-500 font-semibold ml-1">-{(commit.stats?.deletions) || commit.deletions || 0}</span>
                         </div>
-                        <div className="col-span-1 text-center text-xs text-gray-500">{commit.files?.length}</div>
+                        <div className="col-span-1 text-center text-xs text-gray-500">{commit.files?.length || 0}</div>
                       </div>
                     ))}
                   </div>
@@ -188,7 +205,7 @@ export default function StudentProject() {
               {!jiraProject ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                   <Link2 size={28} className="text-gray-300" />
-                  <p className="text-sm text-gray-400">Không có dữ liệu Jira cho project này</p>
+                  <p className="text-sm text-gray-400">Không có dữ liệu thiết lập Jira cho project này hoặc backend chưa hỗ trợ metrics.</p>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -211,28 +228,6 @@ export default function StudentProject() {
                         {jiraProject.sprintStatus}
                       </span>
                     </div>
-                    {/* Mock issues */}
-                    <div className="space-y-2">
-                      {[
-                        { type: "TASK", title: "Implement user authentication", status: "Done", statusCls: "bg-green-50 text-green-700 border-green-100" },
-                        { type: "BUG", title: "Fix login validation error", status: "In Progress", statusCls: "bg-orange-50 text-orange-700 border-orange-100" },
-                        { type: "STORY", title: "Add payment gateway integration", status: "To Do", statusCls: "bg-gray-100 text-gray-500 border-gray-200" },
-                      ].map((issue, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${issue.type === "BUG" ? "bg-red-50 text-red-700 border-red-100" :
-                                issue.type === "STORY" ? "bg-purple-50 text-purple-700 border-purple-100" :
-                                  "bg-blue-50 text-blue-700 border-blue-100"
-                              }`}>{issue.type}</span>
-                            <div>
-                              <p className="text-sm font-medium text-gray-800">{issue.title}</p>
-                              <p className="text-xs text-gray-400">Assignee: {user?.name}</p>
-                            </div>
-                          </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${issue.statusCls}`}>{issue.status}</span>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -248,18 +243,19 @@ export default function StudentProject() {
             </CardHeader>
             <CardContent className="p-0">
               {(project.teamMembers || []).map(m => {
-                const isMe = m.studentId === user?.id;
-                const isLeadM = m.roleInTeam === "LEADER";
+                const idMatch = m.studentId || m.studentUserId;
+                const isMe = String(idMatch) === String(user?.id);
+                const isLeadM = (m.roleInTeam || m.role) === "LEADER";
                 const pct = Math.min(100, ((m.contributionScore || 0) / 40) * 100);
                 return (
-                  <div key={m.studentId} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                  <div key={idMatch} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${isLeadM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
-                      {(mockUsers?.students?.find(s => s.id === m.studentId)?.name || m.studentId || "?").charAt(0)}
+                      {(m.studentName || m.studentCode || idMatch || "?").toString().charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-semibold text-gray-800">
-                          {mockUsers?.students?.find(s => s.id === m.studentId)?.name || m.studentId}
+                          {m.studentName || m.studentCode || idMatch}
                         </p>
                         {isLeadM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                         {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
@@ -308,24 +304,28 @@ export default function StudentProject() {
                   FINAL: "bg-green-50 text-green-700 border-green-100",
                   REVIEW: "bg-blue-50 text-blue-700 border-blue-100",
                   DRAFT: "bg-gray-100 text-gray-500 border-gray-200",
+                  APPROVED: "bg-green-50 text-green-700 border-green-100",
+                  REJECTED: "bg-red-50 text-red-700 border-red-100",
                 }[rpt.status] || "bg-gray-100 text-gray-500 border-gray-200";
 
                 return (
                   <div key={rpt.id} className="flex items-start gap-4 py-4 border-b border-gray-50 last:border-0">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-800 text-sm">{rpt.title}</h4>
+                        <h4 className="font-semibold text-gray-800 text-sm">{rpt.title || 'SRS Document'}</h4>
                         <span className="text-xs font-mono text-gray-500">v{rpt.version}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${statusCls}`}>{rpt.status}</span>
                       </div>
                       <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1"><Clock size={10} />Nộp: {new Date(rpt.submittedDate).toLocaleDateString("vi-VN")}</span>
-                        <span>Reviewer: {rpt.reviewedBy ? mockUsers?.lecturers?.find(l => l.id === rpt.reviewedBy)?.name || rpt.reviewedBy : "Chưa review"}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} />Nộp: {new Date(rpt.submittedAt || rpt.submittedDate).toLocaleDateString("vi-VN")}</span>
+                        <span>Reviewer: {rpt.reviewerName || "Chưa review"}</span>
                       </div>
-                      {rpt.comments && <p className="text-xs text-gray-500 italic mt-1.5">"{rpt.comments}"</p>}
+                      {rpt.feedback && <p className="text-xs text-gray-500 italic mt-1.5">"{rpt.feedback}"</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button className="text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg transition-colors">Download</button>
+                      {rpt.fileUrl && (
+                        <a href={rpt.fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg transition-colors">Download</a>
+                      )}
                       {rpt.status === "DRAFT" && (
                         <button className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-2.5 py-1.5 rounded-lg transition-colors">Gửi review</button>
                       )}
@@ -342,45 +342,13 @@ export default function StudentProject() {
       <Modal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        title="Upload SRS Report"
+        title="Upload SRS Report (Coming via Real API later)"
         size="md"
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Chọn file SRS</label>
-            <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center bg-gray-50">
-              <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-              <p className="text-sm text-gray-500">Kéo file vào đây hoặc <button className="text-teal-600 hover:underline font-medium">chọn file</button></p>
-              <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX (MAX. 10MB)</p>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Phiên bản</label>
-            <input
-              type="text"
-              placeholder="VD: 1.0, 1.1, 2.0"
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Trạng thái</label>
-            <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all">
-              <option value="DRAFT">Draft</option>
-              <option value="REVIEW">Gửi review</option>
-              <option value="FINAL">Final</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Ghi chú</label>
-            <textarea
-              rows={3}
-              placeholder="Nhập ghi chú..."
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all resize-none"
-            />
-          </div>
+          <div className="text-sm text-gray-700 mb-2">Chức năng upload hiện tại cần tích hợp formData submission...</div>
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={() => setIsUploadModalOpen(false)} className="flex-1 rounded-xl border-gray-200 text-gray-600 h-10">Hủy</Button>
-            <Button onClick={() => setIsUploadModalOpen(false)} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 border-0">Upload</Button>
+            <Button variant="outline" onClick={() => setIsUploadModalOpen(false)} className="flex-1 rounded-xl border-gray-200 text-gray-600 h-10">Đóng</Button>
           </div>
         </div>
       </Modal>
