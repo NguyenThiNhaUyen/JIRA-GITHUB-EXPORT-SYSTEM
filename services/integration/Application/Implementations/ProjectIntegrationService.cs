@@ -220,20 +220,33 @@ public class ProjectIntegrationService : IProjectIntegrationService
 
     public async Task<IntegrationInfo?> GetIntegrationStatusAsync(long projectId)
     {
-        var integration = await _unitOfWork.Projects
+        var integration = await _unitOfWork.ProjectIntegrations
             .Query()
-            .Where(p => p.id == projectId)
-            .Select(p => p.project_integration)
-            .FirstOrDefaultAsync();
+            .Include(pi => pi.github_repo)
+            .Include(pi => pi.jira_project)
+            .Include(pi => pi.approved_by)
+            .FirstOrDefaultAsync(pi => pi.project_id == projectId);
 
         if (integration == null) return null;
 
         return new IntegrationInfo
         {
+            ApprovalStatus = integration.approval_status ?? "PENDING",
             GithubStatus = integration.approval_status ?? "PENDING",
             JiraStatus = integration.approval_status ?? "PENDING",
+            GithubRepoUrl = integration.github_repo?.repo_url,
             GithubUrl = integration.github_repo?.repo_url,
-            JiraUrl = integration.jira_project?.jira_url
+            GithubRepoOwner = integration.github_repo?.owner_login,
+            GithubRepoName = integration.github_repo?.name,
+            JiraProjectKey = integration.jira_project?.jira_project_key,
+            JiraSiteUrl = integration.jira_project?.jira_url,
+            JiraUrl = integration.jira_project?.jira_url,
+            SubmittedByUserId = integration.submitted_by_user_id,
+            SubmittedAt = integration.submitted_at,
+            ApprovedByUserId = integration.approved_by_user_id,
+            ApprovedByName = integration.approved_by?.full_name,
+            ApprovedAt = integration.approved_at,
+            RejectedReason = integration.rejected_reason
         };
     }
 

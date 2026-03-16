@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { 
-  ChevronRight, 
   Activity, 
   Clock,
   Plus,
@@ -8,13 +7,10 @@ import {
   Library,
   BookOpen,
   Users,
-  FolderKanban,
   TrendingUp,
-  GraduationCap,
   UserCog,
   WifiOff
 } from "lucide-react";
-import { useState } from "react";
 
 // Components UI
 import { Button } from "../../components/ui/button.jsx";
@@ -76,7 +72,6 @@ export default function AdminDashboard() {
   ];
 
   const recentCourses = coursesData?.items || [];
-  const isLoadingSummary = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

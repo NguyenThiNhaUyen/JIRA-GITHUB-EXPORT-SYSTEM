@@ -7,6 +7,7 @@ public class UserDetailResponse
     public string? FullName { get; set; }
     public bool Enabled { get; set; }
     public string? Role { get; set; }
+    public List<string> Roles { get; set; } = new();
     public string? StudentCode { get; set; }
     public string? StudentId { get; set; }
     public string? LecturerCode { get; set; }

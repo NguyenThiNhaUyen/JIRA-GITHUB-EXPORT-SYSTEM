@@ -15,12 +15,12 @@ public class InvitationService : IInvitationService
 {
     private readonly JiraGithubToolDbContext _context;
     private readonly ILogger<InvitationService> _logger;
-    private readonly Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
+    private readonly IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
 
     public InvitationService(
         JiraGithubToolDbContext context, 
         ILogger<InvitationService> logger,
-        Microsoft.AspNetCore.SignalR.IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
+        IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
     {
         _context = context;
         _logger = logger;
@@ -97,7 +97,7 @@ public class InvitationService : IInvitationService
     public async Task<PagedResponse<InvitationResponse>> GetMyPendingInvitationsAsync(long studentUserId, PagedRequest request)
     {
         var query = _context.team_invitations
-            .Include(i => i.project)
+            .Include(i => i.project).ThenInclude(p => p.course)
             .Include(i => i.invited_by_user)
             .Include(i => i.invited_student_user.user)
             .Where(i => i.invited_student_user_id == studentUserId && i.status == "PENDING")
@@ -197,7 +197,7 @@ public class InvitationService : IInvitationService
     private async Task<InvitationResponse> GetInvitationResponseAsync(long invitationId)
     {
         var i = await _context.team_invitations
-            .Include(inv => inv.project)
+            .Include(inv => inv.project).ThenInclude(p => p.course)
             .Include(inv => inv.invited_by_user)
             .Include(inv => inv.invited_student_user.user)
             .FirstOrDefaultAsync(inv => inv.id == invitationId)
@@ -211,16 +211,18 @@ public class InvitationService : IInvitationService
         return new InvitationResponse
         {
             Id = i.id,
-            GroupId = i.project_id,
-            GroupName = i.project?.name ?? "",
+            ProjectId = i.project_id,
+            ProjectName = i.project?.name ?? "",
             CourseId = i.project?.course_id ?? 0,
             CourseName = i.project?.course?.course_name ?? "N/A",
+            InvitedByUserId = i.invited_by_user_id,
             InvitedByName = i.invited_by_user?.full_name ?? "",
-            InvitedByStudentId = i.invited_by_user_id,
-            InvitedStudentId = i.invited_student_user_id,
+            InvitedStudentUserId = i.invited_student_user_id,
+            InvitedStudentName = i.invited_student_user?.user?.full_name ?? "",
             Status = i.status,
             Message = i.message,
-            CreatedAt = i.created_at
+            CreatedAt = i.created_at,
+            RespondedAt = i.responded_at
         };
     }
 }

@@ -8,24 +8,34 @@ public class ProjectDetailResponse
     public string Status { get; set; } = null!;
     public long CourseId { get; set; }
     public string CourseName { get; set; } = null!;
-    public string CourseCode { get; set; } = string.Empty;  // e.g. "SWD392-SE1831"
+    public string CourseCode { get; set; } = string.Empty;
+    public int TeamCount { get; set; }
+    public List<TeamMemberInfo> TeamMembers { get; set; } = new();
+    public List<TeamMemberInfo> Members 
+    { 
+        get => TeamMembers; 
+        set => TeamMembers = value; 
+    }
     public string? GithubRepoUrl { get; set; }
     public string? JiraProjectUrl { get; set; }
     public string? GithubStatus { get; set; }
     public string? JiraStatus { get; set; }
     public IntegrationInfo? Integration { get; set; }
-    public List<TeamMemberInfo> Members { get; set; } = new();
     public int CommitCount { get; set; }
-    public int Commits { get; set; }              // alias for CommitCount
+    public int Commits              // alias for CommitCount
+    { 
+        get => CommitCount; 
+        set => CommitCount = value; 
+    }
     public int IssueCount { get; set; }
-    public int IssuesDone { get; set; }           // done issues count
-    public int OpenIssues { get; set; }           // open issues count
-    public int PrsMerged { get; set; }            // merged pull requests count
-    public int TeamSize { get; set; }             // number of active members
-    public int SrsVersions { get; set; }          // SRS docs submitted
-    public int SprintCompletion { get; set; }     // alias for ProgressPercent
-    public int MyContribution { get; set; }       // current user contribution %
-    public string? LastCommit { get; set; }       // relative string: "2 giờ trước"
+    public int IssuesDone { get; set; }
+    public int OpenIssues { get; set; }
+    public int PrsMerged { get; set; }
+    public int TeamSize { get; set; }
+    public int SrsVersions { get; set; }
+    public int SprintCompletion { get; set; }
+    public int MyContribution { get; set; }
+    public string? LastCommit { get; set; }
     public DateTime? LastActivity { get; set; }
     public int ProgressPercent { get; set; }
     public int RiskScore { get; set; }
@@ -33,11 +43,23 @@ public class ProjectDetailResponse
 
 public class TeamMemberInfo
 {
-    public long StudentUserId { get; set; } // Changed from StudentId to match FE
+    public long StudentUserId { get; set; }
     public string StudentCode { get; set; } = null!;
-    public string StudentName { get; set; } = null!;
-    public string Role { get; set; } = null!;
+    public string FullName { get; set; } = null!;
+    public string StudentName 
+    { 
+        get => FullName; 
+        set => FullName = value; 
+    }
+    public string TeamRole { get; set; } = null!;
+    public string Role 
+    { 
+        get => TeamRole; 
+        set => TeamRole = value; 
+    }
     public string ParticipationStatus { get; set; } = null!;
+    public string? Responsibility { get; set; }
+    public DateTime? JoinedAt { get; set; }
     public int ContributionScore { get; set; }
 }
 
@@ -47,6 +69,27 @@ public class IntegrationInfo
     public string? JiraUrl { get; set; }
     public string GithubStatus { get; set; } = "PENDING";
     public string JiraStatus { get; set; } = "PENDING";
+    // Detailed HEAD properties
+    public string? GithubRepoUrl 
+    { 
+        get => GithubUrl; 
+        set => GithubUrl = value; 
+    }
+    public string? GithubRepoOwner { get; set; }
+    public string? GithubRepoName { get; set; }
+    public string? JiraProjectKey { get; set; }
+    public string? JiraSiteUrl 
+    { 
+        get => JiraUrl; 
+        set => JiraUrl = value; 
+    }
+    public string ApprovalStatus { get; set; } = "PENDING";
+    public long? SubmittedByUserId { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+    public long? ApprovedByUserId { get; set; }
+    public string? ApprovedByName { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public string? RejectedReason { get; set; }
 }
 
 public class CommitResponse

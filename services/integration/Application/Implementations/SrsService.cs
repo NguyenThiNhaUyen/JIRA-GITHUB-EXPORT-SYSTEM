@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -116,10 +115,7 @@ public class SrsService : ISrsService
         srs.status = request.Status;
         srs.reviewer_user_id = reviewerUserId;
         srs.reviewed_at = DateTime.UtcNow;
-        srs.score = request.Score; // New field
-
-        srs.score = request.Score; // New field
-
+        srs.score = request.Score;
         if (!string.IsNullOrEmpty(request.Feedback))
         {
             srs.feedback = request.Feedback;
@@ -183,7 +179,6 @@ public class SrsService : ISrsService
         {
             query = query.Where(d => d.status == status);
         }
-        // Assuming milestone relates to version_no or another field; keeping placeholder if we need it
         
         var total = await query.CountAsync();
         page = page > 0 ? page : 1;
@@ -253,7 +248,6 @@ public class SrsService : ISrsService
         _context.project_documents.Remove(srs);
         await _context.SaveChangesAsync();
 
-        // Optional: delete physical file to save space
         var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", srs.file_url.TrimStart('/'));
         if (File.Exists(filePath))
         {
@@ -283,8 +277,10 @@ public class SrsService : ISrsService
             VersionNo = d.version_no,
             Status = d.status,
             FileUrl = d.file_url,
+            SubmittedByUserId = d.submitted_by_user_id,
             SubmittedByName = d.submitted_by_user?.full_name,
             SubmittedAt = d.submitted_at,
+            ReviewerUserId = d.reviewer_user_id,
             ReviewerName = d.reviewer_user?.full_name,
             Feedback = d.feedback,
             Score = d.score,

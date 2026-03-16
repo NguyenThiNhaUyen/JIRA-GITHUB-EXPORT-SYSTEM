@@ -7,6 +7,7 @@ using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -71,6 +72,7 @@ public class UserService : IUserService
         {
             Items = mapped,
             TotalCount = total,
+            TotalItems = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -131,12 +133,13 @@ public class UserService : IUserService
         Email = u.email,
         FullName = u.full_name,
         Enabled = u.enabled,
+        Roles = u.roles.Select(r => r.role_name).ToList(),
         Role = u.roles.Any(r => r.role_name.ToUpper() == "ADMIN") ? "ADMIN" : (u.roles.Any(r => r.role_name.ToUpper() == "LECTURER") ? "LECTURER" : "STUDENT"),
         StudentCode = u.student?.student_code,
         StudentId = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
         Department = u.lecturer?.department ?? u.student?.department,
-        AssignedCourses = u.lecturer?.courses.Select(c => c.course_code).ToList() ?? new List<string>(),
+        AssignedCourses = u.lecturer?.courses?.Select(c => c.course_code).ToList() ?? new List<string>(),
         CreatedAt = u.created_at
     };
 }

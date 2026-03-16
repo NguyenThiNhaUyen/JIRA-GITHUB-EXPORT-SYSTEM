@@ -1,21 +1,6 @@
 export const mapProject = (project) => {
     if (!project) return null;
     return {
-<<<<<<< HEAD
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        status: project.status,
-        courseId: project.courseId,
-        courseName: project.courseName,
-        team: (project.members || project.teamMembers || []).map(member => ({
-        studentId: member.studentUserId || member.studentId,
-        studentName: member.studentName,
-        studentCode: member.studentCode,
-        role: member.role,
-        contributionScore: member.contributionScore
-    })),
-=======
         id: String(project.id || project.Id || ""),
         name: project.name || project.Name || "",
         description: project.description || project.Description || "",
@@ -30,7 +15,6 @@ export const mapProject = (project) => {
             participationStatus: member.participationStatus || member.participation_status || "ACTIVE",
             contributionScore: member.contributionScore || member.contribution_score || 0
         })),
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
         integration: project.integration ? {
             githubUrl: project.githubRepoUrl || project.github_repo_url || project.integration.githubUrl || "",
             jiraUrl: project.jiraProjectUrl || project.jira_project_url || project.integration.jiraUrl || "",

@@ -10,9 +10,11 @@ public class SrsDocumentResponse
     public string Status { get; set; } = null!;
     public string? Milestone { get; set; }
     public string FileUrl { get; set; } = null!;
+    public long SubmittedByUserId { get; set; }
     public string? SubmittedByName { get; set; }
     public DateTime SubmittedAt { get; set; }
     public DateTime? Deadline { get; set; }
+    public long? ReviewerUserId { get; set; }
     public string? ReviewerName { get; set; }
     public DateTime? ReviewedAt { get; set; }
     public string? Feedback { get; set; }

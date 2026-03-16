@@ -47,17 +47,9 @@ client.interceptors.response.use(
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-<<<<<<< HEAD
-            window.location.href = "/login";
-        } else if (status === 403) {
-            console.warn("[API] 403 Forbidden — Không có quyền truy cập endpoint này");
-=======
-            
-            // Redirect to login only if not already there
             if (!window.location.pathname.includes("/login")) {
                 window.location.href = "/login";
             }
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
         } else if (!status) {
             console.warn("[API] Network error hoặc Render cold start (503).");
         }

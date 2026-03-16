@@ -5,6 +5,7 @@ using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace JiraGithubExport.IntegrationService.Controllers;
 
@@ -227,11 +228,3 @@ public class ProjectsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(result, "Sync triggered"));
     }
 }
-
-
-
-
-
-
-
-

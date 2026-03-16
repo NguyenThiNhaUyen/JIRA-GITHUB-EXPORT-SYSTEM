@@ -44,6 +44,13 @@ public class JwtService : IJwtService
         // Cũng thêm claim "role" để FE decode JWT lấy được
         claims.Add(new Claim("role", primaryRole));
 
+        // Optional: Keep all roles if multiple role support is needed in the future
+        foreach (var role in roles)
+        {
+            if (role.ToUpper() != primaryRole) 
+                claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

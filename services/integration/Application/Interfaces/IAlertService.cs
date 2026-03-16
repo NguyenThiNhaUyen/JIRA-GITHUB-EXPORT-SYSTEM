@@ -21,7 +21,10 @@ public class AlertResponse
     public string? CourseId { get; set; }
     public string Severity { get; set; } = null!;
     public string Message { get; set; } = null!;
-    public string Status => IsResolved ? "RESOLVED" : "OPEN";
+    public int ThresholdDays { get; set; }
+    public DateTime? LastActivityAt { get; set; }
     public bool IsResolved { get; set; }
+    public DateTime? ResolvedAt { get; set; }
+    public string Status => IsResolved ? "RESOLVED" : "OPEN";
     public DateTime CreatedAt { get; set; }
 }

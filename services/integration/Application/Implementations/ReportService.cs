@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
@@ -397,11 +396,3 @@ public class ReportService : IReportService
         }
     }
 }
-
-
-
-
-
-
-
-

@@ -144,17 +144,11 @@ public class SyncWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to sync integration for project {ProjectId}. Will retry in next cycle.", integration.project_id);
+                // Continue to next integration instead of stopping
+                continue;
             }
         }
         
         _logger.LogInformation("Sync logic completed at {Time}", DateTime.UtcNow);
     }
 }
-
-
-
-
-
-
-
-

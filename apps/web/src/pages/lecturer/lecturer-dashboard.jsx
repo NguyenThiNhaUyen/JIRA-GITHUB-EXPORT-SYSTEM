@@ -49,22 +49,19 @@ import {
   useGetAlerts, 
   useResolveAlert 
 } from "../../features/system/hooks/useAlerts.js";
+import { useGroupRadarMetrics, useLecturerActivityLogs } from "../../hooks/use-api.js";
 
-<<<<<<< HEAD
-// Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
-
-
-/* ─── Derived mock recent activity (keep for UI) ────────────────── */
-// hoặc useGetGroups nếu có
-const MOCK_ACTIVITY = [];
-=======
-const MOCK_ACTIVITY = [
-  { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm Alpha đã submit GitHub repo", time: "5 phút trước" },
-  { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm Beta đã kết nối Jira project", time: "1 giờ trước" },
-  { id: 3, icon: FileText, color: "text-indigo-600 bg-indigo-50", msg: "SRS Draft từ Nhóm Gamma đang chờ review", time: "3 giờ trước" },
-  { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm Delta: Tích hợp đã được phê duyệt", time: "Hôm qua" },
-];
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
+const getActivityIconInfo = (type) => {
+    switch (type) {
+        case 'GITHUB_SYNC': return { icon: GitBranch, color: "text-teal-600 bg-teal-50" };
+        case 'JIRA_SYNC': return { icon: BookOpen, color: "text-blue-600 bg-blue-50" };
+        case 'SRS_SUBMIT': return { icon: FileText, color: "text-indigo-600 bg-indigo-50" };
+        case 'INTEGRATION_APPROVED': return { icon: CheckCircle, color: "text-green-600 bg-green-50" };
+        case 'NEW_USER': return { icon: Users, color: "text-blue-600 bg-blue-50" };
+        case 'NEW_COURSE': return { icon: BookOpen, color: "text-indigo-600 bg-indigo-50" };
+        default: return { icon: CheckCircle, color: "text-gray-600 bg-gray-50" };
+    }
+}
 
 export default function LecturerDashboard() {
   const navigate = useNavigate();
@@ -75,62 +72,16 @@ export default function LecturerDashboard() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
 
-<<<<<<< HEAD
-const { user } = useAuth();
-const { data: semesters = [] } = useGetSemesters();
-const { data: workload } = useLecturerWorkload(user?.id);
-const { data: projects = [] } = useGetProjects(); 
-
-
-const [selectedSubject, setSelectedSubject] = useState("");
-const [selectedCourse, setSelectedCourse] = useState("");
-const [filter, setFilter] = useState("all");
-
-const { data: subjectsData = { items: [] } } = useGetSubjects();
-const { data: coursesData = { items: [] } } = useGetCourses();
-const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
-const { data: alertsData } = useGetAlerts({ pageSize: 5 });
-
-/* ───── Demo fallback data (when API empty) ───── */
-
-
-
-
-
-/* ───── Merge API + demo ───── */
-
-const subjects = subjectsData?.items || [];
-
-const coursesRaw = coursesData?.items || [];
-
-/* ───── Auto select subject ───── */
-
-useEffect(() => {
-  if (!selectedSubject && subjects.length) {
-    setSelectedSubject(subjects[0].id);
-  }
-}, [subjects]);
-
-/* ───── Filter course by subject ───── */
-
-const courses = coursesRaw.filter(
-  c => !selectedSubject || c.subjectId === parseInt(selectedSubject)
-);
-
-/* ───── Auto select course ───── */
-
-useEffect(() => {
-  if (!selectedCourse && courses.length) {
-    setSelectedCourse(courses[0].id);
-  }
-}, [courses]);
-=======
+  const { data: semesters = [] } = useGetSemesters();
   const { data: workload } = useLecturerWorkload(user?.id);
   const { data: subjectsData = { items: [] } } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
   const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
+
+  // Real data hooks from HEAD
+  const { data: radarMetricsData } = useGroupRadarMetrics(selectedCourse);
+  const { data: activityLogsData, isLoading: loadingLogs } = useLecturerActivityLogs(5);
 
   const approveIntMutation = useApproveIntegration();
   const rejectIntMutation = useRejectIntegration();
@@ -148,36 +99,39 @@ useEffect(() => {
     courses: workload?.coursesCount || 0,
     students: workload?.studentsCount || 0,
     github: groups.filter(g => g.integration?.githubStatus === "APPROVED").length,
-    alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
-  }), [workload, groups]);
+    alerts: (alertsData?.items || []).filter(a => a.status === "OPEN").length,
+  }), [workload, groups, alertsData]);
 
-<<<<<<< HEAD
-  
-=======
-  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
+  const alertsList = useMemo(() => (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
     id: a.id,
-    name: a.groupName,
+    name: a.groupName || "Hệ thống",
     msg: a.message,
     severity: a.severity?.toLowerCase() === "high" ? "error" : "warning"
-  }));
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
+  })), [alertsData]);
 
   const pendingIntegrations = groups.filter(
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-<<<<<<< HEAD
-   const groups = course?.groups || [];
-=======
-  const radarData = useMemo(() => groups.map(group => ({
+  const radarData = useMemo(() => radarMetricsData || groups.map(group => ({
     groupName: group.name,
     commits: group.stats?.commitsCount || 0,
     srsDone: group.stats?.srsCompletionPercent || 0,
     teamSize: group.team?.length || 0,
     githubLinked: group.integration?.githubStatus === 'APPROVED' ? 100 : 0,
     jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 100 : 0,
-  })), [groups]);
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
+  })), [radarMetricsData, groups]);
+
+  const activities = useMemo(() => (activityLogsData?.items || []).map(act => {
+      const { icon, color } = getActivityIconInfo(act.type);
+      return {
+          id: act.id,
+          icon,
+          color,
+          msg: act.message || act.description || 'Hoạt động ẩn danh',
+          time: act.time || new Date(act.timestamp || act.createdAt).toLocaleDateString("vi-VN")
+      };
+  }), [activityLogsData]);
 
   const handleApprovePending = async (groupId) => {
     try {
@@ -188,11 +142,11 @@ useEffect(() => {
     }
   };
 
-  const handleRejectPending = async (groupId) => {
+  const handleRejectPending = async (projectId) => {
     const reason = prompt("Nhập lý do từ chối tích hợp:");
     if (!reason) return;
     try {
-      await rejectIntMutation.mutateAsync({ projectId: groupId, reason });
+      await rejectIntMutation.mutateAsync({ projectId, reason });
       success(`Đã từ chối tích hợp`);
     } catch (err) {
       showError(err.message || `Lỗi khi từ chối`);
@@ -212,7 +166,7 @@ useEffect(() => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <PageHeader 
         title="Dashboard Giảng viên"
-        subtitle={`Chào mừng trở lại, ${user?.name || 'Giảng viên'}! Dưới đây là tình chuyên môn các lớp học.`}
+        subtitle={`Chào mừng trở lại, ${user?.name || 'Giảng viên'}! Dưới đây là tình hình chuyên môn các lớp học.`}
         breadcrumb={["Giảng viên", "Hệ thống", "Tổng quan"]}
         actions={[
           <Button key="alerts" variant="outline" className="rounded-full w-10 h-10 p-0 border-gray-100 relative" onClick={() => navigate("/lecturer/alerts")}>
@@ -247,7 +201,16 @@ useEffect(() => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {MOCK_ACTIVITY.map(act => (
+            {loadingLogs ? (
+                <div className="flex justify-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+                </div>
+            ) : activities.length === 0 ? (
+                <div className="text-center py-10 opacity-40">
+                    <Activity size={32} className="mx-auto mb-2" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Chưa có hoạt động</p>
+                </div>
+            ) : activities.map(act => (
               <div key={act.id} className="flex items-start gap-4 px-8 py-5 border-b border-gray-50 hover:bg-gray-50/20 transition-all last:border-0 group">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110 ${act.color}`}>
                   <act.icon size={18} />
@@ -279,15 +242,15 @@ useEffect(() => {
                 {alertsList.length === 0 ? (
                   <div className="text-center py-4">
                      <CheckCircle size={32} className="text-emerald-400 mx-auto mb-2" />
-                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mọi thứ đều ổn ổn định</p>
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mọi thứ đều ổn định</p>
                   </div>
                 ) : alertsList.map(a => (
                   <div key={a.id} className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex justify-between items-center group transition-all hover:bg-amber-50">
-                    <div>
-                      <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">{a.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest truncate">{a.name}</p>
                       <p className="text-xs text-amber-700 mt-1 font-bold">{a.msg}</p>
                     </div>
-                    <Button onClick={() => handleResolveAlert(a.id)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-amber-600 hover:bg-white"><CheckCircle size={14}/></Button>
+                    <Button onClick={() => handleResolveAlert(a.id)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-amber-600 hover:bg-white shrink-0 ml-2"><CheckCircle size={14}/></Button>
                   </div>
                 ))}
                 <Button 
@@ -381,7 +344,7 @@ useEffect(() => {
                                </td>
                                <td className="py-6 px-8">
                                   <div className="flex -space-x-2 justify-center">
-                                     {g.team?.slice(0, 3).map(s => (
+                                     {(g.team || []).slice(0, 3).map(s => (
                                        <div key={s.id} className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-indigo-600 border-2 border-white flex items-center justify-center text-white text-[10px] font-black shadow-sm" title={s.name}>{s.name?.charAt(0)}</div>
                                      ))}
                                      {g.team?.length > 3 && (
@@ -413,7 +376,7 @@ useEffect(() => {
               <div className="mt-8 pt-8 border-t border-gray-50 grid grid-cols-2 gap-4">
                  <div className="text-center p-4 bg-teal-50 rounded-2xl">
                     <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest">Git Approved</p>
-                    <p className="text-xl font-black text-gray-800">{stats.github}</p>
+                    <p className="text-xl font-black text-gray-800">{radarData.filter(d => d.githubLinked === 100 || d.githubLinked === 1).length}</p>
                  </div>
                  <div className="text-center p-4 bg-indigo-50 rounded-2xl">
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Active Alerts</p>
@@ -424,7 +387,7 @@ useEffect(() => {
          </div>
       )}
 
-      {!selectedCourse && (
+      {(!selectedCourse || groups.length === 0) && (
         <div className="flex flex-col items-center justify-center py-20 gap-6 opacity-40">
            <div className="w-24 h-24 rounded-3xl bg-gray-50 flex items-center justify-center shadow-inner border border-gray-100">
              <LayoutList size={40} className="text-gray-300" />

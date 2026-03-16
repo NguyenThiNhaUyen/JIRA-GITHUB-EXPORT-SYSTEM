@@ -31,11 +31,3 @@ public interface ICourseService
     // Students list
     Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize);
 }
-
-
-
-
-
-
-
-

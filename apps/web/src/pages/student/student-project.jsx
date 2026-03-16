@@ -20,24 +20,19 @@ import {
   BarChart2,
   GitCommit,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Activity,
+  Check,
+  AlertCircle
 } from "lucide-react";
 
 // Components UI
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
-<<<<<<< HEAD
-import {
-  useGetProjectById,
-  useGetProjectMetrics
-} from "../../features/projects/hooks/useProjects.js";
-import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
-=======
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
 // Shared Components
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
@@ -60,27 +55,9 @@ export default function StudentProject() {
   const { user } = useAuth();
   const { success, error: showError } = useToast();
 
-<<<<<<< HEAD
-  const { data: projectData } = useGetProjectById(projectId);
-  const { data: metricsData } = useGetProjectMetrics(projectId);
-  const { data: srsData } = useGetProjectSrs(projectId);
-  
-  const project = projectData || null;
-
-  const detail = {
-    weeklyCommits: metricsData?.weeklyCommits || [],
-    teamMembers: metricsData?.studentMetrics || [],
-    srsFiles: srsData?.items || [],
-    milestones: [],
-    activities: [],
-    deadlines: [],
-    personalTasks: []
-  };
-=======
   const [activeTab, setActiveTab] = useState("commits");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   /* ── Data Hooks ── */
   const { data: project, isLoading: loadingProject } = useGetProjectById(projectId);
@@ -91,17 +68,6 @@ export default function StudentProject() {
   const { mutate: syncCommits, isLoading: isSyncing } = useSyncProjectCommits();
   const { mutate: submitSrs, isLoading: isSubmitting } = useSubmitSrs();
 
-<<<<<<< HEAD
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-slate-50 p-6">
-        <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
-          <div className="text-2xl font-bold text-slate-900">Không tìm thấy project</div>
-          <p className="mt-2 text-slate-600">Ban có thể cần tải lại trang.</p>
-          <Button className="mt-4" onClick={() => navigate("/student")}>
-            Quay lại dashboard
-          </Button>
-=======
   const myTeamMember = useMemo(() => 
     project?.team?.find(m => m.studentId === String(user?.id)), 
   [project, user]);
@@ -129,7 +95,6 @@ export default function StudentProject() {
            <p className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Ops! Dự án không tồn tại</p>
            <p className="text-sm text-gray-500 mb-10 mt-4 leading-relaxed font-medium">Mã dự án <b>{projectId}</b> không khớp với bất kỳ dữ liệu nào trong hồ sơ của bạn.</p>
            <Button onClick={() => navigate("/student")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[24px] h-14 font-black uppercase tracking-widest shadow-xl transition-all">Quay lại Dashboard</Button>
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
         </div>
       </div>
     );
@@ -389,260 +354,10 @@ export default function StudentProject() {
                          </div>
                          <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">{d.due}</p>
                       </div>
-<<<<<<< HEAD
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
+                  </div>
+                ))}
             </div>
-
-            <div className="space-y-6">
-              <SectionCard title="Thông tin project" subtitle="Tóm tắt nhanh">
-                <div className="space-y-3 text-sm">
-                  <div className="rounded-2xl bg-slate-50 p-4">
-                    <div className="text-slate-500">Sprint completion</div>
-                    <div className="mt-1 text-2xl font-bold text-slate-900">{project.sprintCompletion}%</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-slate-50 p-4">
-                      <div className="text-slate-500">Open issues</div>
-                      <div className="mt-1 font-bold text-slate-900">{project.openIssues}</div>
-                    </div>
-                    <div className="rounded-2xl bg-slate-50 p-4">
-                      <div className="text-slate-500">Team size</div>
-                      <div className="mt-1 font-bold text-slate-900">{project.teamSize}</div>
-                    </div>
-                    <div className="rounded-2xl bg-slate-50 p-4">
-                      <div className="text-slate-500">Lines changed</div>
-                      <div className="mt-1 font-bold text-slate-900">{project.linesChanged}</div>
-                    </div>
-                    <div className="rounded-2xl bg-slate-50 p-4">
-                      <div className="text-slate-500">SRS versions</div>
-                      <div className="mt-1 font-bold text-slate-900">{project.srsVersions}</div>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 p-4">
-                    <div className="text-slate-500">Tech stack</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(project.techStack || []).map((tech) => (
-                        <span
-                          key={tech}
-                          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Deadlines" subtitle="Các việc cần ưu tiên">
-                <div className="space-y-3">
-                  {detail.deadlines.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`rounded-2xl border p-4 ${getSeverityClass(item.severity)}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="mt-0.5 h-5 w-5" />
-                        <div>
-                          <div className="font-semibold">{item.title}</div>
-                          <div className="mt-1 text-sm">{item.due}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-
-              <SectionCard title="Quick Actions" subtitle="Hành động demo nhanh">
-                <div className="space-y-2">
-                  <Button className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700" onClick={handleSync}>
-                    <RefreshCw className="h-4 w-4" />
-                    Sync commits
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUploadSrs}>
-                    <Upload className="h-4 w-4" />
-                    Upload SRS
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={handleExport}>
-                    <Download className="h-4 w-4" />
-                    Export báo cáo
-                  </Button>
-                </div>
-              </SectionCard>
-            </div>
-          </div>
-        )}
-
-        {selectedTab === "tasks" && (
-          <SectionCard
-            title="Task cá nhân"
-            subtitle="Danh sách task Jira được giao"
-            actions={
-              <Button variant="outline" className="gap-2" onClick={handleOpenJira}>
-                <Link2 className="h-4 w-4" />
-                Mở Jira board
-              </Button>
-            }
-          >
-            <div className="space-y-3">
-              {detail.personalTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                        {task.key}
-                      </span>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getTaskStatusClass(task.status)}`}>
-                        {task.status}
-                      </span>
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        {task.priority}
-                      </span>
-                    </div>
-                    <div className="mt-2 font-semibold text-slate-900">{task.title}</div>
-                    <div className="mt-1 text-sm text-slate-500">Assignee: {task.assignee}</div>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-sm text-slate-600">
-                    <div className="flex items-center gap-1">
-                      <Clock3 className="h-4 w-4" />
-                      {task.due}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => success?.(`Đã mở mock task ${task.key}`)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Xem
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        {selectedTab === "team" && (
-          <SectionCard title="Team Members" subtitle="So sánh đóng góp giữa các thành viên">
-            <div className="space-y-3">
-              {detail.teamMembers.map((member, index) => (
-                <div key={member.id} className="rounded-2xl border border-slate-200 p-4">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                          #{index + 1}
-                        </span>
-                        <div className="font-semibold text-slate-900">{member.name}</div>
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
-                          {member.role}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 md:w-[420px]">
-                      <div className="rounded-xl bg-slate-50 p-3 text-center">
-                        <div className="text-xs text-slate-500">Commits</div>
-                        <div className="mt-1 font-bold text-slate-900">{member.commits}</div>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-3 text-center">
-                        <div className="text-xs text-slate-500">Done Issues</div>
-                        <div className="mt-1 font-bold text-slate-900">{member.issuesDone}</div>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-3 text-center">
-                        <div className="text-xs text-slate-500">Score</div>
-                        <div className="mt-1 font-bold text-slate-900">{member.score}%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        {selectedTab === "srs" && (
-          <SectionCard
-            title="SRS Documents"
-            subtitle="Danh sách phiên bản SRS của project"
-            actions={
-              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={handleUploadSrs}>
-                <Upload className="h-4 w-4" />
-                Upload SRS
-              </Button>
-            }
-          >
-            <div className="space-y-3">
-              {detail.srsFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-blue-50 p-3">
-                      <FileText className="h-5 w-5 text-blue-700" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-slate-900">{file.version}</div>
-                      <div className="text-sm text-slate-500">Updated: {file.updatedAt}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
-                      {file.status}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => success?.(`Đã mở mock SRS ${file.version}`)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Xem
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Tóm tắt nhanh</h3>
-              <p className="mt-1 text-sm text-slate-600">
-                Project đang ở mức {project.sprintCompletion}% sprint completion, contribution cá nhân {project.myContribution}%,
-                còn {project.openIssues} open issues và {detail.deadlines.length} deadline cần theo dõi.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="gap-2" onClick={() => navigate("/student")}>
-                <BookOpen className="h-4 w-4" />
-                Về dashboard
-              </Button>
-              <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={handleSync}>
-                <RefreshCw className="h-4 w-4" />
-                Đồng bộ lần nữa
-              </Button>
-            </div>
-          </div>
-=======
-                   </div>
-                 ))}
-              </div>
-           </Card>
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
+          </Card>
         </div>
       </div>
 
@@ -659,7 +374,7 @@ export default function StudentProject() {
                 onChange={(e) => setUploadFile(e.target.files[0])} 
                />
                <div className={`w-20 h-20 rounded-[28px] shadow-2xl flex items-center justify-center mx-auto mb-6 transition-all group-hover:shadow-teal-100 ${uploadFile ? 'bg-teal-600 text-white' : 'bg-white text-teal-600'}`}>
-                  {uploadFile ? <Check size={32} /> : <Upload size={32} />}
+                   {uploadFile ? <Check size={32} /> : <Upload size={32} />}
                </div>
                <p className="text-base font-black text-gray-800 uppercase tracking-tight">{uploadFile ? uploadFile.name : "Chọn hoặc Kéo thả file SRS"}</p>
                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-2">{uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` : "Định dạng hỗ trợ: PDF (Tối đa 20MB)"}</p>

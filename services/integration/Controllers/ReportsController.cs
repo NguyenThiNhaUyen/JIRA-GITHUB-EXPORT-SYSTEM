@@ -50,7 +50,7 @@ public class ReportsController : ControllerBase
     /// Update SRS review status
     /// </summary>
     [HttpPut("{id}/status")]
-    [Authorize(Roles = "LECTURER,ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     public async Task<IActionResult> ReviewSrsStatus(long id, [FromBody] JiraGithubExport.Shared.Contracts.Requests.Projects.ReviewSrsStatusRequest request)
     {
         var userId = GetCurrentUserId();

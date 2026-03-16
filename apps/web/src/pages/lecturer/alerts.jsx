@@ -31,34 +31,10 @@ import {
   useResolveAlert,
 } from "../../features/system/hooks/useAlerts.js";
 
-<<<<<<< HEAD
-/* ----------------------------- HELPERS ----------------------------- */
-
-const SEVERITY_META = {
-  HIGH: {
-    label: "Nghiêm trọng",
-    dot: "bg-red-500",
-    badge: "bg-red-50 text-red-700 border-red-100",
-    card: "border-red-100 bg-red-50",
-  },
-  MEDIUM: {
-    label: "Trung bình",
-    dot: "bg-amber-500",
-    badge: "bg-amber-50 text-amber-700 border-amber-100",
-    card: "border-amber-100 bg-amber-50",
-  },
-  LOW: {
-    label: "Nhẹ",
-    dot: "bg-blue-500",
-    badge: "bg-blue-50 text-blue-700 border-blue-100",
-    card: "border-blue-100 bg-blue-50",
-  },
-=======
 const SEVERITY_STYLE = {
   HIGH: { dot: "bg-red-500", variant: "danger", label: "Nghiêm trọng" },
   MEDIUM: { dot: "bg-amber-500", variant: "warning", label: "Trung bình" },
   LOW: { dot: "bg-blue-500", variant: "info", label: "Nhẹ" }
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 };
 
 export default function Alerts() {
@@ -67,66 +43,11 @@ export default function Alerts() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState(null);
   const [remindedIds, setRemindedIds] = useState(new Set());
-<<<<<<< HEAD
-  
-  const [selectedAlertId, setSelectedAlertId] = useState(null);
-=======
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   const { data: alertsData, isLoading, refetch } = useGetAlerts({ pageSize: 100 });
   const { mutate: resolveMutate, isPending: resolving } = useResolveAlert();
 
-<<<<<<< HEAD
-  const realAlerts = alertsData?.items || [];
-  const usingMockData = false;
-
-  const alertsList = realAlerts;
-
-  useEffect(() => {
-    if (!selectedAlertId && alertsList.length > 0) {
-      setSelectedAlertId(alertsList[0].id);
-    }
-  }, [alertsList, selectedAlertId]);
-
-  const selectedAlert =
-    alertsList.find((a) => String(a.id) === String(selectedAlertId)) || null;
-
-  const resolve = (id) => {
-    if (usingMockData) {
-      setMockAlerts((prev) =>
-        prev.map((alert) =>
-          alert.id === id ? { ...alert, status: "RESOLVED" } : alert
-        )
-      );
-      success("Đã đánh dấu là đã giải quyết");
-      return;
-    }
-
-    resolveMutate(id, {
-      onSuccess: () => success("Đã đánh dấu là đã giải quyết"),
-      onError: (err) =>
-        showError(err.message || "Không thể giải quyết cảnh báo"),
-    });
-  };
-
-  const remind = (alert) => {
-    setRemindedIds((prev) => new Set([...prev, alert.id]));
-    success(`Đã gửi nhắc nhở đến ${alert.targetName || alert.groupName || "đối tượng"}`);
-  };
-
-  const refresh = () => {
-    if (usingMockData) {
-      setMockAlerts([...MOCK_ALERTS]);
-      success("Đã làm mới dữ liệu mô phỏng");
-      return;
-    }
-
-    refetch();
-    success("Đã làm mới danh sách cảnh báo");
-  };
-=======
   const alertsList = alertsData?.items || [];
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
 
   const filtered = useMemo(() => {
     return alertsList.filter(a => {

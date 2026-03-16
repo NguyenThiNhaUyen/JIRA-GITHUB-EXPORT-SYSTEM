@@ -90,7 +90,6 @@ export default function StudentDashboard() {
     );
   }
 
-<<<<<<< HEAD
   const handleSyncProject = (project) => {
     success?.(`Đã đồng bộ commits cho project ${project.title}`);
   };
@@ -103,8 +102,6 @@ export default function StudentDashboard() {
     success?.("Đã xuất báo cáo cá nhân thành công");
   };
 
-=======
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <PageHeader 

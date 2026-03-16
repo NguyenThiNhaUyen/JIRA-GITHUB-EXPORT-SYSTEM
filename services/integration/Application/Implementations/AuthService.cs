@@ -8,6 +8,7 @@ using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth;
+using Microsoft.Extensions.Logging;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -79,6 +80,7 @@ public class AuthService : IAuthService
                 Email = user.email,
                 FullName = user.full_name ?? user.email,
                 Role = GetPrimaryRole(roles),
+                Roles = roles,
                 StudentCode = user.student?.student_code,
                 LecturerCode = user.lecturer?.lecturer_code
             }
@@ -136,13 +138,13 @@ public class AuthService : IAuthService
                     _context.users.Add(user);
                     await _context.SaveChangesAsync();
 
-                    // Xử lý Role tự chọn (Demo/Testing Only)
+                    // Role selection handling (Demo/Testing Only)
                     string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "STUDENT" : request.Role.ToUpper();
                     var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
                     
                     if (!validRoles.Contains(requestedRole))
                     {
-                        requestedRole = "STUDENT"; // Fallback an toàn
+                        requestedRole = "STUDENT";
                     }
 
                     var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == requestedRole);
@@ -190,6 +192,7 @@ public class AuthService : IAuthService
                     Email = user.email,
                     FullName = user.full_name ?? user.email,
                     Role = GetPrimaryRole(roles),
+                    Roles = roles,
                     StudentCode = user.student?.student_code,
                     LecturerCode = user.lecturer?.lecturer_code
                 }
@@ -241,11 +244,3 @@ public class AuthService : IAuthService
         return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
     }
 }
-
-
-
-
-
-
-
-

@@ -25,7 +25,6 @@ import { WeeklyActivityChart } from "../../features/lecturer/components/contribu
 // Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 
-<<<<<<< HEAD
 /* ----------------------------- HELPERS ----------------------------- */
 
 function hashString(str = "") {
@@ -842,22 +841,18 @@ function ActionModal({ open, onClose, actionType, targetStudent, onConfirm }) {
 }
 
 /* ----------------------------- MAIN COMPONENT ----------------------------- */
-=======
-// Constants
 const WEEKS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
-
 export default function Contributions() {
     const { success } = useToast();
     const [selectedCourse, setSelectedCourse] = useState("");
     const [search, setSearch] = useState("");
     const [commitsByStudent, setCommitsByStudent] = useState({});
     const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0).map((_, i) => ({ 
-        name: `Tuần ${i + 1}`, 
+        name: `W${i + 1}`, 
         count: 0 
     })));
 
-    const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
+    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const courses = coursesData.items || [];
 
     // Initialize selected course
@@ -884,15 +879,15 @@ export default function Contributions() {
             });
         });
 
-        // Mock/Process commits per student
+        // Mock/Process commits per student (Keeping origin/main mock logic until real API supports per-student history)
         const byStudent = {};
         allStudents.forEach(s => {
             const mockCommits = Math.floor(Math.random() * 50);
             byStudent[s.studentId] = {
                 id: s.studentId,
                 name: s.studentName,
-                studentCode: s.studentCode,
-                team: groups.find(g => g.studentIds?.includes(s.studentId))?.name || "No Team",
+                studentCode: s.studentCode || s.studentId,
+                team: groups.find(g => (g.team || []).some(m => m.studentId === s.studentId))?.name || "No Team",
                 commits: mockCommits,
                 prs: Math.floor(mockCommits / 5),
                 reviews: Math.floor(mockCommits / 4),
@@ -902,7 +897,7 @@ export default function Contributions() {
         });
         setCommitsByStudent(byStudent);
 
-        // Mock weekly data for the current course
+        // Mock weekly data
         const mockWeekly = new Array(12).fill(0).map((_, i) => ({
             name: `W${i + 1}`,
             count: Math.floor(Math.random() * 50)
@@ -934,6 +929,15 @@ export default function Contributions() {
         };
     }, [commitsByStudent]);
 
+    if (loadingCourses) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
+                <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Đang tải dữ liệu đóng góp...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <PageHeader 
@@ -956,558 +960,16 @@ export default function Contributions() {
                 riskGroupsCount={stats.riskGroupsCount}
             />
 
-<<<<<<< HEAD
-      {banner && (
-        <div className="fixed top-5 right-5 z-50 rounded-2xl border border-teal-100 bg-white shadow-xl px-4 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
-            <CheckCircle2 size={16} className="text-teal-600" />
-          </div>
-          <p className="text-sm font-medium text-gray-700">{banner}</p>
-        </div>
-      )}
-
-      <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-        <span className="text-teal-700 font-semibold">Giảng viên</span>
-        <ChevronRight size={12} />
-        <span className="text-gray-800 font-semibold">Theo dõi đóng góp</span>
-      </nav>
-
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
-            Theo dõi đóng góp
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Commit, hiệu suất nhóm và mức độ tham gia của từng sinh viên
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          
-
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white shadow-sm">
-            <Filter size={14} className="text-gray-400" />
-            <select
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-              className="bg-transparent text-sm text-gray-700 focus:outline-none"
-            >
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.code || course.name || `Course ${course.id}`}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <Card className="border border-teal-100 bg-gradient-to-r from-teal-50 via-white to-emerald-50 rounded-[24px] shadow-sm overflow-hidden">
-        <CardContent className="p-5 md:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700/80">
-                Tổng quan lớp học
-              </p>
-              <h3 className="text-xl font-bold text-gray-800 mt-1">
-                {currentCourse?.name || currentCourse?.code || "Lớp học hiện tại"}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {groups.length} nhóm • {totalStudents} sinh viên • theo dõi hiệu suất và mức độ tham gia
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                Điểm đóng góp được ước tính từ commit, Jira hoàn thành, pull request, review,
-                số ngày hoạt động và task quá hạn.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-teal-100 text-teal-700">
-                Điểm TB: {avgScore}/100
-              </span>
-              <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-blue-100 text-blue-700">
-                Jira hoàn thành: {totalJiraDone}
-              </span>
-              <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-amber-100 text-amber-700">
-                Nhóm cần theo dõi: {riskGroups.length}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <StatCard
-          icon={GitBranch}
-          color="bg-teal-500"
-          label="Tổng commits"
-          value={totalCommits}
-          note="Toàn bộ sinh viên trong lớp"
-        />
-        <StatCard
-          icon={Users}
-          color="bg-green-500"
-          label="Sinh viên tích cực"
-          value={activeStudents}
-          note="Có ít nhất 1 commit"
-        />
-        <StatCard
-          icon={Target}
-          color="bg-indigo-500"
-          label="Điểm trung bình"
-          value={avgScore}
-          note="Điểm đóng góp / 100"
-        />
-        <StatCard
-          icon={GitPullRequest}
-          color="bg-blue-500"
-          label="Pull request"
-          value={totalPRs}
-          note={`Reviews: ${totalReviews}`}
-        />
-        <StatCard
-          icon={ShieldAlert}
-          color="bg-amber-500"
-          label="Nhóm rủi ro"
-          value={riskGroups.length}
-          note="Mất cân bằng hoặc ít hoạt động"
-        />
-      </div>
-
-      <Card className="border border-gray-100 shadow-sm rounded-[20px] bg-white overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-              <Tabs activeTab={activeTab} onChange={setActiveTab} />
-
-              <div className="flex flex-col sm:flex-row gap-3 xl:min-w-[460px]">
-                <div className="relative flex-1">
-                  <Search
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="Tìm theo tên, MSSV, nhóm..."
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm"
-                  />
-                </div>
-
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="Rất tốt">Rất tốt</option>
-                  <option value="Tích cực">Tích cực</option>
-                  <option value="Ổn định">Ổn định</option>
-                  <option value="Cần chú ý">Cần chú ý</option>
-                  <option value="Chưa commit">Chưa commit</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                onClick={() => handleBulkSend("warning")}
-                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white"
-              >
-                <TriangleAlert size={15} className="mr-2" />
-                Nhắc sinh viên yếu
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => handleBulkSend("email")}
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Mail size={15} className="mr-2" />
-                Gửi mail hàng loạt
-              </Button>
-
-              <span className="px-3 py-2 rounded-xl text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-600">
-                Đã gửi: {sentLogs.length} lượt
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
-                    <GitBranch size={15} className="text-teal-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">
-                    Commits theo tuần
-                  </CardTitle>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-5">
-                {weeklyCommits.every((value) => value === 0) ? (
-                  <div className="py-10 text-center text-sm text-gray-400">
-                    Chưa có dữ liệu hoạt động theo tuần
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-end gap-1.5 h-40">
-                      {weeklyCommits.map((value, index) => (
-                        <div
-                          key={index}
-                          className="flex-1 flex flex-col items-center gap-1 group"
-                        >
-                          <span className="text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {value}
-                          </span>
-                          <div
-                            className="w-full bg-gradient-to-t from-teal-500 to-teal-300 hover:from-teal-600 hover:to-teal-400 rounded-t-md transition-all"
-                            style={{
-                              height: `${(value / maxWeekly) * 100}%`,
-                              minHeight: value > 0 ? 6 : 0,
-                            }}
-                            title={`Tuần ${index + 1}: ${value} commits`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between mt-2">
-                      {WEEKS.map((week) => (
-                        <span
-                          key={week}
-                          className="text-[9px] text-gray-400 flex-1 text-center"
-                        >
-                          {week}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <div className="rounded-2xl bg-teal-50 border border-teal-100 px-4 py-3">
-                        <p className="text-[11px] text-teal-700 font-medium">
-                          Đỉnh hoạt động
-                        </p>
-                        <p className="text-lg font-bold text-teal-800">
-                          {Math.max(...weeklyCommits)} commits
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
-                        <p className="text-[11px] text-blue-700 font-medium">
-                          Tổng 12 tuần
-                        </p>
-                        <p className="text-lg font-bold text-blue-800">
-                          {weeklyCommits.reduce((sum, value) => sum + value, 0)}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3">
-                        <p className="text-[11px] text-amber-700 font-medium">
-                          TB / tuần
-                        </p>
-                        <p className="text-lg font-bold text-amber-800">
-                          {Math.round(
-                            weeklyCommits.reduce((sum, value) => sum + value, 0) /
-                              weeklyCommits.length
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-[10px] text-gray-400 mt-4">
-                      * Dữ liệu đang dùng mock analytics ổn định theo course. Khi tích hợp
-                      backend/GitHub API có thể thay bằng dữ liệu thật mà không cần đổi UI.
-                    </p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <MiniLineChart commits={weeklyCommits} jira={weeklyJira} />
-          </div>
-
-          <HeatmapCard students={sortedStudents} />
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <Card className="xl:col-span-2 border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <BarChart3 size={15} className="text-blue-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">
-                    So sánh đóng góp theo nhóm
-                  </CardTitle>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-5 space-y-4">
-                {groupStats.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-10">
-                    Chưa có nhóm nào trong lớp này
-                  </p>
-                ) : (
-                  groupStats.map((group) => {
-                    const widthPercent = Math.round(
-                      (group.totalCommits / maxGroupCommits) * 100
-                    );
-                    return (
-                      <div
-                        key={group.id}
-                        className="rounded-2xl border border-gray-100 p-4 hover:border-blue-100 hover:bg-blue-50/30 transition-colors"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-800">
-                              {group.name}
-                            </p>
-                            <p className="text-[11px] text-gray-500 mt-0.5">
-                              {group.memberCount} thành viên • {group.zeroCommitMembers} chưa
-                              commit
-                            </p>
-                          </div>
-                          <span
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
-                          >
-                            {group.risk.label}
-                          </span>
-                        </div>
-
-                        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full transition-all"
-                            style={{ width: `${widthPercent}%` }}
-                          />
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-4 gap-3 text-xs">
-                          <div>
-                            <p className="text-gray-400">Commits</p>
-                            <p className="font-semibold text-gray-700">
-                              {group.totalCommits}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Jira</p>
-                            <p className="font-semibold text-gray-700">
-                              {group.totalJira}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Balance</p>
-                            <p className="font-semibold text-gray-700">
-                              {group.balancePercent}%
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Score nhóm</p>
-                            <p className="font-semibold text-gray-700">
-                              {group.totalScore}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-50 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
-                    <Clock3 size={15} className="text-indigo-600" />
-                  </div>
-                  <CardTitle className="text-base font-semibold text-gray-800">
-                    Insight nhanh
-                  </CardTitle>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-5 space-y-3">
-                <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                    Sinh viên nổi bật
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {sortedStudents[0]?.name || "Chưa có dữ liệu"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {sortedStudents[0]?.commits || 0} commits • score{" "}
-                    {sortedStudents[0]?.score || 0}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                    Nhóm mạnh nhất
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {strongestGroup?.name || "Chưa có dữ liệu"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {strongestGroup?.totalCommits || 0} commits
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                    Tỷ lệ active
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {totalStudents > 0
-                      ? Math.round((activeStudents / totalStudents) * 100)
-                      : 0}
-                    %
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {activeStudents}/{totalStudents} sinh viên có hoạt động
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 p-4 bg-gray-50/60">
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400">
-                    Đã nhắc sinh viên
-                  </p>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">
-                    {sentLogs.length}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Gồm email và cảnh báo từ lecturer
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "groups" && (
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Users size={15} className="text-blue-600" />
-              </div>
-              <CardTitle className="text-base font-semibold text-gray-800">
-                Phân tích theo nhóm
-              </CardTitle>
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-5 space-y-4">
-            {groupStats.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-10">
-                Chưa có dữ liệu nhóm
-              </p>
-            ) : (
-              groupStats.map((group) => {
-                const topMember = [...group.members].sort(
-                  (a, b) => b.commits - a.commits
-                )[0];
-
-                return (
-                  <div
-                    key={group.id}
-                    className="rounded-[22px] border border-gray-100 p-5 bg-white hover:border-teal-100 hover:shadow-sm transition-all"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <h4 className="text-lg font-bold text-gray-800">{group.name}</h4>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {group.memberCount} thành viên • {group.totalCommits} commits •{" "}
-                          {group.totalJira} jira done
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${group.risk.className}`}
-                        >
-                          {group.risk.label}
-                        </span>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                          Balance {group.balancePercent}%
-                        </span>
-                        <Button variant="outline" className="rounded-xl h-8 px-3 text-xs">
-                          <Eye size={13} className="mr-1.5" />
-                          Xem chi tiết
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
-                      <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">Tổng score</p>
-                        <p className="text-lg font-bold text-gray-800">{group.totalScore}</p>
-                      </div>
-                      <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">Thành viên nổi bật</p>
-                        <p className="text-sm font-semibold text-gray-800 truncate">
-                          {topMember?.name || "N/A"}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">Chưa commit</p>
-                        <p className="text-lg font-bold text-gray-800">
-                          {group.zeroCommitMembers}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3">
-                        <p className="text-[11px] text-gray-400">TB commit / thành viên</p>
-                        <p className="text-lg font-bold text-gray-800">
-                          {group.memberCount
-                            ? Math.round(group.totalCommits / group.memberCount)
-                            : 0}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {[...group.members]
-                        .sort((a, b) => b.score - a.score)
-                        .map((member) => {
-                          const percent = topMember?.commits
-                            ? Math.max(
-                                6,
-                                Math.round((member.commits / topMember.commits) * 100)
-                              )
-                            : 0;
-
-                          return (
-                            <div key={member.studentId}>
-                              <div className="flex justify-between items-center mb-1.5">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium text-gray-700 truncate">
-                                    {member.name}
-                                  </p>
-                                  <p className="text-[11px] text-gray-400">
-                                    {member.studentCode} • score {member.score}
-                                  </p>
-                                </div>
-                                <span
-                                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${getStatusBadgeClass(
-                                    member.status
-                                  )}`}
-=======
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                     <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
                         <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Chi tiết sinh viên</h3>
+                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest leading-none">Chi tiết sinh viên</h3>
                             <div className="flex items-center gap-3">
                                 <select 
-                                    className="bg-gray-50 border-none rounded-xl px-4 py-2 text-xs font-bold text-gray-500 outline-none focus:ring-2 focus:ring-teal-100"
+                                    className="bg-gray-50 border-none rounded-xl px-4 py-2 text-xs font-black text-gray-500 outline-none focus:ring-2 focus:ring-teal-100 uppercase tracking-widest"
                                     value={selectedCourse}
                                     onChange={(e) => setSelectedCourse(e.target.value)}
->>>>>>> d4f993c269f0e55c18a55ca5482935dba01b41e8
                                 >
                                     {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
                                 </select>
@@ -1530,32 +992,32 @@ export default function Contributions() {
 
                 <div className="space-y-8">
                     <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
-                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-6">Hoạt động trong tuần</h3>
+                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-6 leading-none">Hoạt động trong tuần</h3>
                         <WeeklyActivityChart weeklyCommits={weeklyCommits} />
                     </Card>
 
                     <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Top Contributors</h3>
+                            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest leading-none">Top Contributors</h3>
                             <Target size={18} className="text-teal-600" />
                          </div>
                          <div className="space-y-6">
                             {filteredStudents.sort((a,b) => b.commits - a.commits).slice(0, 3).map((s, i) => (
                                <div key={s.id} className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                     <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-bold text-gray-400">0{i+1}</div>
+                                     <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-gray-400">0{i+1}</div>
                                      <div>
-                                        <p className="text-sm font-bold text-gray-800 truncate max-w-[120px]">{s.name}</p>
+                                        <p className="text-sm font-black text-gray-800 truncate max-w-[120px]">{s.name}</p>
                                         <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest">{s.team}</p>
                                      </div>
                                   </div>
                                   <div className="text-right">
                                      <p className="text-sm font-black text-gray-800">{s.commits}</p>
-                                     <p className="text-[9px] font-bold text-gray-400 uppercase">Commits</p>
+                                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Commits</p>
                                   </div>
                                </div>
                             ))}
-                            {filteredStudents.length === 0 && <p className="text-center text-xs text-gray-400">Không có dữ liệu</p>}
+                            {filteredStudents.length === 0 && <p className="text-center text-[10px] font-black uppercase text-gray-400 tracking-widest py-4">Không có dữ liệu</p>}
                          </div>
                          <Button className="w-full mt-8 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl h-11 text-xs font-black uppercase tracking-widest border-0">Xem tất cả</Button>
                     </Card>
