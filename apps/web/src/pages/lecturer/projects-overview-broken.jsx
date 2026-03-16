@@ -2,12 +2,27 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
+
 import { Button } from "../../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/table.jsx";
+import {
+  Card,
+  CardContent
+} from "../../components/ui/card.jsx";
+
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "../../components/ui/table.jsx";
+
 import { Badge } from "../../components/ui/badge.jsx";
+
 import { projectService } from "../../services/projectService.js";
 import { commitService } from "../../services/commitService.js";
+
 import { useToast } from "../../components/ui/toast.jsx";
 
 export default function ProjectsOverview() {
@@ -15,8 +30,8 @@ export default function ProjectsOverview() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { success, error } = useToast();
-  
-  const [filter, setFilter] = useState('all');
+
+  const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [course, setCourse] = useState(null);
@@ -30,30 +45,30 @@ export default function ProjectsOverview() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      
+
       let projectData = [];
-      if (filter === 'all') {
+
+      if (filter === "all") {
         projectData = await projectService.getCourseProjects(courseId);
-      } else if (filter === 'sync-error') {
+      } else if (filter === "sync-error") {
         projectData = await projectService.getCourseProjects(courseId, {
-          syncStatus: 'ERROR'
+          syncStatus: "ERROR"
         });
-      } else if (filter === 'no-commits-7days') {
+      } else if (filter === "no-commits-7days") {
         projectData = await commitService.getSilentProjects(courseId, 7);
-      } else if (filter === 'inactive-members-14days') {
+      } else if (filter === "inactive-members-14days") {
         projectData = await projectService.getCourseProjects(courseId, {
           hasInactiveMembers: true
         });
       }
-      
+
       setProjects(projectData);
-      
-      // Get course info
+
       const enrichedProjects = await projectService.getProjects({ courseId });
       setCourse(enrichedProjects[0]?.course || null);
-      
+
     } catch (err) {
-      error('Failed to load projects');
+      error("Failed to load projects");
     } finally {
       setLoading(false);
     }
@@ -63,9 +78,9 @@ export default function ProjectsOverview() {
     try {
       const result = await commitService.syncCommits(projectId);
       success(`Synced ${result.commitsAdded} commits`);
-      loadProjects(); // Refresh data
-    } catch (err) {
-      error('Failed to sync commits');
+      loadProjects();
+    } catch {
+      error("Failed to sync commits");
     }
   };
 
@@ -75,54 +90,45 @@ export default function ProjectsOverview() {
 
   const getLastCommitInfo = (project) => {
     const commits = project.commits || [];
-    if (commits.length === 0) return 'No commits';
-    
+
+    if (commits.length === 0) return "No commits";
+
     const lastCommit = commits[0];
     const date = new Date(lastCommit.committedAt);
     const now = new Date();
-    const daysDiff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    return daysDiff === 0 ? 'Today' : `${daysDiff} days ago`;
+
+    const daysDiff = Math.floor(
+      (now - date) / (1000 * 60 * 60 * 24)
+    );
+
+    return daysDiff === 0 ? "Today" : `${daysDiff} days ago`;
   };
 
   const getSyncStatusBadge = (project) => {
     const integration = project.integration;
-    if (!integration) return <Badge variant="outline" size="sm">No Integration</Badge>;
-    
+
+    if (!integration)
+      return (
+        <Badge variant="outline" size="sm">
+          No Integration
+        </Badge>
+      );
+
     const statusColors = {
-      SUCCESS: 'success',
-      ERROR: 'error',
-      PENDING: 'warning'
+      SUCCESS: "success",
+      ERROR: "error",
+      PENDING: "warning"
     };
-    
+
     return (
-      <Badge 
-        variant={statusColors[integration.syncStatus] || 'outline'} 
+      <Badge
+        variant={statusColors[integration.syncStatus] || "outline"}
         size="sm"
       >
         {integration.syncStatus}
       </Badge>
     );
   };
-  const filteredProjects = courseProjects.filter(project => {
-    if (filter === 'all') return true;
-    if (filter === 'no-commits') {
-      const hasCommits = mockCommits.some(commit => commit.projectId === project.id);
-      return !hasCommits;
-    }
-    if (filter === 'sync-error') {
-      // Mock sync error projects
-      return project.id === 'proj002'; // Example
-    }
-    return true;
-  });
-
-  const getLastCommitDate = (projectId) => {
-    const projectCommits = mockCommits.filter(commit => commit.projectId === projectId);
-    if (projectCommits.length === 0) return null;
-    
-    const latestCommit = projectCommits.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    return new Date(latestCommit.date);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -130,70 +136,109 @@ export default function ProjectsOverview() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
+
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects Overview</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Projects Overview
+              </h1>
+
               <p className="text-gray-600">
-                {course ? `${course.code} - ${course.title}` : 'Loading...'}
+                {course
+                  ? `${course.code} - ${course.title}`
+                  : "Loading..."}
               </p>
             </div>
-            <Button onClick={() => navigate('/lecturer')} variant="outline">
+
+            <Button
+              onClick={() => navigate("/lecturer")}
+              variant="outline"
+            >
               Back to Dashboard
             </Button>
+
           </div>
         </div>
       </div>
 
+      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="pt-6">
+
             <div className="flex flex-wrap gap-2">
+
               <Button
-                variant={filter === 'all' ? 'primary' : 'outline'}
+                variant={filter === "all" ? "primary" : "outline"}
                 size="sm"
-                onClick={() => setFilter('all')}
+                onClick={() => setFilter("all")}
               >
                 All Projects
               </Button>
+
               <Button
-                variant={filter === 'sync-error' ? 'primary' : 'outline'}
+                variant={filter === "sync-error" ? "primary" : "outline"}
                 size="sm"
-                onClick={() => setFilter('sync-error')}
+                onClick={() => setFilter("sync-error")}
               >
                 Sync Error
               </Button>
+
               <Button
-                variant={filter === 'no-commits-7days' ? 'primary' : 'outline'}
+                variant={
+                  filter === "no-commits-7days"
+                    ? "primary"
+                    : "outline"
+                }
                 size="sm"
-                onClick={() => setFilter('no-commits-7days')}
+                onClick={() => setFilter("no-commits-7days")}
               >
                 No Commits (7 days)
               </Button>
+
               <Button
-                variant={filter === 'inactive-members-14days' ? 'primary' : 'outline'}
+                variant={
+                  filter === "inactive-members-14days"
+                    ? "primary"
+                    : "outline"
+                }
                 size="sm"
-                onClick={() => setFilter('inactive-members-14days')}
+                onClick={() =>
+                  setFilter("inactive-members-14days")
+                }
               >
                 Inactive Members (14 days)
               </Button>
+
             </div>
           </CardContent>
         </Card>
 
-        {/* Projects Table */}
+        {/* Table */}
         <Card>
           <CardContent className="pt-6">
+
             {loading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading projects...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4" />
+                <p className="text-gray-600">
+                  Loading projects...
+                </p>
               </div>
+
             ) : projects.length === 0 ? (
+
               <div className="text-center py-8">
-                <p className="text-gray-500">No projects found for this filter.</p>
+                <p className="text-gray-500">
+                  No projects found for this filter.
+                </p>
               </div>
+
             ) : (
+
               <Table>
+
                 <TableHeader>
                   <TableRow>
                     <TableHead>Project Name</TableHead>
@@ -204,49 +249,86 @@ export default function ProjectsOverview() {
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
-                  {projects.map(project => (
+
+                  {projects.map((project) => (
                     <TableRow key={project.id}>
+
                       <TableCell>
                         <div>
-                          <div className="font-medium text-gray-900">{project.name}</div>
-                          <div className="text-sm text-gray-500">{project.description}</div>
+                          <div className="font-medium text-gray-900">
+                            {project.name}
+                          </div>
+
+                          <div className="text-sm text-gray-500">
+                            {project.description}
+                          </div>
                         </div>
                       </TableCell>
+
                       <TableCell>
-                        <Badge 
-                          variant={project.status === 'ACTIVE' ? 'success' : 'secondary'}
+                        <Badge
+                          variant={
+                            project.status === "ACTIVE"
+                              ? "success"
+                              : "secondary"
+                          }
                           size="sm"
                         >
                           {project.status}
-                      <TableCell>
-                        <Badge variant={syncStatus.status === 'success' ? 'success' : 'error'}>
-                          {syncStatus.message}
                         </Badge>
                       </TableCell>
+
+                      <TableCell>
+                        {getLastCommitInfo(project)}
+                      </TableCell>
+
+                      <TableCell>
+                        {getSyncStatusBadge(project)}
+                      </TableCell>
+
+                      <TableCell>
+                        {project.members?.length || 0}
+                      </TableCell>
+
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              handleViewProjectDetail(project.id)
+                            }
+                          >
                             Chi tiết
                           </Button>
-                          <Button size="sm" variant="ghost">
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              handleSyncCommits(project.id)
+                            }
+                          >
                             Sync
                           </Button>
+
                         </div>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
 
-            {filteredProjects.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                Không có project nào phù hợp với bộ lọc.
-              </div>
+                    </TableRow>
+                  ))}
+
+                </TableBody>
+
+              </Table>
             )}
+
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

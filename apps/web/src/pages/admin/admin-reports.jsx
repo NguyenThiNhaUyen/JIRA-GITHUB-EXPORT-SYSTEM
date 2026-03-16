@@ -205,16 +205,18 @@ export default function AdminReports() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Commit Trends */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Lịch sử Commit (30 ngày qua)</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <WeeklyTrendsChart data={commitChartData} />
-            </div>
-          </CardContent>
-        </Card>
+        {commitChartData.length > 0 && (
+          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 pb-4">
+              <CardTitle className="text-lg text-gray-800 font-bold">Lịch sử Commit (30 ngày qua)</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="h-64">
+                <WeeklyTrendsChart data={commitChartData} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* SRS Status Distribution */}
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
@@ -229,34 +231,18 @@ export default function AdminReports() {
         </Card>
 
         {/* Project Distribution */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Dự án theo Lớp học</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <CommitFrequencyChart data={projectDistribution} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Course Performance */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Tiến độ Các môn học</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <BurndownChart
-                data={filteredCourses.map(course => ({
-                  name: course.code,
-                  completed: 10, // Mock for status visualization
-                  remaining: 5
-                }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {projectDistribution.length > 0 && (
+          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 pb-4">
+              <CardTitle className="text-lg text-gray-800 font-bold">Dự án theo Lớp học</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="h-64">
+                <CommitFrequencyChart data={projectDistribution} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Detailed Tables */}
@@ -290,8 +276,8 @@ export default function AdminReports() {
                         <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course.name}</div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="font-medium text-gray-700">{course.currentStudents}</span>
-                        <span className="text-gray-400 text-xs ml-1">/{course.maxStudents}</span>
+                        <span className="font-medium text-gray-700">{course.currentStudents || 0}</span>
+                        <span className="text-gray-400 text-xs ml-1">/{course.maxStudents || 0}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="font-medium text-gray-700">{course.projectsCount || 0}</span>
@@ -361,7 +347,7 @@ export default function AdminReports() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center text-center space-y-4 h-full py-4">
               <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
-                <span className="text-2xl font-bold">{data.projectStats.silentProjects}</span>
+                <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 text-lg">Dự án chưa hoạt động</h4>

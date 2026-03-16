@@ -1,4 +1,8 @@
 import { useMemo } from "react";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
+import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -25,248 +29,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
-
-/* ───────────────────────── MOCK DATA ───────────────────────── */
-
-const MOCK_COURSES = [
-  {
-    id: "SE113",
-    code: "SE113.SP25",
-    name: "Software Engineering",
-    lecturerNames: ["TS. Nguyễn Thanh Bình"],
-    subject: { code: "SE113" },
-    semester: "Spring 2025",
-    status: "ACTIVE",
-    credits: 3,
-    totalStudents: 31,
-    progress: 76,
-    schedule: "Thứ 2, 7:30 - 9:30",
-    room: "BE-204",
-    description:
-      "Môn học tập trung vào quy trình phát triển phần mềm, quản lý nhóm và tài liệu dự án.",
-  },
-  {
-    id: "SWD392",
-    code: "SWD392.SP25",
-    name: "SWP Project",
-    lecturerNames: ["ThS. Lê Hoàng"],
-    subject: { code: "SWD392" },
-    semester: "Spring 2025",
-    status: "ACTIVE",
-    credits: 3,
-    totalStudents: 28,
-    progress: 68,
-    schedule: "Thứ 4, 13:00 - 15:00",
-    room: "DE-302",
-    description:
-      "Môn project thực hành theo nhóm, kết hợp quản lý task và demo sprint định kỳ.",
-  },
-  {
-    id: "PRU211",
-    code: "PRU211.SP25",
-    name: "C# Programming",
-    lecturerNames: ["TS. Trần Minh Hà"],
-    subject: { code: "PRU211" },
-    semester: "Spring 2025",
-    status: "ACTIVE",
-    credits: 4,
-    totalStudents: 36,
-    progress: 84,
-    schedule: "Thứ 6, 9:30 - 11:30",
-    room: "AL-107",
-    description:
-      "Môn lập trình với C#, hướng đối tượng, xử lý dữ liệu và ứng dụng desktop/web cơ bản.",
-  },
-];
-
-const MOCK_PROJECTS = [
-  {
-    id: "P1",
-    courseId: "SE113",
-    name: "Jira GitHub Export Tool",
-    repositoryName: "jira-gh-export-tool",
-    jiraProjectKey: "JGT",
-    teamLeaderId: "SE123456",
-    course: {
-      name: "Software Engineering",
-      subject: { code: "SE113" },
-    },
-    team: [
-      { studentId: "SE123456", studentName: "Trần Thị B" },
-      { studentId: "SE123111", studentName: "Nguyễn Văn A" },
-      { studentId: "SE123222", studentName: "Lê Minh C" },
-      { studentId: "SE123333", studentName: "Phạm Khánh D" },
-      { studentId: "SE123444", studentName: "Hoàng Gia E" },
-    ],
-    status: "ACTIVE",
-  },
-  {
-    id: "P2",
-    courseId: "SWD392",
-    name: "CV Review AI Platform",
-    repositoryName: "jobie-cv-review",
-    jiraProjectKey: "JOB",
-    teamLeaderId: "SE999999",
-    course: {
-      name: "SWP Project",
-      subject: { code: "SWD392" },
-    },
-    team: [
-      { studentId: "SE123456", studentName: "Trần Thị B" },
-      { studentId: "SE888111", studentName: "Nguyễn Văn H" },
-      { studentId: "SE888222", studentName: "Lê Anh K" },
-      { studentId: "SE888333", studentName: "Phạm Duy N" },
-    ],
-    status: "ACTIVE",
-  },
-  {
-    id: "P3",
-    courseId: "PRU211",
-    name: "C# Library Management",
-    repositoryName: "csharp-library-manager",
-    jiraProjectKey: "LIB",
-    teamLeaderId: "SE123456",
-    course: {
-      name: "C# Programming",
-      subject: { code: "PRU211" },
-    },
-    team: [
-      { studentId: "SE123456", studentName: "Trần Thị B" },
-      { studentId: "SE777111", studentName: "Đỗ Gia P" },
-      { studentId: "SE777222", studentName: "Trần Minh T" },
-    ],
-    status: "ACTIVE",
-  },
-];
-
-const MOCK_PROJECT_METRICS = {
-  P1: {
-    totalCommits: 70,
-    studentMetrics: [
-      { studentId: "SE123456", commitCount: 24 },
-      { studentId: "SE123111", commitCount: 18 },
-      { studentId: "SE123222", commitCount: 12 },
-      { studentId: "SE123333", commitCount: 9 },
-      { studentId: "SE123444", commitCount: 7 },
-    ],
-  },
-  P2: {
-    totalCommits: 61,
-    studentMetrics: [
-      { studentId: "SE123456", commitCount: 16 },
-      { studentId: "SE888111", commitCount: 22 },
-      { studentId: "SE888222", commitCount: 13 },
-      { studentId: "SE888333", commitCount: 10 },
-    ],
-  },
-  P3: {
-    totalCommits: 49,
-    studentMetrics: [
-      { studentId: "SE123456", commitCount: 19 },
-      { studentId: "SE777111", commitCount: 17 },
-      { studentId: "SE777222", commitCount: 13 },
-    ],
-  },
-};
-
-const MOCK_ALERTS = [
-  {
-    id: "A1",
-    severity: "high",
-    groupName: "Jira GitHub Export Tool",
-    message:
-      "Contribution tuần này của bạn thấp hơn tuần trước. Hãy cập nhật task Jira và push tiến độ mới.",
-  },
-  {
-    id: "A2",
-    severity: "medium",
-    groupName: "CV Review AI Platform",
-    message: "Sprint demo còn 3 ngày. Team đang còn 4 task chưa hoàn thành.",
-  },
-  {
-    id: "A3",
-    severity: "info",
-    groupName: "C# Library Management",
-    message: "Admin đã cập nhật trạng thái xử lý cho SRS gần nhất của nhóm bạn.",
-  },
-];
-
-const MOCK_SRS = {
-  P1: [
-    {
-      id: "S1",
-      version: "1.0",
-      status: "APPROVED",
-      submittedAt: "2026-02-12T08:00:00",
-      feedback: "Admin đã duyệt bản này. Tài liệu rõ ràng và đầy đủ.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-    {
-      id: "S2",
-      version: "2.0",
-      status: "UNDER_REVIEW",
-      submittedAt: "2026-02-23T08:00:00",
-      feedback: "Admin đang kiểm tra nội dung tài liệu.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-    {
-      id: "S3",
-      version: "3.0",
-      status: "NEEDS_REVISION",
-      submittedAt: "2026-03-09T08:00:00",
-      feedback: "Cần bổ sung phần scope và functional requirements trước khi duyệt.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-  ],
-  P2: [
-    {
-      id: "S4",
-      version: "1.0",
-      status: "APPROVED",
-      submittedAt: "2026-02-18T08:00:00",
-      feedback: "Admin đã ghi nhận bản SRS này.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-    {
-      id: "S5",
-      version: "2.0",
-      status: "SUBMITTED",
-      submittedAt: "2026-03-04T08:00:00",
-      feedback: "Tài liệu đã được gửi lên hệ thống và đang chờ admin tiếp nhận.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-  ],
-  P3: [
-    {
-      id: "S6",
-      version: "1.0",
-      status: "REJECTED",
-      submittedAt: "2026-03-06T08:00:00",
-      feedback: "File nộp thiếu một số phần bắt buộc, vui lòng upload lại bản hoàn chỉnh.",
-      fileUrl: "#",
-      receiver: "Admin",
-    },
-  ],
-};
-
-const SRS_STATUS_CLS = {
-  SUBMITTED: "bg-blue-50 text-blue-700 border-blue-200",
-  UNDER_REVIEW: "bg-amber-50 text-amber-700 border-amber-200",
-  NEEDS_REVISION: "bg-red-50 text-red-700 border-red-200",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REJECTED: "bg-slate-100 text-slate-700 border-slate-200",
-};
-
-const ALERT_SEVERITY = {
-  high: { cls: "bg-red-50 border-red-100" },
-  medium: { cls: "bg-orange-50 border-orange-100" },
-  info: { cls: "bg-blue-50 border-blue-100" },
-};
 
 /* ───────────────────────── UI helpers ───────────────────────── */
 
@@ -327,8 +89,10 @@ export default function StudentCoursesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const coursesList = MOCK_COURSES;
-  const projectsList = MOCK_PROJECTS;
+  const { data: coursesData } = useGetCourses({ pageSize: 100 });
+  const { data: projectsData } = useGetProjects({ pageSize: 100 });
+  const coursesList = coursesData?.items || [];
+  const projectsList = projectsData?.items || [];
 
   return (
     <div className="space-y-6">
@@ -508,7 +272,8 @@ export function StudentMyProjectPage() {
   const { success } = useToast();
   const { user } = useAuth();
 
-  const myProjects = MOCK_PROJECTS;
+  const { data: projectsData } = useGetProjects({ pageSize: 100 });
+  const myProjects = projectsData?.items || [];
 
   return (
     <div className="space-y-6">
@@ -642,30 +407,14 @@ export function StudentMyProjectPage() {
 
 export function StudentContributionPage() {
   const { user } = useAuth();
-  const myGroups = MOCK_PROJECTS;
-
-  const metricsMap = useMemo(() => {
-    const result = {};
-    myGroups.forEach((project) => {
-      result[project.id] = MOCK_PROJECT_METRICS[project.id];
-    });
-    return result;
-  }, [myGroups]);
-
+  const { data: projectsData } = useGetProjects({ pageSize: 100 });
+  const myGroups = projectsData?.items || [];
   const totalMyCommits = useMemo(() => {
-    return myGroups.reduce((sum, project) => {
-      const metrics = metricsMap[project.id];
-      const myMetric =
-        metrics?.studentMetrics?.find((m) => String(m.studentId) === String(user?.id)) || {
-          commitCount: 0,
-        };
-      return sum + myMetric.commitCount;
-    }, 0);
-  }, [metricsMap, myGroups, user?.id]);
-
+    return myGroups.reduce((sum, project) => sum + (project.commits || 0), 0);
+  }, [myGroups]);
   const activeGroups = useMemo(() => {
-    return myGroups.filter((project) => (metricsMap[project.id]?.totalCommits || 0) > 0).length;
-  }, [metricsMap, myGroups]);
+    return myGroups.filter((project) => (project.commits || 0) > 0).length;
+  }, [myGroups]);
 
   return (
     <div className="space-y-6">
@@ -712,7 +461,8 @@ export function StudentContributionPage() {
 }
 
 function ProjectContributionCard({ project, userId }) {
-  const metrics = MOCK_PROJECT_METRICS[project.id];
+  const { data: metricsData } = useGetProjectMetrics(project.id);
+  const metrics = metricsData || { studentMetrics: [], totalCommits: 0 };
   const members = project.team || [];
 
   if (!metrics) return null;
@@ -801,16 +551,25 @@ function ProjectContributionCard({ project, userId }) {
 /* ═══════════ Alerts Page ═══════════ */
 
 export function StudentAlertsPage() {
-  const alerts = MOCK_ALERTS;
+  const { data: alertsData } = useGetAlerts({ pageSize: 100 });
+  const alerts = alertsData?.items || [];
 
   const sevCls = {
     high: {
-      border: `${ALERT_SEVERITY.high?.cls || "bg-red-50 border-red-100"} border`,
+      border: `${({
+  high: { cls: "bg-red-50 border-red-100" },
+  medium: { cls: "bg-orange-50 border-orange-100" },
+  info: { cls: "bg-blue-50 border-blue-100" },
+}).high?.cls || "bg-red-50 border-red-100"} border`,
       icon: "text-red-500",
       text: "text-red-800",
     },
     medium: {
-      border: `${ALERT_SEVERITY.medium?.cls || "bg-orange-50 border-orange-100"} border`,
+      border: `${({
+  high: { cls: "bg-red-50 border-red-100" },
+  medium: { cls: "bg-orange-50 border-orange-100" },
+  info: { cls: "bg-blue-50 border-blue-100" },
+}).medium?.cls || "bg-orange-50 border-orange-100"} border`,
       icon: "text-orange-500",
       text: "text-orange-800",
     },
@@ -889,26 +648,9 @@ export function StudentAlertsPage() {
 
 export function StudentSrsPage() {
   const { success } = useToast();
-  const myGroups = MOCK_PROJECTS;
-
-  const srsSummary = useMemo(() => {
-    const summary = {
-      SUBMITTED: 0,
-      UNDER_REVIEW: 0,
-      NEEDS_REVISION: 0,
-      APPROVED: 0,
-      REJECTED: 0,
-    };
-
-    Object.values(MOCK_SRS).forEach((items) => {
-      items.forEach((item) => {
-        const st = String(item.status || "SUBMITTED").toUpperCase();
-        if (summary[st] !== undefined) summary[st] += 1;
-      });
-    });
-
-    return summary;
-  }, []);
+  const { data: projectsData } = useGetProjects({ pageSize: 100 });
+  const myGroups = projectsData?.items || [];
+  const srsSummary = { SUBMITTED: 0, UNDER_REVIEW: 0, NEEDS_REVISION: 0, APPROVED: 0, REJECTED: 0 };
 
   return (
     <div className="space-y-6">
@@ -922,7 +664,13 @@ export function StudentSrsPage() {
         {["SUBMITTED", "UNDER_REVIEW", "NEEDS_REVISION", "APPROVED", "REJECTED"].map((s) => (
           <div
             key={s}
-            className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${SRS_STATUS_CLS[s]}`}
+            className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${({
+  SUBMITTED: "bg-blue-50 text-blue-700 border-blue-200",
+  UNDER_REVIEW: "bg-amber-50 text-amber-700 border-amber-200",
+  NEEDS_REVISION: "bg-red-50 text-red-700 border-red-200",
+  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  REJECTED: "bg-slate-100 text-slate-700 border-slate-200",
+})[String(rpt.status || "SUBMITTED").toUpperCase()]}`}
           >
             <span className="text-[11px] font-semibold">{s}</span>
             <span className="text-xl font-bold">{srsSummary[s]}</span>
@@ -963,7 +711,8 @@ export function StudentSrsPage() {
 
 function ProjectSrsRows({ project }) {
   const { success } = useToast();
-  const srsList = MOCK_SRS[project.id] || [];
+  const { data: srsData } = useGetProjectSrs(project.id);
+  const srsList = srsData?.items || [];
 
   if (srsList.length === 0) return null;
 
@@ -981,8 +730,14 @@ function ProjectSrsRows({ project }) {
               </span>
               <span
                 className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${
-                  SRS_STATUS_CLS[String(rpt.status || "SUBMITTED").toUpperCase()] ||
-                  SRS_STATUS_CLS.SUBMITTED
+                  ({
+  SUBMITTED: "bg-blue-50 text-blue-700 border-blue-200",
+  UNDER_REVIEW: "bg-amber-50 text-amber-700 border-amber-200",
+  NEEDS_REVISION: "bg-red-50 text-red-700 border-red-200",
+  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  REJECTED: "bg-slate-100 text-slate-700 border-slate-200",
+})[String(rpt.status || "SUBMITTED").toUpperCase()] ||
+                  "bg-blue-50 text-blue-700 border-blue-200"
                 }`}
               >
                 {rpt.status}

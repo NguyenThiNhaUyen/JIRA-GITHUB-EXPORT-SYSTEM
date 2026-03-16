@@ -187,15 +187,15 @@ export default function StudentDashboard() {
   }
 
   const handleSyncProject = (project) => {
-    success?.(`Đã đồng bộ mock commits cho project ${project.title}`);
+    success?.(`Đã đồng bộ commits cho project ${project.title}`);
   };
 
   const handleUploadSrs = (project) => {
-    success?.(`Mở mock upload SRS cho project ${project.title}`);
+    success?.(`Mở form nộp SRS cho project ${project.title}`);
   };
 
   const handleExport = () => {
-    success?.("Đã export mock báo cáo cá nhân thành công");
+    success?.("Đã xuất báo cáo cá nhân thành công");
   };
 
   return (

@@ -24,9 +24,10 @@ import {
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
-  getStudentProjectById,
-  getStudentProjectDetailById,
-} from "../../mock/student.mock.js";
+  useGetProjectById,
+  useGetProjectMetrics
+} from "../../features/projects/hooks/useProjects.js";
+import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 
 function getStatusBadgeClass(status) {
   switch (status) {
@@ -99,20 +100,33 @@ export default function StudentProject() {
   const { success, error } = useToast();
   const [selectedTab, setSelectedTab] = useState("overview");
 
-  const project = getStudentProjectById(projectId);
-  const detail = getStudentProjectDetailById(projectId);
+  const { data: projectData } = useGetProjectById(projectId);
+  const { data: metricsData } = useGetProjectMetrics(projectId);
+  const { data: srsData } = useGetProjectSrs(projectId);
+  
+  const project = projectData || null;
+
+  const detail = {
+    weeklyCommits: metricsData?.weeklyCommits || [],
+    teamMembers: metricsData?.studentMetrics || [],
+    srsFiles: srsData?.items || [],
+    milestones: [],
+    activities: [],
+    deadlines: [],
+    personalTasks: []
+  };
 
   const maxCommit = useMemo(() => {
     if (!detail?.weeklyCommits?.length) return 1;
     return Math.max(...detail.weeklyCommits.map((item) => item.value), 1);
   }, [detail]);
 
-  if (!project || !detail) {
+  if (!project) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
         <div className="mx-auto max-w-5xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
           <div className="text-2xl font-bold text-slate-900">Không tìm thấy project</div>
-          <p className="mt-2 text-slate-600">Project này không tồn tại trong mock data.</p>
+          <p className="mt-2 text-slate-600">Ban có thể cần tải lại trang.</p>
           <Button className="mt-4" onClick={() => navigate("/student")}>
             Quay lại dashboard
           </Button>
@@ -330,7 +344,7 @@ export default function StudentProject() {
                   <div className="rounded-2xl bg-slate-50 p-4">
                     <div className="text-slate-500">Tech stack</div>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {project.techStack.map((tech) => (
+                      {(project.techStack || []).map((tech) => (
                         <span
                           key={tech}
                           className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700"

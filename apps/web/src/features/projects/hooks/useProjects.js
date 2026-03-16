@@ -19,7 +19,7 @@ import * as projectApi from '../api/projectApi.js';
 export const PROJECT_KEYS = {
     all: ['projects'],
     lists: () => [...PROJECT_KEYS.all, 'list'],
-    list: (filters) => [...PROJECT_KEYS.lists(), { filters }],
+    list: (filters) => [...PROJECT_KEYS.lists(), filters],
     details: () => [...PROJECT_KEYS.all, 'detail'],
     detail: (id) => [...PROJECT_KEYS.details(), id],
     team: (projectId) => [...PROJECT_KEYS.detail(projectId), 'team'],
@@ -29,6 +29,10 @@ export const useGetProjects = (params) => {
     return useQuery({
         queryKey: PROJECT_KEYS.list(params),
         queryFn: () => getProjects(params),
+
+        staleTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false
     });
 };
 
@@ -90,14 +94,16 @@ export const useRemoveTeamMember = () => {
         mutationFn: ({ projectId, studentId }) => removeTeamMember(projectId, studentId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
-        },
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+    },
     });
 };
 
 export const useUpdateTeamMember = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ projectId, studentId, updates }) => updateTeamMember(projectId, studentId, updates),
+        mutationFn: ({ projectId, studentId, contributionScore }) =>
+    updateTeamMember(projectId, studentId, contributionScore),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
         },

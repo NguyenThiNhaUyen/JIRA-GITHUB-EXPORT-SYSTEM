@@ -1,4 +1,3 @@
-// Lecturer Dashboard - Overview for LECTURER role
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -18,8 +17,8 @@ export default function LecturerDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { success, error } = useToast();
-  
-  const [selectedCourse, setSelectedCourse] = useState('');
+
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,8 +28,10 @@ export default function LecturerDashboard() {
     totalProjects: 0,
     totalStudents: 0,
     silentProjects: [],
-    inactiveStudents: []
+    inactiveStudents: [],
   });
+
+  const { totalProjects, totalStudents, silentProjects, inactiveStudents } = stats;
 
   useEffect(() => {
     loadLecturerData();
@@ -40,24 +41,24 @@ export default function LecturerDashboard() {
     if (selectedCourse) {
       loadCourseData(selectedCourse);
     }
-  }, [selectedCourse]);
+  }, [selectedCourse, courses]);
 
   const loadLecturerData = async () => {
     try {
       setLoading(true);
-      // Get courses where this lecturer is assigned
+
       const lecturerCourses = await courseService.getCourses();
-      const myCourses = lecturerCourses.filter(course => 
-        course.lecturers?.some(lecturer => lecturer.id === user.id)
+      const myCourses = lecturerCourses.filter((course) =>
+        course.lecturers?.some((lecturer) => lecturer.id === user?.id)
       );
-      
+
       setCourses(myCourses);
-      
+
       if (myCourses.length > 0 && !selectedCourse) {
         setSelectedCourse(myCourses[0].id);
       }
     } catch (err) {
-      error('Failed to load courses');
+      error("Failed to load courses");
     } finally {
       setLoading(false);
     }
@@ -66,32 +67,28 @@ export default function LecturerDashboard() {
   const loadCourseData = async (courseId) => {
     try {
       setLoading(true);
-      
-      // Get projects for this course
+
       const projects = await projectService.getCourseProjects(courseId);
       setCourseProjects(projects);
-      
-      // Calculate stats
-      const totalProjects = projects.length;
-      const course = courses.find(c => c.id === courseId);
+
+      const course = courses.find((c) => c.id === courseId);
       const totalStudents = course?.currentStudents || 0;
-      
-      // Find silent projects (no commits in 7 days)
+      const totalProjects = projects.length;
+
       const silentProjects = await projectService.getCourseProjects(courseId, {
-        hasRecentCommits: false
+        hasRecentCommits: false,
       });
-      
-      // Find inactive students (no commits in 14 days)
+
       const inactiveStudents = await commitService.getInactiveStudents(courseId, 14);
-      
+
       setStats({
         totalProjects,
         totalStudents,
         silentProjects,
-        inactiveStudents
+        inactiveStudents,
       });
     } catch (err) {
-      error('Failed to load course data');
+      error("Failed to load course data");
     } finally {
       setLoading(false);
     }
@@ -106,9 +103,9 @@ export default function LecturerDashboard() {
     try {
       const result = await commitService.syncCommits(projectId);
       success(`Synced ${result.commitsAdded} commits for project`);
-      loadCourseData(selectedCourse); // Refresh data
+      loadCourseData(selectedCourse);
     } catch (err) {
-      error('Failed to sync commits');
+      error("Failed to sync commits");
     }
   };
 
@@ -118,12 +115,12 @@ export default function LecturerDashboard() {
 
   const handleStudentAdded = (result) => {
     success(`${result.successful} students enrolled successfully!`);
-    loadLecturerData(); // Refresh data
+    loadLecturerData();
   };
 
   const handleProjectCreated = (project) => {
     success(`Project "${project.name}" created successfully!`);
-    loadCourseData(selectedCourse); // Refresh data
+    loadCourseData(selectedCourse);
   };
 
   const handleViewProjectsOverview = () => {
@@ -132,7 +129,6 @@ export default function LecturerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -148,18 +144,17 @@ export default function LecturerDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Course Selector */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Chọn Course
           </label>
-          <select 
-            value={selectedCourse || ''}
+          <select
+            value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
             className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">-- Chọn Course --</option>
-            {lecturerCourses.map(course => (
+            {courses.map((course) => (
               <option key={course.id} value={course.id}>
                 {course.code} - {course.name}
               </option>
@@ -167,7 +162,6 @@ export default function LecturerDashboard() {
           </select>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <SimpleStatCard
             title="Projects"
@@ -195,14 +189,14 @@ export default function LecturerDashboard() {
           />
         </div>
 
-        {/* Alerts */}
         <div className="space-y-4 mb-8">
           {silentProjects.length > 0 && (
             <Alert variant="warning">
               <div>
-                <strong>Cảnh báo:</strong> {silentProjects.length} nhóm không có hoạt động commit trong 7 ngày qua.
+                <strong>Cảnh báo:</strong> {silentProjects.length} nhóm không có hoạt động
+                commit trong 7 ngày qua.
                 <div className="mt-2">
-                  {silentProjects.map(project => (
+                  {silentProjects.map((project) => (
                     <Badge key={project.id} variant="warning" className="mr-2 mb-2">
                       {project.name}
                     </Badge>
@@ -215,32 +209,29 @@ export default function LecturerDashboard() {
           {inactiveStudents.length > 0 && (
             <Alert variant="error">
               <div>
-                <strong>Cảnh báo:</strong> {inactiveStudents.length} sinh viên không có hoạt động commit trong 14 ngày qua.
+                <strong>Cảnh báo:</strong> {inactiveStudents.length} sinh viên không có hoạt
+                động commit trong 14 ngày qua.
                 <div className="mt-2">
-                  {inactiveStudents.map(studentId => {
-                    const student = mockUsers.students.find(s => s.id === studentId);
-                    return student ? (
-                      <Badge key={studentId} variant="error" className="mr-2 mb-2">
-                        {student.name}
-                      </Badge>
-                    ) : null;
-                  })}
+                  {inactiveStudents.map((studentId) => (
+                    <Badge key={studentId} variant="error" className="mr-2 mb-2">
+                      Student ID: {studentId}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </Alert>
           )}
         </div>
 
-        {/* Course Projects */}
         {selectedCourse && (
-          <div>
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Course Actions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button 
+                  <Button
                     onClick={() => setShowAddStudentModal(true)}
                     variant="outline"
                     className="w-full"
@@ -248,7 +239,8 @@ export default function LecturerDashboard() {
                   >
                     Add Student to Course
                   </Button>
-                  <Button 
+
+                  <Button
                     onClick={() => setShowCreateProjectModal(true)}
                     variant="outline"
                     className="w-full"
@@ -256,7 +248,8 @@ export default function LecturerDashboard() {
                   >
                     Create New Project
                   </Button>
-                  <Button 
+
+                  <Button
                     onClick={handleViewProjectsOverview}
                     variant="secondary"
                     className="w-full"
@@ -264,8 +257,9 @@ export default function LecturerDashboard() {
                   >
                     View All Projects
                   </Button>
-                  <Button 
-                    onClick={() => navigate('/admin/reports')}
+
+                  <Button
+                    onClick={() => navigate("/admin/reports")}
                     variant="ghost"
                     className="w-full"
                   >
@@ -281,40 +275,44 @@ export default function LecturerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {courseProjects.slice(0, 5).map(project => (
-                    <div key={project.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  {courseProjects.slice(0, 5).map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <div className="font-medium text-gray-900">{project.name}</div>
                         <div className="text-sm text-gray-600">{project.description}</div>
                       </div>
+
                       <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={project.status === 'ACTIVE' ? 'success' : 'secondary'}
+                        <Badge
+                          variant={project.status === "ACTIVE" ? "success" : "secondary"}
                           size="sm"
                         >
                           {project.status}
                         </Badge>
-                        <Button 
+
+                        <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleSyncCommits(project.id)}
                         >
                           Sync
                         </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleViewProjectDetail(project.id)}
-                        >
+
+                        <Button size="sm" onClick={() => handleViewProjectDetail(project.id)}>
                           View
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 {courseProjects.length > 5 && (
                   <div className="mt-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={handleViewProjectsOverview}
                       className="w-full"
@@ -327,16 +325,14 @@ export default function LecturerDashboard() {
             </Card>
           </div>
         )}
-        </div>
 
-        {/* Modals */}
         <AddStudentModal
           isOpen={showAddStudentModal}
           onClose={() => setShowAddStudentModal(false)}
           onSuccess={handleStudentAdded}
           courseId={selectedCourse}
         />
-        
+
         <CreateProjectModal
           isOpen={showCreateProjectModal}
           onClose={() => setShowCreateProjectModal(false)}

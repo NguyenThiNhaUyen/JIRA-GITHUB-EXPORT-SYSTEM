@@ -48,8 +48,6 @@ export async function resetUserPassword(id, newPassword = "Admin@123") {
 }
 
 export async function getStudentLinks(studentId) {
-    // This might still be in integration layer, calling /api/github/links or similar
-    // Keep mock if BE endpoint is unknown
     const res = await client.get(`/users/student/${studentId}/links`);
     return unwrap(res);
 }

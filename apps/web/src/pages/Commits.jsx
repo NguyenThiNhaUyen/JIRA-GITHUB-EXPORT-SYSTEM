@@ -7,7 +7,6 @@ import { CodeChangesChart } from "../components/charts/code-changes-chart.jsx";
 import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card.jsx";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
-import { mockMembers } from "../lib/mock-data.js";
 import { formatDateTime } from "../lib/date-utils.js";
 import { useMemo } from "react";
 
@@ -39,6 +38,7 @@ export default function Commits() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: commitsData, isLoading: commitsLoading } = useCommitsList({ q: searchQuery });
+  // Note: These might not have real backend implementation yet, data will be empty arrays
   const { data: frequency, isLoading: frequencyLoading } = useCommitsFrequency();
   const { data: codeChanges, isLoading: codeChangesLoading } = useCodeChanges();
 
@@ -47,7 +47,7 @@ export default function Commits() {
     return {
       total: commitsData?.total || 0,
       today: items.filter((c) => {
-        const commitDate = new Date(c.committedAt).toDateString();
+        const commitDate = new Date(c.committedAt || c.timestamp).toDateString();
         return commitDate === new Date().toDateString();
       }).length,
       thisWeek: items.length,
@@ -94,18 +94,20 @@ export default function Commits() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CommitFrequencyChart
-          data={frequency?.buckets || []}
-          isLoading={frequencyLoading}
-          isError={false}
-        />
-        <CodeChangesChart
-          data={codeChanges?.buckets || []}
-          isLoading={codeChangesLoading}
-          isError={false}
-        />
-      </div>
+      {frequency?.buckets?.length > 0 && codeChanges?.buckets?.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <CommitFrequencyChart
+            data={frequency?.buckets || []}
+            isLoading={frequencyLoading}
+            isError={false}
+          />
+          <CodeChangesChart
+            data={codeChanges?.buckets || []}
+            isLoading={codeChangesLoading}
+            isError={false}
+          />
+        </div>
+      )}
 
       {/* Search */}
       <Card>
@@ -125,10 +127,9 @@ export default function Commits() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-blue-100">
-            {commits.slice(0, 20).map((commit) => {
-              const author = mockMembers.find((m) => m.id === commit.authorId);
+            {commits.slice(0, 20).map((commit, idx) => {
               return (
-                <CommitItem key={commit.id} commit={commit} author={author} />
+                <CommitItem key={commit.id || idx} commit={commit} />
               );
             })}
             {commits.length === 0 && !commitsLoading && (
@@ -146,35 +147,38 @@ export default function Commits() {
   );
 }
 
-function CommitItem({ commit, author }) {
+function CommitItem({ commit }) {
+  const authorName = commit.authorName || commit.author?.name || "Unknown";
+  const authorInitial = authorName.charAt(0).toUpperCase();
+
   return (
     <div className="p-4 lg:p-6 hover:bg-blue-50/30 transition-colors">
       <div className="flex items-start gap-4">
         <div className="mt-1">
           <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
-            {author?.name.charAt(0) || "U"}
+            {authorInitial}
           </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <Hash size={14} className="text-blue-400 flex-shrink-0" />
             <code className="text-xs lg:text-sm font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded flex-shrink-0">
-              {commit.sha.slice(0, 7)}
+              {(commit.sha || commit.id || "0000000").slice(0, 7)}
             </code>
             <span className="font-medium text-blue-900 text-sm lg:text-base break-words">{commit.message}</span>
           </div>
           <div className="flex items-center gap-3 lg:gap-4 text-xs lg:text-sm text-blue-600 flex-wrap">
             <div className="flex items-center gap-1">
               <User size={14} />
-              <span>{author?.name || "Unknown"}</span>
+              <span>{authorName}</span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar size={14} />
-              <span>{formatDateTime(commit.committedAt)}</span>
+              <span>{formatDateTime(commit.committedAt || commit.timestamp)}</span>
             </div>
-            <span className="text-green-600">+{commit.additions}</span>
-            <span className="text-red-600">-{commit.deletions}</span>
-            <span className="text-blue-500">{commit.filesChanged} files</span>
+            <span className="text-green-600">+{commit.additions || 0}</span>
+            <span className="text-red-600">-{commit.deletions || 0}</span>
+            <span className="text-blue-500">{commit.filesChanged || 0} files</span>
           </div>
         </div>
       </div>

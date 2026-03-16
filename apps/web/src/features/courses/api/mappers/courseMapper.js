@@ -67,12 +67,11 @@ export function mapCourse(beCourse) {
         },
 
         // ── Students & capacity ────────────────────────────────────
-        // BE v2.1 giờ trả về `currentStudents`
         currentStudents: beCourse.currentStudents ?? beCourse.enrolledStudentsCount ?? 0,
-        maxStudents: beCourse.maxStudents ?? 40,
+        maxStudents: beCourse.maxStudents ?? 0,
 
         // ── Status ────────────────────────────────────────────────
-        status: beCourse.status ?? "ACTIVE",
+        status: beCourse.status ?? "UNKNOWN",
 
         // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({

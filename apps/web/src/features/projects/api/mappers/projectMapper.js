@@ -8,12 +8,12 @@ export const mapProject = (project) => {
         courseId: project.courseId,
         courseName: project.courseName,
         team: (project.members || project.teamMembers || []).map(member => ({
-            studentId: member.studentUserId,
-            studentName: member.studentName,
-            studentCode: member.studentCode,
-            role: member.role,
-            contributionScore: member.contributionScore
-        })),
+        studentId: member.studentUserId || member.studentId,
+        studentName: member.studentName,
+        studentCode: member.studentCode,
+        role: member.role,
+        contributionScore: member.contributionScore
+    })),
         integration: project.integration ? {
             githubUrl: project.githubRepoUrl || project.integration.githubUrl,
             jiraUrl: project.jiraProjectUrl || project.integration.jiraUrl,

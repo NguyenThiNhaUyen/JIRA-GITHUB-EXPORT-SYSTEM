@@ -20,39 +20,11 @@ Tooltip
 
 
 /* ---------------- MOCK DATA ---------------- */
-
-const MOCK_HEATMAP = [
-{ date:"2026-03-01", count:3 },
-{ date:"2026-03-02", count:6 },
-{ date:"2026-03-03", count:2 },
-{ date:"2026-03-04", count:8 },
-{ date:"2026-03-05", count:4 }
-]
-
-const MOCK_COMMITS = [
-{ day:"Mon", commits:5 },
-{ day:"Tue", commits:7 },
-{ day:"Wed", commits:3 },
-{ day:"Thu", commits:9 },
-{ day:"Fri", commits:12 }
-]
-
-const MOCK_TEAMS = [
-{ name:"Team A", commits:42 },
-{ name:"Team B", commits:37 },
-{ name:"Team C", commits:31 }
-]
-
-const MOCK_INACTIVE = [
-{ name:"Team F", reason:"No commits 7 days" },
-{ name:"Team H", reason:"Repo missing" }
-]
-
-const MOCK_JIRA = [
-{ status:"Todo", value:15 },
-{ status:"In Progress", value:9 },
-{ status:"Done", value:22 }
-]
+const MOCK_HEATMAP = []
+const MOCK_COMMITS = []
+const MOCK_TEAMS = []
+const MOCK_INACTIVE = []
+const MOCK_JIRA = []
 
 
 
@@ -80,145 +52,10 @@ Class performance insights
 
 
 
-{/* Overview */}
-
-<div className="grid grid-cols-4 gap-4">
-
-<Stat label="Teams" value={8}/>
-<Stat label="Students" value={32}/>
-<Stat label="Repo Connected" value={6}/>
-<Stat label="Active Teams" value={6}/>
-
+<div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border shadow-sm">
+  <div className="text-xl font-bold text-gray-800 mb-2">Chưa hỗ trợ API</div>
+  <p className="text-gray-500">Chức năng Course Analytics hiện chưa có dữ liệu từ backend.</p>
 </div>
-
-
-
-{/* Heatmap */}
-
-<Card>
-
-<CardHeader>
-
-<CardTitle>
-Contribution Heatmap
-</CardTitle>
-
-</CardHeader>
-
-<CardContent>
-
-<CalendarHeatmap
-startDate={subDays(new Date(),90)}
-endDate={new Date()}
-values={MOCK_HEATMAP}
-/>
-
-</CardContent>
-
-</Card>
-
-
-
-{/* Commit Trend */}
-
-<Card>
-
-<CardHeader>
-
-<CardTitle>
-Commit Trend
-</CardTitle>
-
-</CardHeader>
-
-<CardContent>
-
-<div className="h-64">
-
-<ResponsiveContainer width="100%" height="100%">
-
-<LineChart data={MOCK_COMMITS}>
-
-<XAxis dataKey="day"/>
-
-<YAxis/>
-
-<Tooltip/>
-
-<Line
-type="monotone"
-dataKey="commits"
-stroke="#14b8a6"
-strokeWidth={3}
-/>
-
-</LineChart>
-
-</ResponsiveContainer>
-
-</div>
-
-</CardContent>
-
-</Card>
-
-
-
-{/* Teams Section */}
-
-<div className="grid lg:grid-cols-2 gap-6">
-
-<TopTeams/>
-
-<InactiveTeams/>
-
-</div>
-
-
-
-{/* Jira Stats */}
-
-<Card>
-
-<CardHeader>
-
-<CardTitle>
-Jira Issue Stats
-</CardTitle>
-
-</CardHeader>
-
-<CardContent>
-
-<div className="h-64">
-
-<ResponsiveContainer width="100%" height="100%">
-
-<BarChart data={MOCK_JIRA}>
-
-<XAxis dataKey="status"/>
-
-<YAxis/>
-
-<Tooltip/>
-
-<Bar
-dataKey="value"
-fill="#14b8a6"
-/>
-
-</BarChart>
-
-</ResponsiveContainer>
-
-</div>
-
-</CardContent>
-
-</Card>
-
-
-
 </div>
 
 )

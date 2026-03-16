@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -22,6 +23,26 @@ public class UserService : IUserService
         _logger = logger;
     }
 
+    public async Task<List<UserDetailResponse>> GetStudentsAsync()
+    {
+        var users = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .Where(u => u.roles.Any(r => r.role_name == "STUDENT"))
+            .ToListAsync();
+        return users.Select(MapToResponse).ToList();
+    }
+
+    public async Task<List<UserDetailResponse>> GetLecturersAsync()
+    {
+        var users = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.lecturer)
+            .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+            .ToListAsync();
+        return users.Select(MapToResponse).ToList();
+    }
+
     public async Task<PagedResponse<UserDetailResponse>> GetAllUsersAsync(string? role, PagedRequest request)
     {
         var query = _context.users
@@ -39,17 +60,17 @@ public class UserService : IUserService
         var page = request.Page > 0 ? request.Page : 1;
         var pageSize = request.PageSize > 0 ? request.PageSize : 20;
         var items = await query
-            .OrderBy(u => u.id)
+            .OrderByDescending(u => u.created_at)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        var mapped = items.Select(u => MapToResponse(u)).ToList();
+        var mapped = items.Select(MapToResponse).ToList();
 
         return new PagedResponse<UserDetailResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -110,9 +131,12 @@ public class UserService : IUserService
         Email = u.email,
         FullName = u.full_name,
         Enabled = u.enabled,
-        Roles = u.roles.Select(r => r.role_name).ToList(),
+        Role = u.roles.Any(r => r.role_name.ToUpper() == "ADMIN") ? "ADMIN" : (u.roles.Any(r => r.role_name.ToUpper() == "LECTURER") ? "LECTURER" : "STUDENT"),
         StudentCode = u.student?.student_code,
+        StudentId = u.student?.student_code,
         LecturerCode = u.lecturer?.lecturer_code,
+        Department = u.lecturer?.department ?? u.student?.department,
+        AssignedCourses = u.lecturer?.courses.Select(c => c.course_code).ToList() ?? new List<string>(),
         CreatedAt = u.created_at
     };
 }

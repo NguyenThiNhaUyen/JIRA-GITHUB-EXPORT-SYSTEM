@@ -38,8 +38,14 @@ using Microsoft.OpenApi.Models;
             // ============================================
 
             // JWT Settings
-            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            builder.Services.Configure<JwtSettings>(jwtSection);
+            var jwtSettings = jwtSection.Get<JwtSettings>();
+
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
+            }
 
             // ============================================
             // DATABASE
@@ -47,9 +53,19 @@ using Microsoft.OpenApi.Models;
 
             var connectionString = builder.Configuration.GetConnectionString("Default");
             
-            builder.Services.AddDbContext<JiraGithubToolDbContext>(options =>
+            // Fix for Supabase MaxClientsInSessionMode: Enforce strict connection pooling limits
+            if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("Max Pool Size", StringComparison.OrdinalIgnoreCase))
             {
-                options.UseNpgsql(connectionString);
+                connectionString = $"{connectionString.TrimEnd(';')};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=5;Connection Idle Lifetime=20;";
+            }
+
+            // Fix connection exhaustion by pooling DbContext instances
+            builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
+            {
+                options.UseNpgsql(connectionString, o => 
+                {
+                    o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
+                });
 
                 if (builder.Environment.IsDevelopment())
                 {
@@ -83,6 +99,20 @@ using Microsoft.OpenApi.Models;
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request for the hub
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = context =>
                     {
                         context.HandleResponse();
@@ -133,6 +163,9 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IAlertService, AlertService>();
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
+
 
             // Background Services
             builder.Services.AddHostedService<SyncWorker>();
@@ -150,17 +183,30 @@ using Microsoft.OpenApi.Models;
             // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
             // ============================================
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();
             
-            // Redis Configuration
+            // Redis Configuration (Non-blocking Connect)
             var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
             
-            // Register IConnectionMultiplexer for distributed locks (e.g., SyncWorker)
-            var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
-            builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            try 
+            {
+                var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+                builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
+                // We still register a dummy or handle null in services if needed, 
+                // but at least the app won't crash on startup.
+            }
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
@@ -235,22 +281,27 @@ using Microsoft.OpenApi.Models;
             // Global exception handler
             app.UseCustomExceptionHandler();
 
-            // Swagger (Development only)
-            if (app.Environment.IsDevelopment())
+
+           if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-                    c.RoutePrefix = "swagger"; // Swagger at /swagger
-                });
-            }
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+                c.RoutePrefix = "swagger"; // Swagger at /swagger
+            });
+          }
 
-            if (!app.Environment.IsDevelopment())
+            // Render/Cloud handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-Render environments.
+            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
             {
                 app.UseHttpsRedirection();
             }
 
+            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
             app.UseStaticFiles();
 
             // CORS
@@ -262,133 +313,46 @@ using Microsoft.OpenApi.Models;
 
             // Map controllers & SignalR Hubs
             app.MapControllers();
+            // Mount NotificationHub on both paths to support FE calling /notificationHub
             app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
+
+            // Health Check Endpoint for Render/Deployments
+            app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
+            app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
 
             // ============================================
-            // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)
+            // DATABASE SEEDING (Background)
             // ============================================
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<JiraGithubToolDbContext>();
-                    var passwordHasher = services.GetRequiredService<IPasswordHasher>();
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-
-                    // 0. Auto-migrate database on startup
-                    try
-                    {
-                        logger.LogInformation("Applying database migrations...");
-                        await context.Database.MigrateAsync();
-                        logger.LogInformation("Database migrated successfully.");
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogCritical(ex, "❌ Database migration failed! Deployment halted.");
-                        throw; // Rethrow so deployment fails fast
-                    }
-
-                    // 1. Create Default Roles if not exist
-                    var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
-                    bool rolesAdded = false;
-                    foreach (var roleName in defaultRoles)
-                    {
-                        if (!await context.roles.AnyAsync(r => r.role_name == roleName))
-                        {
-                            context.roles.Add(new role { role_name = roleName });
-                            rolesAdded = true;
-                        }
-                    }
-                    if (rolesAdded) await context.SaveChangesAsync();
-
-                    // 2. Create Super Admin Account if not exist
-                    string adminEmail = "admin@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == adminEmail))
-                    {
-                        var adminRole = await context.roles.FirstAsync(r => r.role_name == "ADMIN");
-                        var adminUser = new user
-                        {
-                            email = adminEmail,
-                            password = passwordHasher.HashPassword("Admin@123"), // Password mặc định
-                            full_name = "Super Admin",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow
-                        };
-                        adminUser.roles.Add(adminRole);
-                        context.users.Add(adminUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Admin Account -> Email: {Email} | Pass: Admin@123", adminEmail);
-                    }
-
-                    // 3. Create Sample Lecturer Account if not exist
-                    string lecturerEmail = "lecturer@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == lecturerEmail))
-                    {
-                        var lecturerRole = await context.roles.FirstAsync(r => r.role_name == "LECTURER");
-                        var lecturerUser = new user
-                        {
-                            email = lecturerEmail,
-                            password = passwordHasher.HashPassword("Admin@123"),
-                            full_name = "Sample Lecturer",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow,
-                            lecturer = new lecturer
-                            {
-                                lecturer_code = "LEC001",
-                                created_at = DateTime.UtcNow,
-                                updated_at = DateTime.UtcNow
-                            }
-                        };
-                        lecturerUser.roles.Add(lecturerRole);
-                        context.users.Add(lecturerUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Lecturer Account -> Email: {Email} | Pass: Admin@123", lecturerEmail);
-                    }
-
-                    // 4. Create Sample Student Account if not exist
-                    string studentEmail = "student@truonghoc.com";
-                    if (!await context.users.AnyAsync(u => u.email == studentEmail))
-                    {
-                        var studentRole = await context.roles.FirstAsync(r => r.role_name == "STUDENT");
-                        var studentUser = new user
-                        {
-                            email = studentEmail,
-                            password = passwordHasher.HashPassword("Admin@123"),
-                            full_name = "Sample Student",
-                            enabled = true,
-                            created_at = DateTime.UtcNow,
-                            updated_at = DateTime.UtcNow,
-                            student = new student
-                            {
-                                student_code = "STU001",
-                                created_at = DateTime.UtcNow,
-                                updated_at = DateTime.UtcNow
-                            }
-                        };
-                        studentUser.roles.Add(studentRole);
-                        context.users.Add(studentUser);
-                        await context.SaveChangesAsync();
-                        
-                        logger.LogWarning("🚀 [SYSTEM INIT] Seeded Default Student Account -> Email: {Email} | Pass: Admin@123", studentEmail);
-                    }
+            _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
                 }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "❌ An error occurred while seeding the database.");
-                }
-            }
+            });
 
             // ============================================
             // RUN APPLICATION
             // ============================================
+            var envPort = Environment.GetEnvironmentVariable("PORT");
+            if (!string.IsNullOrEmpty(envPort))
+            {
+                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
+                var url = $"http://0.0.0.0:{envPort}";
+                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
+                app.Urls.Clear(); // Clear any pre-configured URLs
+                app.Urls.Add(url);
+                await app.RunAsync();
+            }
+            else
+            {
+                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
+                await app.RunAsync();
+            }
 
-            await app.RunAsync();
+
 
 
 

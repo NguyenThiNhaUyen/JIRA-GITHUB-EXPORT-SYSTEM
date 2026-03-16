@@ -29,7 +29,7 @@ export async function deleteProject(projectId) {
 
 export async function addTeamMember(projectId, studentUserId, role = "MEMBER", responsibility = "") {
     const res = await client.post(`/projects/${projectId}/members`, {
-        studentUserId,
+        studentUserId: Number(studentUserId),
         teamRole: role,   // BE expects "teamRole" not "role"
         responsibility
     });

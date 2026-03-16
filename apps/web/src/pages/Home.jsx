@@ -1,38 +1,10 @@
+import { useQuery } from "@tanstack/react-query";
+import { getAnalyticsStats, getActivityLog } from "../features/dashboard/api/analyticsApi.js";
+import { projectService } from "../services/projectService.js";
 
-// ================= MOCK DATA =================
-const mockConnections = {
-  jira: false, // Đổi true/false để test UI
-  github: true,
-};
-const mockSyncStatus = "ERROR"; // "OK" | "ERROR" | "PENDING" | "NONE"
-const mockLastSync = null; // ISO string hoặc null
-const mockProjects = [
-  // Empty array để test onboarding
-  {
-    course: "SE1401",
-    project: "Jira–GitHub Export Tool",
-    team: "Team 1",
-    jiraKey: "JIRA-123",
-    repo: "fptu/jira-gh-export-tool",
-    syncStatus: "ERROR",
-    lastSync: "2026-01-25T14:30:00Z",
-  },
-];
-const mockStats = [
-  { label: "Courses", value: 2, icon: "M6 18L18 6M6 6l12 12", color: "blue" },
-  { label: "Projects", value: 1, icon: "M4 6h16M4 12h16M4 18h16", color: "green" },
-  { label: "Teams", value: 3, icon: "M17 20h5v-2a4 4 0 00-3-3.87", color: "purple" },
-  { label: "Lecturers", value: 2, icon: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z", color: "orange" },
-  { label: "Students", value: 12, icon: "M17 20h5v-2a4 4 0 00-3-3.87", color: "teal" },
-  { label: "Last Sync", value: mockLastSync ? formatSyncTime(mockLastSync) : "Chưa sync", icon: "M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-4v4l3 3", color: "gray" },
-];
-const mockActivity = [
-  { type: "sync", user: "Nguyễn Xuân Lộc", time: "2026-01-25T14:30:00Z", desc: "Đồng bộ dữ liệu thành công." },
-  { type: "export", user: "NguyenThiNhaUyen", time: "2026-01-24T10:00:00Z", desc: "Xuất báo cáo nhóm Team 1." },
-  { type: "connect", user: "Tran Tan Phat", time: "2026-01-23T09:00:00Z", desc: "Kết nối GitHub repo mới." },
-];
-
+// ================= UTILS =================
 function formatSyncTime(iso) {
+  if (!iso) return "Chưa sync";
   const d = new Date(iso);
   return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) +
     " • " + d.toLocaleDateString("vi-VN");
@@ -40,14 +12,40 @@ function formatSyncTime(iso) {
 
 // ================= MAIN DASHBOARD =================
 export default function Home() {
-  // Onboarding: thiếu project thì show stepper
-  const showOnboarding = mockProjects.length === 0;
-  // Banner nếu chưa kết nối Jira
-  const showJiraBanner = !mockConnections.jira;
-  // Repo/Commits empty nếu chưa GitHub
-  const showRepoEmpty = !mockConnections.github;
-  // Sync error callout
-  const showSyncError = mockSyncStatus === "ERROR";
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['home', 'stats'],
+    queryFn: getAnalyticsStats
+  });
+
+  const { data: projectsData, isLoading: projectsLoading } = useQuery({
+    queryKey: ['home', 'projects'],
+    queryFn: () => projectService.getProjects()
+  });
+
+  const { data: activityData, isLoading: activityLoading } = useQuery({
+    queryKey: ['home', 'activity'],
+    queryFn: () => getActivityLog(3)
+  });
+
+  const projects = projectsData || [];
+  const activities = activityData?.items || []; // adjust if API returns array directly
+
+  const showOnboarding = projects.length === 0 && !projectsLoading;
+  
+  // Note: These mock states can be tied to real config later
+  const mockConnections = { jira: true, github: true };
+  const showJiraBanner = false;
+  const showRepoEmpty = false;
+  const showSyncError = false;
+
+  const stats = [
+    { label: "Courses", value: statsData?.totalCourses || 0, icon: "M6 18L18 6M6 6l12 12", color: "blue" },
+    { label: "Projects", value: statsData?.totalProjects || 0, icon: "M4 6h16M4 12h16M4 18h16", color: "green" },
+    { label: "Teams", value: statsData?.activeGroups || 0, icon: "M17 20h5v-2a4 4 0 00-3-3.87", color: "purple" },
+    { label: "Students", value: statsData?.totalUsers || 0, icon: "M17 20h5v-2a4 4 0 00-3-3.87", color: "teal" },
+    { label: "Success Rate", value: (statsData?.syncSuccessRate || 0) + "%", icon: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z", color: "orange" },
+    { label: "Commits", value: statsData?.totalCommits || 0, icon: "M3 12a9 9 0 1118 0 9 9 0 01-18 0zm9-4v4l3 3", color: "gray" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -79,8 +77,8 @@ export default function Home() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {mockStats.map((s, i) => (
-          <StatCard key={i} {...s} />
+        {stats.map((s, i) => (
+          <StatCard key={i} {...s} loading={statsLoading} />
         ))}
       </div>
 
@@ -99,7 +97,7 @@ export default function Home() {
               <tr>
                 <th className="px-3 py-2 text-left">Course</th>
                 <th className="px-3 py-2 text-left">Project</th>
-                <th className="px-3 py-2 text-left">Team</th>
+                <th className="px-3 py-2 text-left">Team Name</th>
                 <th className="px-3 py-2 text-left">Jira Key</th>
                 <th className="px-3 py-2 text-left">Repo</th>
                 <th className="px-3 py-2 text-left">Sync status</th>
@@ -107,20 +105,22 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {mockProjects.length === 0 ? (
+              {projectsLoading ? (
+                <tr><td colSpan={7} className="text-center py-6 text-gray-500">Đang tải...</td></tr>
+              ) : projects.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-6 text-gray-500">Chưa có project nào.</td></tr>
               ) : (
-                mockProjects.map((p, i) => (
-                  <tr key={i} className="border-t">
-                    <td className="px-3 py-2">{p.course}</td>
-                    <td className="px-3 py-2">{p.project}</td>
-                    <td className="px-3 py-2">{p.team}</td>
-                    <td className="px-3 py-2">{p.jiraKey}</td>
-                    <td className="px-3 py-2">{showRepoEmpty ? <span className="italic text-gray-400">No repo</span> : p.repo}</td>
+                projects.map((p, i) => (
+                  <tr key={p.id || i} className="border-t">
+                    <td className="px-3 py-2">{p.course?.code || "N/A"}</td>
+                    <td className="px-3 py-2">{p.name || "N/A"}</td>
+                    <td className="px-3 py-2">{p.team?.name || "N/A"}</td>
+                    <td className="px-3 py-2">{p.integration?.jiraKey || "N/A"}</td>
+                    <td className="px-3 py-2">{p.integration?.githubRepo || "N/A"}</td>
                     <td className="px-3 py-2">
-                      <StatusPill status={p.syncStatus} />
+                      <StatusPill status={p.integration?.syncStatus || "NONE"} />
                     </td>
-                    <td className="px-3 py-2">{p.lastSync ? formatSyncTime(p.lastSync) : "Chưa sync"}</td>
+                    <td className="px-3 py-2">{formatSyncTime(p.integration?.lastSyncAt)}</td>
                   </tr>
                 ))
               )}
@@ -132,16 +132,22 @@ export default function Home() {
       {/* Recent activity feed */}
       <div className="bg-white rounded-2xl shadow-sm border p-6">
         <h2 className="text-lg font-bold text-blue-900 mb-4">Recent Activity</h2>
-        <ul className="space-y-3">
-          {mockActivity.map((a, i) => (
-            <li key={i} className="flex items-center gap-3 text-sm">
-              <ActivityIcon type={a.type} />
-              <span className="font-medium text-blue-900">{a.user}</span>
-              <span className="text-gray-500">{a.desc}</span>
-              <span className="ml-auto text-xs text-gray-400">{formatSyncTime(a.time)}</span>
-            </li>
-          ))}
-        </ul>
+        {activityLoading ? (
+          <p className="text-sm text-gray-500">Đang tải hoạt động...</p>
+        ) : activities.length === 0 ? (
+          <p className="text-sm text-gray-500">Không có hoạt động gần đây.</p>
+        ) : (
+          <ul className="space-y-3">
+            {activities.map((a, i) => (
+              <li key={i} className="flex items-center gap-3 text-sm">
+                <ActivityIcon type={a.action || "sync"} />
+                <span className="font-medium text-blue-900">{a.user || "System"}</span>
+                <span className="text-gray-500">{a.description || a.message}</span>
+                <span className="ml-auto text-xs text-gray-400">{formatSyncTime(a.timestamp)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
@@ -157,7 +163,7 @@ function ConnectionChip({ label, connected }) {
   );
 }
 
-function StatCard({ label, value, icon, color }) {
+function StatCard({ label, value, icon, color, loading }) {
   const colorMap = {
     blue: "text-blue-600 bg-blue-100",
     green: "text-green-600 bg-green-100",
@@ -169,7 +175,7 @@ function StatCard({ label, value, icon, color }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border p-5 flex flex-col items-start">
       <div className={`rounded-lg p-2 mb-2 ${colorMap[color]}`}> <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d={icon} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> </div>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-2xl font-bold">{loading ? "..." : value}</div>
       <div className="text-xs text-gray-500 mt-1">{label}</div>
     </div>
   );
@@ -177,6 +183,7 @@ function StatCard({ label, value, icon, color }) {
 
 function StatusPill({ status }) {
   const map = {
+    SUCCESS: ["bg-green-100 text-green-700", "Đã sync"],
     OK: ["bg-green-100 text-green-700", "Đã sync"],
     ERROR: ["bg-red-100 text-red-700", "Lỗi"],
     PENDING: ["bg-yellow-100 text-yellow-700", "Đang sync"],
@@ -192,7 +199,7 @@ function ActivityIcon({ type }) {
     export: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="#0ea5e9" strokeWidth="2" d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg>,
     connect: <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="2"/><path stroke="#22c55e" strokeWidth="2" d="M8 12l2 2 4-4"/></svg>,
   };
-  return icons[type] || null;
+  return icons[type] || icons.sync;
 }
 
 function OnboardingStepper() {
@@ -214,3 +221,4 @@ function OnboardingStepper() {
     </div>
   );
 }
+

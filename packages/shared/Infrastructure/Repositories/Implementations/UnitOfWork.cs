@@ -35,7 +35,9 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<inactive_alert>? _inactiveAlerts;
     private IGenericRepository<report_export>? _reportExports;
     private IGenericRepository<audit_log>? _auditLogs;
+    private IGenericRepository<team_invitation>? _teamInvitations;
     private IGenericRepository<external_account>? _externalAccounts;
+    private IGenericRepository<notification>? _notifications;
 
     public UnitOfWork(JiraGithubToolDbContext context)
     {
@@ -64,7 +66,9 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<inactive_alert> InactiveAlerts => _inactiveAlerts ??= new GenericRepository<inactive_alert>(_context);
     public IGenericRepository<report_export> ReportExports => _reportExports ??= new GenericRepository<report_export>(_context);
     public IGenericRepository<audit_log> AuditLogs => _auditLogs ??= new GenericRepository<audit_log>(_context);
+    public IGenericRepository<team_invitation> TeamInvitations => _teamInvitations ??= new GenericRepository<team_invitation>(_context);
     public IGenericRepository<external_account> ExternalAccounts => _externalAccounts ??= new GenericRepository<external_account>(_context);
+    public IGenericRepository<notification> Notifications => _notifications ??= new GenericRepository<notification>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

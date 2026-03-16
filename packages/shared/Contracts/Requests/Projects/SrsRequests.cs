@@ -12,10 +12,12 @@ public class UploadSrsRequest
 public class ReviewSrsStatusRequest
 {
     [Required]
-    [RegularExpression("^(FINAL|DRAFT)$", ErrorMessage = "Status must be FINAL or DRAFT")]
+    [RegularExpression("^(APPROVED|REJECTED|NEED_REVISION|UNDER_REVIEW)$", ErrorMessage = "Status must be APPROVED, REJECTED, UNDER_REVIEW or NEED_REVISION")]
     public string Status { get; set; } = null!;
     
     public string? Feedback { get; set; }
+    public decimal? Score { get; set; }
+    public string? Metadata { get; set; } // JSON checklist
 }
 
 public class ReviewSrsFeedbackRequest

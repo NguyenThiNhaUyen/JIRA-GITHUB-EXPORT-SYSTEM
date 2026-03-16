@@ -7,10 +7,14 @@ class MockDB {
 
   initializeData() {
     // Try to load from localStorage first
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    if (stored) {
+    // FORCE RESET: Skip localStorage to always load fresh data
+    const FORCE_RESET = true; // Set to false after testing
+
+    // Try to load from localStorage first
+    const stored = !FORCE_RESET ? localStorage.getItem(this.STORAGE_KEY) : null;
+    if (localStorage.getItem(this.STORAGE_KEY)) {
       try {
-        const data = JSON.parse(stored);
+        const data = JSON.parse(localStorage.getItem(this.STORAGE_KEY));
         this.data = data;
         return;
       } catch (e) {

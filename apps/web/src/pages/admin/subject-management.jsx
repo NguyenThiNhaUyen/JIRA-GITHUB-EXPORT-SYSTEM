@@ -46,15 +46,15 @@ export default function SubjectManagement() {
     const [editingSubject, setEditingSubject] = useState(null);
 
     const [formData, setFormData] = useState({
-        department: "",
-        courseNumber: "",
-        code: "",
-        name: "",
-        description: "",
-        credits: 3,
-        maxStudents: 40,
-        status: "ACTIVE",
-    });
+  department: "",
+  courseNumber: "",
+  code: "",
+  name: "",
+  description: "",
+  credits: 3,
+  maxStudents: 40,
+  status: "ACTIVE",
+});
 
     /* Auto generate code */
     useEffect(() => {
@@ -134,20 +134,30 @@ export default function SubjectManagement() {
 
         e.preventDefault();
 
+        const payload = {
+        subjectCode: formData.code,
+        subjectName: formData.name,
+        department: formData.department,
+        description: formData.description,
+        credits: Number(formData.credits),
+        maxStudents: Number(formData.maxStudents),
+        status: formData.status
+};
+
         try {
 
             if (editingSubject) {
 
                 await updateMutation.mutateAsync({
                     id: editingSubject.id,
-                    updates: formData
-                });
+                    updates: payload
+            });
 
                 success("Cập nhật môn học thành công!");
 
             } else {
 
-                await createMutation.mutateAsync(formData);
+                await createMutation.mutateAsync(payload);
 
                 success("Tạo môn học thành công!");
 
@@ -156,7 +166,7 @@ export default function SubjectManagement() {
             setShowModal(false);
 
         } catch (err) {
-
+            console.log(err.response?.data);
             error(err.message || "Thao tác thất bại");
 
         }

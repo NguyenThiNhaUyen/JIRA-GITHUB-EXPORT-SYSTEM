@@ -40,12 +40,7 @@ import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAl
 
 /* ─── Derived mock recent activity (keep for UI) ────────────────── */
 // hoặc useGetGroups nếu có
-const MOCK_ACTIVITY = [
-  { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
-  { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
-  { id: 3, icon: FileText, color: "text-indigo-600 bg-indigo-50", msg: "SRS Draft từ Nhóm C đang chờ review", time: "3 giờ trước" },
-  { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm D: GitHub đã được phê duyệt", time: "Hôm qua" },
-];
+const MOCK_ACTIVITY = [];
 
 export default function LecturerDashboard() {
 
@@ -74,23 +69,15 @@ const { data: alertsData } = useGetAlerts({ pageSize: 5 });
 
 /* ───── Demo fallback data (when API empty) ───── */
 
-const demoSubjects = [
-  { id: 1, code: "SWD392", name: "Software Architecture" }
-];
 
-const demoCourses = [
-  { id: 1, code: "SWD392-SE1831", subjectId: 1 }
-];
+
+
 
 /* ───── Merge API + demo ───── */
 
-const subjects = subjectsData?.items?.length
-  ? subjectsData.items
-  : demoSubjects;
+const subjects = subjectsData?.items || [];
 
-const coursesRaw = coursesData?.items?.length
-  ? coursesData.items
-  : demoCourses;
+const coursesRaw = coursesData?.items || [];
 
 /* ───── Auto select subject ───── */
 
@@ -138,51 +125,10 @@ const commitChartData = commitTrendsCloud?.length
   //const subjects = subjectsData.items || [];
   //const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
 
-  const demoGroups = [
-  {
-    id: 1,
-    name: "Team Alpha",
-    topic: "AI Interview System",
-    team: [
-      { id: 1, name: "An" },
-      { id: 2, name: "Binh" },
-      { id: 3, name: "Chi" }
-    ],
-    integration: {
-      githubStatus: "APPROVED",
-      jiraStatus: "APPROVED"
-    }
-  },
-  {
-    id: 2,
-    name: "Team Beta",
-    topic: "Job Matching Platform",
-    team: [
-      { id: 4, name: "Dung" },
-      { id: 5, name: "Huy" }
-    ],
-    integration: {
-      githubStatus: "PENDING",
-      jiraStatus: "APPROVED"
-    }
-  },
-  {
-    id: 3,
-    name: "Team Gamma",
-    topic: "Smart Resume Analyzer",
-    team: [
-      { id: 6, name: "Lan" },
-      { id: 7, name: "Minh" }
-    ],
-    integration: {
-      githubStatus: "APPROVED",
-      jiraStatus: "PENDING"
-    }
-  }
-];
+  
 
 
-   const groups = course?.groups?.length ? course.groups : demoGroups;
+   const groups = course?.groups || [];
 
 
   const handleManageGroups = () => {

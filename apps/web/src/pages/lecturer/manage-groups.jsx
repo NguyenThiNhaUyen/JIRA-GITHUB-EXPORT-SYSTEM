@@ -106,32 +106,32 @@ export default function ManageGroups() {
     removeTeamMemberMutation.isPending;
 
   const assignedStudentIds = useMemo(() => {
-    return new Set(
-      groups.flatMap((group) =>
-        (group.team || []).map((member) => Number(member.studentId))
+  return new Set(
+    groups.flatMap((group) =>
+      (group.team || []).map((member) =>
+        Number(member.studentId || member.studentUserId)
       )
-    );
-  }, [groups]);
+    )
+  );
+}, [groups]);
 
   const availableStudents = useMemo(() => {
-    return students.filter(
-      (student) => !assignedStudentIds.has(Number(student.id))
-    );
-  }, [students, assignedStudentIds]);
+  return students.filter(
+    (student) => !assignedStudentIds.has(Number(student.id))
+  );
+}, [students, assignedStudentIds]);
 
   const filteredAvailableStudents = useMemo(() => {
-    const keyword = studentSearch.trim().toLowerCase();
-    if (!keyword) return availableStudents;
+  const keyword = studentSearch.trim().toLowerCase();
+  if (!keyword) return availableStudents;
 
-    return availableStudents.filter((student) => {
-      const name = student.name?.toLowerCase() || "";
-      const studentId = student.studentId?.toLowerCase() || "";
-      const studentCode = student.studentCode?.toLowerCase() || "";
+  return availableStudents.filter((student) => {
+    const name = student.name?.toLowerCase() || "";
+    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
 
       return (
         name.includes(keyword) ||
-        studentId.includes(keyword) ||
-        studentCode.includes(keyword)
+        studentId.includes(keyword)
       );
     });
   }, [availableStudents, studentSearch]);
@@ -160,13 +160,13 @@ export default function ManageGroups() {
       });
 
       for (let i = 0; i < selectedStudents.length; i += 1) {
-        const studentId = selectedStudents[i];
+        const studentId = Number(selectedStudents[i]);
 
         await addTeamMemberMutation.mutateAsync({
-          projectId: project.id,
-          studentId,
-          role: i === 0 ? "LEADER" : "MEMBER",
-        });
+  projectId: project.id,
+  studentId: studentId,
+  role: i === 0 ? "LEADER" : "MEMBER",
+});
       }
 
       success(`Đã tạo nhóm "${project.name}" thành công`);
@@ -223,7 +223,7 @@ export default function ManageGroups() {
           const student = members[j];
           await addTeamMemberMutation.mutateAsync({
             projectId: project.id,
-            studentId: student.id,
+            studentId: Number(student.id),
             role: j === 0 ? "LEADER" : "MEMBER",
           });
         }
@@ -320,7 +320,7 @@ export default function ManageGroups() {
     try {
       await removeTeamMemberMutation.mutateAsync({
         projectId: groupId,
-        studentId,
+        studentId: studentId
       });
       success("Đã xóa sinh viên khỏi nhóm");
     } catch (err) {
@@ -366,7 +366,7 @@ export default function ManageGroups() {
       for (const studentId of forceAddSelectedIds) {
         await addTeamMemberMutation.mutateAsync({
           projectId: forceAddGroupId,
-          studentId,
+          studentId: Number(studentId),
           role: "MEMBER",
         });
       }
@@ -381,18 +381,16 @@ export default function ManageGroups() {
   };
 
   const filteredForceAddStudents = useMemo(() => {
-    const keyword = forceAddSearch.trim().toLowerCase();
-    if (!keyword) return availableStudents;
+  const keyword = forceAddSearch.trim().toLowerCase();
+  if (!keyword) return availableStudents;
 
-    return availableStudents.filter((student) => {
-      const name = student.name?.toLowerCase() || "";
-      const studentId = student.studentId?.toLowerCase() || "";
-      const studentCode = student.studentCode?.toLowerCase() || "";
+  return availableStudents.filter((student) => {
+    const name = student.name?.toLowerCase() || "";
+    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
 
       return (
         name.includes(keyword) ||
-        studentId.includes(keyword) ||
-        studentCode.includes(keyword)
+        studentId.includes(keyword)
       );
     });
   }, [availableStudents, forceAddSearch]);
@@ -1115,7 +1113,7 @@ export default function ManageGroups() {
                             ) : (
                               groupStudents.map((member) => (
                                 <div
-                                  key={`${group.id}-${member.studentId}`}
+                                  key={`${group.id}-${member.studentId ?? member.studentUserId ?? Math.random()}`}
                                   className="inline-flex items-center gap-1.5 rounded-full border border-gray-100 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm"
                                 >
                                   <div className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-100 text-[9px] font-bold text-teal-700">
@@ -1134,7 +1132,7 @@ export default function ManageGroups() {
                                     onClick={() =>
                                       handleRemoveStudentFromGroup(
                                         group.id,
-                                        member.studentId
+                                        member.studentId ?? member.studentUserId
                                       )
                                     }
                                     className="ml-0.5 font-bold text-gray-300 transition-colors hover:text-red-500"

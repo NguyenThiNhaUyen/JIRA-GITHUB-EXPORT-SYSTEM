@@ -216,7 +216,11 @@ const jiraConnected = course.projects?.filter(p => p.jiraProjectCode)?.length ||
 const inactiveTeams = groupCount - activeTeams;
 const alerts = course.alertsCount || 0;
 
-const semester = course.semesterName || course.semester?.name || "N/A";
+const semester =
+  course.semesterName ||
+  course.semester ||
+  course.semester?.name ||
+  "N/A";
 
 const progress = Math.min(100, Math.round((activeTeams / (groupCount || 1)) * 100));
 const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString() : "—";
@@ -418,32 +422,33 @@ Alerts
 
 /* ---------------- MINI CHART ---------------- */
 
-function MiniCommitChart({data}){
+function MiniCommitChart({ data }) {
 
-return(
+if (!data || data.length === 0) {
+  return <div className="h-10 w-full" />
+}
 
-<div className="h-10 w-full">
+return (
+  <div className="w-full h-[40px]">
 
-<ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" aspect={4}>
 
-<LineChart data={data}>
+      <LineChart data={data}>
 
-<Line
-type="monotone"
-dataKey="commits"
-stroke="#14b8a6"
-strokeWidth={2}
-dot={false}
-/>
+        <Line
+          type="monotone"
+          dataKey="commits"
+          stroke="#14b8a6"
+          strokeWidth={2}
+          dot={false}
+        />
 
-</LineChart>
+      </LineChart>
 
-</ResponsiveContainer>
+    </ResponsiveContainer>
 
-</div>
-
+  </div>
 )
-
 }
 
 

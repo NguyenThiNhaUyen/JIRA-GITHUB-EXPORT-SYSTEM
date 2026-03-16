@@ -30,149 +30,6 @@ import {
   useResolveAlert,
 } from "../../features/system/hooks/useAlerts.js";
 
-/* ----------------------------- MOCK DATA ----------------------------- */
-
-const MOCK_ALERTS = [
-  {
-    id: "mock-alert-1",
-    groupName: "Team Alpha",
-    courseCode: "SWD392-SE1801",
-    severity: "HIGH",
-    status: "OPEN",
-    type: "NO_COMMIT",
-    targetType: "student",
-    targetName: "Nguyễn Minh Anh",
-    message:
-      "Sinh viên chưa có commit trong 10 ngày gần đây. Hệ thống ghi nhận mức tham gia rất thấp so với tiến độ chung của nhóm.",
-    createdAt: "2026-03-11T08:10:00+07:00",
-    lastActivityAt: "2026-03-01T19:20:00+07:00",
-    metrics: {
-      commits: 0,
-      jiraDone: 1,
-      overdueTasks: 3,
-      score: 18,
-      balance: 41,
-    },
-    suggestion:
-      "Ưu tiên liên hệ trực tiếp sinh viên để xác minh tình trạng tham gia và phân chia lại công việc nếu cần.",
-  },
-  {
-    id: "mock-alert-2",
-    groupName: "Team Alpha",
-    courseCode: "SWD392-SE1801",
-    severity: "MEDIUM",
-    status: "OPEN",
-    type: "LOW_BALANCE",
-    targetType: "group",
-    targetName: "Team Alpha",
-    message:
-      "Nhóm có dấu hiệu mất cân bằng đóng góp. Một thành viên đang gánh phần lớn commit và task hoàn thành.",
-    createdAt: "2026-03-10T21:30:00+07:00",
-    lastActivityAt: "2026-03-10T20:40:00+07:00",
-    metrics: {
-      commits: 18,
-      jiraDone: 13,
-      overdueTasks: 1,
-      score: 76,
-      balance: 41,
-    },
-    suggestion:
-      "Kiểm tra lại cách phân chia task của nhóm và yêu cầu các thành viên còn lại cập nhật đóng góp cụ thể.",
-  },
-  {
-    id: "mock-alert-3",
-    groupName: "Team Gamma",
-    courseCode: "SWD392-SE1801",
-    severity: "HIGH",
-    status: "OPEN",
-    type: "OVERDUE_TASKS",
-    targetType: "student",
-    targetName: "Mai Ngọc Hân",
-    message:
-      "Sinh viên đang có nhiều task Jira quá hạn và chưa phản hồi cập nhật tiến độ trong giai đoạn gần đây.",
-    createdAt: "2026-03-10T18:00:00+07:00",
-    lastActivityAt: "2026-03-04T14:00:00+07:00",
-    metrics: {
-      commits: 2,
-      jiraDone: 2,
-      overdueTasks: 4,
-      score: 26,
-      balance: 50,
-    },
-    suggestion:
-      "Nên nhắc nhở ngay và yêu cầu cập nhật trạng thái task Jira trước buổi review tiếp theo.",
-  },
-  {
-    id: "mock-alert-4",
-    groupName: "Team Beta",
-    courseCode: "SWD392-SE1801",
-    severity: "LOW",
-    status: "OPEN",
-    type: "LOW_ACTIVITY",
-    targetType: "group",
-    targetName: "Team Beta",
-    message:
-      "Tổng hoạt động GitHub của nhóm giảm rõ rệt trong tuần này so với nhịp bình thường.",
-    createdAt: "2026-03-09T16:15:00+07:00",
-    lastActivityAt: "2026-03-09T13:00:00+07:00",
-    metrics: {
-      commits: 8,
-      jiraDone: 6,
-      overdueTasks: 0,
-      score: 63,
-      balance: 68,
-    },
-    suggestion:
-      "Theo dõi thêm trong 2-3 ngày tới trước khi escalates thành cảnh báo nghiêm trọng hơn.",
-  },
-  {
-    id: "mock-alert-5",
-    groupName: "Vision Crew",
-    courseCode: "EXE101-SE1802",
-    severity: "MEDIUM",
-    status: "RESOLVED",
-    type: "INACTIVE_MEMBER",
-    targetType: "student",
-    targetName: "Lê Anh Tú",
-    message:
-      "Sinh viên từng ít hoạt động trong 7 ngày, đã được giảng viên nhắc nhở và nhóm xác nhận đã quay lại tiến độ.",
-    createdAt: "2026-03-08T10:00:00+07:00",
-    lastActivityAt: "2026-03-10T09:30:00+07:00",
-    metrics: {
-      commits: 5,
-      jiraDone: 4,
-      overdueTasks: 0,
-      score: 52,
-      balance: 59,
-    },
-    suggestion:
-      "Tiếp tục quan sát trong sprint hiện tại để đảm bảo mức tham gia đã ổn định.",
-  },
-  {
-    id: "mock-alert-6",
-    groupName: "Startup Sparks",
-    courseCode: "EXE101-SE1802",
-    severity: "MEDIUM",
-    status: "OPEN",
-    type: "JIRA_GITHUB_MISMATCH",
-    targetType: "group",
-    targetName: "Startup Sparks",
-    message:
-      "Số task Jira hoàn thành cao nhưng output GitHub thấp hơn đáng kể. Cần kiểm tra chất lượng cập nhật task.",
-    createdAt: "2026-03-11T07:45:00+07:00",
-    lastActivityAt: "2026-03-11T07:20:00+07:00",
-    metrics: {
-      commits: 4,
-      jiraDone: 12,
-      overdueTasks: 1,
-      score: 47,
-      balance: 55,
-    },
-    suggestion:
-      "Đối chiếu issue Jira với commit hoặc pull request tương ứng để xác nhận tiến độ thật.",
-  },
-];
-
 /* ----------------------------- HELPERS ----------------------------- */
 
 const SEVERITY_META = {
@@ -228,16 +85,16 @@ export default function Alerts() {
   const [filter, setFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [remindedIds, setRemindedIds] = useState(new Set());
-  const [mockAlerts, setMockAlerts] = useState(MOCK_ALERTS);
+  
   const [selectedAlertId, setSelectedAlertId] = useState(null);
 
   const { data: alertsData, isLoading, refetch } = useGetAlerts({ pageSize: 100 });
   const { mutate: resolveMutate } = useResolveAlert();
 
   const realAlerts = alertsData?.items || [];
-  const usingMockData = realAlerts.length === 0;
+  const usingMockData = false;
 
-  const alertsList = usingMockData ? mockAlerts : realAlerts;
+  const alertsList = realAlerts;
 
   useEffect(() => {
     if (!selectedAlertId && alertsList.length > 0) {
