@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx";
-import { Badge } from "../ui/badge.jsx";
-import { Button } from "../ui/button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card.jsx";
+import { Badge } from "../ui/Badge.jsx";
+import { Button } from "../ui/Button.jsx";
 import { ArrowLeft, Upload, Edit, Trash2, Crown, Users, FileText } from "lucide-react";
 import LeaderControls from "./LeaderControls.jsx";
 import TeamMembersTable from "./TeamMembersTable.jsx";

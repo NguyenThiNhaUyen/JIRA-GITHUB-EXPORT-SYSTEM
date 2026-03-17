@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
+import { Button } from "../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
+import { useToast } from "../../components/ui/Toast.jsx";
 import { LINK_STATUS as LINK_STATUS_CFG, SRS_STATUS } from "../../shared/permissions.js";
 import {
     BookOpen, CheckCircle, AlertTriangle,
@@ -22,10 +22,10 @@ import {
 } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { Skeleton } from "../../components/ui/skeleton.jsx";
-import { Modal } from "../../components/ui/interactive.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Modal } from "../../components/ui/Interactive.jsx";
 import { InputField } from "../../components/shared/FormFields.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
+import { Badge } from "../../components/ui/Badge.jsx";
 import { StatusBadge } from "../../components/shared/Badge.jsx";
 
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));

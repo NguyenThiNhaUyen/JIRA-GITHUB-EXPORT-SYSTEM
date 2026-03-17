@@ -1,8 +1,8 @@
 // Forgot Password page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "../components/ui/button.jsx";
-import { Alert } from "../components/ui/interactive.jsx";
+import { Button } from "../components/ui/Button.jsx";
+import { Alert } from "../components/ui/Interactive.jsx";
 import { Mail, ArrowLeft, CheckCircle, Shield, GraduationCap } from "lucide-react";
 
 export default function ForgotPassword() {

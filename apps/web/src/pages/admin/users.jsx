@@ -23,10 +23,10 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
-import { Badge } from "../../components/ui/badge.jsx";
+import { Button } from "../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
+import { useToast } from "../../components/ui/Toast.jsx";
+import { Badge } from "../../components/ui/Badge.jsx";
 
 // Shared Components
 import { PageHeader } from "../../components/shared/PageHeader.jsx";

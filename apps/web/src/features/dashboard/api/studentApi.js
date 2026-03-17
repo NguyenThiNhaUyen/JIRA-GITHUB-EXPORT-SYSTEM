@@ -41,3 +41,51 @@ export async function getStudentProjects(params = {}) {
     return unwrap(res);
 }
 
+/**
+ * GET /api/student/me/warnings
+ */
+export async function getStudentWarnings() {
+    const res = await client.get("/student/me/warnings");
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/tasks
+ */
+export async function getStudentTasks(params = {}) {
+    const res = await client.get("/student/me/tasks", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/commits
+ */
+export async function getStudentCommits(params = {}) {
+    const res = await client.get("/student/me/commits", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/grades
+ */
+export async function getStudentGrades() {
+    const res = await client.get("/student/me/grades");
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/courses
+ */
+export async function getStudentCourses(params = {}) {
+    const res = await client.get("/student/me/courses", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/invitations
+ */
+export async function getStudentInvitations(params = {}) {
+    const res = await client.get("/student/me/invitations", { params });
+    return unwrap(res);
+}
+

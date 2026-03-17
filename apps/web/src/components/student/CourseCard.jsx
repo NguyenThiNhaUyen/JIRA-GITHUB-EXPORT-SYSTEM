@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardContent } from "../ui/card.jsx";
-import { Badge } from "../ui/badge.jsx";
+import { Card, CardContent } from "../ui/Card.jsx";
+import { Badge } from "../ui/Badge.jsx";
 import { ChevronRight, Users, GitBranch, CheckCircle2, Clock, XCircle, Crown } from "lucide-react";
 
 export default function CourseCard({ course, group, onSelect }) {

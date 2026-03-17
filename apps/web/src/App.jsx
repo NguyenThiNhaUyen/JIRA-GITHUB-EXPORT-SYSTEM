@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import ProtectedRoute from "./components/protected-route.jsx";
-import RoleGuard from "./components/role-guard.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import RoleGuard from "./components/RoleGuard.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
 // Public pages (Keep sync for initial load)
@@ -14,7 +14,7 @@ import NotFound from "./pages/NotFound.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import LecturerLayout from "./layouts/LecturerLayout.jsx";
 import StudentLayout from "./layouts/StudentLayout.jsx";
-import { MainLayout } from "./components/layout/main-layout.jsx";
+import { MainLayout } from "./components/layout/MainLayout.jsx";
 
 // Loading component
 const PageLoader = () => (
@@ -27,36 +27,36 @@ const PageLoader = () => (
 );
 
 // Admin pages
-const AdminDashboard = lazy(() => import("./pages/admin/admin-dashboard.jsx"));
-const AdminReports = lazy(() => import("./pages/admin/admin-reports.jsx"));
-const CourseManagement = lazy(() => import("./pages/admin/course-management.jsx"));
-const SemesterManagement = lazy(() => import("./pages/admin/semester-management.jsx"));
-const SubjectManagement = lazy(() => import("./pages/admin/subject-management.jsx"));
-const LecturerAssignment = lazy(() => import("./pages/admin/lecturer-assignment.jsx"));
-const UserManagement = lazy(() => import("./pages/admin/users.jsx"));
-const MyReports = lazy(() => import("./pages/admin/my-reports.jsx"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports.jsx"));
+const CourseManagement = lazy(() => import("./pages/admin/CourseManagement.jsx"));
+const SemesterManagement = lazy(() => import("./pages/admin/SemesterManagement.jsx"));
+const SubjectManagement = lazy(() => import("./pages/admin/SubjectManagement.jsx"));
+const LecturerAssignment = lazy(() => import("./pages/admin/LecturerAssignment.jsx"));
+const UserManagement = lazy(() => import("./pages/admin/Users.jsx"));
+const MyReports = lazy(() => import("./pages/admin/MyReports.jsx"));
 const LecturerWorkload = lazy(() => import("./pages/admin/LecturerWorkload.jsx"));
 
 // Lecturer pages
-const LecturerDashboard = lazy(() => import("./pages/lecturer/lecturer-dashboard.jsx"));
-const ManageGroups = lazy(() => import("./pages/lecturer/manage-groups.jsx"));
-const GroupDetail = lazy(() => import("./pages/lecturer/group-detail.jsx"));
-const MyCourses = lazy(() => import("./pages/lecturer/my-courses.jsx"));
-const Contributions = lazy(() => import("./pages/lecturer/contributions.jsx"));
-const Alerts = lazy(() => import("./pages/lecturer/alerts.jsx"));
-const SrsReports = lazy(() => import("./pages/lecturer/srs-reports.jsx"));
-const Reports = lazy(() => import("./pages/lecturer/reports.jsx"));
-const CourseAnalytics = lazy(() => import("./pages/lecturer/course-analytics.jsx"));
-const ProjectsOverview = lazy(() => import("./pages/lecturer/projects-overview.jsx"));
+const LecturerDashboard = lazy(() => import("./pages/lecturer/LecturerDashboard.jsx"));
+const ManageGroups = lazy(() => import("./pages/lecturer/ManageGroups.jsx"));
+const GroupDetail = lazy(() => import("./pages/lecturer/GroupDetail.jsx"));
+const MyCourses = lazy(() => import("./pages/lecturer/MyCourses.jsx"));
+const Contributions = lazy(() => import("./pages/lecturer/Contributions.jsx"));
+const Alerts = lazy(() => import("./pages/lecturer/Alerts.jsx"));
+const SrsReports = lazy(() => import("./pages/lecturer/SrsReports.jsx"));
+const Reports = lazy(() => import("./pages/lecturer/Reports.jsx"));
+const CourseAnalytics = lazy(() => import("./pages/lecturer/CourseAnalytics.jsx"));
+const ProjectsOverview = lazy(() => import("./pages/lecturer/ProjectsOverview.jsx"));
 
 // Student pages
-const StudentDashboard = lazy(() => import("./pages/student/student-dashboard.jsx"));
-const StudentProject = lazy(() => import("./pages/student/student-project.jsx"));
-const StudentCoursesPage = lazy(() => import("./pages/student/student-courses.jsx"));
-const StudentMyProjectPage = lazy(() => import("./pages/student/student-my-project.jsx"));
-const StudentAlertsPage = lazy(() => import("./pages/student/student-alerts.jsx"));
-const StudentSrsPage = lazy(() => import("./pages/student/student-srs.jsx"));
-const StudentContributionPage = lazy(() => import("./pages/student/student-contribution.jsx"));
+const StudentDashboard = lazy(() => import("./pages/student/StudentDashboard.jsx"));
+const StudentProject = lazy(() => import("./pages/student/StudentProject.jsx"));
+const StudentCoursesPage = lazy(() => import("./pages/student/StudentCourses.jsx"));
+const StudentMyProjectPage = lazy(() => import("./pages/student/StudentMyProject.jsx"));
+const StudentAlertsPage = lazy(() => import("./pages/student/StudentAlerts.jsx"));
+const StudentSrsPage = lazy(() => import("./pages/student/StudentSrs.jsx"));
+const StudentContributionPage = lazy(() => import("./pages/student/StudentContribution.jsx"));
 const CourseWorkspace = lazy(() => import("./pages/student/CourseWorkspace.jsx"));
 
 export default function App() {

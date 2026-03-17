@@ -1,6 +1,6 @@
 import React from "react";
 import { Search, Filter } from "lucide-react";
-import { Card, CardContent } from "../../../../components/ui/card.jsx";
+import { Card, CardContent } from "../../../../components/ui/Card.jsx";
 
 export function SrsFilters({
   search,

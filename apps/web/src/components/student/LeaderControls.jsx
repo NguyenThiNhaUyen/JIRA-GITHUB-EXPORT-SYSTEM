@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "../ui/button.jsx";
-import { Badge } from "../ui/badge.jsx";
+import { Button } from "../ui/Button.jsx";
+import { Badge } from "../ui/Badge.jsx";
 import { Settings, AlertCircle } from "lucide-react";
 
 export default function LeaderControls({ group, topics, onUpdate, onSubmit }) {

@@ -4,9 +4,9 @@ import { useApp } from "../../context/AppContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "../ui/input.jsx";
-import { Select } from "../ui/select.jsx";
-import { Button } from "../ui/button.jsx";
+import { Input } from "../ui/Input.jsx";
+import { Select } from "../ui/Select.jsx";
+import { Button } from "../ui/Button.jsx";
 import { cn } from "../../lib/utils.js";
 
 function Control({ label, children }) {

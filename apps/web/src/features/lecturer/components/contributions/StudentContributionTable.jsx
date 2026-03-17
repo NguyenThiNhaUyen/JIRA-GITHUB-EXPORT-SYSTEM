@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
 
 export function StudentContributionTable({ students, getStatusBadgeClass, onWarning, onEmail, sentMap, shouldWarnStudent }) {
   return (

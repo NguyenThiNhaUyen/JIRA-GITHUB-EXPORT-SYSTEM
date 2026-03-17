@@ -22,7 +22,7 @@ import {
   useRejectInvitation
 } from "../../features/projects/hooks/useInvitations.js";
 
-import { useToast } from "../../components/ui/toast.jsx";
+import { useToast } from "../../components/ui/Toast.jsx";
 
 export function TopHeader() {
   const { user, logout } = useAuth();

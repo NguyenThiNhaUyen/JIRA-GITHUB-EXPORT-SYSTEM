@@ -11,12 +11,12 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
-import { Button } from "../../components/ui/button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
+import { Button } from "../../components/ui/Button.jsx";
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
 import { StatsCard } from "../../components/shared/StatsCard.jsx";
 import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
-import { Skeleton } from "../../components/ui/skeleton.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
 
 // Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";

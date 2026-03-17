@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "../../components/ui/button.jsx";
+import { Button } from "../../components/ui/Button.jsx";
 
 export default function SRSUploadModal({ isOpen, onClose, onSave, editingReport }) {
     const [form, setForm] = useState({ file: null });

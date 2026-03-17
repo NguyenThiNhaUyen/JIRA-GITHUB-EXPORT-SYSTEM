@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "../ui/badge.jsx";
+import { Badge } from "../ui/Badge.jsx";
 
 export default function TeamMembersTable({ members }) {
     if (!members || members.length === 0) {
