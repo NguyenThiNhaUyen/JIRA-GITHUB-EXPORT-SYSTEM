@@ -9,7 +9,14 @@
  */
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-system.onrender.com";
+// Tự động nhận diện môi trường dựa trên URL hiện tại
+// Tự động nhận diện môi trường để hỗ trợ cả Local và Render
+const currentOrigin = window.location.origin;
+const isLocal = currentOrigin.includes("localhost") || currentOrigin.includes("127.0.0.1");
+
+const BASE_URL = isLocal 
+    ? (import.meta.env.VITE_API_URL ?? "http://localhost:5032")
+    : "https://jira-github-export-system.onrender.com";
 
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
@@ -42,7 +49,7 @@ client.interceptors.response.use(
 
         if (status === 401 || status === 403) {
             console.warn(`[API] ${status} — Redirection to Login due to Auth failure`);
-            
+
             // Clear all auth related storage
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
