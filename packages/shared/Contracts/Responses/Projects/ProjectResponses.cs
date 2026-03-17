@@ -154,3 +154,67 @@ public class MemberContribution
     public int InactiveDays { get; set; }
     public string? Alert { get; set; }
 }
+
+public class KanbanBoardResponse
+{
+    public KanbanColumns Columns { get; set; } = new();
+}
+
+public class KanbanColumns
+{
+    public List<KanbanTask> Todo { get; set; } = new();
+    public List<KanbanTask> In_Progress { get; set; } = new();
+    public List<KanbanTask> Done { get; set; } = new();
+}
+
+public class KanbanTask
+{
+    public string Id { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Status { get; set; } = null!;
+    public string? Assignee { get; set; }
+    public string? Priority { get; set; }
+    public string? Type { get; set; }
+    public string? StoryPoint { get; set; }
+}
+
+public class CfdBoardResponse
+{
+    public List<CfdBucket> Buckets { get; set; } = new();
+}
+
+public class CfdBucket
+{
+    public string Date { get; set; } = null!;
+    public int Todo { get; set; }
+    public int InProgress { get; set; }
+    public int Done { get; set; }
+}
+
+public class RoadmapResponse
+{
+    public List<RoadmapItem> Items { get; set; } = new();
+}
+
+public class RoadmapItem
+{
+    public string Id { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Status { get; set; } = null!;
+    public DateTime? DueDate { get; set; }
+    public string? Assignee { get; set; }
+}
+
+public class AgingWipResponse
+{
+    public List<AgingWipItem> Items { get; set; } = new();
+}
+
+public class AgingWipItem
+{
+    public string IssueId { get; set; } = null!;
+    public string Key { get; set; } = null!;
+    public string Summary { get; set; } = null!;
+    public int DaysInProgress { get; set; }
+    public string? Assignee { get; set; }
+}

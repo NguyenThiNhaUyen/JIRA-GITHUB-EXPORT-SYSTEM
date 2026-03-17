@@ -540,7 +540,7 @@ export default function ManageGroups() {
                     <option value={5}>5 Sinh viên / Nhóm</option>
                     <option value={6}>6 Sinh viên / Nhóm</option>
                  </SelectField>
-                 <Button className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-violet-100 border-0 transition-all" onClick={() => success("Đang phân tích dữ liệu và chia nhóm...")} disabled={isBusy || availableStudents.length===0}><Wand2 size={16} className="mr-2"/> Bắt đầu chia nhóm</Button>
+                 <Button className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-violet-100 border-0 transition-all" onClick={handleAutoCreateGroups} disabled={isBusy || availableStudents.length===0}><Wand2 size={16} className="mr-2"/> Bắt đầu chia nhóm</Button>
               </CardContent>
            </Card>
         </div>

@@ -37,12 +37,11 @@ import CourseAnalytics from "./pages/lecturer/course-analytics.jsx";
 // Student pages
 import StudentDashboard from "./pages/student/student-dashboard.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
-import StudentCoursesPage, {
-  StudentMyProjectPage,
-  StudentContributionPage,
-  StudentAlertsPage,
-  StudentSrsPage,
-} from "./pages/student/student-placeholders.jsx";
+import StudentCoursesPage from "./pages/student/student-courses.jsx";
+import StudentMyProjectPage from "./pages/student/student-my-project.jsx";
+import StudentAlertsPage from "./pages/student/student-alerts.jsx";
+import StudentSrsPage from "./pages/student/student-srs.jsx";
+import StudentContributionPage from "./pages/student/student-contribution.jsx";
 
 import { useAuth } from "./context/AuthContext.jsx";
 

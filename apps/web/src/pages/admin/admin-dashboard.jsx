@@ -9,7 +9,11 @@ import {
   Users,
   TrendingUp,
   UserCog,
-  WifiOff
+  WifiOff,
+  GitBranch,
+  CheckCircle,
+  AlertTriangle,
+  Info
 } from "lucide-react";
 
 // Components UI
@@ -17,6 +21,7 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
 import { AdminStats } from "../../features/dashboard/components/AdminStats.jsx";
+import { Skeleton } from "../../components/ui/skeleton.jsx";
 
 // Hooks
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -44,12 +49,12 @@ export default function AdminDashboard() {
   const { data: activityLogData = [] } = useActivityLog(5);
 
   const stats = {
-    semesters: semesters.length,
-    subjects: adminStatsData?.totalSubjects || subjects.length,
-    courses: adminStatsData?.totalCourses || coursesData?.totalCount || 0,
-    lecturers: lecturersRaw.length,
-    students: adminStatsData?.totalUsers || studentsRaw.length,
-    projects: adminStatsData?.totalProjects || 0
+    semesters: adminStatsData?.semesters || semesters.length,
+    subjects: adminStatsData?.subjects || subjects.length,
+    courses: adminStatsData?.courses || coursesData?.totalCount || 0,
+    lecturers: adminStatsData?.lecturers || lecturersRaw.length,
+    students: adminStatsData?.students || studentsRaw.length,
+    projects: adminStatsData?.projects || 0
   };
 
   const integrationStats = {
@@ -60,12 +65,26 @@ export default function AdminDashboard() {
     reportsExported: integrationStatsData?.reportsExported || 0,
   };
 
-  const activityLog = activityLogData.length > 0 ? activityLogData.map(a => ({
-    icon: Activity,
-    color: "text-teal-600 bg-teal-50",
-    msg: a.message || a.msg,
-    time: a.time || "Vừa xong"
-  })) : [
+  const getLogIcon = (type) => {
+    switch (String(type).toLowerCase()) {
+      case "github": return { icon: GitBranch, color: "text-teal-600 bg-teal-50" };
+      case "jira": return { icon: BookOpen, color: "text-blue-600 bg-blue-50" };
+      case "success": return { icon: CheckCircle, color: "text-green-600 bg-green-50" };
+      case "warning": return { icon: AlertTriangle, color: "text-amber-600 bg-amber-50" };
+      case "error": return { icon: AlertTriangle, color: "text-red-600 bg-red-50" };
+      default: return { icon: Info, color: "text-slate-600 bg-slate-50" };
+    }
+  };
+
+  const activityLog = activityLogData.length > 0 ? activityLogData.map(a => {
+    const { icon, color } = getLogIcon(a.type);
+    return {
+      icon,
+      color,
+      msg: a.message || a.msg,
+      time: a.time || "Vừa xong"
+    };
+  }) : [
     { icon: Users, color: "text-blue-600 bg-blue-50", msg: "Sinh viên mới đăng ký lớp học", time: "5 phút trước" },
     { icon: UserCog, color: "text-teal-600 bg-teal-50", msg: "Giảng viên mới được phân công môn học", time: "30 phút trước" },
     { icon: BookOpen, color: "text-indigo-600 bg-indigo-50", msg: "Lớp học phần mới được tạo", time: "2 giờ trước" },
@@ -99,8 +118,18 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {activityLog.map((act, i) => (
-              <div key={i} className="flex items-start gap-4 px-6 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+            {activityLogData.length === 0 && (loadingCourses || loadingSems) ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="flex items-start gap-4 px-6 py-4 border-b border-gray-50 last:border-0">
+                  <Skeleton className="w-9 h-9 rounded-2xl shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4 rounded-lg" />
+                    <Skeleton className="h-3 w-1/4 rounded-lg" />
+                  </div>
+                </div>
+              ))
+            ) : activityLog.map((act, i) => (
+              <div key={i} className="flex items-start gap-4 px-6 py-4 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0 animate-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${i*100}ms` }}>
                 <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${act.color}`}>
                   <act.icon size={16} />
                 </div>
@@ -189,11 +218,14 @@ export default function AdminDashboard() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loadingCourses ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto" />
-                  </td>
-                </tr>
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-8 py-5"><div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-32" /></div></td>
+                    <td className="px-8 py-5"><div className="flex flex-col items-center gap-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-3 w-20" /></div></td>
+                    <td className="px-8 py-5 text-center"><Skeleton className="h-4 w-10 mx-auto" /></td>
+                    <td className="px-8 py-5 text-center"><Skeleton className="h-6 w-20 rounded-lg mx-auto" /></td>
+                  </tr>
+                ))
               ) : recentCourses.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-12 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
@@ -201,8 +233,8 @@ export default function AdminDashboard() {
                   </td>
                 </tr>
               ) : (
-                recentCourses.map((course) => (
-                  <tr key={course.id} className="hover:bg-gray-50/50 transition-colors">
+                recentCourses.map((course, idx) => (
+                  <tr key={course.id} className="hover:bg-gray-50/50 transition-colors animate-in fade-in duration-500" style={{ animationDelay: `${idx*50}ms` }}>
                     <td className="px-8 py-5">
                       <div>
                         <p className="font-black text-gray-800 text-sm tracking-tight">{course.code}</p>

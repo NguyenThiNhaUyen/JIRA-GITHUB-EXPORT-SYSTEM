@@ -262,4 +262,44 @@ public class StudentService : IStudentService
             Commits = commits.Count(c => c.committed_at.HasValue && c.committed_at.Value.Date == d)
         }).ToList();
     }
+
+    public async Task<List<object>> GetStudentDeadlinesAsync(long userId)
+    {
+        var projectIds = await _unitOfWork.TeamMembers.Query()
+            .Where(t => t.student_user_id == userId && t.participation_status == "ACTIVE")
+            .Select(t => t.project_id)
+            .ToListAsync();
+
+        var deadlines = new List<object>();
+
+        foreach (var projectId in projectIds)
+        {
+            var project = await _unitOfWork.Projects.Query()
+                .Include(p => p.project_integration)
+                .FirstOrDefaultAsync(p => p.id == projectId);
+
+            if (project?.project_integration?.jira_project_id != null)
+            {
+                var issues = await _unitOfWork.JiraIssues.Query()
+                    .Where(i => i.jira_project_id == project.project_integration.jira_project_id && i.status != "Done")
+                    .OrderBy(i => i.updated_at)
+                    .Take(5)
+                    .ToListAsync();
+
+                foreach (var issue in issues)
+                {
+                    deadlines.Add(new
+                    {
+                        id = issue.jira_issue_key,
+                        title = issue.title,
+                        deadline = issue.updated_at.AddDays(7).ToString("yyyy-MM-dd"), // Mocking for now as per ProjectDashboardService
+                        status = issue.status,
+                        project = project.name
+                    });
+                }
+            }
+        }
+
+        return deadlines.OrderBy(d => ((dynamic)d).deadline).ToList();
+    }
 }

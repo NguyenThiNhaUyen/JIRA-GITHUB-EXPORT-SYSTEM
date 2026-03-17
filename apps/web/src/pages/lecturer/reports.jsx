@@ -30,7 +30,14 @@ import { SelectField, InputField } from "../../components/shared/FormFields.jsx"
 import { StatusBadge } from "../../components/shared/Badge.jsx";
 import { Skeleton } from "../../components/ui/skeleton.jsx";
 
-// Hooks
+import { 
+    useGetMyReports, 
+    useGenerateCommitStats, 
+    useGenerateTeamRoster, 
+    useGenerateSrs, 
+    useGenerateActivitySummary,
+    useGetReportDownloadLink
+} from "../../features/admin/hooks/useReports.js";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 import { useInactiveTeams } from "../../features/dashboard/hooks/useDashboard.js";
@@ -43,11 +50,7 @@ const EXPORT_TYPES = [
     { id: "by-sync", icon: GitBranch, color: "bg-violet-500", title: "Đối chiếu Jira/GH", desc: "Phân tích khớp dữ liệu giữa Task Jira và Code Commits.", formats: ["PDF", "Excel"] }
 ];
 
-const MOCK_EXPORTS = [
-    { id: 1, type: "Báo cáo theo Lớp", target: "SWD392 - SE1841", format: "PDF", date: "2026-03-01T08:22:00", size: "1.8 MB", createdBy: "Lê Thị Mai" },
-    { id: 2, type: "Báo cáo theo Nhóm", target: "Nhóm SE01-G1", format: "Excel", date: "2025-03-03T10:45:00", size: "890 KB" },
-    { id: 3, type: "Báo cáo theo Sinh viên", target: "SE001 - K22", format: "CSV", date: "2025-03-05T14:30:00", size: "240 KB" },
-];
+
 
 export default function Reports() {
     const { success, info } = useToast();
@@ -62,6 +65,13 @@ export default function Reports() {
         pageSize: 100 
     });
     const { data: inactiveTeams = [] } = useInactiveTeams();
+    const { data: myReports = [], isLoading: loadingMyReports } = useGetMyReports();
+
+    // Mutations
+    const commitStatsMutation = useGenerateCommitStats();
+    const teamRosterMutation = useGenerateTeamRoster();
+    const srsMutation = useGenerateSrs();
+    const activitySummaryMutation = useGenerateActivitySummary();
 
     const courses = coursesData?.items || [];
     const projects = projectsData?.items || [];
@@ -71,13 +81,13 @@ export default function Reports() {
     const isLoading = loadingCourses || loadingProjects;
 
     const statsRecords = useMemo(() => ({
-        totalExports: 42, 
-        thisWeek: 5, 
+        totalExports: myReports.length, 
+        thisWeek: myReports.filter(r => new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length, 
         risky: inactiveTeams.filter(t => t.severity === 'high').length, 
         alertSV: 8, 
         overdue: 12, 
         avgSprint: 76
-    }), [inactiveTeams]);
+    }), [inactiveTeams, myReports]);
 
     const previewData = useMemo(() => {
         let teams = projects.map(p => ({
@@ -100,12 +110,30 @@ export default function Reports() {
         };
     }, [projects, inactiveTeams, search]);
 
-    const handleExport = (format, typeTitle) => {
-        info(`Đang yêu cầu tạo file ${format} cho "${typeTitle}"...`);
-        // Simulating export success
-        setTimeout(() => {
-            success(`Xuất ${format} cho "${typeTitle}" thành công`);
-        }, 1500);
+    const handleExport = async (format, typeId, typeTitle) => {
+        try {
+            info(`Đang yêu cầu tạo file ${format} cho "${typeTitle}"...`);
+            let res;
+            if (typeId === "by-course") {
+                if (courseFilter === "all") throw new Error("Vui lòng chọn một lớp cụ thể để xuất báo cáo lớp.");
+                res = await commitStatsMutation.mutateAsync({ courseId: courseFilter, format });
+            } else if (typeId === "by-group") {
+                if (teamFilter === "all") throw new Error("Vui lòng chọn một nhóm cụ thể để xuất báo cáo nhóm.");
+                res = await teamRosterMutation.mutateAsync({ projectId: teamFilter, format });
+            } else if (typeId === "by-sync") {
+                if (teamFilter === "all") throw new Error("Vui lòng chọn một nhóm để đối chiếu.");
+                res = await srsMutation.mutateAsync({ projectId: teamFilter, format });
+            } else {
+                success(`Tính năng xuất "${typeTitle}" sẽ sớm khả dụng.`);
+                return;
+            }
+
+            if (res?.reportId) {
+                success(`Yêu cầu tạo "${typeTitle}" đã được ghi nhận (ID: ${res.reportId}). Vui lòng chờ trong giây lát.`);
+            }
+        } catch (err) {
+            error(err.message || "Lỗi khi tạo báo cáo");
+        }
     };
 
     if (isLoading) {
@@ -181,7 +209,7 @@ export default function Reports() {
                         </div>
                         <div className="mt-6 flex gap-2">
                              {et.formats.map(f => (
-                                <button key={f} onClick={(e) => { e.stopPropagation(); handleExport(f, et.title); }} className="flex-1 py-1.5 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-teal-600 hover:border-teal-200 transition-all">{f}</button>
+                                <button key={f} onClick={(e) => { e.stopPropagation(); handleExport(f, et.id, et.title); }} className="flex-1 py-1.5 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-teal-600 hover:border-teal-200 transition-all">{f}</button>
                              ))}
                         </div>
                     </div>
@@ -238,19 +266,23 @@ export default function Reports() {
                             <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest">Lịch sử xuất</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {MOCK_EXPORTS.map(ex => (
+                            {myReports.map(ex => (
                                 <div key={ex.id} className="p-5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
-                                        <p className="text-xs font-black text-gray-800 uppercase tracking-tight">{ex.type}</p>
+                                        <p className="text-xs font-black text-gray-800 uppercase tracking-tight">{ex.type || "Báo cáo"}</p>
                                         <span className="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase">{ex.format}</span>
                                     </div>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{ex.target} • {ex.size}</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{ex.fileName || "N/A"} • {new Date(ex.createdAt).toLocaleString("vi-VN")}</p>
                                     <div className="mt-3 flex gap-2">
-                                        <Button variant="ghost" className="h-8 rounded-lg text-teal-600 bg-teal-50 hover:bg-teal-100 text-[10px] font-black uppercase tracking-widest px-4 border-0" onClick={() => handleExport(ex.format, ex.type)}>Tải lại</Button>
+                                        {ex.fileUrl ? (
+                                            <a href={ex.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center h-8 rounded-lg text-teal-600 bg-teal-50 hover:bg-teal-100 text-[10px] font-black uppercase tracking-widest px-4 transition-all">Tải xuống</a>
+                                        ) : (
+                                            <span className="text-[9px] text-amber-600 font-bold">Đang xử lý...</span>
+                                        )}
                                     </div>
                                 </div>
                             ))}
-                            {MOCK_EXPORTS.length === 0 && (
+                            {myReports.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                                     <SearchX size={32} className="text-gray-300" />
                                     <p className="text-sm text-gray-500 font-black uppercase tracking-widest text-[10px]">Chưa có lịch sử</p>

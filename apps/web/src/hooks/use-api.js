@@ -7,7 +7,7 @@ import {
 import { useApp } from "../context/AppContext.jsx";
 import { getStudentDashboardStats, getLecturerCoursesStats, getLecturerActivityLogs, getGroupRadarMetrics } from "../features/analytics/api/analyticsApi.js";
 import { getProjectCommits, getProjectCommitHistory } from "../features/github/api/githubApi.js";
-import { getProjectMetrics } from "../features/projects/api/projectApi.js";
+import { getProjectMetrics, getProjectKanban, getProjectCfd, getProjectRoadmap, getProjectAgingWip, getProjectCycleTime } from "../features/projects/api/projectApi.js";
 import { commitService } from "../services/commitService.js";
 
 
@@ -124,35 +124,35 @@ export function useHeatmap(memberId) {
   });
 }
 
-export function useTasksBoard() {
-  const { weekId, repoId } = useApp();
+export function useTasksBoard(projectId) {
   return useQuery({
-    queryKey: ["tasks", "board", weekId, repoId],
-    queryFn: () => ({ columns: { todo: [], in_progress: [], done: [] } }),
+    queryKey: ["tasks", "board", projectId],
+    queryFn: () => getProjectKanban(projectId),
+    enabled: !!projectId
   });
 }
 
-export function useCfd() {
-  const { repoId } = useApp();
+export function useCfd(projectId) {
   return useQuery({
-    queryKey: ["tasks", "cfd", repoId],
-    queryFn: () => ({ buckets: [] }),
+    queryKey: ["tasks", "cfd", projectId],
+    queryFn: () => getProjectCfd(projectId),
+    enabled: !!projectId
   });
 }
 
-export function useCycleTime() {
-  const { repoId } = useApp();
+export function useCycleTime(projectId) {
   return useQuery({
-    queryKey: ["tasks", "cycle-time", repoId],
-    queryFn: () => ({ histogram: [], medianDays: 0, p75Days: 0 }),
+    queryKey: ["tasks", "cycle-time", projectId],
+    queryFn: () => getProjectCycleTime(projectId),
+    enabled: !!projectId
   });
 }
 
-export function useAgingWip(limit = 5) {
-  const { repoId } = useApp();
+export function useAgingWip(projectId, limit = 5) {
   return useQuery({
-    queryKey: ["tasks", "aging-wip", repoId, limit],
-    queryFn: () => ({ items: [] }),
+    queryKey: ["tasks", "aging-wip", projectId, limit],
+    queryFn: () => getProjectAgingWip(projectId, limit),
+    enabled: !!projectId
   });
 }
 
@@ -182,11 +182,11 @@ export function useCodeChanges() {
   });
 }
 
-export function useDeadlinesRoadmap() {
-  const { repoId } = useApp();
+export function useDeadlinesRoadmap(projectId) {
   return useQuery({
-    queryKey: ["deadlines", "roadmap", repoId],
-    queryFn: () => ({ items: [], sprints: [] }),
+    queryKey: ["deadlines", "roadmap", projectId],
+    queryFn: () => getProjectRoadmap(projectId),
+    enabled: !!projectId
   });
 }
 

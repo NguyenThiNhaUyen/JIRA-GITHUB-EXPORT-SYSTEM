@@ -86,3 +86,28 @@ export async function getProjectCommitHistory(projectId) {
     const res = await client.get(`/projects/${projectId}/commit-history`);
     return unwrap(res);
 }
+
+export async function getProjectKanban(projectId) {
+    const res = await client.get(`/projects/${projectId}/kanban`);
+    return unwrap(res);
+}
+
+export async function getProjectCfd(projectId) {
+    const res = await client.get(`/projects/${projectId}/cfd`);
+    return unwrap(res);
+}
+
+export async function getProjectRoadmap(projectId) {
+    const res = await client.get(`/projects/${projectId}/roadmap`);
+    return unwrap(res);
+}
+
+export async function getProjectAgingWip(projectId, limit = 5) {
+    const res = await client.get(`/projects/${projectId}/aging-wip`, { params: { limit } });
+    return unwrap(res);
+}
+
+export async function getProjectCycleTime(projectId) {
+    const res = await client.get(`/projects/${projectId}/cycle-time`);
+    return unwrap(res);
+}

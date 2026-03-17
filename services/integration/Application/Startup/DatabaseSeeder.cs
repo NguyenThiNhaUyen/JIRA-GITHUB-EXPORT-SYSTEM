@@ -359,10 +359,104 @@ public static class DatabaseSeeder
             // GIAI ĐOẠN 4: GH ISSUES, COMMENTS, WORK LINKS
             // ============================================
             await SeedPhase4Async(dbContext, seedLogger);
+
+            // ============================================
+            // GIAI ĐOẠN 5: REPORT EXPORTS (History)
+            // ============================================
+            await SeedPhase5Async(dbContext, seedLogger);
         }
         catch (Exception ex)
         {
             seedLogger.LogError(ex, "❌ Database seeding failed.");
+        }
+    }
+
+    private static async Task SeedPhase5Async(JiraGithubToolDbContext dbContext, ILogger seedLogger)
+    {
+        try
+        {
+            var lectUser = await dbContext.users.FirstOrDefaultAsync(u => u.email == "gv@fpt.edu.vn");
+            var proj = await dbContext.projects.FirstOrDefaultAsync(p => p.name == "Jira-Github Sync System");
+            var course = await dbContext.courses.FirstOrDefaultAsync(c => c.course_code == "SE1831");
+
+            if (lectUser == null || proj == null || course == null)
+            {
+                seedLogger.LogWarning("⚠️ [PHASE 5] Skipped: Missing lecturer, project, or course.");
+                return;
+            }
+
+            var reportExports = new List<report_export>
+            {
+                new report_export
+                {
+                    report_type = "COMMIT_STATISTICS",
+                    scope = "COURSE",
+                    scope_entity_id = course.id,
+                    format = "PDF",
+                    status = "COMPLETED",
+                    file_url = "/reports/course_se1831_commits_sample.pdf",
+                    requested_by_user_id = lectUser.id,
+                    requested_at = DateTime.UtcNow.AddDays(-2),
+                    completed_at = DateTime.UtcNow.AddDays(-2).AddMinutes(1)
+                },
+                new report_export
+                {
+                    report_type = "TEAM_ROSTER",
+                    scope = "PROJECT",
+                    scope_entity_id = proj.id,
+                    format = "XLSX",
+                    status = "COMPLETED",
+                    file_url = "/reports/project_sync_roster_sample.xlsx",
+                    requested_by_user_id = lectUser.id,
+                    requested_at = DateTime.UtcNow.AddDays(-1),
+                    completed_at = DateTime.UtcNow.AddDays(-1).AddMinutes(2)
+                },
+                new report_export
+                {
+                    report_type = "SRS_ISO29148",
+                    scope = "PROJECT",
+                    scope_entity_id = proj.id,
+                    format = "PDF",
+                    status = "COMPLETED",
+                    file_url = "/reports/project_sync_srs_sample.pdf",
+                    requested_by_user_id = lectUser.id,
+                    requested_at = DateTime.UtcNow.AddHours(-5),
+                    completed_at = DateTime.UtcNow.AddHours(-5).AddMinutes(3)
+                },
+                new report_export
+                {
+                    report_type = "ACTIVITY_SUMMARY",
+                    scope = "PROJECT",
+                    scope_entity_id = proj.id,
+                    format = "PDF",
+                    status = "PROCESSING",
+                    requested_by_user_id = lectUser.id,
+                    requested_at = DateTime.UtcNow.AddMinutes(-10)
+                }
+            };
+
+            int addedCount = 0;
+            foreach (var re in reportExports)
+            {
+                if (!await dbContext.report_exports.AnyAsync(x => 
+                    x.report_type == re.report_type && 
+                    x.scope_entity_id == re.scope_entity_id && 
+                    x.requested_by_user_id == re.requested_by_user_id))
+                {
+                    dbContext.report_exports.Add(re);
+                    addedCount++;
+                }
+            }
+
+            if (addedCount > 0)
+            {
+                await dbContext.SaveChangesAsync();
+                seedLogger.LogInformation("🚀 [SEED Phase 5] {Count} report_export records seeded.", addedCount);
+            }
+        }
+        catch (Exception ex)
+        {
+            seedLogger.LogError(ex, "❌ [PHASE 5] Seeding failed: {Msg}", ex.Message);
         }
     }
 
