@@ -17,11 +17,9 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     subjectId: '',
     semesterId: '',
-    code: '',
-    title: '',
+    courseCode: '',
+    courseName: '',
     status: 'ACTIVE',
-    startDate: '',
-    endDate: '',
     maxStudents: 40
   });
   
@@ -49,16 +47,8 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
     
     if (!formData.subjectId) newErrors.subjectId = 'Subject is required';
     if (!formData.semesterId) newErrors.semesterId = 'Semester is required';
-    if (!formData.code.trim()) newErrors.code = 'Course code is required';
-    if (!formData.title.trim()) newErrors.title = 'Course title is required';
-    if (!formData.startDate) newErrors.startDate = 'Start date is required';
-    if (!formData.endDate) newErrors.endDate = 'End date is required';
-    
-    if (formData.startDate && formData.endDate) {
-      if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-        newErrors.endDate = 'End date must be after start date';
-      }
-    }
+    if (!formData.courseCode.trim()) newErrors.courseCode = 'Course code is required';
+    if (!formData.courseName.trim()) newErrors.courseName = 'Course title is required';
     
     if (!formData.maxStudents || formData.maxStudents < 1) {
       newErrors.maxStudents = 'Max students must be at least 1';
@@ -76,8 +66,17 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     
     try {
-      const course = await courseService.createCourse(formData);
-      success(`Course "${course.title}" created successfully!`);
+      const payload = {
+        subjectId: Number(formData.subjectId),
+        semesterId: Number(formData.semesterId),
+        courseCode: formData.courseCode,
+        courseName: formData.courseName,
+        status: formData.status,
+        maxStudents: Number(formData.maxStudents)
+      };
+
+      const course = await courseService.createCourse(payload);
+      success(`Course "${course.courseName || course.title}" created successfully!`);
       onSuccess?.(course);
       onClose();
       
@@ -96,11 +95,9 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
       setFormData({
         subjectId: '',
         semesterId: '',
-        code: '',
-        title: '',
+        courseCode: '',
+        courseName: '',
         status: 'ACTIVE',
-        startDate: '',
-        endDate: '',
         maxStudents: 40
       });
       setErrors({});
@@ -169,15 +166,15 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
               Course Code *
             </label>
             <Input
-              name="code"
-              value={formData.code}
+              name="courseCode"
+              value={formData.courseCode}
               onChange={handleInputChange}
               placeholder="e.g., SE101.001"
-              className={errors.code ? 'border-red-300' : ''}
+              className={errors.courseCode ? 'border-red-300' : ''}
               disabled={loading}
             />
-            {errors.code && (
-              <p className="text-red-500 text-sm mt-1">{errors.code}</p>
+            {errors.courseCode && (
+              <p className="text-red-500 text-sm mt-1">{errors.courseCode}</p>
             )}
           </div>
 
@@ -204,52 +201,19 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
             Course Title *
           </label>
           <Input
-            name="title"
-            value={formData.title}
+            name="courseName"
+            value={formData.courseName}
             onChange={handleInputChange}
             placeholder="e.g., Software Engineering Fundamentals - Spring 2026"
-            className={errors.title ? 'border-red-300' : ''}
+            className={errors.courseName ? 'border-red-300' : ''}
             disabled={loading}
           />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+          {errors.courseName && (
+            <p className="text-red-500 text-sm mt-1">{errors.courseName}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Date *
-            </label>
-            <Input
-              type="date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleInputChange}
-              className={errors.startDate ? 'border-red-300' : ''}
-              disabled={loading}
-            />
-            {errors.startDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Date *
-            </label>
-            <Input
-              type="date"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleInputChange}
-              className={errors.endDate ? 'border-red-300' : ''}
-              disabled={loading}
-            />
-            {errors.endDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>
-            )}
-          </div>
+<div className="grid grid-cols-1 gap-4">
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

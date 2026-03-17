@@ -9,14 +9,11 @@
  */
 import axios from "axios";
 
-// Tự động nhận diện môi trường dựa trên URL hiện tại
-// Tự động nhận diện môi trường để hỗ trợ cả Local và Render
-const currentOrigin = window.location.origin;
-const isLocal = currentOrigin.includes("localhost") || currentOrigin.includes("127.0.0.1");
+// ÉP BUỘC sử dụng Backend trên Render để hỗ trợ test FE local với BE Cloud
+// Nếu bạn muốn dùng Backend Local (Visual Studio), hãy đổi thành: http://localhost:5032
+const BASE_URL = "https://jira-github-export-system.onrender.com";
 
-const BASE_URL = isLocal 
-    ? (import.meta.env.VITE_API_URL ?? "http://localhost:5032")
-    : "https://jira-github-export-system.onrender.com";
+console.log(`[API Config] Target Backend: ${BASE_URL}`);
 
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
