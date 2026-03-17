@@ -266,7 +266,7 @@ export default function MainLayout({ children }) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
-                    console.log("Sync", { semesterId, weekId, repoId });
+                    // Sync functionality
                   }}
                   className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors"
                   title={`Sync dữ liệu cho ${semesterId} - ${weekId} - ${repoId}`}
@@ -277,7 +277,7 @@ export default function MainLayout({ children }) {
 
                 <button
                   onClick={() => {
-                    console.log("Export", { semesterId, weekId, repoId });
+                    // Export functionality
                   }}
                   className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-500 hover:bg-blue-600 text-white shadow-sm transition-colors"
                   title={`Export dữ liệu cho ${semesterId} - ${weekId} - ${repoId}`}

@@ -25,6 +25,7 @@ const NAV = [
             { to: "/admin/subjects", icon: Library, label: "Môn học" },
             { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
             { to: "/admin/lecturer-assignment", icon: UserCog, label: "Phân công giảng viên" },
+            { to: "/admin/workload", icon: BarChart3, label: "Khối lượng giảng dạy" },
         ],
     },
     {

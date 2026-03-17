@@ -111,7 +111,7 @@ export function Topbar() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => console.log("Sync")}
+            onClick={() => {/* Sync functionality */}}
           >
             <RefreshCw size={16} className="mr-2" />
             <span>Sync</span>
@@ -119,7 +119,7 @@ export function Topbar() {
 
           <Button
             size="sm"
-            onClick={() => console.log("Export")}
+            onClick={() => {/* Export functionality */}}
           >
             <Download size={16} className="mr-2" />
             <span>Export</span>

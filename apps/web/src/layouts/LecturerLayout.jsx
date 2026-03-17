@@ -27,7 +27,8 @@ const navSections = [
         label: "Quản lý",
         items: [
             { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lớp của tôi" },
-            { to: "/lecturer/groups", icon: Users, label: "Nhóm & Dự án" },
+            { to: "/lecturer/groups", icon: Users, label: "Theo dõi nhóm" },
+            { to: "/lecturer/projects", icon: GraduationCap, label: "Tổng quan dự án" },
         ],
     },
     {

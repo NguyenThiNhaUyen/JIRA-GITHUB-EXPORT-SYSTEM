@@ -106,16 +106,14 @@ export function TopHeader() {
 
         connection.on("ReceiveNotification", (notification) => {
           if (!isMounted) return;
-          console.log("[SignalR] Received notification:", notification);
           info?.(notification.message || "Bạn có thông báo mới", { title: "Thông báo" });
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         });
 
         try {
             await connection.start();
-            if (isMounted) console.log("[SignalR] Connected");
         } catch (err) {
-            if (isMounted) console.error("[SignalR] Connection Error: ", err);
+            // SignalR Connection Error
         }
     };
 

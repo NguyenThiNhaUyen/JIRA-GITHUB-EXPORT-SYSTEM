@@ -2,7 +2,8 @@ import { FileText, FileDown, Upload, Target, Activity, CheckCircle, Clock } from
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
-import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
+import { useGetProjectSrs, useSubmitSrs } from "../../features/srs/hooks/useSrs.js";
+import { useState } from "react";
 
 // Components UI
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
@@ -10,12 +11,43 @@ import { Button } from "../../components/ui/button.jsx";
 import { PageHeader } from "../../components/shared/PageHeader.jsx";
 import { StatusBadge } from "../../components/shared/Badge.jsx";
 import { Skeleton } from "../../components/ui/skeleton.jsx";
+import { Modal } from "../../components/ui/interactive.jsx";
+import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
+import { RefreshCw, Check, AlertCircle } from "lucide-react";
 
 export default function StudentSrsPage() {
     const { user } = useAuth();
-    const { success } = useToast();
+    const { success, error: showError } = useToast();
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProject, setSelectedProject] = useState("");
+    const [file, setFile] = useState(null);
+    const [version, setVersion] = useState("1.0.0");
+    const [isFinal, setIsFinal] = useState(false);
+
+    const submitSrsMutation = useSubmitSrs();
+
+    const handleUpload = () => {
+        if (!selectedProject) return showError("Vui lòng chọn dự án");
+        if (!file) return showError("Vui lòng chọn file tài liệu");
+
+        submitSrsMutation.mutate({ 
+            projectId: selectedProject, 
+            file,
+            version,
+            isFinal
+        }, {
+            onSuccess: () => {
+                success("Đã nộp tài liệu SRS thành công!");
+                setIsModalOpen(false);
+                setFile(null);
+                setSelectedProject("");
+            },
+            onError: () => showError("Nộp thất bại. Vui lòng thử lại.")
+        });
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -50,7 +82,7 @@ export default function StudentSrsPage() {
                         <p className="text-[11px] text-teal-200 font-bold leading-relaxed mb-10 uppercase tracking-widest opacity-80">Vui lòng kiểm tra định dạng .pdf (IEEE 29148). Mọi thay đổi đều được ghi vết theo phiên bản.</p>
                         <Button 
                             className="w-full h-16 bg-white text-teal-900 hover:bg-teal-50 rounded-[24px] font-black uppercase tracking-[0.2em] border-0 shadow-2xl transition-all hover:scale-105 active:scale-95"
-                            onClick={() => success("Vui lòng chọn file từ máy tính...")}
+                            onClick={() => setIsModalOpen(true)}
                         >
                             Nộp ngay bây giờ
                         </Button>
@@ -74,6 +106,46 @@ export default function StudentSrsPage() {
                     </Card>
                 </div>
             </div>
+
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nộp tài liệu SRS mới" size="md">
+                <div className="space-y-6">
+                    <SelectField label="Dự án" value={selectedProject} onChange={e => setSelectedProject(e.target.value)}>
+                        <option value="">Chọn dự án nộp bài</option>
+                        {myGroups.map(p => <option key={p.id} value={p.id}>{p.name} - {p.course?.code}</option>)}
+                    </SelectField>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="Phiên bản" value={version} onChange={e => setVersion(e.target.value)} placeholder="1.0.0" />
+                        <SelectField label="Loại nộp" value={isFinal ? "final" : "draft"} onChange={e => setIsFinal(e.target.value === "final")}>
+                            <option value="draft">Bản nháp (Draft)</option>
+                            <option value="final">Bản chính thức (Final)</option>
+                        </SelectField>
+                    </div>
+
+                    <div 
+                        className={`p-10 border-2 border-dashed rounded-[32px] text-center group cursor-pointer transition-all ${file ? 'border-teal-500 bg-teal-50/30' : 'border-teal-100 bg-teal-50/10 hover:bg-teal-50/30'}`}
+                        onClick={() => document.getElementById('srs-file-input').click()}
+                    >
+                        <input id="srs-file-input" type="file" className="hidden" onChange={e => setFile(e.target.files[0])} />
+                        <div className={`w-16 h-16 rounded-2xl shadow-xl flex items-center justify-center mx-auto mb-4 ${file ? 'bg-teal-600 text-white' : 'bg-white text-teal-600'}`}>
+                            {file ? <Check size={24}/> : <Upload size={24}/>}
+                        </div>
+                        <p className="text-sm font-black text-gray-800 uppercase tracking-tight">{file ? file.name : "Chọn hoặc Kéo thả file"}</p>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1.5">{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Định dạng hỗ trợ: PDF"}</p>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
+                        <Button onClick={() => setIsModalOpen(false)} variant="ghost" className="rounded-2xl h-12 px-8 font-black uppercase tracking-widest text-[10px] text-gray-400">Hủy</Button>
+                        <Button 
+                            onClick={handleUpload} 
+                            disabled={submitSrsMutation.isPending || !file || !selectedProject} 
+                            className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-12 px-10 font-black uppercase tracking-widest shadow-xl shadow-teal-100 disabled:opacity-50"
+                        >
+                            {submitSrsMutation.isPending ? <RefreshCw className="animate-spin mr-2" size={14}/> : null} Gửi nộp bài
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

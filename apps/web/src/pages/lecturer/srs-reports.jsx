@@ -1,4 +1,3 @@
-// SRS Reports — Lecturer
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronRight,
@@ -9,7 +8,6 @@ import {
   ExternalLink,
   Search,
   Filter,
-  Clock3,
   AlertTriangle,
   GitBranch,
   FolderKanban,
@@ -17,854 +15,373 @@ import {
   CalendarDays,
   Upload,
   CheckCheck,
-  ShieldAlert,
   RefreshCcw,
   Download,
+  Star
 } from "lucide-react";
 
 // Components UI
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
+import { Badge } from "../../components/ui/badge.jsx";
+
+// Shared Components
+import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { StatsCard } from "../../components/shared/StatsCard.jsx";
+
+// Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useCourseProjectReports, useUpdateReportStatus, useGetReports } from "../../features/admin/hooks/useReports.js";
+import { useGetReports } from "../../features/admin/hooks/useReports.js";
 import { useSendAlert } from "../../features/system/hooks/useAlerts.js";
 import { useGenerateCommitStats } from "../../features/projects/hooks/useReports.js";
+import { useReviewSrs } from "../../features/srs/hooks/useSrs.js";
 
-/* -------------------------------- HELPERS -------------------------------- */
 const STATUS_META = {
-  NOT_SUBMITTED: {
-    label: "Chưa nộp",
-    chip: "bg-gray-100 text-gray-600 border-gray-200",
-    dot: "bg-gray-400",
-  },
-  DRAFT: {
-    label: "Draft",
-    chip: "bg-slate-100 text-slate-600 border-slate-200",
-    dot: "bg-slate-400",
-  },
-  SUBMITTED: {
-    label: "Đã nộp",
-    chip: "bg-sky-50 text-sky-700 border-sky-200",
-    dot: "bg-sky-500",
-  },
-  REVIEW: {
-    label: "Đang review",
-    chip: "bg-blue-50 text-blue-700 border-blue-200",
-    dot: "bg-blue-500",
-  },
-  NEED_REVISION: {
-    label: "Cần chỉnh sửa",
-    chip: "bg-amber-50 text-amber-700 border-amber-200",
-    dot: "bg-amber-500",
-  },
-  APPROVED: {
-    label: "Approved",
-    chip: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    dot: "bg-emerald-500",
-  },
-  FINAL: {
-    label: "Final",
-    chip: "bg-green-50 text-green-700 border-green-200",
-    dot: "bg-green-500",
-  },
-  OVERDUE: {
-    label: "Quá hạn",
-    chip: "bg-red-50 text-red-700 border-red-200",
-    dot: "bg-red-500",
-  },
+  NOT_SUBMITTED: { label: "Chưa nộp", variant: "secondary", color: "text-gray-500 bg-gray-50 border-gray-100" },
+  DRAFT: { label: "Bản nháp", variant: "outline", color: "text-slate-500 bg-slate-50 border-slate-100" },
+  SUBMITTED: { label: "Đã nộp", variant: "info", color: "text-sky-600 bg-sky-50 border-sky-100" },
+  REVIEW: { label: "Đang review", variant: "info", color: "text-blue-600 bg-blue-50 border-blue-100" },
+  NEED_REVISION: { label: "Cần sửa", variant: "warning", color: "text-amber-600 bg-amber-50 border-amber-100" },
+  APPROVED: { label: "Đã duyệt", variant: "success", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+  FINAL: { label: "Hoàn tất", variant: "success", color: "text-green-600 bg-green-50 border-green-100" },
+  OVERDUE: { label: "Quá hạn", variant: "danger", color: "text-red-600 bg-red-50 border-red-100" },
 };
 
-function formatDate(date) {
-  if (!date) return "—";
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatDateShort(date) {
-  if (!date) return "—";
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString("vi-VN");
-}
-
-function getDaysDiff(deadline) {
-  const now = new Date();
-  const end = new Date(deadline);
-  const diff = end.getTime() - now.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-function checklistBadge(type) {
-  if (type === "pass") return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  if (type === "warning") return "bg-amber-50 text-amber-700 border-amber-200";
-  return "bg-red-50 text-red-700 border-red-200";
-}
-
-function checklistLabel(type) {
-  if (type === "pass") return "Đạt";
-  if (type === "warning") return "Lưu ý";
-  return "Thiếu";
-}
-
-function getScoreColor(score) {
-  if (score >= 8.5) return "text-green-700 bg-green-50 border-green-200";
-  if (score >= 7) return "text-blue-700 bg-blue-50 border-blue-200";
-  if (score > 0) return "text-amber-700 bg-amber-50 border-amber-200";
-  return "text-gray-500 bg-gray-100 border-gray-200";
-}
-
-/* ------------------------------- COMPONENT ------------------------------- */
-
 export default function SrsReports() {
-  const { success, error } = useToast();
+  const { success, error: showError } = useToast();
 
-  const [srsList, setSrsList] = useState([]);
-  const [selected, setSelected] = useState(null);
-
+  const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
-  const [milestoneFilter, setMilestoneFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("latest");
   const [feedbackText, setFeedbackText] = useState("");
+  const [scoreValue, setScoreValue] = useState(0);
 
-  const updateStatusMutation = useUpdateReportStatus();
+  const reviewMutation = useReviewSrs();
   const { mutate: sendAlert, isPending: isSendingAlert } = useSendAlert();
   const generateStatsMutation = useGenerateCommitStats();
   
   const { data: coursesData = { items: [] } } = useGetCourses({ pageSize: 100 });
   const realCourses = coursesData?.items || [];
+  const currentCourse = realCourses.find(c => c.code === courseFilter || c.id === courseFilter);
 
-  const allProjectsList = useMemo(() => {
-    if (realCourses.length > 0) {
-      let projs = [];
-      realCourses.forEach(c => {
-        const groups = c.groups || c.projects || [];
-        groups.forEach(g => {
-           projs.push({
-             ...g,
-             courseId: c.id,
-             courseCode: c.code,
-             courseName: c.name,
-             teamName: g.name,
-             projectName: g.description || "Unknown Project", 
-             leader: g.members?.find(m => m.teamRole === "LEADER")?.studentName || "—",
-             members: g.members?.map(m => m.studentName) || [],
-             jiraUrl: g.integration?.jiraProjectUrl || "#",
-             githubUrl: g.integration?.githubRepoUrl || "#",
-           });
-        });
-      });
-      return projs;
-    }
-    return []; 
-  }, [realCourses]);
-
-  // Optimized: Single query for the whole course
-  const currentCourseId = realCourses.find(c => c.code === courseFilter)?.id;
   const { data: srsResponse, isLoading: loadingReports } = useGetReports({ 
-    courseId: currentCourseId, 
+    courseId: currentCourse?.id, 
     type: "SRS" 
   }, { 
-    enabled: !!currentCourseId 
+    enabled: !!currentCourse?.id || courseFilter === 'all'
   });
 
-  useEffect(() => {
-    if (!srsResponse?.items) {
-      if (!currentCourseId) setSrsList([]);
-      return;
-    }
-
-    const items = srsResponse.items;
-    let merged = items.map(rpt => {
-       const project = allProjectsList.find(p => p.id === rpt.projectId);
-       return {
-          ...rpt,
-          id: rpt.id || rpt.reportId,
-          projectId: rpt.projectId,
-          teamName: project?.teamName || "Unknown Team",
-          projectName: project?.projectName || "Unknown Project",
-          leader: project?.leader || "N/A",
-          members: project?.members || [],
-          jiraUrl: project?.jiraUrl || "#",
-          githubUrl: project?.githubUrl || "#",
-          courseCode: project?.courseCode || courseFilter,
-          courseName: project?.courseName || "—",
-          score: rpt.score || 0,
-          fileUrl: rpt.fileUrl || "#",
-          submittedAt: rpt.submittedAt,
-          version: `Version ${rpt.versionNo || 1.0}`,
-          summary: rpt.feedback || "No feedback provided yet.",
-       };
+  const allProjects = useMemo(() => {
+    const projs = [];
+    realCourses.forEach(c => {
+      (c.projects || []).forEach(p => {
+        projs.push({ ...p, courseCode: c.code, courseName: c.name });
+      });
     });
+    return projs;
+  }, [realCourses]);
 
-    setSrsList(merged);
-    if (merged.length > 0 && !selected) {
-      setSelected(merged[0].id);
-    }
-  }, [srsResponse, allProjectsList, currentCourseId]);
-
-  useEffect(() => {
-    const current = srsList.find((item) => item.id === selected);
-    setFeedbackText(current?.feedback || "");
-  }, [selected, srsList]);
-
-  const stats = useMemo(() => {
-    const totalGroups = allProjectsList.length;
-    const submitted = srsList.filter((x) =>
-      ["SUBMITTED", "REVIEW", "NEED_REVISION", "APPROVED", "FINAL", "OVERDUE"].includes(x.status)
-    ).length;
-
-    return {
-      totalGroups,
-      submitted,
-      notSubmitted: totalGroups - submitted,
-      review: srsList.filter((x) => x.status === "REVIEW").length,
-      revision: srsList.filter((x) => x.status === "NEED_REVISION").length,
-      final: srsList.filter((x) => x.status === "FINAL").length,
-      overdue: srsList.filter((x) => x.status === "OVERDUE").length,
-    };
-  }, [srsList, allProjectsList.length]);
+  const srsList = useMemo(() => {
+    if (!srsResponse?.items) return [];
+    return srsResponse.items.map(rpt => {
+      const p = allProjects.find(px => px.id === rpt.projectId);
+      return {
+        ...rpt,
+        teamName: p?.name || "Unknown Team",
+        projectName: p?.description || "Unknown Project",
+        leaderName: p?.team?.find(m => m.role === 'LEADER')?.studentName || "N/A",
+        courseCode: p?.courseCode || "—",
+        score: rpt.score || 0
+      };
+    });
+  }, [srsResponse, allProjects]);
 
   const filtered = useMemo(() => {
-    let data = [...srsList];
-
-    if (statusFilter !== "all") {
-      data = data.filter((item) => item.status === statusFilter);
-    }
-
-    if (courseFilter !== "all") {
-      data = data.filter((item) => item.courseCode === courseFilter);
-    }
-
-    if (milestoneFilter !== "all") {
-      data = data.filter((item) => item.milestone === milestoneFilter);
-    }
-
-    if (search.trim()) {
+    return srsList.filter(item => {
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+      const matchesCourse = courseFilter === "all" || item.courseCode === courseFilter;
       const q = search.toLowerCase();
-      data = data.filter(
-        (item) =>
-          item.teamName.toLowerCase().includes(q) ||
-          item.projectName.toLowerCase().includes(q) ||
-          item.courseCode.toLowerCase().includes(q) ||
-          item.leader.toLowerCase().includes(q)
-      );
+      const matchesSearch = !search || 
+        item.teamName.toLowerCase().includes(q) || 
+        item.projectName.toLowerCase().includes(q) ||
+        item.leaderName.toLowerCase().includes(q);
+      return matchesStatus && matchesCourse && matchesSearch;
+    });
+  }, [srsList, statusFilter, courseFilter, search]);
+
+  const selectedSrs = useMemo(() => filtered.find(s => s.id === selectedId) || (filtered.length > 0 ? filtered[0] : null), [filtered, selectedId]);
+
+  useEffect(() => {
+    if (selectedSrs) {
+      setFeedbackText(selectedSrs.feedback || "");
+      setScoreValue(selectedSrs.score || 0);
     }
+  }, [selectedSrs]);
 
-    data.sort((a, b) => {
-      if (sortBy === "latest") return new Date(b.updatedAt) - new Date(a.updatedAt);
-      if (sortBy === "deadline") return new Date(a.deadline) - new Date(b.deadline);
-      if (sortBy === "score") return (b.score || 0) - (a.score || 0);
-      if (sortBy === "coverage") return (b.githubCoverage || 0) - (a.githubCoverage || 0);
-      return 0;
-    });
-
-    return data;
-  }, [srsList, search, statusFilter, courseFilter, milestoneFilter, sortBy]);
-
-  const selectedSrs = useMemo(
-    () => srsList.find((item) => item.id === selected),
-    [srsList, selected]
-  );
-
-  const milestoneOptions = useMemo(() => {
-    return [...new Set(srsList.map((x) => x.milestone).filter(Boolean))];
-  }, [srsList]);
-
-  const handleSaveFeedback = () => {
+  const handleReview = async (status) => {
     if (!selectedSrs) return;
-    success("Đã lưu nhận xét cho nhóm (Local UI Update)");
+    try {
+      await reviewMutation.mutateAsync({
+        reportId: selectedSrs.id,
+        status,
+        feedback: feedbackText,
+        score: parseFloat(scoreValue)
+      });
+      success(`Đã cập nhật đánh giá cho ${selectedSrs.teamName}`);
+    } catch (err) {
+      showError(err.message || "Đánh giá thất bại");
+    }
   };
 
-  const handleStatusUpdate = (id, newStatus) => {
-    updateStatusMutation.mutate({ reportId: id, status: newStatus }, {
-      onSuccess: () => {
-        setSrsList((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  status: newStatus,
-                  updatedAt: new Date().toISOString(),
-                }
-              : item
-          )
-        );
-        const label = STATUS_META[newStatus]?.label || newStatus;
-        success(`Đã cập nhật trạng thái sang "${label}"`);
-      },
-      onError: (err) => {
-         error(`Lỗi cập nhật trạng thái: ${err.message}`);
-      }
+  const handleExportCsv = () => {
+    if (filtered.length === 0) return showError("Không có dữ liệu để xuất");
+    
+    try {
+      const headers = ["Nhóm", "Dự án", "Lớp", "Phiên bản", "Trạng thái", "Điểm", "Ngày nộp", "Feedback"];
+      const rows = filtered.map(item => [
+        item.teamName,
+        item.projectName,
+        item.courseCode,
+        item.version,
+        STATUS_META[item.status]?.label || item.status,
+        item.score || 0,
+        new Date(item.submittedAt || item.createdAt).toLocaleDateString("vi-VN"),
+        (item.feedback || "").replace(/"/g, '""')
+      ].map(val => `"${val}"`).join(","));
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SRS_Reports_Export_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      success("Đã xuất bảng điểm thành công!");
+    } catch (err) {
+      showError("Lỗi khi xuất file");
+    }
+  };
+
+  const handleSyncAlerts = () => {
+    const overdue = filtered.filter(s => s.status === 'OVERDUE' || s.status === 'NEED_REVISION');
+    if (overdue.length === 0) return success("Không có nhóm nào cần nhắc nhở");
+    
+    overdue.forEach(v => {
+      sendAlert({ 
+        groupId: v.projectId, 
+        message: "Nhắc nhở: Vui lòng cập nhật tài liệu SRS theo yêu cầu của Giảng viên.",
+        severity: "MEDIUM"
+      });
     });
-  };
-
-  const renderStatusChip = (status) => {
-    const meta = STATUS_META[status] || STATUS_META.DRAFT;
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${meta.chip}`}
-      >
-        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-        {meta.label}
-      </span>
-    );
+    success(`Đã gửi nhắc nhở cho ${overdue.length} nhóm`);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-        <span className="text-teal-700 font-semibold">Giảng viên</span>
-        <ChevronRight size={12} />
-        <span className="text-gray-800 font-semibold">SRS Reports</span>
-      </nav>
-
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-800">
-            SRS Reports
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Quản lý, review và theo dõi tiến độ tài liệu đặc tả yêu cầu phần mềm theo nhóm / project
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="rounded-xl border-gray-200"
-            disabled={generateStatsMutation.isPending || courseFilter === 'all'}
-            onClick={() => {
-              generateStatsMutation.mutate(
-                { courseId: realCourses.find(c => c.code === courseFilter)?.id, format: "PDF" },
-                {
-                  onSuccess: () => success("Đã bắt đầu tạo báo cáo tổng hợp cho lớp."),
-                  onError: (err) => error("Lỗi: " + err.message)
-                }
-              );
-            }}
-          >
-            <Download size={14} className="mr-2" />
-            {generateStatsMutation.isPending ? "Đang xử lý..." : "Export Lớp"}
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="Quản lý Tài liệu SRS"
+        subtitle="Review, đánh giá và phản hồi các bản đặc tả yêu cầu phần mềm từ sinh viên."
+        breadcrumb={["Giảng viên", "Báo cáo", "SRS"]}
+        actions={[
+          <Button key="alert" onClick={handleSyncAlerts} disabled={isSendingAlert} variant="outline" className="rounded-2xl border-orange-200 text-orange-600 hover:bg-orange-50 h-11 px-6 text-[10px] font-black uppercase tracking-widest transition-all">
+            <MessageSquare size={14} className="mr-2" /> Nhắc nhóm trễ hạn
+          </Button>,
+          <Button key="export" onClick={handleExportCsv} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-8 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0 transition-all">
+            <Download size={16} className="mr-2" /> Xuất bảng điểm
           </Button>
-          <Button
-            className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white"
-            disabled={isSendingAlert}
-            onClick={() => {
-              const overdueGroups = srsList.filter(s => s.status === 'NOT_SUBMITTED' || s.status === 'NEED_REVISION' || s.status === 'OVERDUE');
-              if (overdueGroups.length === 0) {
-                success("Không có nhóm nào cần nhắc nhở.");
-                return;
-              }
-              
-              overdueGroups.forEach(group => {
-                sendAlert({
-                   groupId: Number(group.projectId),
-                   message: "Nhắc nhở: Tài liệu SRS của nhóm đang trễ hạn hoặc cần chỉnh sửa. Vui lòng cập nhật sớm.",
-                   severity: "MEDIUM"
-                });
-              });
-              success(`Đã gửi nhắc nhở cho ${overdueGroups.length} nhóm.`);
-            }}
-          >
-            <MessageSquare size={14} className="mr-2" />
-            {isSendingAlert ? "Đang gửi..." : "Nhắc nhóm trễ hạn"}
-          </Button>
-        </div>
+        ]}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard label="Tổng bản nộp" value={srsList.length} icon={FileText} variant="indigo" />
+        <StatsCard label="Đang Review" value={srsList.filter(s => s.status === 'REVIEW' || s.status === 'SUBMITTED').length} icon={Eye} variant="info" />
+        <StatsCard label="Cần chỉnh sửa" value={srsList.filter(s => s.status === 'NEED_REVISION').length} icon={RefreshCcw} variant="warning" />
+        <StatsCard label="Đã hoàn tất" value={srsList.filter(s => s.status === 'FINAL' || s.status === 'APPROVED').length} icon={CheckCheck} variant="success" />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
-        {[
-          {
-            label: "Tổng nhóm",
-            value: stats.totalGroups,
-            icon: Users,
-            cls: "bg-white border-gray-200 text-gray-700",
-          },
-          {
-            label: "Đã nộp",
-            value: stats.submitted,
-            icon: Upload,
-            cls: "bg-sky-50 border-sky-200 text-sky-700",
-          },
-          {
-            label: "Đang review",
-            value: stats.review,
-            icon: Eye,
-            cls: "bg-blue-50 border-blue-200 text-blue-700",
-          },
-          {
-            label: "Cần chỉnh sửa",
-            value: stats.revision,
-            icon: RefreshCcw,
-            cls: "bg-amber-50 border-amber-200 text-amber-700",
-          },
-          {
-            label: "Final",
-            value: stats.final,
-            icon: CheckCheck,
-            cls: "bg-green-50 border-green-200 text-green-700",
-          },
-          {
-            label: "Quá hạn",
-            value: stats.overdue,
-            icon: AlertTriangle,
-            cls: "bg-red-50 border-red-200 text-red-700",
-          },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={item.label}
-              className={`rounded-2xl border px-4 py-4 shadow-sm ${item.cls}`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold">{item.label}</span>
-                <Icon size={15} />
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div className="xl:col-span-8 space-y-6">
+          <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
+            <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-50/30">
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-80">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <input 
+                    placeholder="Tìm tên nhóm, leader..." 
+                    value={search} 
+                    onChange={e => setSearch(e.target.value)}
+                    className="w-full h-11 pl-11 pr-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all" 
+                  />
+                </div>
+                <select 
+                  value={courseFilter} 
+                  onChange={e => setCourseFilter(e.target.value)}
+                  className="h-11 px-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none transition-all cursor-pointer"
+                >
+                  <option value="all">Tất cả lớp</option>
+                  {realCourses.map(c => <option key={c.id} value={c.code}>{c.code}</option>)}
+                </select>
               </div>
-              <div className="mt-3 text-2xl font-bold">{item.value}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Filters */}
-      <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
-            <div className="xl:col-span-4 relative">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo nhóm, project, leader, course..."
-                className="w-full h-11 rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-700 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-              />
-            </div>
-
-            <div className="xl:col-span-2">
-              <select
-                value={courseFilter}
-                onChange={(e) => setCourseFilter(e.target.value)}
-                className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-              >
-                <option value="all">Tất cả môn</option>
-                {realCourses.map((course) => (
-                  <option key={course.id} value={course.code}>
-                    {course.code}
-                  </option>
+              <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+                {["all", "SUBMITTED", "REVIEW", "NEED_REVISION", "FINAL"].map(status => (
+                  <button 
+                    key={status} 
+                    onClick={() => setStatusFilter(status)}
+                    className={`shrink-0 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${statusFilter === status ? 'bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-100' : 'bg-white text-gray-400 border-gray-100 hover:border-teal-400 hover:text-teal-600'}`}
+                  >
+                    {status === 'all' ? 'Tất cả' : STATUS_META[status]?.label}
+                  </button>
                 ))}
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <select
-                value={milestoneFilter}
-                onChange={(e) => setMilestoneFilter(e.target.value)}
-                className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-              >
-                <option value="all">Tất cả milestone</option>
-                {milestoneOptions.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-              >
-                <option value="latest">Mới cập nhật</option>
-                <option value="deadline">Sắp đến hạn</option>
-                <option value="score">Điểm review</option>
-                <option value="coverage">GitHub coverage</option>
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <div className="h-11 rounded-xl border border-dashed border-teal-200 bg-teal-50/60 flex items-center justify-center gap-2 text-xs font-semibold text-teal-700">
-                <Filter size={14} />
-                {filtered.length} bản ghi
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap mt-4">
-            {[
-              { key: "all", label: "Tất cả" },
-              { key: "FINAL", label: "Final" },
-              { key: "REVIEW", label: "Review" },
-              { key: "SUBMITTED", label: "Submitted" },
-              { key: "NEED_REVISION", label: "Need Revision" },
-              { key: "DRAFT", label: "Draft" },
-              { key: "OVERDUE", label: "Overdue" },
-            ].map((item) => (
-              <button
-                key={item.key}
-                onClick={() => setStatusFilter(item.key)}
-                className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                  statusFilter === item.key
-                    ? "bg-teal-600 border-teal-600 text-white"
-                    : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Left side */}
-        <div className="xl:col-span-7 space-y-6">
-          <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white overflow-hidden">
-            <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-50/70 border-b border-gray-100 text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              <div className="col-span-4">Nhóm / Project</div>
-              <div className="col-span-1 text-center">Ver</div>
-              <div className="col-span-2 text-center">Trạng thái</div>
-              <div className="col-span-2 text-center">Hạn nộp</div>
-              <div className="col-span-1 text-center">Điểm</div>
-              <div className="col-span-2 text-right">Thao tác</div>
             </div>
 
             <CardContent className="p-0">
-              {filtered.length === 0 ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center">
-                  <FileText size={34} className="text-gray-300" />
-                  <p className="text-sm text-gray-400 mt-3">
-                    Không có SRS nào khớp bộ lọc hiện tại
-                  </p>
-                </div>
-              ) : (
-                filtered.map((item) => {
-                  const daysLeft = getDaysDiff(item.deadline);
-                  const isDanger = item.status === "OVERDUE" || daysLeft < 0;
-                  const isWarn = daysLeft <= 2 && daysLeft >= 0;
-
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => setSelected(item.id)}
-                      className={`grid grid-cols-12 gap-3 px-5 py-4 items-center border-b border-gray-50 last:border-0 hover:bg-gray-50/70 cursor-pointer transition-colors ${
-                        selected === item.id ? "bg-teal-50/40" : ""
-                      }`}
-                    >
-                      <div className="col-span-4 min-w-0">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-teal-50 flex items-center justify-center shrink-0">
-                            <FileText size={16} className="text-teal-600" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">
-                              {item.teamName}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate mt-0.5">
-                              {item.projectName}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-semibold">
-                                {item.courseCode}
-                              </span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold">
-                                {item.milestone}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-span-1 text-center">
-                        <span className="text-xs font-mono text-gray-700">
-                          {item.version}
-                        </span>
-                      </div>
-
-                      <div className="col-span-2 text-center">
-                        {renderStatusChip(item.status)}
-                      </div>
-
-                      <div className="col-span-2 text-center">
-                        <div className="text-xs font-medium text-gray-700">
-                          {formatDateShort(item.deadline)}
-                        </div>
-                        <div
-                          className={`text-[10px] mt-1 font-semibold ${
-                            isDanger
-                              ? "text-red-600"
-                              : isWarn
-                              ? "text-amber-600"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {isDanger
-                            ? "Đã quá hạn"
-                            : isWarn
-                            ? `${daysLeft} ngày nữa`
-                            : "Đúng hạn"}
-                        </div>
-                      </div>
-
-                      <div className="col-span-1 text-center">
-                        <span
-                          className={`inline-flex items-center justify-center min-w-[44px] h-7 px-2 rounded-lg border text-xs font-bold ${getScoreColor(
-                            item.score
-                          )}`}
-                        >
-                          {item.score ? item.score.toFixed(1) : "—"}
-                        </span>
-                      </div>
-
-                      <div className="col-span-2 flex items-center justify-end gap-1 flex-wrap">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelected(item.id);
-                          }}
-                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-teal-100 bg-teal-50 text-teal-700 text-xs font-semibold hover:bg-teal-100"
-                        >
-                          <Eye size={11} />
-                          View
-                        </button>
-
-                        {["SUBMITTED", "REVIEW"].includes(item.status) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelected(item.id);
-                              handleStatusUpdate(item.id, "FINAL");
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-green-100 bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100"
-                          >
-                            <CheckCircle size={11} />
-                            Final
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-50/30">
+                    <tr>
+                      <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Dự án & Nhóm</th>
+                      <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Version</th>
+                      <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Trạng thái</th>
+                      <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Điểm</th>
+                      <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {loadingReports ? (
+                      [1,2,3].map(i => (
+                        <tr key={i} className="animate-pulse">
+                          <td colSpan={5} className="py-8 px-8"><div className="h-4 bg-gray-50 rounded w-full" /></td>
+                        </tr>
+                      ))
+                    ) : filtered.map(item => (
+                      <tr 
+                        key={item.id} 
+                        onClick={() => setSelectedId(item.id)}
+                        className={`group cursor-pointer transition-all ${selectedId === item.id ? 'bg-teal-50/30' : 'hover:bg-gray-50/20'}`}
+                      >
+                        <td className="py-6 px-8">
+                           <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 shrink-0 group-hover:scale-110 transition-transform"><FileText size={18}/></div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-black text-gray-800 uppercase tracking-tight truncate">{item.teamName}</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 truncate max-w-[200px]">{item.projectName}</p>
+                              </div>
+                           </div>
+                        </td>
+                        <td className="py-6 px-8 text-center"><span className="text-[11px] font-black text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100 uppercase">V{item.version || '1.0'}</span></td>
+                        <td className="py-6 px-8 text-center">
+                           <Badge variant="outline" className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest border transition-all ${STATUS_META[item.status]?.color || ''}`}>{STATUS_META[item.status]?.label}</Badge>
+                        </td>
+                        <td className="py-6 px-8 text-center">
+                           <div className="inline-flex items-center gap-1 font-black text-sm text-gray-800 bg-gray-50 px-3 py-1 rounded-xl shadow-inner border border-gray-100">
+                              <Star size={12} className="text-amber-400 fill-amber-400" /> {item.score ? item.score.toFixed(1) : '—'}
+                           </div>
+                        </td>
+                        <td className="py-6 px-8 text-right">
+                           <Button variant="ghost" size="icon" className="w-10 h-10 rounded-2xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all"><Eye size={16}/></Button>
+                        </td>
+                      </tr>
+                    ))}
+                    {filtered.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-20 text-center opacity-40">
+                          <FileText size={48} className="mx-auto mb-4" />
+                          <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">Không tìm thấy yêu cầu nào</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right side detail */}
-        <div className="xl:col-span-5">
-          <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white sticky top-4 overflow-hidden">
-            <CardHeader className="border-b border-gray-100 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                  <FileText size={18} className="text-indigo-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-gray-800">
-                    Chi tiết SRS
-                  </CardTitle>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Xem, review và cập nhật trạng thái tài liệu
-                  </p>
-                </div>
-              </div>
+        <div className="xl:col-span-4 space-y-8">
+          <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white sticky top-8">
+            <CardHeader className="border-b border-gray-50 py-6 px-8 flex justify-between items-center">
+              <CardTitle className="text-xs font-black text-gray-400 uppercase tracking-widest">Chi tiết thẩm định</CardTitle>
+              {selectedSrs?.fileUrl && (
+                  <Button variant="outline" onClick={() => window.open(selectedSrs.fileUrl, '_blank')} className="rounded-xl h-9 px-4 text-[9px] font-black uppercase tracking-widest border-teal-100 text-teal-600 hover:bg-teal-50">
+                    <ExternalLink size={12} className="mr-1.5" /> Xem File
+                  </Button>
+              )}
             </CardHeader>
-
-            <CardContent className="p-5">
+            <CardContent className="p-8 space-y-8">
               {!selectedSrs ? (
-                <div className="py-14 text-center">
-                  <FileText size={34} className="text-gray-300 mx-auto" />
-                  <p className="text-sm text-gray-400 mt-3">
-                    Chọn một SRS để xem chi tiết
-                  </p>
+                <div className="py-20 text-center opacity-30">
+                  <Eye size={48} className="mx-auto mb-4" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]">Chọn một bản nộp để review</p>
                 </div>
               ) : (
-                <div className="space-y-5">
-                  {/* top info */}
-                  <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">
-                          {selectedSrs.teamName}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {selectedSrs.projectName}
-                        </p>
-                      </div>
-                      {renderStatusChip(selectedSrs.status)}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                      <div className="rounded-xl bg-white border border-gray-100 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Version
-                        </p>
-                        <p className="text-sm font-mono text-gray-700 mt-1">
-                          {selectedSrs.version}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-white border border-gray-100 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Điểm review
-                        </p>
-                        <p className="text-sm font-semibold text-gray-700 mt-1">
-                          {selectedSrs.score ? selectedSrs.score.toFixed(1) : "Chưa chấm"}
-                        </p>
+                <>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xl font-black text-gray-800 tracking-tighter uppercase leading-tight mb-2">{selectedSrs.teamName}</h3>
+                      <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <span className="flex items-center gap-1.5"><Users size={12}/> {selectedSrs.leaderName}</span>
+                        <span className="flex items-center gap-1.5"><CalendarDays size={12}/> {new Date(selectedSrs.submittedAt || selectedSrs.createdAt).toLocaleDateString("vi-VN")}</span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* meta */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-gray-100 p-4">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <Users size={15} className="text-teal-600" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                          Leader
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-800 mt-2">
-                        {selectedSrs.leader}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {selectedSrs.members.length} thành viên
-                      </p>
+                    <div className="p-5 rounded-[24px] bg-gray-50 border border-gray-100 space-y-4">
+                       <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bản đặc tả:</span>
+                          <span className="text-[10px] font-black text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-widest">ISO 29148 Standard</span>
+                       </div>
+                       <p className="text-xs font-bold text-gray-600 leading-relaxed italic">"{selectedSrs.projectName}"</p>
                     </div>
 
-                    <div className="rounded-2xl border border-gray-100 p-4">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <CalendarDays size={15} className="text-indigo-600" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                          Deadline
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-800 mt-2">
-                        {formatDateShort(selectedSrs.deadline)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Cập nhật: {formatDate(selectedSrs.updatedAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* links */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <a
-                      href={selectedSrs.jiraUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-2xl border border-gray-100 p-4 hover:border-teal-200 hover:bg-teal-50/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <FolderKanban size={16} className="text-teal-600" />
-                        <span className="text-sm font-semibold text-gray-800">
-                          Jira Board
-                        </span>
-                        <ExternalLink size={13} className="text-gray-400 ml-auto" />
-                      </div>
-                    </a>
-
-                    <a
-                      href={selectedSrs.githubUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-2xl border border-gray-100 p-4 hover:border-indigo-200 hover:bg-indigo-50/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <GitBranch size={16} className="text-indigo-600" />
-                        <span className="text-sm font-semibold text-gray-800">
-                          GitHub Repo
-                        </span>
-                        <ExternalLink size={13} className="text-gray-400 ml-auto" />
-                      </div>
-                    </a>
-                  </div>
-
-                  {/* summary */}
-                  <div className="rounded-2xl border border-gray-100 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      Tóm tắt tài liệu
-                    </p>
-                    <p className="text-sm text-gray-700 leading-6 mt-2">
-                      {selectedSrs.summary}
-                    </p>
-                  </div>
-
-                  {/* review form */}
-                  <div className="rounded-2xl border border-teal-100 bg-teal-50/40 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <MessageSquare size={16} className="text-teal-600" />
-                      <h4 className="text-sm font-bold text-gray-800">
-                        Chấm bài & nhận xét
-                      </h4>
+                    <div className="space-y-4">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Điểm Review (0-10)</label>
+                       <div className="relative">
+                          <input 
+                            type="number" 
+                            step="0.5" 
+                            min="0" 
+                            max="10" 
+                            value={scoreValue}
+                            onChange={e => setScoreValue(e.target.value)}
+                            className="w-full h-14 rounded-[20px] bg-gray-50 border border-gray-100 px-6 text-base font-black text-amber-600 focus:ring-4 focus:ring-teal-50 focus:border-teal-500 outline-none transition-all pr-12" 
+                          />
+                          <Star size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-amber-400 fill-amber-400" />
+                       </div>
                     </div>
 
-                    <textarea
-                      rows={5}
-                      value={feedbackText}
-                      onChange={(e) => setFeedbackText(e.target.value)}
-                      placeholder="Nhập nội dung phản hồi cho nhóm..."
-                      className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 placeholder-gray-400 outline-none resize-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-                    />
+                    <div className="space-y-4">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phản hồi của Giảng viên</label>
+                       <textarea 
+                          rows={6}
+                          value={feedbackText}
+                          onChange={e => setFeedbackText(e.target.value)}
+                          placeholder="Nhập nội dung góp ý hoặc lý do yêu cầu sửa đổi..."
+                          className="w-full rounded-[24px] bg-gray-50 border border-gray-100 p-6 text-sm font-bold text-gray-700 focus:ring-4 focus:ring-teal-50 focus:border-teal-500 outline-none transition-all resize-none placeholder:text-gray-300"
+                       />
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      <Button
-                        className="rounded-xl h-11 bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => handleStatusUpdate(selectedSrs.id, "FINAL")}
-                      >
-                        <CheckCircle size={14} className="mr-2" />
-                        Duyệt Final
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        className="rounded-xl h-11 border-amber-200 text-amber-700 bg-white hover:bg-amber-50"
-                        onClick={() =>
-                          handleStatusUpdate(selectedSrs.id, "NEED_REVISION")
-                        }
-                      >
-                        <RefreshCcw size={14} className="mr-2" />
-                        Yêu cầu sửa
-                      </Button>
+                    <div className="grid grid-cols-2 gap-4 pt-4">
+                       <Button 
+                          onClick={() => handleReview("NEED_REVISION")}
+                          disabled={reviewMutation.isPending}
+                          className="h-16 rounded-[24px] bg-amber-500 hover:bg-amber-600 text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-amber-100 border-0 transition-all hover:scale-[1.02] active:scale-95"
+                       >
+                          Yêu cầu sửa
+                       </Button>
+                       <Button 
+                          onClick={() => handleReview("FINAL")}
+                          disabled={reviewMutation.isPending}
+                          className="h-16 rounded-[24px] bg-teal-600 hover:bg-teal-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-teal-100 border-0 transition-all hover:scale-[1.02] active:scale-95"
+                       >
+                          {reviewMutation.isPending ? <RefreshCcw className="animate-spin mr-2" size={14}/> : <CheckCircle size={16} className="mr-2"/>} Duyệt Final
+                       </Button>
                     </div>
                   </div>
-
-                  {/* file actions */}
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={selectedSrs.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1"
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-xl border-gray-200 bg-white"
-                      >
-                        <ExternalLink size={14} className="mr-2" />
-                        Xem file SRS
-                      </Button>
-                    </a>
-                  </div>
-                </div>
+                </>
               )}
             </CardContent>
           </Card>

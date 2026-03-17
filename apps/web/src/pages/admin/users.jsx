@@ -13,10 +13,13 @@ import {
   MoreHorizontal,
   Mail,
   ShieldAlert,
-  ArrowRight,
+  ArrowUpDown,
   Filter,
   XCircle,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 // Components UI
@@ -51,6 +54,9 @@ export default function UserManagement() {
     const [search, setSearch] = useState("");
     const [filterRole, setFilterRole] = useState("all");
     const [actionMenu, setActionMenu] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
+    const PAGE_SIZE = 10;
 
     const { data: adminsRaw = [], isLoading: load1 } = useGetUsers("ADMIN");
     const { data: lectsRaw = [], isLoading: load2 } = useGetUsers("LECTURER");
@@ -68,16 +74,42 @@ export default function UserManagement() {
         return [...admins, ...lects, ...students];
     }, [adminsRaw, lectsRaw, studentsRaw, load1, load2, load3]);
 
-    const filtered = useMemo(() => {
-        return users.filter(u => {
+    const handleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
+        }));
+    };
+
+    const filteredAndSorted = useMemo(() => {
+        let result = users.filter(u => {
             const q = search.toLowerCase();
             const matchSearch = !search ||
                 u.name?.toLowerCase().includes(q) ||
-                u.email?.toLowerCase().includes(q);
+                u.email?.toLowerCase().includes(q) ||
+                (u.userName || u.studentCode || u.studentId || "").toLowerCase().includes(q);
             const matchRole = filterRole === "all" || u.role === filterRole;
             return matchSearch && matchRole;
         });
-    }, [users, search, filterRole]);
+
+        if (sortConfig.key) {
+            result.sort((a, b) => {
+                const valA = a[sortConfig.key]?.toLowerCase() || "";
+                const valB = b[sortConfig.key]?.toLowerCase() || "";
+                if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+                return 0;
+            });
+        }
+        return result;
+    }, [users, search, filterRole, sortConfig]);
+
+    const paginated = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return filteredAndSorted.slice(start, start + PAGE_SIZE);
+    }, [filteredAndSorted, currentPage]);
+
+    const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE);
 
     const handleAction = async (userId, action, data) => {
         try {
@@ -97,11 +129,16 @@ export default function UserManagement() {
         }
     };
 
+    const SortIcon = ({ column }) => {
+        if (sortConfig.key !== column) return <ArrowUpDown size={12} className="ml-1 opacity-20" />;
+        return sortConfig.direction === "asc" ? <ChevronUp size={12} className="ml-1 text-teal-600" /> : <ChevronDown size={12} className="ml-1 text-teal-600" />;
+    };
+
     if (load1 || load2 || load3) return (
       <div className="flex h-screen items-center justify-center p-8 bg-gray-50/50">
          <div className="text-center">
-           <Users className="animate-pulse text-teal-600 mx-auto mb-4" size={48} /> 
-           <span className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Đang đồng bộ danh sách tài khoản...</span>
+            <Users className="animate-pulse text-teal-600 mx-auto mb-4" size={48} /> 
+            <span className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Đang đồng bộ danh sách tài khoản...</span>
          </div>
       </div>
     );
@@ -131,14 +168,14 @@ export default function UserManagement() {
                     <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest leading-none">Cơ sở dữ liệu người dùng</CardTitle>
                     <div className="flex gap-3 w-full md:w-auto items-center">
                         <div className="flex-1 md:w-80">
-                            <InputField placeholder="Tìm tên, email hoặc mã số..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
+                            <InputField placeholder="Tìm tên, email hoặc mã số..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} icon={Search} />
                         </div>
                         <div className="flex items-center gap-2">
                            <Filter size={14} className="text-gray-300" />
                            {["all", "ADMIN", "LECTURER", "STUDENT"].map(r => (
                                <button
                                    key={r}
-                                   onClick={(e) => { e.stopPropagation(); setFilterRole(r); }}
+                                   onClick={(e) => { e.stopPropagation(); setFilterRole(r); setCurrentPage(1); }}
                                    className={`text-[9px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl border transition-all ${filterRole === r
                                        ? "bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-100"
                                        : "bg-white text-gray-400 border-gray-100 hover:border-teal-400 hover:text-teal-600"
@@ -155,14 +192,29 @@ export default function UserManagement() {
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-gray-50/50">
                                 <tr>
-                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Họ và tên / Email</th>
-                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Vai trò chính</th>
-                                    <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100">Trạng thái bảo mật</th>
+                                    <th 
+                                      className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
+                                      onClick={() => handleSort("name")}
+                                    >
+                                      <div className="flex items-center">Họ và tên / Email <SortIcon column="name" /></div>
+                                    </th>
+                                    <th 
+                                      className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
+                                      onClick={() => handleSort("role")}
+                                    >
+                                      <div className="flex items-center justify-center">Vai trò chính <SortIcon column="role" /></div>
+                                    </th>
+                                    <th 
+                                      className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
+                                      onClick={() => handleSort("status")}
+                                    >
+                                      <div className="flex items-center justify-center">Trạng thái <SortIcon column="status" /></div>
+                                    </th>
                                     <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right border-b border-gray-100">Thao tác hồ sơ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {filtered.map(u => {
+                                {paginated.map(u => {
                                     const roleCfg = ROLE_MAP[u.role] || ROLE_MAP.STUDENT;
                                     const isActive = u.status !== "DISABLED" && u.enabled !== false;
                                     return (
@@ -179,7 +231,7 @@ export default function UserManagement() {
                                                     <div className="flex flex-col">
                                                         <p className="font-black text-gray-800 text-sm leading-none flex items-center gap-2">
                                                           {u.name}
-                                                          {u.studentId && <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{u.studentId}</span>}
+                                                          {(u.studentId || u.studentCode) && <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{u.studentId || u.studentCode}</span>}
                                                         </p>
                                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">{u.email}</p>
                                                     </div>
@@ -200,24 +252,22 @@ export default function UserManagement() {
                                             <td className="py-5 px-8 text-center">
                                                 {isActive ? (
                                                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 uppercase tracking-widest transition-all hover:bg-emerald-100">
-                                                        <CheckCircle size={10} /> Active Profile
+                                                        <CheckCircle size={10} /> Active
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-red-500 bg-red-50 px-3 py-1.5 rounded-full border border-red-100 uppercase tracking-widest transition-all hover:bg-red-100">
-                                                        <ShieldAlert size={10} /> Account Locked
+                                                        <ShieldAlert size={10} /> Locked
                                                     </span>
                                                 )}
                                             </td>
                                             <td className="py-5 px-8">
                                                 <div className="flex justify-end relative">
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="icon" 
-                                                        className="w-10 h-10 rounded-2xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all"
+                                                    <button 
+                                                        className="w-10 h-10 rounded-2xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-gray-400 hover:text-teal-600 transition-all flex items-center justify-center"
                                                         onClick={(e) => { e.stopPropagation(); setActionMenu(actionMenu === u.id ? null : u.id); }}
                                                     >
                                                         <MoreHorizontal size={18} />
-                                                    </Button>
+                                                    </button>
 
                                                     {actionMenu === u.id && (
                                                         <div className="absolute right-0 top-12 z-50 bg-white border border-gray-100 rounded-[24px] shadow-2xl py-3 w-60 animate-in zoom-in duration-200">
@@ -251,7 +301,7 @@ export default function UserManagement() {
                                         </tr>
                                     );
                                 })}
-                                {filtered.length === 0 && (
+                                {filteredAndSorted.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="py-20 text-center">
                                             <Search size={48} className="text-gray-100 mx-auto mb-4" />
@@ -263,6 +313,29 @@ export default function UserManagement() {
                         </table>
                     </div>
                 </CardContent>
+                {totalPages > 1 && (
+                    <div className="p-6 border-t border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                         <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                            Trang {currentPage} / {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                             <Button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                            >
+                                Trước
+                            </Button>
+                            <Button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                            >
+                                Sau
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
     );

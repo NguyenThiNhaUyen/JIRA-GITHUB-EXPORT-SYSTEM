@@ -65,7 +65,7 @@ export default function StudentCoursesPage() {
                             <Card key={c.id}
                                 className="border-0 shadow-sm rounded-[40px] overflow-hidden bg-white hover:shadow-2xl hover:shadow-teal-500/10 transition-all cursor-pointer group animate-in fade-in slide-up duration-500"
                                 style={{ animationDelay: `${index * 100}ms` }}
-                                onClick={() => navigate("/student")}
+                                onClick={() => navigate(`/student/workspace/${c.id}`)}
                             >
                                 <div className="h-2 bg-gradient-to-r from-teal-500 to-indigo-500" />
                                 <CardContent className="p-10 space-y-8">

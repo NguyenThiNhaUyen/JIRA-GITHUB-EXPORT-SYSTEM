@@ -96,6 +96,33 @@ export default function AdminReports() {
     }
   };
 
+  const handleExport = () => {
+    try {
+      const headers = ["Mã lớp", "Tên lớp", "Học kỳ", "Sinh viên", "Dự án", "Trạng thái"];
+      const rows = allCourses.map(c => [
+        c.code,
+        c.name,
+        c.semester?.name || "N/A",
+        `${c.currentStudents}/${c.maxStudents}`,
+        c.projectsCount || 0,
+        c.status
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `BaoCaoTongHop_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      success("Đã xuất báo cáo tổng hợp thành công!");
+    } catch (err) {
+      showError("Không thể xuất báo cáo.");
+    }
+  };
+
   if (loadingSemesters || loadingCourses) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -117,7 +144,7 @@ export default function AdminReports() {
           <Button key="print" variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition-all">
             <Printer size={16} className="mr-2" /> In báo cáo
           </Button>,
-          <Button key="export" className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white h-11 px-6 text-xs font-bold uppercase tracking-widest shadow-lg shadow-teal-100 border-0">
+          <Button key="export" onClick={handleExport} className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white h-11 px-6 text-xs font-bold uppercase tracking-widest shadow-lg shadow-teal-100 border-0">
             <Download size={16} className="mr-2" /> Export Tổng hợp
           </Button>
         ]}

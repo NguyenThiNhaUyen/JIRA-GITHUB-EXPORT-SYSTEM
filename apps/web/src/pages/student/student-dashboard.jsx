@@ -148,7 +148,7 @@ export default function StudentDashboard() {
                 ) : courses.map(course => (
                   <button
                     key={course.id}
-                    onClick={() => setSelectedCourseId(course.id)}
+                    onClick={() => navigate(`/student/workspace/${course.id}`)}
                     className={`p-4 rounded-2xl border transition-all text-left group animate-in slide-in-from-bottom-2 duration-300 ${selectedCourseId === course.id ? 'border-teal-500 bg-teal-50/30' : 'border-gray-100 bg-gray-50/50 hover:bg-white hover:border-teal-200 shadow-sm hover:shadow-lg'}`}
                   >
                     <div className="flex justify-between items-start mb-3">
