@@ -30,7 +30,6 @@ COPY --from=build /app/publish .
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Expose port (Render assigns PORT dynamically, default 10000/8080)
-EXPOSE 8080
 EXPOSE 10000
 
 # Run the app
