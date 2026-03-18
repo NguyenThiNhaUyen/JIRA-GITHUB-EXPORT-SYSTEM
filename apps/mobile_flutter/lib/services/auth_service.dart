@@ -7,20 +7,72 @@ class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   static const String baseUrl =
-      "https://jira-github-export-system.onrender.com/api";
+      "https://jira-github-export-system.onrender.com";
 
+  /// =========================
+  /// BASE REQUEST (giống interceptor)
+  /// =========================
+  Future<http.Response> _request(
+    String method,
+    String endpoint, {
+    Map<String, dynamic>? body,
+    bool auth = false,
+    int retry = 2,
+  }) async {
+    final url = Uri.parse("$baseUrl$endpoint");
+
+    int attempt = 0;
+
+    while (true) {
+      try {
+        final headers = {
+          "Content-Type": "application/json",
+        };
+
+        // attach token giống Axios interceptor
+        if (auth) {
+          final token = await _storage.read(key: "token");
+          if (token != null) {
+            headers["Authorization"] = "Bearer $token";
+          }
+        }
+
+        late http.Response response;
+
+        if (method == "POST") {
+          response = await http.post(
+            url,
+            headers: headers,
+            body: jsonEncode(body ?? {}),
+          );
+        } else if (method == "GET") {
+          response = await http.get(url, headers: headers);
+        } else {
+          throw Exception("Unsupported method");
+        }
+
+        return response;
+      } catch (e) {
+        if (attempt >= retry) rethrow;
+        attempt++;
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+  }
+
+  /// =========================
   /// LOGIN
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  /// =========================
+  Future<Map<String, dynamic>> login(
+      String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/sessions"),
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: jsonEncode({
+      final response = await _request(
+        "POST",
+        "/api/sessions",
+        body: {
           "email": email,
-          "password": password
-        }),
+          "password": password,
+        },
       );
 
       print("Status: ${response.statusCode}");
@@ -33,48 +85,59 @@ class AuthService {
         final user = User.fromJson(json["data"]["user"]);
 
         await _storage.write(key: "token", value: token);
-        await _storage.write(key: "user", value: jsonEncode(user.toJson()));
+        await _storage.write(
+            key: "user", value: jsonEncode(user.toJson()));
 
         return {
           "success": true,
-          "user": user
-        };
-      } else {
-        return {
-          "success": false,
-          "error": json["message"] ?? "Login failed"
+          "user": user,
         };
       }
-    } catch (e) {
-      print("Login error: $e");
+
       return {
         "success": false,
-        "error": "Cannot connect to server"
+        "error": json["message"] ?? "Login failed",
+      };
+    } catch (e) {
+      print("Login error: $e");
+
+      return {
+        "success": false,
+        "error": "Server is waking up, please try again",
       };
     }
   }
 
+  /// =========================
   /// LOGOUT
+  /// =========================
   Future<void> logout() async {
-    await _storage.delete(key: "token");
-    await _storage.delete(key: "user");
+    await _storage.deleteAll();
   }
 
+  /// =========================
   /// CHECK LOGIN
+  /// =========================
   Future<bool> isLoggedIn() async {
     final token = await _storage.read(key: "token");
     return token != null;
   }
 
+  /// =========================
   /// GET CURRENT USER
+  /// =========================
   Future<User?> getCurrentUser() async {
     final userData = await _storage.read(key: "user");
+
     if (userData == null) return null;
+
     final Map<String, dynamic> json = jsonDecode(userData);
     return User.fromJson(json);
   }
 
+  /// =========================
   /// GET TOKEN
+  /// =========================
   Future<String?> getToken() async {
     return await _storage.read(key: "token");
   }

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 
 class ContributionsScreen extends StatefulWidget {
   const ContributionsScreen({super.key});
@@ -39,243 +41,14 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
     'T12'
   ];
 
-  static const List<int> _wGh = [4, 7, 6, 9, 11, 8, 13, 10, 12, 9, 14, 16];
-  static const List<int> _wJira = [3, 5, 4, 7, 8, 6, 9, 7, 10, 8, 11, 12];
+  static const List<int> _wGh = [];
+  static const List<int> _wJira = [];
 
-  static const List<Map<String, dynamic>> _courses = [
-    {
-      'id': 'c1',
-      'code': 'SWD392-SE1801',
-      'name': 'SWD392 - Software Architecture',
-    },
-    {
-      'id': 'c2',
-      'code': 'EXE101-SE1802',
-      'name': 'EXE101 - Entrepreneurship',
-    },
-  ];
+  static const List<Map<String, dynamic>> _courses = [];
 
-  static const List<Map<String, dynamic>> _allStudents = [
-    {
-      'id': 's1',
-      'name': 'Nguyễn Minh Anh',
-      'code': 'SE180001',
-      'email': 'minhanh@fpt.edu.vn',
-      'group': 'Team Alpha',
-      'commits': 28,
-      'jira': 18,
-      'prs': 7,
-      'reviews': 8,
-      'activeDays': 11,
-      'overdue': 0,
-      'score': 94,
-      'status': 'Rất tốt',
-      'lastActive': 1
-    },
-    {
-      'id': 's2',
-      'name': 'Trần Quang Huy',
-      'code': 'SE180002',
-      'email': 'quanghuy@fpt.edu.vn',
-      'group': 'Team Alpha',
-      'commits': 14,
-      'jira': 10,
-      'prs': 4,
-      'reviews': 5,
-      'activeDays': 8,
-      'overdue': 1,
-      'score': 72,
-      'status': 'Tích cực',
-      'lastActive': 2
-    },
-    {
-      'id': 's3',
-      'name': 'Lê Thu Trang',
-      'code': 'SE180003',
-      'email': 'thutrang@fpt.edu.vn',
-      'group': 'Team Alpha',
-      'commits': 7,
-      'jira': 6,
-      'prs': 2,
-      'reviews': 2,
-      'activeDays': 5,
-      'overdue': 1,
-      'score': 48,
-      'status': 'Ổn định',
-      'lastActive': 3
-    },
-    {
-      'id': 's4',
-      'name': 'Phạm Gia Bảo',
-      'code': 'SE180004',
-      'email': 'giabao@fpt.edu.vn',
-      'group': 'Team Alpha',
-      'commits': 3,
-      'jira': 3,
-      'prs': 1,
-      'reviews': 0,
-      'activeDays': 2,
-      'overdue': 2,
-      'score': 28,
-      'status': 'Cần chú ý',
-      'lastActive': 9
-    },
-    {
-      'id': 's5',
-      'name': 'Võ Khánh Linh',
-      'code': 'SE180005',
-      'email': 'khanhlinh@fpt.edu.vn',
-      'group': 'Team Beta',
-      'commits': 22,
-      'jira': 15,
-      'prs': 6,
-      'reviews': 7,
-      'activeDays': 10,
-      'overdue': 0,
-      'score': 88,
-      'status': 'Rất tốt',
-      'lastActive': 1
-    },
-    {
-      'id': 's6',
-      'name': 'Đỗ Thành Công',
-      'code': 'SE180006',
-      'email': 'thanhcong@fpt.edu.vn',
-      'group': 'Team Beta',
-      'commits': 12,
-      'jira': 9,
-      'prs': 3,
-      'reviews': 4,
-      'activeDays': 7,
-      'overdue': 0,
-      'score': 66,
-      'status': 'Tích cực',
-      'lastActive': 2
-    },
-    {
-      'id': 's7',
-      'name': 'Ngô Hải Yến',
-      'code': 'SE180007',
-      'email': 'haiyen@fpt.edu.vn',
-      'group': 'Team Beta',
-      'commits': 0,
-      'jira': 1,
-      'prs': 0,
-      'reviews': 0,
-      'activeDays': 0,
-      'overdue': 4,
-      'score': 0,
-      'status': 'Chưa commit',
-      'lastActive': 14
-    },
-    {
-      'id': 's8',
-      'name': 'Bùi Nhật Nam',
-      'code': 'SE180008',
-      'email': 'nhatnam@fpt.edu.vn',
-      'group': 'Team Beta',
-      'commits': 5,
-      'jira': 4,
-      'prs': 1,
-      'reviews': 1,
-      'activeDays': 4,
-      'overdue': 1,
-      'score': 38,
-      'status': 'Cần chú ý',
-      'lastActive': 5
-    },
-    {
-      'id': 's9',
-      'name': 'Hoàng Đức Anh',
-      'code': 'SE180009',
-      'email': 'ducanh@fpt.edu.vn',
-      'group': 'Team Gamma',
-      'commits': 19,
-      'jira': 13,
-      'prs': 5,
-      'reviews': 6,
-      'activeDays': 9,
-      'overdue': 0,
-      'score': 80,
-      'status': 'Tích cực',
-      'lastActive': 1
-    },
-    {
-      'id': 's10',
-      'name': 'Phan Bảo Ngọc',
-      'code': 'SE180010',
-      'email': 'baongoc@fpt.edu.vn',
-      'group': 'Team Gamma',
-      'commits': 9,
-      'jira': 7,
-      'prs': 2,
-      'reviews': 3,
-      'activeDays': 6,
-      'overdue': 1,
-      'score': 55,
-      'status': 'Ổn định',
-      'lastActive': 3
-    },
-    {
-      'id': 's11',
-      'name': 'Đặng Tuấn Kiệt',
-      'code': 'SE180011',
-      'email': 'tuankiet@fpt.edu.vn',
-      'group': 'Team Gamma',
-      'commits': 2,
-      'jira': 2,
-      'prs': 0,
-      'reviews': 0,
-      'activeDays': 1,
-      'overdue': 3,
-      'score': 20,
-      'status': 'Cần chú ý',
-      'lastActive': 10
-    },
-    {
-      'id': 's12',
-      'name': 'Mai Ngọc Hân',
-      'code': 'SE180012',
-      'email': 'ngochan@fpt.edu.vn',
-      'group': 'Team Gamma',
-      'commits': 11,
-      'jira': 8,
-      'prs': 3,
-      'reviews': 3,
-      'activeDays': 7,
-      'overdue': 0,
-      'score': 62,
-      'status': 'Tích cực',
-      'lastActive': 2
-    },
-  ];
+  static const List<Map<String, dynamic>> _allStudents = [];
 
-  static const List<Map<String, dynamic>> _groupStats = [
-    {
-      'name': 'Team Alpha',
-      'commits': 52,
-      'jira': 37,
-      'members': 4,
-      'zero': 0,
-      'balance': 75
-    },
-    {
-      'name': 'Team Beta',
-      'commits': 39,
-      'jira': 29,
-      'members': 4,
-      'zero': 1,
-      'balance': 42
-    },
-    {
-      'name': 'Team Gamma',
-      'commits': 41,
-      'jira': 30,
-      'members': 4,
-      'zero': 0,
-      'balance': 60
-    },
-  ];
+  static const List<Map<String, dynamic>> _groupStats = [];
 
   // ── state ─────────────────────────────────────────
   String _course = 'c1';
@@ -287,6 +60,30 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
   bool _showModal = false;
   final TextEditingController _modalMsg = TextEditingController();
   String? _banner;
+
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -482,14 +279,14 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
       _allStudents.where((s) => (s['commits'] as int) > 0).length;
   int get _inactiveCount =>
       _allStudents.where((s) => s['commits'] == 0).length;
-  int get _avgScore => (_allStudents.fold(
+  int get _avgScore => _totalStudents == 0 ? 0 : (_allStudents.fold(
               0, (s, e) => s + (e['score'] as int)) /
           _totalStudents)
       .round();
 
   int get _maxWeekly {
     final all = [..._wGh, ..._wJira];
-    return all.reduce(math.max);
+    return all.isEmpty ? 1 : all.reduce(math.max);
   }
 
   int get _maxGroupCommits {
@@ -505,15 +302,17 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
     return Scaffold(
       backgroundColor: bg,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(
+      appBar: AppTopHeader(
         title: 'Theo dõi đóng góp',
         user: AppUser(
-          name: 'Nguyễn Văn Nam',
-          email: 'namnv@fe.edu.vn',
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
           role: 'LECTURER',
         ),
       ),
-      body: Stack(
+      body: _isLoading
+        ? const Center(child: CircularProgressIndicator(color: teal))
+        : Stack(
         children: [
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -1176,7 +975,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
                 Expanded(
                   child: _miniSummaryBox(
                     'TB / tuần',
-                    '${(_wGh.fold(0, (a, b) => a + b) / _wGh.length).round()}',
+                    '${_wGh.isEmpty ? 0 : (_wGh.fold(0, (a, b) => a + b) / _wGh.length).round()}',
                     const Color(0xFFFFFBEB),
                     const Color(0xFFD97706),
                   ),
@@ -1226,7 +1025,8 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
 
   // ── line chart ───────────────────────────────────
   Widget _buildLineChart() {
-    final maxVal = [..._wGh, ..._wJira].reduce((a, b) => a > b ? a : b);
+    final allVals = [..._wGh, ..._wJira];
+    final maxVal = allVals.isEmpty ? 1 : allVals.reduce((a, b) => a > b ? a : b);
 
     return _cardWrap(
       child: Column(
@@ -2225,7 +2025,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
                       Expanded(
                         child: _groupMetricBox(
                           'TB commit / thành viên',
-                          '${((g['commits'] as int) / (g['members'] as int)).round()}',
+                          '${(g['members'] as int) == 0 ? 0 : ((g['commits'] as int) / (g['members'] as int)).round()}',
                         ),
                       ),
                     ],
@@ -2950,7 +2750,7 @@ class _LineChartPainter extends CustomPainter {
       final path = Path();
 
       for (int i = 0; i < data.length; i++) {
-        final x = i / (data.length - 1) * size.width;
+        final x = data.length <= 1 ? size.width / 2 : i / (data.length - 1) * size.width;
         final y = size.height - (data[i] / maxVal) * size.height;
         if (i == 0) {
           path.moveTo(x, y);

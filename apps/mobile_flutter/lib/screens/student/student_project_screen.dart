@@ -19,118 +19,34 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
 
   // Mock project data
   static const Map<String, dynamic> _project = {
-    'title': 'AI Interview System',
-    'description':
-        'Hệ thống phỏng vấn tự động sử dụng AI để đánh giá kỹ năng ứng viên',
-    'courseCode': 'SWD392',
-    'groupName': 'Team Alpha',
-    'role': 'Backend Developer',
-    'status': 'ACTIVE',
-    'repository': 'github.com/team-alpha/ai-interview',
-    'jiraKey': 'AIINT',
-    'branch': 'main',
-    'commits': 34,
-    'issuesDone': 12,
-    'prsMerged': 8,
-    'myContribution': 32,
-    'sprintCompletion': 68,
-    'openIssues': 7,
-    'techStack': ['Spring Boot', 'React', 'Python', 'PostgreSQL', 'Docker'],
+    'title': '',
+    'description': '',
+    'courseCode': '',
+    'groupName': '',
+    'role': '',
+    'status': '',
+    'repository': '',
+    'jiraKey': '',
+    'branch': '',
+    'commits': 0,
+    'issuesDone': 0,
+    'prsMerged': 0,
+    'myContribution': 0,
+    'sprintCompletion': 0,
+    'openIssues': 0,
+    'techStack': <String>[],
   };
 
-  static const List<Map<String, dynamic>> _milestones = [
-    {'title': 'Requirements Analysis', 'progress': 100, 'status': 'Done'},
-    {'title': 'System Design', 'progress': 100, 'status': 'Done'},
-    {'title': 'Core Backend API', 'progress': 75, 'status': 'In Progress'},
-    {'title': 'Frontend UI', 'progress': 50, 'status': 'In Progress'},
-    {'title': 'AI Integration', 'progress': 20, 'status': 'In Progress'},
-    {'title': 'Testing & QA', 'progress': 0, 'status': 'Not started'},
-  ];
+  static const List<Map<String, dynamic>> _milestones = [];
 
-  static const List<Map<String, dynamic>> _personalTasks = [
-    {
-      'key': 'AIINT-45',
-      'title': 'Implement JWT Authentication',
-      'status': 'Done',
-      'priority': 'High',
-      'due': '12/03/2026',
-    },
-    {
-      'key': 'AIINT-62',
-      'title': 'Design Interview Question API',
-      'status': 'In Progress',
-      'priority': 'High',
-      'due': '18/03/2026',
-    },
-    {
-      'key': 'AIINT-71',
-      'title': 'Database Schema Optimization',
-      'status': 'In Progress',
-      'priority': 'Medium',
-      'due': '20/03/2026',
-    },
-    {
-      'key': 'AIINT-80',
-      'title': 'Unit Tests for Auth Module',
-      'status': 'To Do',
-      'priority': 'Low',
-      'due': '25/03/2026',
-    },
-  ];
+  static const List<Map<String, dynamic>> _personalTasks = [];
 
-  static const List<Map<String, dynamic>> _teamMembers = [
-    {
-      'name': 'Nguyễn Văn An',
-      'role': 'Frontend Dev',
-      'commits': 45,
-      'issuesDone': 15,
-      'score': 28,
-    },
-    {
-      'name': 'Trần Thị Bình',
-      'role': 'Backend Dev',
-      'commits': 34,
-      'issuesDone': 12,
-      'score': 32,
-    },
-    {
-      'name': 'Lê Văn Chi',
-      'role': 'AI Engineer',
-      'commits': 28,
-      'issuesDone': 9,
-      'score': 22,
-    },
-    {
-      'name': 'Phạm Thị Dung',
-      'role': 'DevOps',
-      'commits': 38,
-      'issuesDone': 14,
-      'score': 18,
-    },
-  ];
+  static const List<Map<String, dynamic>> _teamMembers = [];
 
-  static const List<Map<String, dynamic>> _srsFiles = [
-    {
-      'version': 'SRS v2.1',
-      'updatedAt': '10/03/2026',
-      'status': 'Approved',
-    },
-    {
-      'version': 'SRS v2.0',
-      'updatedAt': '28/02/2026',
-      'status': 'Archived',
-    },
-    {
-      'version': 'SRS v1.0',
-      'updatedAt': '15/02/2026',
-      'status': 'Archived',
-    },
-  ];
+  static const List<Map<String, dynamic>> _srsFiles = [];
 
-  static const List<int> _weeklyCommits = [5, 12, 8, 18, 6, 14, 9];
-  static const List<String> _weekDays = [
-    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
-  ];
+  static const List<int> _weeklyCommits = [];
+  static const List<String> _weekDays = [];
 
   @override
   void initState() {

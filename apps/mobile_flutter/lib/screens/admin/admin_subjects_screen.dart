@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminSubjectsScreen extends StatefulWidget {
   const AdminSubjectsScreen({super.key});
@@ -21,8 +22,10 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
   };
 
   final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
   final List<Map<String, dynamic>> _subjects = [];
+  AppUser? _currentUser;
 
   String _filter = "ALL";
   String _search = "";
@@ -63,7 +66,21 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUser();
     _loadData();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -121,27 +138,8 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
     );
   }
 
-  void _autoGenerateSubject() {
-    final count = _subjects.length + 1;
 
-    final generated = {
-      "id": _nextId,
-      "department": "Software Engineering",
-      "courseNumber": "30$count",
-      "code": "SWD30$count",
-      "name": "Auto Subject $count",
-      "description": "Auto generated subject for demo purpose",
-      "credits": 3,
-      "maxStudents": 40,
-      "status": "ACTIVE",
-    };
 
-    setState(() {
-      _subjects.add(generated);
-    });
-
-    _showSnack("Đã tạo môn học mẫu tự động.");
-  }
 
   Future<void> _showSubjectDialog({Map<String, dynamic>? subject}) async {
     final bool isEdit = subject != null;
@@ -442,33 +440,47 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                       return;
                     }
 
+                    final payload = {
+                      'subjectCode': code,
+                      'subjectName': name,
+                      'department': department,
+                      'description': description,
+                      'credits': credits,
+                      'maxStudents': maxStudents,
+                      'status': status,
+                    };
+
+                    _isLoading = true;
+                    setState(() {});
+
                     if (isEdit) {
-                      setState(() {
-                        subject["department"] = department;
-                        subject["courseNumber"] = courseNumber;
-                        subject["code"] = code;
-                        subject["name"] = name;
-                        subject["description"] = description;
-                        subject["credits"] = credits;
-                        subject["maxStudents"] = maxStudents;
-                        subject["status"] = status;
+                      final updatePayload = {
+                        'subjectName': name,
+                        'department': department,
+                        'description': description,
+                        'credits': credits,
+                        'maxStudents': maxStudents,
+                        'status': status,
+                      };
+                      _adminService.updateSubject(subject["id"], updatePayload).then((success) {
+                        if (success) {
+                          _showSnack("Cập nhật môn học thành công.");
+                          _loadData();
+                        } else {
+                          _showSnack("Thao tác thất bại. Vui lòng thử lại.", success: false);
+                          setState(() => _isLoading = false);
+                        }
                       });
-                      _showSnack("Cập nhật môn học thành công.");
                     } else {
-                      setState(() {
-                        _subjects.add({
-                          "id": _nextId,
-                          "department": department,
-                          "courseNumber": courseNumber,
-                          "code": code,
-                          "name": name,
-                          "description": description,
-                          "credits": credits,
-                          "maxStudents": maxStudents,
-                          "status": status,
-                        });
+                      _adminService.createSubject(payload).then((newSubject) {
+                        if (newSubject != null) {
+                          _showSnack("Đã thêm môn học mới.");
+                          _loadData();
+                        } else {
+                          _showSnack("Thao tác thất bại. Vui lòng thử lại.", success: false);
+                          setState(() => _isLoading = false);
+                        }
                       });
-                      _showSnack("Đã thêm môn học mới.");
                     }
 
                     Navigator.pop(dialogContext);
@@ -518,10 +530,15 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
     );
 
     if (confirmed == true) {
-      setState(() {
-        _subjects.removeWhere((s) => s["id"] == subject["id"]);
-      });
-      _showSnack("Đã xóa môn học.");
+      setState(() => _isLoading = true);
+      final success = await _adminService.deleteSubject(subject["id"]);
+      if (success) {
+        _showSnack("Đã xóa môn học.");
+        _loadData();
+      } else {
+        setState(() => _isLoading = false);
+        _showSnack("Không thể xóa môn học này.", success: false);
+      }
     }
   }
 
@@ -889,11 +906,6 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                       icon: const Icon(Icons.add),
                       label: const Text("Thêm"),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: _autoGenerateSubject,
-                      icon: const Icon(Icons.auto_fix_high),
-                      label: const Text("Auto Generate"),
-                    ),
                   ],
                 ),
               ],
@@ -918,11 +930,6 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                       onPressed: () => _showSubjectDialog(),
                       icon: const Icon(Icons.add),
                       label: const Text("Thêm"),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: _autoGenerateSubject,
-                      icon: const Icon(Icons.auto_fix_high),
-                      label: const Text("Auto Generate"),
                     ),
                   ],
                 ),
@@ -1035,9 +1042,9 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
     return AppTopHeader(
       title: 'Môn học',
       primary: false,
-      user: const AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
     );

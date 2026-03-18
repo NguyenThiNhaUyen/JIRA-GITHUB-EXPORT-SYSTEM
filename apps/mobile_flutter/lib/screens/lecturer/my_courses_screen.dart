@@ -544,7 +544,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                _buildMiniCommitChart(),
+                _buildMiniCommitChart(course),
                 const SizedBox(height: 12),
 
                 Row(
@@ -704,8 +704,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     );
   }
 
-  Widget _buildMiniCommitChart() {
-    final List<int> defaultCommits = [5, 7, 3, 9, 12];
+  Widget _buildMiniCommitChart(Map<String, dynamic> course) {
+    final List<int> defaultCommits = (course['commits'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [];
+    if (defaultCommits.isEmpty) return const SizedBox(height: 36);
     final max = defaultCommits.reduce((a, b) => a > b ? a : b);
     return SizedBox(
       height: 36,

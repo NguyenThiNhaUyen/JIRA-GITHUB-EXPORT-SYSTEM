@@ -35,23 +35,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   String _selectedCourseId = 'all';
 
   // Mock weekly activity
-  final List<Map<String, dynamic>> _weeklyActivity = [
-    {'day': 'T2', 'commits': 5},
-    {'day': 'T3', 'commits': 12},
-    {'day': 'T4', 'commits': 8},
-    {'day': 'T5', 'commits': 20},
-    {'day': 'T6', 'commits': 15},
-    {'day': 'T7', 'commits': 3},
-    {'day': 'CN', 'commits': 7},
-  ];
+  final List<Map<String, dynamic>> _weeklyActivity = [];
 
   // Mock heatmap (28 cells = 4 weeks)
-  final List<int> _heatmapData = [
-    0, 1, 2, 3, 4, 2, 1,
-    0, 0, 1, 2, 3, 1, 0,
-    1, 2, 4, 3, 2, 1, 0,
-    0, 1, 1, 2, 4, 3, 2,
-  ];
+  final List<int> _heatmapData = [];
 
   @override
   void initState() {
@@ -687,7 +674,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   // ── 6. Activity Section ────────────────────────────
   Widget _buildActivitySection() {
-    final maxCommits = _weeklyActivity.map((d) => d['commits'] as int).reduce((a, b) => a > b ? a : b).toDouble();
+    final maxCommits = _weeklyActivity.isEmpty ? 1.0 : _weeklyActivity.map((d) => d['commits'] as int).reduce((a, b) => a > b ? a : b).toDouble();
     return _sectionCard(
       title: 'Phân tích hoạt động tuần này',
       subtitle: 'Tổng hợp commit và Jira issues trong 7 ngày gần nhất',

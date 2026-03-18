@@ -37,15 +37,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   List<Map<String, dynamic>> _courses = [];
   List<Map<String, dynamic>> _groups = [];
 
-  static const List<Map<String, dynamic>> _commits = [
-    {'day': 'Mon', 'commits': 12},
-    {'day': 'Tue', 'commits': 19},
-    {'day': 'Wed', 'commits': 15},
-    {'day': 'Thu', 'commits': 22},
-    {'day': 'Fri', 'commits': 30},
-    {'day': 'Sat', 'commits': 10},
-    {'day': 'Sun', 'commits': 8},
-  ];
+  static const List<Map<String, dynamic>> _commits = [];
 
   String _selectedSubject = '';
   String _selectedCourse = '';
@@ -1276,8 +1268,16 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   }
 
   Widget _buildHeatmapGrid() {
-    const mockData = [3, 6, 2, 8, 4, 0, 1, 5, 7, 3, 6, 2, 8, 4, 0,
-                      1, 5, 7, 3, 6, 2, 8, 4, 0, 1, 5, 7, 3, 6, 2];
+    final mockData = <int>[];
+
+    if (mockData.isEmpty) {
+      return const SizedBox(
+        height: 80, 
+        child: Center(
+          child: Text('Chưa có dữ liệu heatmap', style: TextStyle(fontSize: 11, color: textSecondary))
+        )
+      );
+    }
 
     return SizedBox(
       height: 80,
@@ -1305,6 +1305,8 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
 
   // ─── 8. Commit Trend ───────────────────────────────
   Widget _buildCommitTrendCard() {
+    if (_commits.isEmpty) return const SizedBox.shrink();
+    
     final maxCommit =
         _commits.map((c) => c['commits'] as int).reduce((a, b) => a > b ? a : b);
     return _card(
@@ -1393,7 +1395,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         .entries
         .map((e) => {
               'name': e.value['name'],
-              'commits': [145, 88, 32, 20][e.key % 4],
+              'commits': 0,
             })
         .toList()
       ..sort((a, b) => (b['commits'] as int).compareTo(a['commits'] as int));

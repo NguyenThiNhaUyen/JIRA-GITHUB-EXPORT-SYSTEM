@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -20,6 +21,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   static const Color teal = Color(0xFF0F766E);
 
   final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   // ── Role config ─────────────────────────────────────────
@@ -43,12 +45,27 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   // ── State ────────────────────────────────────────────────
   late List<Map<String, dynamic>> _users;
+  AppUser? _currentUser;
 
   @override
   void initState() {
     super.initState();
     _users = [];
+    _loadUser();
     _loadUsers();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadUsers() async {
@@ -94,31 +111,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
 
-  void _changeRole(String userId, String newRole) {
-    setState(() {
-      final idx = _users.indexWhere((u) => u['id'].toString() == userId);
-      if (idx != -1) _users[idx]['role'] = newRole;
-      _openMenuId = null;
-    });
-    _snack('Đã cập nhật quyền thành ${_roleCfg[newRole]!['label']}');
-  }
-
-  void _toggleStatus(String userId, String currentStatus) {
-    setState(() {
-      final idx = _users.indexWhere((u) => u['id'].toString() == userId);
-      if (idx != -1) {
-        _users[idx]['status'] = currentStatus == 'DISABLED'
-            ? 'ACTIVE'
-            : 'DISABLED';
-      }
-      _openMenuId = null;
-    });
-    _snack('Đã cập nhật trạng thái tài khoản');
-  }
-
-  void _resetPassword(String userId, String name) {
+  Future<void> _changeRole(String userId, String newRole) async {
     setState(() => _openMenuId = null);
-    _snack('Đã gửi email đặt lại mật khẩu đến $name');
+    final success = await _adminService.updateUserRole(int.parse(userId), newRole);
+    if (success) {
+      _snack('Đã cập nhật quyền thành ${_roleCfg[newRole]!['label']}');
+      _loadUsers();
+    } else {
+      _snack('Cập nhật quyền thất bại', ok: false);
+    }
+  }
+
+  Future<void> _toggleStatus(String userId, String currentStatus) async {
+    setState(() => _openMenuId = null);
+    final isEnabling = currentStatus == 'DISABLED';
+    final success = await _adminService.updateUserStatus(int.parse(userId), isEnabling);
+    if (success) {
+      _snack(isEnabling ? 'Đã kích hoạt tài khoản' : 'Đã vô hiệu hóa tài khoản');
+      _loadUsers();
+    } else {
+      _snack('Thao tác thất bại', ok: false);
+    }
+  }
+
+  Future<void> _resetPassword(String userId, String name) async {
+    setState(() => _openMenuId = null);
+    // UI might need a dialog to enter new password, but here we use a default one for admin reset
+    final success = await _adminService.resetPassword(int.parse(userId), "A12345678@");
+    if (success) {
+      _snack('Đã đặt lại mật khẩu về mặc định cho $name');
+    } else {
+      _snack('Reset mật khẩu thất bại', ok: false);
+    }
   }
 
   // ── BUILD ────────────────────────────────────────────────
@@ -196,12 +220,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Widget _buildTopHeader(bool isMobile) {
-    return const AppTopHeader(
+    return AppTopHeader(
       title: 'Quản lý Tài khoản',
       primary: false,
-      user: AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
     );

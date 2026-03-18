@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminReportsScreen extends StatefulWidget {
   const AdminReportsScreen({super.key});
@@ -15,7 +16,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   String selectedSemester = '';
   String selectedCourse = '';
   final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
+  AppUser? _currentUser;
 
   static const Color bgColor = Color(0xFFEFF7F5);
   static const Color contentBg = Color(0xFFF8FAFC);
@@ -95,7 +98,21 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUser();
     _loadData();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -202,9 +219,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     return AppTopHeader(
       title: 'Phân tích hệ thống',
       primary: false,
-      user: const AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
     );

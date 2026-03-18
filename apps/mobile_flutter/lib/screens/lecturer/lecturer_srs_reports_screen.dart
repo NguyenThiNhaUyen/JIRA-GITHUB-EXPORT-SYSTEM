@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
-
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 const _kT = Color(0xFF0F766E);
 const _kBg = Color(0xFFF9FAFB);
 const _kBd = Color(0xFFE5E7EB);
@@ -37,14 +38,7 @@ Color _scoreColor(double s) {
 }
 
 // ── Mock data ────────────────────────────────────────────────
-final _mockData = [
-  {'id':'srs-001','projectId':'p1','teamName':'Team Alpha','projectName':'Dormitory Issue Tracker','leader':'Nguyễn Văn An','members':['An','Bình','Hà','Minh','Linh'],'courseCode':'SWD392','courseName':'Software Architecture & Design','version':'v2.1','status':'FINAL','milestone':'Final SRS','submittedAt':'2026-03-10 08:30','updatedAt':'2026-03-10 10:15','deadline':'2026-03-12','reviewer':'Lê Thị Mai','feedback':'Tài liệu khá đầy đủ, actors và use cases rõ ràng. Cần giữ consistency giữa mục non-functional requirements và backlog Jira.','score':9.0,'checklist':{'introduction':'pass','stakeholders':'pass','functional':'pass','nonFunctional':'warning','useCases':'pass','consistency':'pass'},'jiraMapped':18,'githubCoverage':76,'commentsCount':7,'summary':'Hệ thống quản lý phản ánh ký túc xá với các chức năng gửi phản ánh, xử lý yêu cầu, theo dõi tiến độ và dashboard.','notes':['NFR cần mô tả rõ response time.','Một số acceptance criteria có thể tách nhỏ hơn.'],'history':[{'version':'v1.0','date':'2026-03-03 09:00','author':'Nguyễn Văn An'},{'version':'v2.1','date':'2026-03-10 08:30','author':'Nguyễn Văn An'}],'jiraUrl':'https://jira.example.com/alpha','githubUrl':'https://github.com/example/team-alpha'},
-  {'id':'srs-002','projectId':'p2','teamName':'Team Beta','projectName':'FPTU Club Event Hub','leader':'Trần Mỹ Duyên','members':['Duyên','Khánh','Phong','Trang'],'courseCode':'SWD392','courseName':'Software Architecture & Design','version':'v1.4','status':'REVIEW','milestone':'SRS Round 2','submittedAt':'2026-03-10 13:20','updatedAt':'2026-03-10 13:20','deadline':'2026-03-12','reviewer':'Lê Thị Mai','feedback':'Đã cải thiện so với bản trước. Cần mô tả rõ hơn phân quyền.','score':8.1,'checklist':{'introduction':'pass','stakeholders':'pass','functional':'warning','nonFunctional':'pass','useCases':'pass','consistency':'warning'},'jiraMapped':15,'githubCoverage':58,'commentsCount':5,'summary':'Nền tảng quản lý sự kiện CLB, đăng ký tham gia, check-in QR và quản lý truyền thông.','notes':['Thiếu alternate flow cho huỷ đăng ký.'],'history':[{'version':'v1.0','date':'2026-03-01 08:10','author':'Trần Mỹ Duyên'},{'version':'v1.4','date':'2026-03-10 13:20','author':'Trần Mỹ Duyên'}],'jiraUrl':'https://jira.example.com/beta','githubUrl':'https://github.com/example/team-beta'},
-  {'id':'srs-003','projectId':'p3','teamName':'Team Gamma','projectName':'Lab Asset Booking','leader':'Lê Hoàng Long','members':['Long','Nhi','Vũ','Thảo','Phát'],'courseCode':'SWD392','courseName':'Software Architecture & Design','version':'v1.1','status':'NEED_REVISION','milestone':'SRS Round 1','submittedAt':'2026-03-08 09:00','updatedAt':'2026-03-08 09:00','deadline':'2026-03-09','reviewer':'Lê Thị Mai','feedback':'Cần bổ sung non-functional requirements, đặc biệt là concurrency và audit log.','score':6.4,'checklist':{'introduction':'pass','stakeholders':'warning','functional':'warning','nonFunctional':'fail','useCases':'fail','consistency':'warning'},'jiraMapped':9,'githubCoverage':34,'commentsCount':8,'summary':'Hệ thống đặt lịch mượn thiết bị phòng lab, phê duyệt yêu cầu và thống kê sử dụng tài sản.','notes':['Thiếu boundary condition cho double booking.'],'history':[{'version':'v1.0','date':'2026-03-04 15:00','author':'Lê Hoàng Long'},{'version':'v1.1','date':'2026-03-08 09:00','author':'Lê Hoàng Long'}],'jiraUrl':'https://jira.example.com/gamma','githubUrl':'https://github.com/example/team-gamma'},
-  {'id':'srs-004','projectId':'p4','teamName':'Team Delta','projectName':'Medical Appointment Queue','leader':'Phạm Quốc Huy','members':['Huy','Loan','Tú','Yến'],'courseCode':'SWD392','courseName':'Software Architecture & Design','version':'v0.9','status':'DRAFT','milestone':'SRS Round 1','submittedAt':'2026-03-10 17:45','updatedAt':'2026-03-10 17:45','deadline':'2026-03-12','reviewer':'—','feedback':'','score':0,'checklist':{'introduction':'warning','stakeholders':'warning','functional':'warning','nonFunctional':'warning','useCases':'warning','consistency':'warning'},'jiraMapped':5,'githubCoverage':11,'commentsCount':0,'summary':'Ứng dụng xếp hàng khám bệnh và đặt lịch, hỗ trợ quản lý bệnh nhân và theo dõi lượt khám.','notes':['Bản nháp, chưa submit review.'],'history':[{'version':'v0.9','date':'2026-03-10 17:45','author':'Phạm Quốc Huy'}],'jiraUrl':'https://jira.example.com/delta','githubUrl':'https://github.com/example/team-delta'},
-  {'id':'srs-005','projectId':'p5','teamName':'Team Epsilon','projectName':'Student Complaint Portal','leader':'Đinh Gia Hân','members':['Hân','Dũng','Hương','Nhật'],'courseCode':'SWD392','courseName':'Software Architecture & Design','version':'v1.0','status':'OVERDUE','milestone':'SRS Round 1','submittedAt':'2026-03-07 10:10','updatedAt':'2026-03-07 10:10','deadline':'2026-03-08','reviewer':'—','feedback':'Nhóm chưa resubmit sau khi được nhắc nhở.','score':0,'checklist':{'introduction':'fail','stakeholders':'fail','functional':'fail','nonFunctional':'fail','useCases':'fail','consistency':'fail'},'jiraMapped':3,'githubCoverage':4,'commentsCount':1,'summary':'Cổng tiếp nhận phản ánh sinh viên với phân loại khiếu nại, xử lý ticket và theo dõi phản hồi.','notes':['Trễ deadline.','SRS chưa đạt mức tối thiểu để review.'],'history':[{'version':'v1.0','date':'2026-03-07 10:10','author':'Đinh Gia Hân'}],'jiraUrl':'https://jira.example.com/epsilon','githubUrl':'https://github.com/example/team-epsilon'},
-  {'id':'srs-006','projectId':'p6','teamName':'Team Zeta','projectName':'Canteen Smart Ordering','leader':'Võ Thành Công','members':['Công','Uyên','Thảo','Hiếu','Kha'],'courseCode':'PRU211','courseName':'C# Programming','version':'v1.3','status':'SUBMITTED','milestone':'SRS Round 2','submittedAt':'2026-03-10 19:30','updatedAt':'2026-03-10 19:30','deadline':'2026-03-12','reviewer':'Chưa phân công','feedback':'','score':0,'checklist':{'introduction':'pass','stakeholders':'pass','functional':'warning','nonFunctional':'warning','useCases':'pass','consistency':'warning'},'jiraMapped':13,'githubCoverage':49,'commentsCount':0,'summary':'Hệ thống đặt món căn tin thông minh, thanh toán nhanh và dự đoán thời gian nhận món.','notes':['Mới submit, chưa vào vòng review.'],'history':[{'version':'v1.0','date':'2026-03-05 09:35','author':'Võ Thành Công'},{'version':'v1.3','date':'2026-03-10 19:30','author':'Võ Thành Công'}],'jiraUrl':'https://jira.example.com/zeta','githubUrl':'https://github.com/example/team-zeta'},
-];
+final _mockData = <Map<String, dynamic>>[];
 
 // ── Screen ───────────────────────────────────────────────────
 class LecturerSrsReportsScreen extends StatefulWidget {
@@ -63,12 +57,32 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
   String _sortBy = 'latest';
   String _feedbackText = '';
 
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
     _srsList = _mockData.map((e) => Map<String, dynamic>.from(e)).toList();
     if (_srsList.isNotEmpty) _selected = _srsList.first['id'] as String;
-    _feedbackText = (_srsList.first['feedback'] as String?) ?? '';
+    _feedbackText = _srsList.isNotEmpty ? ((_srsList.first['feedback'] as String?) ?? '') : '';
+    
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // Computed
@@ -140,9 +154,17 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(title: 'SRS Reports',
-        user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
-      body: SingleChildScrollView(
+      appBar: AppTopHeader(
+        title: 'SRS Reports',
+        user: AppUser(
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
+          role: 'LECTURER'
+        )
+      ),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: _kT))
+        : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Breadcrumb

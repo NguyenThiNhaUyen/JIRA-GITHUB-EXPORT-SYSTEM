@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminGroupsScreen extends StatefulWidget {
   const AdminGroupsScreen({super.key});
@@ -21,7 +22,9 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
   String _courseFilter = 'all';
   String _statusFilter = 'all';
   final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
+  AppUser? _currentUser;
 
   final List<Map<String, dynamic>> _groups = [];
 
@@ -73,7 +76,21 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUser();
     _loadData();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -162,9 +179,9 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
     return AppTopHeader(
       title: 'Quản lý nhóm dự án',
       primary: false,
-      user: const AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
       actions: [
@@ -287,23 +304,21 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
                 borderSide: const BorderSide(color: cardBorder),
               ),
             ),
-            items: const [
-              DropdownMenuItem(
+            items: [
+              const DropdownMenuItem(
                 value: 'all',
                 child: Text('Tất cả môn học', style: TextStyle(fontSize: 13)),
               ),
-              DropdownMenuItem(
-                value: 'SWD392',
-                child: Text('SWD392', style: TextStyle(fontSize: 13)),
-              ),
-              DropdownMenuItem(
-                value: 'PRJ301',
-                child: Text('PRJ301', style: TextStyle(fontSize: 13)),
-              ),
-              DropdownMenuItem(
-                value: 'PRN222',
-                child: Text('PRN222', style: TextStyle(fontSize: 13)),
-              ),
+              ..._groups
+                  .map((g) => g['course']?.toString() ?? '')
+                  .where((c) => c.isNotEmpty)
+                  .toSet()
+                  .map(
+                    (course) => DropdownMenuItem(
+                      value: course,
+                      child: Text(course, style: const TextStyle(fontSize: 13)),
+                    ),
+                  ),
             ],
           ),
         ],
