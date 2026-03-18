@@ -83,32 +83,106 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
       final user = await _authService.getCurrentUser();
       if (user != null) {
         final courses = await _lecturerService.getMyCourses();
-        setState(() {
-          _currentUser = user;
-          _courseList = courses;
-          _isLoading = false;
-        });
+        
+        // Fetch teams and students for all courses to provide a complete overview
+        final allTeams = <Map<String, dynamic>>[];
+        final allStudents = <Map<String, dynamic>>[];
+        
+        for (final course in courses) {
+          final courseId = course['id'] ?? course['Id'];
+          if (courseId != null) {
+            final results = await Future.wait([
+              _lecturerService.getCourseGroups(courseId),
+              _lecturerService.getCourseStudents(courseId),
+            ]);
+            
+            final normalizedGroups = (results[0] as List).map((g) {
+              final norm = _normalizeGroup(g as Map<String, dynamic>);
+              return {...norm, 'courseId': courseId.toString()};
+            }).toList();
+            
+            final normalizedStudents = (results[1] as List).map((s) {
+              final norm = _normalizeStudent(s as Map<String, dynamic>);
+              return {...norm, 'courseId': courseId.toString()};
+            }).toList();
+
+            allTeams.addAll(normalizedGroups);
+            allStudents.addAll(normalizedStudents);
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _currentUser = user;
+            _courseList = courses.map(_normalizeCourse).toList();
+            _teamList = allTeams;
+            _studentList = allStudents;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        print("Error loading initial data: $e");
+      }
     }
+  }
+
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['className'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? 'N/A').toString(),
+      'className': (c['className'] ?? c['name'] ?? 'N/A').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
+    final integration = g['integration'] ?? {};
+    return {
+      'id': (g['id'] ?? g['Id'] ?? 0).toString(),
+      'name': (g['name'] ?? g['groupName'] ?? 'N/A').toString(),
+      'project': (g['topic'] ?? g['projectName'] ?? 'No project').toString(),
+      'commits': (g['commitsCount'] ?? 0) as int,
+      'issuesDone': (g['issuesDone'] ?? 0) as int,
+      'issuesTotal': (g['issuesTotal'] ?? 10) as int, // Default for mock
+      'warningCount': (g['warningCount'] ?? 0) as int,
+      'sprintCompletion': (g['sprintCompletion'] ?? 0) as int,
+      'jiraCoverage': (g['jiraCoverage'] ?? 0) as int,
+      'githubCoverage': (g['githubCoverage'] ?? 0) as int,
+      'riskLevel': (g['riskLevel'] ?? 'Low').toString(),
+      'overdueTasks': (g['overdueTasks'] ?? 0) as int,
+    };
+  }
+
+  Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
+    return {
+      'id': (s['id'] ?? s['Id'] ?? 0).toString(),
+      'name': (s['name'] ?? s['fullName'] ?? 'N/A').toString(),
+      'studentCode': (s['studentCode'] ?? '').toString(),
+      'contributionScore': (s['contributionScore'] ?? 0) as int,
+      'sprintCoverage': (s['sprintCoverage'] ?? 0) as int,
+      'commits': (s['commitsCount'] ?? 0) as int,
+      'status': (s['status'] ?? 'Active').toString(),
+      'teamId': (s['groupId'] ?? s['teamId'] ?? '').toString(),
+    };
   }
 
   Map<String,dynamic> get _selectedConfig => _exportTypes.firstWhere((e) => e['id'] == _selectedType);
 
   List<Map<String,dynamic>> get _teamOptions {
-    if (_courseFilter == 'all') return List<Map<String,dynamic>>.from(_teams);
-    return _teams.where((t) => t['courseId'] == _courseFilter).toList().cast<Map<String,dynamic>>();
+    if (_courseFilter == 'all') return _teamList;
+    return _teamList.where((t) => t['courseId'] == _courseFilter).toList();
   }
 
   // Computed preview data
   Map<String,dynamic> get _preview {
-    var teams = _teams.toList().cast<Map<String,dynamic>>();
-    var students = _students.toList().cast<Map<String,dynamic>>();
+    var teams = _teamList.toList();
+    var students = _studentList.toList();
     if (_courseFilter != 'all') {
       teams = teams.where((t) => t['courseId'] == _courseFilter).toList();
-      final ids = teams.map((t) => t['id']).toSet();
-      students = students.where((s) => ids.contains(s['teamId'])).toList();
+      students = students.where((s) => s['courseId'] == _courseFilter).toList();
     }
     if (_teamFilter != 'all') {
       teams = teams.where((t) => t['id'] == _teamFilter).toList();
@@ -136,15 +210,18 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
   }
 
   // Dashboard stats
-  int get _riskyTeams => _teams.where((t) => t['riskLevel'] == 'High').length;
-  int get _warnStudents => _students.where((s) => s['status'] == 'Warning' || s['status'] == 'At Risk').length;
-  int get _overdueTasks => _teams.fold<int>(0, (s, t) => s + (t['overdueTasks'] as int));
-  int get _avgCompletion => _teams.isEmpty ? 0 : (_teams.fold<int>(0, (s, t) => s + (t['sprintCompletion'] as int)) / _teams.length).round();
+  int get _riskyTeams => _teamList.where((t) => t['riskLevel'] == 'High').length;
+  int get _warnStudents => _studentList.where((s) => s['status'] == 'Warning' || s['status'] == 'At Risk').length;
+  int get _overdueTasks => _teamList.fold<int>(0, (s, t) => s + (t['overdueTasks'] as int));
+  int get _avgCompletion => _teamList.isEmpty ? 0 : (_teamList.fold<int>(0, (s, t) => s + (t['sprintCompletion'] as int)) / _teamList.length).round();
 
   String get _scopeLabel {
-    if (_teamFilter != 'all') return _teams.firstWhere((t) => t['id'] == _teamFilter)['name'] as String;
+    if (_teamFilter != 'all') {
+      final t = _teamList.firstWhere((t) => t['id'] == _teamFilter, orElse: () => {});
+      return t['name'] ?? 'Nhóm đã chọn';
+    }
     if (_courseFilter != 'all') {
-      final c = _courses.firstWhere((c) => c['id'] == _courseFilter);
+      final c = _courseList.firstWhere((c) => c['id'] == _courseFilter, orElse: () => {});
       return '${c['code']} - ${c['className']}';
     }
     return 'Toàn bộ dữ liệu phù hợp';
@@ -273,7 +350,7 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
         Row(children: [
           Expanded(child: _dropdown({'all':'Tất cả học kỳ','Spring 2026':'Spring 2026'}, _semesterFilter, (v) => setState(() => _semesterFilter = v!))),
           const SizedBox(width: 8),
-          Expanded(child: _dropdown({'all':'Tất cả lớp', ..._courses.asMap().map((_, c) => MapEntry(c['id'] as String, '${c['code']} - ${c['className']}'))}, _courseFilter, (v) => setState(() { _courseFilter = v!; _teamFilter = 'all'; }))),
+          Expanded(child: _dropdown({'all':'Tất cả lớp', ..._courseList.asMap().map((_, c) => MapEntry(c['id'] as String, '${c['code']} - ${c['className']}'))}, _courseFilter, (v) => setState(() { _courseFilter = v!; _teamFilter = 'all'; }))),
         ]),
         const SizedBox(height: 8),
         Row(children: [

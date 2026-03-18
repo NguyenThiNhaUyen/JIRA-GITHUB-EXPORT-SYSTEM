@@ -99,6 +99,26 @@ class LecturerService {
     return ok;
   }
 
+  /// GET /api/srs
+  Future<List<Map<String, dynamic>>> getSrsReports() async {
+    final data = await _get("/srs?pageSize=1000");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  /// GET /api/alerts
+  Future<List<Map<String, dynamic>>> getAlerts() async {
+    final data = await _get("/alerts?pageSize=1000");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  /// POST /api/alerts/{id}/resolve
+  Future<bool> resolveAlert(dynamic id) async {
+    final ok = await _post("/alerts/$id/resolve", {});
+    return ok;
+  }
+
   /// POST /api/alerts/send
   Future<bool> sendAlert(dynamic groupId, String message, {String severity = "MEDIUM"}) async {
     return _post("/alerts/send", {

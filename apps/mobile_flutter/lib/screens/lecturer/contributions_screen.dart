@@ -75,25 +75,62 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
     setState(() => _isLoading = true);
     try {
       final user = await _authService.getCurrentUser();
-      if (user != null) {
-        final results = await Future.wait([
-          _lecturerService.getMyCourses(),
-          _lecturerService.getCourseContributions(_course),
-        ]);
-
-        setState(() {
-          _currentUser = user;
-          _courseList = List<Map<String, dynamic>>.from(results[0] as List);
-          _allStudents = List<Map<String, dynamic>>.from(results[1] as List);
-          // Process _allStudents to get _groupStats and weekly data if needed
-          _isLoading = false;
-        });
+      final courses = await _lecturerService.getMyCourses();
+      
+      if (courses.isNotEmpty) {
+        final firstCourseId = (courses.first['id'] ?? courses.first['Id'] ?? 'c1').toString();
+        final contributions = await _lecturerService.getCourseContributions(firstCourseId);
+        
+        if (mounted) {
+          setState(() {
+            _currentUser = user;
+            _courseList = courses.map(_normalizeCourse).toList();
+            _course = firstCourseId;
+            _allStudents = contributions.map(_normalizeStudent).toList();
+            // In a real app, you would also process weekly data from contributions
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _currentUser = user;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        print("Error loading initial data: $e");
+      }
     }
   }
 
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['className'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? 'N/A').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
+    return {
+      'id': (s['id'] ?? s['Id'] ?? 0).toString(),
+      'name': (s['name'] ?? s['fullName'] ?? 'N/A').toString(),
+      'code': (s['code'] ?? s['studentCode'] ?? '').toString(),
+      'group': (s['group'] ?? s['groupName'] ?? 'No Group').toString(),
+      'commits': (s['commits'] ?? s['commitsCount'] ?? 0) as int,
+      'jira': (s['jira'] ?? s['jiraTasksDone'] ?? 0) as int,
+      'prs': (s['prs'] ?? s['pullRequests'] ?? 0) as int,
+      'reviews': (s['reviews'] ?? s['codeReviews'] ?? 0) as int,
+      'score': (s['score'] ?? s['contributionScore'] ?? 0) as int,
+      'status': (s['status'] ?? s['participationStatus'] ?? 'Ổn định').toString(),
+      'lastActive': (s['lastActive'] ?? s['daysSinceLastActivity'] ?? 0) as int,
+      'overdue': (s['overdue'] ?? s['overdueTasks'] ?? 0) as int,
+    };
+  }
 
   @override
   void dispose() {
@@ -494,10 +531,10 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
               spacing: 10,
               alignment: WrapAlignment.spaceBetween,
               children: [
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'TỔNG QUAN LỚP HỌC',
                       style: TextStyle(
                         fontSize: 10,

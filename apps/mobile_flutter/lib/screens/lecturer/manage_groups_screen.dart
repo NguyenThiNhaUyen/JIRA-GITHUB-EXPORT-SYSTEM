@@ -46,25 +46,75 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
     try {
       final user = await _authService.getCurrentUser();
       final results = await Future.wait([
-        _lecturerService.getMyCourses(), // To find course name
+        _lecturerService.getMyCourses(),
         _lecturerService.getCourseGroups(widget.courseId),
         _lecturerService.getCourseStudents(widget.courseId),
       ]);
 
       final allCourses = results[0] as List<Map<String, dynamic>>;
-      final course = allCourses.firstWhere((c) => c['id'].toString() == widget.courseId, orElse: () => {});
+      final course = allCourses.firstWhere(
+        (c) => (c['id'] ?? c['Id'] ?? '').toString() == widget.courseId,
+        orElse: () => {},
+      );
 
-      setState(() {
-        _currentUser = user;
-        _courseInfo = course;
-        _groups = results[1] as List<Map<String, dynamic>>;
-        _allStudents = results[2] as List<Map<String, dynamic>>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _courseInfo = course.isNotEmpty ? _normalizeCourse(course) : null;
+          _groups = (results[1] as List).map((e) => _normalizeGroup(e as Map<String, dynamic>)).toList();
+          _allStudents = (results[2] as List).map((e) => _normalizeStudent(e as Map<String, dynamic>)).toList();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      _snack('Lỗi khi tải dữ liệu nhóm', err: true);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        print("Error loading manage groups data: $e");
+        _snack('Lỗi khi tải dữ liệu nhóm', err: true);
+      }
     }
+  }
+
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['className'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? 'N/A').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
+    final integration = g['integration'] ?? {};
+    final students = (g['students'] ?? g['members'] ?? []) as List;
+    return {
+      'id': (g['id'] ?? g['Id'] ?? 0).toString(),
+      'name': (g['name'] ?? g['groupName'] ?? 'N/A').toString(),
+      'description': (g['topic'] ?? g['projectName'] ?? g['description'] ?? '').toString(),
+      'githubStatus': (g['githubStatus'] ?? integration['github_status'] ?? 'NONE').toString().toUpperCase(),
+      'jiraStatus': (g['jiraStatus'] ?? integration['jira_status'] ?? 'NONE').toString().toUpperCase(),
+      'riskScore': (g['riskScore'] ?? 0) as int,
+      'progressPercent': (g['progressPercent'] ?? 0) as int,
+      'students': students.map((e) => _normalizeMember(e as Map<String, dynamic>)).toList(),
+      'commitCount': (g['commitCount'] ?? g['commitsCount'] ?? 0) as int,
+      'issueCount': (g['issueCount'] ?? g['issuesCount'] ?? 0) as int,
+      'lastActivity': (g['lastActivity'] ?? g['last_activity'] ?? 'N/A').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
+    return {
+      'id': (s['id'] ?? s['Id'] ?? 0).toString(),
+      'name': (s['name'] ?? s['fullName'] ?? 'N/A').toString(),
+      'code': (s['code'] ?? s['studentCode'] ?? '').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeMember(Map<String, dynamic> m) {
+    return {
+      'id': (m['id'] ?? m['Id'] ?? 0).toString(),
+      'fullName': (m['fullName'] ?? m['name'] ?? 'N/A').toString(),
+      'role': (m['role'] ?? 'MEMBER').toString().toUpperCase(),
+    };
   }
 
   // ── state ─────────────────────────────────────────
