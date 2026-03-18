@@ -2,17 +2,19 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/main-layout.jsx";
 import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
+
 import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import TestUI from "./pages/test-ui.jsx";
+
 import CourseAnalytics from "./pages/lecturer/course-analytics.jsx";
 
-// Admin Layout
+/* ================= ADMIN ================= */
+
 import AdminLayout from "./layouts/AdminLayout.jsx";
 
-// Admin pages
 import AdminDashboard from "./pages/admin/admin-dashboard.jsx";
 import AdminReports from "./pages/admin/admin-reports.jsx";
 import CourseManagement from "./pages/admin/course-management.jsx";
@@ -22,8 +24,10 @@ import LecturerAssignment from "./pages/admin/lecturer-assignment.jsx";
 import UserManagement from "./pages/admin/users.jsx";
 import MyReports from "./pages/admin/my-reports.jsx";
 
-// Lecturer pages
+/* ================= LECTURER ================= */
+
 import LecturerLayout from "./layouts/LecturerLayout.jsx";
+
 import LecturerDashboard from "./pages/lecturer/lecturer-dashboard.jsx";
 import ManageGroups from "./pages/lecturer/manage-groups.jsx";
 import GroupDetail from "./pages/lecturer/group-detail.jsx";
@@ -33,10 +37,13 @@ import Alerts from "./pages/lecturer/alerts.jsx";
 import SrsReports from "./pages/lecturer/srs-reports.jsx";
 import Reports from "./pages/lecturer/reports.jsx";
 
-// Student pages
+/* ================= STUDENT ================= */
+
 import StudentLayout from "./layouts/StudentLayout.jsx";
+
 import StudentDashboard from "./pages/student/student-dashboard.jsx";
 import StudentProject from "./pages/student/student-project.jsx";
+
 import StudentCoursesPage, {
   StudentMyProjectPage,
   StudentContributionPage,
@@ -51,26 +58,36 @@ export default function App() {
 
   const getDefaultRedirect = () => {
     if (!userRole) return "/login";
+
     const role = String(userRole).toUpperCase();
+
     if (role === "ADMIN") return "/admin";
     if (role === "LECTURER") return "/lecturer";
     if (role === "STUDENT") return "/student";
+
     return "/login";
   };
 
   return (
     <Routes>
-      {/* Public routes */}
+
+      {/* ================= PUBLIC ROUTES ================= */}
+
       <Route path="/test-ui" element={<TestUI />} />
-      <Route 
-        path="/login" 
-        element={userRole ? <Navigate to={getDefaultRedirect()} replace /> : <Login />} 
+
+      <Route
+        path="/login"
+        element={
+          userRole ? <Navigate to={getDefaultRedirect()} replace /> : <Login />
+        }
       />
+
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />
 
-      {/* Admin routes */}
+      {/* ================= ADMIN ================= */}
+
       <Route
         path="/admin"
         element={
@@ -83,6 +100,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/reports"
         element={
@@ -95,6 +113,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/courses"
         element={
@@ -109,17 +128,6 @@ export default function App() {
       />
 
       <Route
-  path="/lecturer/groups"
-  element={
-    <ProtectedRoute>
-      <RoleGuard requiredRole="LECTURER">
-        <Navigate to="/lecturer/my-courses" replace />
-      </RoleGuard>
-    </ProtectedRoute>
-  }
-/>
-
-      <Route
         path="/admin/courses/:courseId"
         element={
           <ProtectedRoute>
@@ -131,6 +139,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/semesters"
         element={
@@ -143,6 +152,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/subjects"
         element={
@@ -155,6 +165,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/lecturer-assignment"
         element={
@@ -167,6 +178,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/users"
         element={
@@ -179,6 +191,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/admin/my-reports"
         element={
@@ -192,7 +205,8 @@ export default function App() {
         }
       />
 
-      {/* Lecturer routes */}
+      {/* ================= LECTURER ================= */}
+
       <Route
         path="/lecturer"
         element={
@@ -205,6 +219,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/lecturer/my-courses"
         element={
@@ -217,8 +232,10 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* PAGE NHÓM & DỰ ÁN */}
       <Route
-        path="/lecturer/groups/:courseId"
+        path="/lecturer/groups"
         element={
           <ProtectedRoute>
             <RoleGuard requiredRole="LECTURER">
@@ -229,66 +246,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/lecturer/contributions"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerLayout>
-                <Contributions />
-              </LecturerLayout>
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/alerts"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerLayout>
-                <Alerts />
-              </LecturerLayout>
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/srs"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerLayout>
-                <SrsReports />
-              </LecturerLayout>
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/reports"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerLayout>
-                <Reports />
-              </LecturerLayout>
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lecturer/course/:courseId/manage-groups"
-        element={
-          <ProtectedRoute>
-            <RoleGuard requiredRole="LECTURER">
-              <LecturerLayout>
-                <ManageGroups />
-              </LecturerLayout>
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
+
       <Route
         path="/lecturer/group/:groupId"
         element={
@@ -301,6 +259,59 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/lecturer/contributions"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Contributions />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/lecturer/alerts"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Alerts />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/lecturer/srs"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <SrsReports />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/lecturer/reports"
+        element={
+          <ProtectedRoute>
+            <RoleGuard requiredRole="LECTURER">
+              <LecturerLayout>
+                <Reports />
+              </LecturerLayout>
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/lecturer/course/:courseId/analytics"
         element={
@@ -314,7 +325,8 @@ export default function App() {
         }
       />
 
-      {/* Student routes */}
+      {/* ================= STUDENT ================= */}
+
       <Route
         path="/student"
         element={
@@ -327,6 +339,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/courses"
         element={
@@ -339,6 +352,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/my-project"
         element={
@@ -351,6 +365,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/contribution"
         element={
@@ -363,6 +378,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/alerts"
         element={
@@ -375,6 +391,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/srs"
         element={
@@ -387,6 +404,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/student/project/:projectId"
         element={
@@ -400,10 +418,12 @@ export default function App() {
         }
       />
 
-      {/* Default redirect */}
+      {/* ================= DEFAULT ================= */}
+
       <Route path="/" element={<Navigate to={getDefaultRedirect()} replace />} />
 
-      {/* Fallback */}
+      {/* ================= FALLBACK ================= */}
+
       <Route
         path="*"
         element={
