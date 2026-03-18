@@ -106,6 +106,15 @@ class LecturerSidebar extends StatelessWidget {
                     label: 'Báo cáo & Export',
                     route: '/lecturer/reports',
                   ),
+                  const SizedBox(height: 16),
+                  const _SidebarSectionTitle('HÀNH ĐỘNG'),
+                  const SizedBox(height: 6),
+                  const _SidebarItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Đăng xuất',
+                    route: '/logout',
+                    color: Colors.redAccent,
+                  ),
                 ],
               ),
             ),
@@ -238,6 +247,15 @@ class LecturerDrawer extends StatelessWidget {
                     label: 'Báo cáo & Export',
                     route: '/lecturer/reports',
                   ),
+                  const SizedBox(height: 16),
+                  const _SidebarSectionTitle('HÀNH ĐỘNG'),
+                  const SizedBox(height: 6),
+                  const _SidebarItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Đăng xuất',
+                    route: '/logout',
+                    color: Colors.redAccent,
+                  ),
                 ],
               ),
             ),
@@ -276,12 +294,14 @@ class _SidebarItem extends StatelessWidget {
   final String label;
   final String route;
   final bool exactMatch;
+  final Color? color;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.route,
     this.exactMatch = false,
+    this.color,
   });
 
   @override
@@ -323,13 +343,13 @@ class _SidebarItem extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: active ? activeText : inactiveText),
+                Icon(icon, size: 20, color: color ?? (active ? activeText : inactiveText)),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: active ? activeText : inactiveText,
+                      color: color ?? (active ? activeText : inactiveText),
                       fontSize: 14,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                     ),

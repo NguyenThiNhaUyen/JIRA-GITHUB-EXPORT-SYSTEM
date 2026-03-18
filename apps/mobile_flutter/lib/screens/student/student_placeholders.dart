@@ -1,9 +1,13 @@
-// Student Placeholders - based on student-placeholders.jsx
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'dart:math';
 import '../../../widgets/app_top_header.dart';
 import '../../../widgets/student_navigation.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../services/student_service.dart';
+import '../../../services/auth_service.dart';
+import '../../../models/user.dart';
 
 // ───────────────────────── MOCK DATA ─────────────────────────
 
@@ -111,14 +115,6 @@ Widget _buildEmptyState(IconData icon, String title, String desc) {
     ),
   );
 }
-
-// ───────────────────────── PAGES ─────────────────────────
-
-import '../../../providers/auth_provider.dart';
-import 'package:provider/provider.dart';
-import '../../../services/student_service.dart';
-import '../../../services/auth_service.dart';
-import '../../../models/user.dart';
 
 // ───────────────────────── PAGES ─────────────────────────
 
@@ -952,19 +948,6 @@ class _StudentSrsScreenState extends State<StudentSrsScreen> {
           const SizedBox(height: 8),
           _buildEmptyState(Icons.description_outlined, 'Chưa có bản nộp nào', 'Hãy nộp bản SRS đầu tiên cho nhóm này'),
         ],
-      ),
-    );
-  }
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

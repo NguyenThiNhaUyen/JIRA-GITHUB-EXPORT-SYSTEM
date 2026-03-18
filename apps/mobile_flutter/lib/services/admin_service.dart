@@ -47,10 +47,6 @@ class AdminService {
     return _request('POST', '/semesters/generate', body: {'year': year});
   }
 
-  Future<bool> deleteSemester(int id) async {
-    return _request('DELETE', '/semesters/$id');
-  }
-
   // ─── POST / PUT / DELETE Methods (Subjects) ──────────────
 
   Future<Map<String, dynamic>?> createSubject(Map<String, dynamic> data) async {
@@ -107,13 +103,27 @@ class AdminService {
       body: {'newPassword': newPassword});
   }
 
+  // ─── REPORT Generation Methods ──────────────────────────
+
+  Future<bool> generateCommitStats(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/commit-statistics?courseId=$courseId&format=$format');
+  }
+
+  Future<bool> generateTeamRoster(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/team-roster?courseId=$courseId&format=$format');
+  }
+
+  Future<bool> generateSrs(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/srs?courseId=$courseId&format=$format');
+  }
+
   // ─── Private Helpers ─────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> _getList(String endpoint) async {
     try {
       final token = await _auth.getToken();
       final response = await http.get(
-        Uri.parse('${AuthService.baseUrl}$endpoint'),
+        Uri.parse('${AuthService.baseUrl}/api$endpoint'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -141,7 +151,7 @@ class AdminService {
   Future<Map<String, dynamic>?> _post(String endpoint, dynamic body) async {
     try {
       final token = await _auth.getToken();
-      final url = Uri.parse('${AuthService.baseUrl}$endpoint');
+      final url = Uri.parse('${AuthService.baseUrl}/api$endpoint');
       final response = await http.post(
         url,
         headers: {
@@ -165,7 +175,7 @@ class AdminService {
   Future<bool> _request(String method, String endpoint, {dynamic body}) async {
     try {
       final token = await _auth.getToken();
-      final url = Uri.parse('${AuthService.baseUrl}$endpoint');
+      final url = Uri.parse('${AuthService.baseUrl}/api$endpoint');
       final headers = {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',

@@ -250,7 +250,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     ];
     return GridView.builder(
       shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 2.2),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 2.0),
       itemCount: stats.length,
       itemBuilder: (_, i) {
         final s = stats[i];
@@ -463,7 +463,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
           _detailBlock('MÔ TẢ', a['message'] as String),
           const SizedBox(height: 10),
           GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 2.2,
+            crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 2.1,
             children: [
               _metricBox('Commits', '${metrics['commits']}'),
               _metricBox('Jira done', '${metrics['jiraDone']}'),

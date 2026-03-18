@@ -59,9 +59,8 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
   String? _banner;
 
   // ── dynamic data ──────────────────────────────────
-  List<String> _weeks = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-  List<int> _wGh = [];
-  List<int> _wJira = [];
+  List<int> _wGh = List.filled(12, 0);
+  List<int> _wJira = List.filled(12, 0);
   List<Map<String, dynamic>> _courseList = [];
   List<Map<String, dynamic>> _allStudents = [];
   List<Map<String, dynamic>> _groupStats = [];
@@ -968,7 +967,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
                 Expanded(
                   child: _miniSummaryBox(
                     'Đỉnh hoạt động',
-                    '${_wGh.reduce(math.max)} commits',
+                    '${_wGh.isEmpty ? 0 : _wGh.reduce(math.max)} commits',
                     const Color(0xFFECFDF5),
                     const Color(0xFF059669),
                   ),

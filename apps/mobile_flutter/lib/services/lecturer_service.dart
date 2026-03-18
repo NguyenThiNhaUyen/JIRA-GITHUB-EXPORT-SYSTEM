@@ -18,7 +18,7 @@ class LecturerService {
   // --- Helpers ---
   Future<dynamic> _get(String path) async {
     try {
-      final response = await http.get(Uri.parse("$_baseUrl$path"), headers: await _headers());
+      final response = await http.get(Uri.parse("$_baseUrl/api$path"), headers: await _headers());
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final json = jsonDecode(response.body);
         return json['data'] ?? json['Data'] ?? json;
@@ -32,7 +32,7 @@ class LecturerService {
   Future<bool> _post(String path, dynamic body) async {
     try {
       final response = await http.post(
-        Uri.parse("$_baseUrl$path"),
+        Uri.parse("$_baseUrl/api$path"),
         headers: await _headers(),
         body: jsonEncode(body),
       );
@@ -45,7 +45,7 @@ class LecturerService {
   Future<bool> _patch(String path, dynamic body) async {
     try {
       final response = await http.patch(
-        Uri.parse("$_baseUrl$path"),
+        Uri.parse("$_baseUrl/api$path"),
         headers: await _headers(),
         body: jsonEncode(body),
       );
@@ -112,6 +112,42 @@ class LecturerService {
   Future<List<Map<String, dynamic>>> getCourseContributions(dynamic courseId) async {
     final data = await _get("/analytics/courses/$courseId/contributions");
     if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  // --- New Advanced Analytics APIs (Lecturer) ---
+
+  /// GET /api/analytics/lecturer/courses - Thống kê khối lượng giảng dạy (Lecturer workload)
+  Future<Map<String, dynamic>?> getLecturerCoursesStats() async {
+    final data = await _get("/analytics/lecturer/courses");
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// GET /api/analytics/lecturer/activity-logs - Nhật ký hoạt động của riêng giảng viên
+  Future<List<dynamic>> getLecturerActivityLogs({int limit = 10}) async {
+    final data = await _get("/analytics/lecturer/activity-logs?limit=$limit");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/commit-trends - Xu hướng commit trong các lớp mình dạy
+  Future<List<dynamic>> getCommitTrends({int days = 7}) async {
+    final data = await _get("/analytics/commit-trends?days=$days");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/heatmap - Biểu đồ nhiệt hoạt động chung của các nhóm phụ trách
+  Future<List<dynamic>> getHeatmap({int days = 90}) async {
+    final data = await _get("/analytics/heatmap?days=$days");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/activity-log - Nhật ký hệ thống (Audit logs - bản Lecturer rút gọn)
+  Future<List<dynamic>> getAuditLogs({int limit = 10}) async {
+    final data = await _get("/analytics/activity-log?limit=$limit");
+    if (data is List) return data;
     return [];
   }
 

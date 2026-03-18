@@ -133,7 +133,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
             ),
             onPressed: () {
               Navigator.pop(ctx);
-              context.go('/login');
+              context.go('/logout');
             },
             child: const Text('Đăng xuất'),
           ),
@@ -180,35 +180,52 @@ class _AppTopHeaderState extends State<AppTopHeader> {
     // If showSearch explicitly false → show title
     // Otherwise (sidebar screens) → show search bar
     final bool useSearch = widget.showSearch && !widget.showBack;
+    final double scWidth = MediaQuery.of(context).size.width;
+    final bool isSmall = scWidth < 600;
 
     Widget centerWidget;
     if (useSearch) {
-      centerWidget = Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Container(
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _borderColor.withOpacity(0.5)),
-            ),
-            child: TextField(
-              controller: _searchController,
-              textAlignVertical: TextAlignVertical.center,
-              style: const TextStyle(fontSize: 13, color: _txtPrimary),
-              decoration: const InputDecoration(
-                hintText: 'Tìm kiếm...',
-                hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-                prefixIcon: Icon(Icons.search_rounded, size: 17, color: Color(0xFF9CA3AF)),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
+      if (isSmall && (widget.actions?.isNotEmpty ?? false)) {
+        // On small screen with many actions, just show a search icon button to save space
+        centerWidget = Align(
+          alignment: Alignment.centerLeft,
+          child: IconButton(
+            icon: const Icon(Icons.search_rounded, color: _txtSec, size: 22),
+            onPressed: _showSearchSheet,
+          ),
+        );
+      } else {
+        centerWidget = Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Container(
+              height: 44,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: const Color(0xFFE5E7EB), width: 1.2),
+              ),
+              child: TextField(
+                controller: _searchController,
+                textAlignVertical: TextAlignVertical.center,
+                style: const TextStyle(fontSize: 14, color: _txtPrimary, fontWeight: FontWeight.w500),
+                decoration: const InputDecoration(
+                  hintText: 'Tìm kiếm...',
+                  hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontWeight: FontWeight.normal),
+                  prefixIcon: Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+      }
     } else {
       centerWidget = Text(
         widget.title,
@@ -228,10 +245,14 @@ class _AppTopHeaderState extends State<AppTopHeader> {
       shape: const Border(bottom: BorderSide(color: _borderColor, width: 1)),
       leading: leadingWidget,
       title: centerWidget,
-      titleSpacing: 0,
+      titleSpacing: (isSmall && useSearch) ? 0 : 8,
       actions: [
-        // Extra custom actions (e.g. + button on course page)
-        ...(widget.actions ?? []),
+        // Extra custom actions
+        if (widget.actions != null)
+          ...widget.actions!.map((a) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: a,
+              )),
 
         // Bell
         _buildBell(),

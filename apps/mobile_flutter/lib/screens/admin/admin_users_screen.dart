@@ -87,17 +87,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   String _filterRole = 'all';
   String? _openMenuId;
 
-  List<Map<String, dynamic>> get _filtered => _users.where((u) {
+  Map<String, dynamic> _normalizeUser(Map<String, dynamic> u) {
+    String role = (u['role'] ?? u['Role'] ?? 'STUDENT').toString().toUpperCase();
+    bool isActive = true;
+    if (u['status'] != null) {
+      isActive = u['status'].toString().toUpperCase() != 'DISABLED';
+    } else if (u['enabled'] != null) {
+      isActive = u['enabled'] == true;
+    } else if (u['isEnabled'] != null) {
+      isActive = u['isEnabled'] == true;
+    }
+
+    return {
+      'id': (u['id'] ?? u['Id'] ?? 0).toString(),
+      'name': (u['name'] ?? u['fullName'] ?? u['FullName'] ?? 'N/A').toString(),
+      'email': (u['email'] ?? u['Email'] ?? '').toString(),
+      'role': role,
+      'status': isActive ? 'ACTIVE' : 'DISABLED',
+      'studentId': u['studentId'] ?? u['studentCode'] ?? u['StudentCode'],
+    };
+  }
+
+  List<Map<String, dynamic>> get _filtered => _users.map(_normalizeUser).where((u) {
     final matchSearch =
         _search.isEmpty ||
-        '${u['name']}'.toLowerCase().contains(_search.toLowerCase()) ||
-        '${u['email']}'.toLowerCase().contains(_search.toLowerCase());
+        u['name'].toString().toLowerCase().contains(_search.toLowerCase()) ||
+        u['email'].toString().toLowerCase().contains(_search.toLowerCase());
     final matchRole = _filterRole == 'all' || u['role'] == _filterRole;
     return matchSearch && matchRole;
   }).toList();
 
   int _countByRole(String role) =>
-      _users.where((u) => u['role'] == role).length;
+      _users.map(_normalizeUser).where((u) => u['role'] == role).length;
 
   // ── Actions ──────────────────────────────────────────────
   void _snack(String msg, {bool ok = true}) {

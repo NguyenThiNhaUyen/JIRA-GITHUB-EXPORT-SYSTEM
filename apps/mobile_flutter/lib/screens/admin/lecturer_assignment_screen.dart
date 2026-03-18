@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 // ────────────────────────────────────────────────────────────
 // Lecturer Assignment Screen  (Admin)
@@ -13,13 +14,14 @@ class LecturerAssignmentScreen extends StatefulWidget {
   const LecturerAssignmentScreen({super.key});
 
   @override
-  State<LecturerAssignmentScreen> createState() =>
-      _LecturerAssignmentScreenState();
+  State<LecturerAssignmentScreen> createState() => _LecturerAssignmentScreenState();
 }
 
 class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
   final AdminService _adminService = AdminService();
-  // ─── Controllers ────────────────────────────────────────
+  final AuthService _authService = AuthService();
+  AppUser? _currentUser;
+  
   final TextEditingController _searchController = TextEditingController();
 
   // ─── Mock Data ──────────────────────────────────────────
@@ -36,7 +38,21 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
   void initState() {
     super.initState();
     _courses = [];
+    _loadUser();
     _loadData();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -79,29 +95,50 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
   bool _isLoading = false;
 
   // ─── Lookup Maps ────────────────────────────────────────
-  Map<String, dynamic>? _subjectById(int id) => _subjects
+  Map<String, dynamic>? _subjectById(dynamic id) => _subjects
       .cast<Map<String, dynamic>?>()
-      .firstWhere((s) => s?["id"] == id, orElse: () => null);
+      .firstWhere((s) {
+        final sId = s?["id"] ?? s?["Id"] ?? 0;
+        return sId.toString() == id.toString();
+      }, orElse: () => null);
 
-  Map<String, dynamic>? _semesterById(int id) => _semesters
+  Map<String, dynamic>? _semesterById(dynamic id) => _semesters
       .cast<Map<String, dynamic>?>()
-      .firstWhere((s) => s?["id"] == id, orElse: () => null);
+      .firstWhere((s) {
+        final semId = s?["id"] ?? s?["Id"] ?? 0;
+        return semId.toString() == id.toString();
+      }, orElse: () => null);
 
   // ─── Lecturer Workload ──────────────────────────────────
   Map<String, int> get _lecturerWorkload {
     final map = <String, int>{};
-    for (final c in _courses) {
-      for (final l in (c["lecturers"] as List)) {
-        final id = l["id"] as String;
-        map[id] = (map[id] ?? 0) + 1;
+    for (final course in _courses) {
+      final c = _normalizeCourse(course);
+      for (final lecturer in (c["lecturers"] as List)) {
+        final id = (lecturer["id"] ?? lecturer["Id"] ?? "").toString();
+        if (id.isNotEmpty) {
+          map[id] = (map[id] ?? 0) + 1;
+        }
       }
     }
     return map;
   }
 
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'semesterId': (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? 0),
+      'subjectId': (c['subjectId'] ?? c['subject_id'] ?? c['SubjectId'] ?? 0),
+      'currentStudents': (c['currentStudents'] ?? c['current_students'] ?? c['enrollmentCount'] ?? (c['enrollments'] as List?)?.length ?? 0) as int,
+      'lecturers': (c['lecturers'] ?? c['Lecturers'] ?? c['teachingBy'] ?? c['teaching_by'] ?? []) as List,
+    };
+  }
+
   // ─── Filtered + Sorted Courses ──────────────────────────
   List<Map<String, dynamic>> get _filtered {
-    var result = _courses.where((c) {
+    var result = _courses.map(_normalizeCourse).where((c) {
       final matchSearch =
           _search.isEmpty ||
           (c["code"] as String).toLowerCase().contains(_search.toLowerCase()) ||
@@ -143,10 +180,10 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
 
   // ─── Stats ──────────────────────────────────────────────
   int get _assignedCount =>
-      _courses.where((c) => (c["lecturers"] as List).isNotEmpty).length;
+      _courses.map(_normalizeCourse).where((c) => (c["lecturers"] as List).isNotEmpty).length;
 
   int get _unassignedCount =>
-      _courses.where((c) => (c["lecturers"] as List).isEmpty).length;
+      _courses.map(_normalizeCourse).where((c) => (c["lecturers"] as List).isEmpty).length;
 
   // ─── Actions ────────────────────────────────────────────
   void _showSnack(String message, {bool success = true}) {
@@ -177,15 +214,18 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
-              setState(() {
-                final course = _courses.firstWhere((c) => c["id"] == courseId);
-                (course["lecturers"] as List).removeWhere(
-                  (l) => l["id"] == lecturerId,
-                );
-              });
-              Navigator.pop(ctx);
-              _showSnack("Đã xóa phân công");
+            onPressed: () async {
+              final ok = await _adminService.removeLecturer(
+                int.parse(courseId),
+                int.parse(lecturerId),
+              );
+              if (ok) {
+                _loadData();
+                Navigator.pop(ctx);
+                _showSnack("Đã xóa phân công");
+              } else {
+                _showSnack("Xóa phân công thất bại", success: false);
+              }
             },
             child: const Text("Xóa"),
           ),
@@ -250,11 +290,12 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                         ),
                       ),
                       items: _lecturers.map((l) {
-                        final id = l["id"] as String;
+                        final id = (l["id"] ?? l["Id"] ?? "").toString();
+                        final name = (l["name"] ?? l["fullName"] ?? l["FullName"] ?? "N/A").toString();
                         return DropdownMenuItem(
                           value: id,
                           child: Text(
-                            "${l["name"]} (${workload[id] ?? 0} lớp)",
+                            "$name (${workload[id] ?? 0} lớp)",
                           ),
                         );
                       }).toList(),
@@ -279,38 +320,24 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       if (selectedLecturer.isEmpty) {
                         _showSnack("Vui lòng chọn giảng viên", success: false);
                         return;
                       }
 
-                      final lect = _lecturers.firstWhere(
-                        (l) => l["id"] == selectedLecturer,
+                      final ok = await _adminService.assignLecturer(
+                        int.parse(course["id"].toString()),
+                        int.parse(selectedLecturer),
                       );
 
-                      // Check if already assigned
-                      final alreadyAssigned = (course["lecturers"] as List).any(
-                        (l) => l["id"] == selectedLecturer,
-                      );
-
-                      if (alreadyAssigned) {
-                        _showSnack(
-                          "Giảng viên đã được phân công",
-                          success: false,
-                        );
-                        return;
+                      if (ok) {
+                        _loadData();
+                        Navigator.pop(ctx);
+                        _showSnack("Đã phân công giảng viên");
+                      } else {
+                        _showSnack("Phân công thất bại", success: false);
                       }
-
-                      setState(() {
-                        (course["lecturers"] as List).add({
-                          "id": lect["id"],
-                          "name": lect["name"],
-                        });
-                      });
-
-                      Navigator.pop(ctx);
-                      _showSnack("Đã phân công giảng viên");
                     },
                     child: const Text(
                       "Xác nhận phân công",
@@ -406,9 +433,9 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
     return AppTopHeader(
       title: 'Phân công Giảng viên',
       primary: false,
-      user: const AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
     );
@@ -832,11 +859,11 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
 
   // ─── Course Row ─────────────────────────────────────────
   Widget _buildCourseRow(Map<String, dynamic> course, bool isMobile) {
-    final assigned = course["lecturers"] as List;
-    final subject = _subjectById(course["subjectId"] as int);
-    final semester = _semesterById(course["semesterId"] as int);
+    final assigned = (course["lecturers"] as List);
+    final subject = _subjectById(course["subjectId"]);
+    final semester = _semesterById(course["semesterId"]);
     final current = course["currentStudents"] as int;
-    final max = course["maxStudents"] as int;
+    final max = (course["maxStudents"] as num).toInt();
     final ratio = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final workload = _lecturerWorkload;
 
@@ -982,8 +1009,11 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                   : Wrap(
                       spacing: 6,
                       runSpacing: 6,
-                      children: assigned.map<Widget>((lect) {
-                        final wl = workload[lect["id"]] ?? 1;
+                      children: assigned.map<Widget>((lecturerData) {
+                        final lect = lecturerData as Map<String, dynamic>;
+                        final lectId = (lect["id"] ?? lect["Id"] ?? "").toString();
+                        final lectName = (lect["name"] ?? lect["fullName"] ?? lect["FullName"] ?? "N/A").toString();
+                        final wl = workload[lectId] ?? 1;
                         return Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -997,10 +1027,10 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _lecturerAvatar(lect["name"] as String),
+                              _lecturerAvatar(lectName),
                               const SizedBox(width: 6),
                               Text(
-                                lect["name"] as String,
+                                lectName,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1021,8 +1051,8 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                               GestureDetector(
                                 onTap: () => _handleRemove(
                                   course["id"] as String,
-                                  lect["id"] as String,
-                                  lect["name"] as String,
+                                  lectId,
+                                  lectName,
                                 ),
                                 child: const Icon(
                                   Icons.close,
@@ -1184,8 +1214,11 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: assigned.map<Widget>((lect) {
-                final wl = workload[lect["id"]] ?? 1;
+              children: assigned.map<Widget>((lecturerData) {
+                final lect = lecturerData as Map<String, dynamic>;
+                final lectId = (lect["id"] ?? lect["Id"] ?? "").toString();
+                final lectName = (lect["name"] ?? lect["fullName"] ?? lect["FullName"] ?? "N/A").toString();
+                final wl = workload[lectId] ?? 1;
                 return Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -1199,10 +1232,10 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _lecturerAvatar(lect["name"] as String),
+                      _lecturerAvatar(lectName),
                       const SizedBox(width: 6),
                       Text(
-                        lect["name"] as String,
+                        lectName,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1221,8 +1254,8 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                       GestureDetector(
                         onTap: () => _handleRemove(
                           course["id"] as String,
-                          lect["id"] as String,
-                          lect["name"] as String,
+                          lectId,
+                          lectName,
                         ),
                         child: const Icon(
                           Icons.close,

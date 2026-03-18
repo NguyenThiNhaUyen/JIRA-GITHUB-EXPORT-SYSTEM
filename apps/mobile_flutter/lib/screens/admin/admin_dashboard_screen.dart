@@ -14,16 +14,10 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final AdminDashboardService _dashboardService = AdminDashboardService();
-  final AdminService _adminService = AdminService();
   final AuthService _authService = AuthService();
   bool _isLoading = true;
   String _error = '';
   AppUser? _currentUser;
-
-  String semester = '';
-  String major = '';
-  String subject = '';
-  String classId = '';
 
   static const Color bgColor = Color(0xFFEFF7F5);
   static const Color contentBg = Color(0xFFF8FAFC);
@@ -52,19 +46,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'reportsExported': 0,
   };
 
-  List<Map<String, dynamic>> commitData = [];
-  List<Map<String, dynamic>> heatmapData = [];
-  List<Map<String, dynamic>> teamRanking = [];
-  List<Map<String, dynamic>> inactiveTeams = [];
-  List<Map<String, dynamic>> teamActivity = [];
   List<Map<String, dynamic>> systemActivity = [];
   List<Map<String, dynamic>> recentCourses = [];
-  List<Map<String, dynamic>> recentGroups = [];
-
-  List<Map<String, dynamic>> _semestersData = [];
-  List<Map<String, dynamic>> _subjectsData = [];
-  List<Map<String, dynamic>> _coursesData = [];
-  List<String> _majorsData = [];
 
   @override
   void initState() {
@@ -93,23 +76,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       setState(() {
         stats = Map<String, dynamic>.from(data['stats'] ?? {});
         integrationStats = Map<String, dynamic>.from(data['integrationStats'] ?? {});
-        commitData = List<Map<String, dynamic>>.from(data['commitData'] ?? []);
-        heatmapData = List<Map<String, dynamic>>.from(data['heatmapData'] ?? []);
-        teamRanking = List<Map<String, dynamic>>.from(data['teamRanking'] ?? []);
-        inactiveTeams = List<Map<String, dynamic>>.from(data['inactiveTeams'] ?? []);
-        teamActivity = List<Map<String, dynamic>>.from(data['teamActivity'] ?? []);
         systemActivity = List<Map<String, dynamic>>.from(data['systemActivity'] ?? []);
         recentCourses = List<Map<String, dynamic>>.from(data['recentCourses'] ?? []);
-        recentGroups = List<Map<String, dynamic>>.from(data['recentGroups'] ?? []);
-
-        _semestersData = List<Map<String, dynamic>>.from(data['semestersData'] ?? []);
-        _subjectsData = List<Map<String, dynamic>>.from(data['subjectsData'] ?? []);
-        _coursesData = List<Map<String, dynamic>>.from(data['coursesData'] ?? []);
-        _majorsData = _subjectsData
-            .map((s) => s['department']?.toString() ?? '')
-            .where((d) => d.isNotEmpty)
-            .toSet()
-            .toList();
 
         _isLoading = false;
       });
@@ -164,8 +132,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               children: [
                                 _buildBreadcrumb(),
                                 const SizedBox(height: 18),
-                                _buildFilters(),
-                                const SizedBox(height: 18),
                                 _buildSystemOverview(stats),
                                 const SizedBox(height: 18),
                                 _buildIntegrationOverview(),
@@ -173,49 +139,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 isMobile
                                     ? Column(
                                         children: [
-                                          _buildCommitChart(),
-                                          const SizedBox(height: 18),
-                                          _buildHeatmap(),
-                                        ],
-                                      )
-                                    : Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(child: _buildCommitChart()),
-                                          const SizedBox(width: 18),
-                                          Expanded(child: _buildHeatmap()),
-                                        ],
-                                      ),
-                                const SizedBox(height: 18),
-                                isMobile
-                                    ? Column(
-                                        children: [
-                                          _buildInactiveTeams(),
-                                          const SizedBox(height: 18),
-                                          _buildTopTeams(),
-                                        ],
-                                      )
-                                    : Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: _buildInactiveTeams(),
-                                          ),
-                                          const SizedBox(width: 18),
-                                          Expanded(child: _buildTopTeams()),
-                                        ],
-                                      ),
-                                const SizedBox(height: 18),
-                                _buildTeamActivityTable(),
-                                const SizedBox(height: 18),
-                                isMobile
-                                    ? Column(
-                                        children: [
-                                          _buildQuickActions(),
-                                          const SizedBox(height: 18),
                                           _buildActivityLog(),
+                                          const SizedBox(height: 18),
+                                          _buildQuickActions(),
                                         ],
                                       )
                                     : Row(
@@ -235,8 +161,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       ),
                                 const SizedBox(height: 18),
                                 _buildRecentCourses(),
-                                const SizedBox(height: 18),
-                                _buildRecentGroups(),
                               ],
                             ),
                           ),
@@ -294,152 +218,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildFilters() {
-    return _SectionCard(
-      title: 'Bộ lọc',
-      child: isMobile
-          ? Column(
-              children: [
-                _buildDropdown(
-                  value: semester,
-                  hint: 'Semester',
-                  items: _semestersData.map((e) => e['name']?.toString() ?? '').toList(),
-                  onChanged: (value) => setState(() => semester = value ?? ''),
-                ),
-                const SizedBox(height: 12),
-                _buildDropdown(
-                  value: major,
-                  hint: 'Major',
-                  items: _majorsData,
-                  onChanged: (value) => setState(() => major = value ?? ''),
-                ),
-                const SizedBox(height: 12),
-                _buildDropdown(
-                  value: subject,
-                  hint: 'Subject',
-                  items: _subjectsData.map((e) => e['code']?.toString() ?? '').toList(),
-                  onChanged: (value) => setState(() => subject = value ?? ''),
-                ),
-                const SizedBox(height: 12),
-                _buildDropdown(
-                  value: classId,
-                  hint: 'Class',
-                  items: _coursesData.map((e) => e['code']?.toString() ?? '').toList(),
-                  onChanged: (value) => setState(() => classId = value ?? ''),
-                ),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(
-                    value: semester,
-                    hint: 'Semester',
-                    items: _semestersData.map((e) => e['name']?.toString() ?? '').toList(),
-                    onChanged: (value) =>
-                        setState(() => semester = value ?? ''),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDropdown(
-                    value: major,
-                    hint: 'Major',
-                    items: _majorsData,
-                    onChanged: (value) => setState(() => major = value ?? ''),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDropdown(
-                    value: subject,
-                    hint: 'Subject',
-                    items: _subjectsData.map((e) => e['code']?.toString() ?? '').toList(),
-                    onChanged: (value) => setState(() => subject = value ?? ''),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildDropdown(
-                    value: classId,
-                    hint: 'Class',
-                    items: _coursesData.map((e) => e['code']?.toString() ?? '').toList(),
-                    onChanged: (value) => setState(() => classId = value ?? ''),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String value,
-    required String hint,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value.isEmpty ? null : value,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: textSecondary),
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: cardBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: cardBorder),
-        ),
-      ),
-      items: items
-          .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
-          .toList(),
-    );
-  }
-
   Widget _buildSystemOverview(Map<String, dynamic> stats) {
     final items = [
       {
         'label': 'Học kỳ',
-        'value': '${stats['semesters'] ?? stats['Semesters'] ?? 0}',
+        'value': '${stats['semesters'] ?? 0}',
         'icon': Icons.calendar_month_outlined,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Môn học',
-        'value': '${stats['subjects'] ?? stats['Subjects'] ?? 0}',
+        'value': '${stats['subjects'] ?? 0}',
         'icon': Icons.library_books_outlined,
         'color': const Color(0xFF6366F1),
       },
       {
         'label': 'Lớp học phần',
-        'value': '${stats['courses'] ?? stats['Courses'] ?? 0}',
+        'value': '${stats['courses'] ?? 0}',
         'icon': Icons.menu_book_outlined,
         'color': const Color(0xFF2563EB),
       },
       {
         'label': 'Giảng viên',
-        'value': '${stats['lecturers'] ?? stats['Lecturers'] ?? 0}',
+        'value': '${stats['lecturers'] ?? 0}',
         'icon': Icons.manage_accounts_outlined,
         'color': const Color(0xFF8B5CF6),
       },
       {
         'label': 'Sinh viên',
-        'value': '${stats['students'] ?? stats['Students'] ?? 0}',
+        'value': '${stats['students'] ?? 0}',
         'icon': Icons.school_outlined,
         'color': const Color(0xFF14B8A6),
       },
       {
         'label': 'Nhóm dự án',
-        'value': '${stats['projects'] ?? stats['Projects'] ?? 0}',
+        'value': '${stats['projects'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFFF59E0B),
       },
@@ -450,7 +263,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return _SectionCard(
       title: 'System Overview',
-      subtitle: '${stats['activeSemesters'] ?? stats['ActiveSemesters'] ?? 0} học kỳ đang mở',
+      subtitle: '${stats['activeSemesters'] ?? 0} học kỳ đang mở',
       child: GridView.builder(
         itemCount: items.length,
         shrinkWrap: true,
@@ -527,31 +340,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final items = [
       {
         'label': 'Repo Connected',
-        'value': '${integrationStats['repoConnected'] ?? integrationStats['RepoConnected'] ?? 0}',
+        'value': '${integrationStats['repoConnected'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFF10B981),
       },
       {
         'label': 'Missing Repo',
-        'value': '${integrationStats['repoMissing'] ?? integrationStats['RepoMissing'] ?? 0}',
+        'value': '${integrationStats['repoMissing'] ?? 0}',
         'icon': Icons.error_outline,
         'color': const Color(0xFFEF4444),
       },
       {
         'label': 'Jira Project',
-        'value': '${integrationStats['jiraConnected'] ?? integrationStats['JiraConnected'] ?? 0}',
+        'value': '${integrationStats['jiraConnected'] ?? 0}',
         'icon': Icons.check_circle_outline,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Sync Errors',
-        'value': '${integrationStats['syncErrors'] ?? integrationStats['SyncErrors'] ?? 0}',
+        'value': '${integrationStats['syncErrors'] ?? 0}',
         'icon': Icons.warning_amber_rounded,
         'color': const Color(0xFFF59E0B),
       },
       {
         'label': 'Reports Exported',
-        'value': '${integrationStats['reportsExported'] ?? integrationStats['ReportsExported'] ?? 0}',
+        'value': '${integrationStats['reportsExported'] ?? 0}',
         'icon': Icons.trending_up,
         'color': const Color(0xFF6366F1),
       },
@@ -635,263 +448,50 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildCommitChart() {
-    final maxCommit = commitData
-        .map((e) => e['commits'] as int)
-        .fold<int>(0, (a, b) => a > b ? a : b);
-
-    return _SectionCard(
-      title: 'GitHub Commit Activity',
-      subtitle: 'Biểu đồ commit theo ngày trong tuần.',
-      child: SizedBox(
-        height: 260,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: commitData.map((item) {
-            final commits = item['commits'] as int;
-            final ratio = maxCommit > 0 ? commits / maxCommit : 0.0;
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$commits',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 160 * ratio + 8,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [cyan, blue],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '${item['day']}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeatmap() {
-    return _SectionCard(
-      title: 'Contribution Heatmap',
-      subtitle: 'Mức độ hoạt động đóng góp của toàn hệ thống.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: heatmapData.map((item) {
-              final count = item['count'] as int;
-              return Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: _heatmapColor(count),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: const [
-              Text(
-                'Less',
-                style: TextStyle(fontSize: 12, color: textSecondary),
-              ),
-              SizedBox(width: 8),
-              _LegendDot(color: Color(0xFFF3F4F6)),
-              SizedBox(width: 4),
-              _LegendDot(color: Color(0xFF99F6E4)),
-              SizedBox(width: 4),
-              _LegendDot(color: Color(0xFF5EEAD4)),
-              SizedBox(width: 4),
-              _LegendDot(color: Color(0xFF14B8A6)),
-              SizedBox(width: 4),
-              _LegendDot(color: Color(0xFF0F766E)),
-              SizedBox(width: 8),
-              Text(
-                'More',
-                style: TextStyle(fontSize: 12, color: textSecondary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _heatmapColor(int count) {
-    if (count >= 9) return const Color(0xFF0F766E);
-    if (count >= 7) return const Color(0xFF14B8A6);
-    if (count >= 4) return const Color(0xFF5EEAD4);
-    if (count >= 1) return const Color(0xFF99F6E4);
-    return const Color(0xFFF3F4F6);
-  }
-
-  Widget _buildTopTeams() {
-    return _SectionCard(
-      title: 'Top Team Contributions',
-      child: Column(
-        children: teamRanking.asMap().entries.map((entry) {
-          final index = entry.key;
-          final team = entry.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: cardBorder),
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFFFCFDFE),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 17,
-                  backgroundColor: const Color(0xFFCCFBF1),
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                      color: teal,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    '${team['team']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${team['commits']} commits',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildInactiveTeams() {
-    return _SectionCard(
-      title: 'Inactive Teams (AI)',
-      child: Column(
-        children: inactiveTeams.map((team) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF2F2),
-              border: Border.all(color: const Color(0xFFFECACA)),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${team['team']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: Text(
-                    '${team['reason']}',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: Color(0xFFDC2626),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTeamActivityTable() {
-    return _SectionCard(
-      title: 'Team Activity Overview',
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingTextStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: textSecondary,
-            fontSize: 12,
-          ),
-          dataTextStyle: const TextStyle(color: textPrimary, fontSize: 13),
-          columnSpacing: 28,
-          columns: const [
-            DataColumn(label: Text('Team')),
-            DataColumn(label: Text('Repo')),
-            DataColumn(label: Text('Commits')),
-            DataColumn(label: Text('Last Commit')),
-            DataColumn(label: Text('Status')),
-          ],
-          rows: teamActivity.map((item) {
-            return DataRow(
-              cells: [
-                DataCell(Text('${item['team']}')),
-                DataCell(
-                  Text((item['repo'] == true) ? 'Connected' : 'Missing'),
-                ),
-                DataCell(Text('${item['commits']}')),
-                DataCell(Text('${item['lastCommit']}')),
-                DataCell(_statusChip('${item['status']}')),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
 
   Widget _buildActivityLog() {
     return _SectionCard(
       title: 'Hoạt động hệ thống',
       child: Column(
         children: systemActivity.map((item) {
+          final type = (item['type'] ?? item['Type'] ?? '').toString().toLowerCase();
+          
+          IconData icon;
+          Color color;
+          Color bg;
+
+          switch (type) {
+            case 'github':
+              icon = Icons.code_rounded;
+              color = const Color(0xFF0D9488);
+              bg = const Color(0xFFF0FDFA);
+              break;
+            case 'jira':
+              icon = Icons.assignment_rounded;
+              color = const Color(0xFF2563EB);
+              bg = const Color(0xFFEFF6FF);
+              break;
+            case 'success':
+              icon = Icons.check_circle_rounded;
+              color = const Color(0xFF16A34A);
+              bg = const Color(0xFFF0FDF4);
+              break;
+            case 'warning':
+              icon = Icons.warning_amber_rounded;
+              color = const Color(0xFFD97706);
+              bg = const Color(0xFFFFFBEB);
+              break;
+            case 'error':
+              icon = Icons.error_outline_rounded;
+              color = const Color(0xFFDC2626);
+              bg = const Color(0xFFFEF2F2);
+              break;
+            default:
+              icon = Icons.info_outline_rounded;
+              color = const Color(0xFF64748B);
+              bg = const Color(0xFFF8FAFC);
+          }
+
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
@@ -907,14 +507,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: item['bg'] is Color ? item['bg'] : const Color(0xFFEFF6FF),
+                    color: bg,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(
-                    item['icon'] is IconData ? item['icon'] : Icons.local_activity_outlined,
-                    size: 18,
-                    color: item['fg'] is Color ? item['fg'] : const Color(0xFF2563EB),
-                  ),
+                  child: Icon(icon, size: 18, color: color),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -922,7 +518,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${item['msg']}',
+                        '${item['message'] ?? item['Message'] ?? item['msg'] ?? ""}',
                         style: const TextStyle(
                           color: textPrimary,
                           fontSize: 14,
@@ -938,7 +534,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${item['time']}',
+                            '${item['time'] ?? item['Time'] ?? "Vừa xong"}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: textSecondary,
@@ -961,23 +557,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final actions = [
       {
         'icon': Icons.calendar_month_outlined,
-        'label': 'Tạo học kỳ',
+        'label': 'Học kỳ',
         'route': '/admin/semesters',
       },
       {
         'icon': Icons.library_books_outlined,
-        'label': 'Tạo môn học',
+        'label': 'Môn học',
         'route': '/admin/subjects',
       },
       {
         'icon': Icons.menu_book_outlined,
-        'label': 'Tạo lớp học phần',
+        'label': 'Lớp HP',
         'route': '/admin/courses',
       },
       {
-        'icon': Icons.group_work_outlined,
-        'label': 'Create Groups',
-        'route': '/admin/groups',
+        'icon': Icons.assignment_ind_outlined,
+        'label': 'Phân giảng',
+        'route': '/admin/lecturer-assignment',
+      },
+      {
+        'icon': Icons.people_outline_rounded,
+        'label': 'Người dùng',
+        'route': '/admin/users',
+      },
+      {
+        'icon': Icons.trending_up,
+        'label': 'Báo cáo',
+        'route': '/admin/reports',
       },
     ];
 
@@ -988,10 +594,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 3 : 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.9,
+          crossAxisCount: isMobile ? 3 : (isTablet ? 3 : 2),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: isMobile ? 0.95 : 1.1,
         ),
         itemBuilder: (context, index) {
           final item = actions[index];
@@ -1005,26 +611,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 color: const Color(0xFFFCFDFE),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(item['icon'] as IconData, color: textPrimary),
+                      child: Icon(item['icon'] as IconData, size: 20, color: textPrimary),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 10),
                     Text(
                       item['label'] as String,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: textPrimary,
+                        fontSize: 10,
+                        color: textSecondary,
                       ),
                     ),
                   ],
@@ -1056,6 +663,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             )
           : Column(
               children: recentCourses.map((course) {
+                final subjectCode = course['subject']?['code'] ?? course['subjectCode'] ?? 'N/A';
+                final semesterName = course['semester']?['name'] ?? course['semesterName'] ?? 'N/A';
+                final current = course['currentStudents'] ?? 0;
+                final max = course['maxStudents'] ?? 40;
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(14),
@@ -1083,14 +695,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text('${course['subjectCode']}'),
-                            Text('${course['semesterName']}'),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${course['currentStudents']}/${course['maxStudents']}',
+                            Row(
+                               children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '$subjectCode',
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text('$semesterName', style: const TextStyle(fontSize: 12, color: textSecondary)),
+                               ],
                             ),
                             const SizedBox(height: 8),
-                            _courseStatusBadge('${course['status']}'),
+                            Row(
+                               children: [
+                                  Text('$current', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  Text('/$max', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                  const Spacer(),
+                                  _courseStatusBadge('${course['status']}'),
+                               ],
+                            ),
                           ],
                         )
                       : Row(
@@ -1120,15 +750,34 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             ),
                             Expanded(
                               flex: 2,
-                              child: Text(
-                                '${course['subjectCode']}\n${course['semesterName']}',
-                                textAlign: TextAlign.center,
+                              child: Column(
+                                 children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '$subjectCode',
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text('$semesterName', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                 ],
                               ),
                             ),
                             Expanded(
-                              child: Text(
-                                '${course['currentStudents']}/${course['maxStudents']}',
-                                textAlign: TextAlign.center,
+                              child: Center(
+                                child: RichText(
+                                   text: TextSpan(
+                                      children: [
+                                         TextSpan(text: '$current', style: const TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+                                         TextSpan(text: '/$max', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                      ],
+                                   ),
+                                ),
                               ),
                             ),
                             Expanded(
@@ -1143,114 +792,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 );
               }).toList(),
             ),
-    );
-  }
-
-  Widget _buildRecentGroups() {
-    return _SectionCard(
-      title: 'Recent Project Groups',
-      child: Column(
-        children: recentGroups.map((g) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: cardBorder),
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFFFCFDFE),
-            ),
-            child: isMobile
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${g['id']}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: teal,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Class: ${g['course']}'),
-                      const SizedBox(height: 6),
-                      Text('GitHub: ${(g['github'] == true) ? "✓" : "✗"}'),
-                      const SizedBox(height: 6),
-                      Text('Jira: ${(g['jira'] == true) ? "✓" : "✗"}'),
-                      const SizedBox(height: 8),
-                      _statusChip('${g['status']}'),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${g['id']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: teal,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Text('${g['course']}')),
-                      Expanded(
-                        child: Text(
-                          (g['github'] == true) ? '✓' : '✗',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          (g['jira'] == true) ? '✓' : '✗',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Expanded(
-                        child: Center(child: _statusChip('${g['status']}')),
-                      ),
-                    ],
-                  ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _statusChip(String status) {
-    Color bg;
-    Color fg;
-
-    switch (status) {
-      case 'ACTIVE':
-        bg = const Color(0xFFECFDF5);
-        fg = const Color(0xFF15803D);
-        break;
-      case 'LOW':
-        bg = const Color(0xFFFEFCE8);
-        fg = const Color(0xFFA16207);
-        break;
-      case 'MISSING_REPO':
-        bg = const Color(0xFFFEF2F2);
-        fg = const Color(0xFFDC2626);
-        break;
-      case 'MISSING_JIRA':
-        bg = const Color(0xFFFFF7ED);
-        fg = const Color(0xFFEA580C);
-        break;
-      default:
-        bg = const Color(0xFFF3F4F6);
-        fg = const Color(0xFF6B7280);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
-      ),
     );
   }
 
@@ -1375,20 +916,4 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  final Color color;
 
-  const _LegendDot({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 13,
-      height: 13,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
-  }
-}
