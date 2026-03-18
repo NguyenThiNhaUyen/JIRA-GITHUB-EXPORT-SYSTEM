@@ -10,7 +10,7 @@ import {
   AlertCircle,
   TrendingUp
 } from "lucide-react";
-import { StatsCard } from "../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function AdminStats({ stats, integrationStats, activeSemesters }) {
   return (
@@ -36,3 +36,9 @@ export function AdminStats({ stats, integrationStats, activeSemesters }) {
     </div>
   );
 }
+
+
+
+
+
+

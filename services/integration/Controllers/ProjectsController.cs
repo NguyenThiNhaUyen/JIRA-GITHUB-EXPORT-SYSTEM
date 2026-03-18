@@ -227,4 +227,59 @@ public class ProjectsController : ControllerBase
         var result = await _coreService.SyncProjectCommitsAsync(projectId);
         return Ok(ApiResponse<object>.SuccessResponse(result, "Sync triggered"));
     }
+
+    /// <summary>
+    /// Get project kanban board
+    /// </summary>
+    [HttpGet("{projectId}/kanban")]
+    [ProducesResponseType(typeof(ApiResponse<KanbanBoardResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectKanban(long projectId)
+    {
+        var result = await _dashboardService.GetProjectKanbanAsync(projectId);
+        return Ok(ApiResponse<KanbanBoardResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get project cumulative flow diagram data
+    /// </summary>
+    [HttpGet("{projectId}/cfd")]
+    [ProducesResponseType(typeof(ApiResponse<CfdBoardResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCfd(long projectId)
+    {
+        var result = await _dashboardService.GetProjectCfdAsync(projectId);
+        return Ok(ApiResponse<CfdBoardResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get project roadmap/deadlines
+    /// </summary>
+    [HttpGet("{projectId}/roadmap")]
+    [ProducesResponseType(typeof(ApiResponse<RoadmapResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectRoadmap(long projectId)
+    {
+        var result = await _dashboardService.GetProjectRoadmapAsync(projectId);
+        return Ok(ApiResponse<RoadmapResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get aging WIP tasks
+    /// </summary>
+    [HttpGet("{projectId}/aging-wip")]
+    [ProducesResponseType(typeof(ApiResponse<AgingWipResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectAgingWip(long projectId, [FromQuery] int limit = 5)
+    {
+        var result = await _dashboardService.GetProjectAgingWipAsync(projectId, limit);
+        return Ok(ApiResponse<AgingWipResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get project cycle time metrics
+    /// </summary>
+    [HttpGet("{projectId}/cycle-time")]
+    [ProducesResponseType(typeof(ApiResponse<CycleTimeResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCycleTime(long projectId)
+    {
+        var result = await _dashboardService.GetProjectCycleTimeAsync(projectId);
+        return Ok(ApiResponse<CycleTimeResponse>.SuccessResponse(result));
+    }
 }

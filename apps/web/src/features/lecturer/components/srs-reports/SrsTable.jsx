@@ -1,6 +1,6 @@
 import React from "react";
 import { Eye, ExternalLink, Calendar, GitBranch } from "lucide-react";
-import { Card, CardContent } from "../../../../components/ui/card.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
 
 export function SrsTable({ items, selectedId, onSelect, statusMeta }) {
   const renderStatusChip = (status) => {
@@ -75,3 +75,9 @@ export function SrsTable({ items, selectedId, onSelect, statusMeta }) {
     </Card>
   );
 }
+
+
+
+
+
+

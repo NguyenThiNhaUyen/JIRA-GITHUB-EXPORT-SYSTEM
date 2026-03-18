@@ -167,6 +167,15 @@ public class AnalyticsController : ControllerBase
         var result = await _analyticsService.GetStudentCommitActivityAsync(studentUserId, days);
         return Ok(ApiResponse<object>.SuccessResponse(result));
     }
+
+    /// <summary>GET /api/analytics/courses/{courseId}/contributions</summary>
+    [HttpGet("courses/{courseId}/contributions")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> GetCourseContributions(long courseId)
+    {
+        var result = await _analyticsService.GetCourseContributionsAsync(courseId);
+        return Ok(ApiResponse<object>.SuccessResponse(result));
+    }
 }
 
 /// <summary>

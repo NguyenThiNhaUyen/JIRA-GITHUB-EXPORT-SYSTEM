@@ -37,3 +37,9 @@ export function mapSubjectList(beData) {
     const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSubject);
 }
+
+
+
+
+
+

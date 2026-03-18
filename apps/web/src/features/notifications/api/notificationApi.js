@@ -17,3 +17,9 @@ export async function markAsRead(id) {
     const res = await client.patch(`/notifications/${id}/read`);
     return unwrap(res);
 }
+
+
+
+
+
+

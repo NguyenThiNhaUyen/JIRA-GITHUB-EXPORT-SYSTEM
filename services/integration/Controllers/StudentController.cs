@@ -96,4 +96,11 @@ public class StudentController : ControllerBase
         var result = await _studentService.GetStudentCommitActivityAsync(GetCurrentUserId(), days);
         return Ok(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>>.SuccessResponse(result));
     }
+
+    [HttpGet("me/deadlines")]
+    public async Task<IActionResult> GetMyDeadlines()
+    {
+        var result = await _studentService.GetStudentDeadlinesAsync(GetCurrentUserId());
+        return Ok(ApiResponse<List<object>>.SuccessResponse(result));
+    }
 }

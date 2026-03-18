@@ -46,10 +46,14 @@ public class MemberContributionSummary
     public int PullRequests { get; set; }
     public int IssuesCompleted { get; set; }
 }
-
-
-
-
-
-
-
+public class ReportExportResponse
+{
+    public long Id { get; set; }
+    public string Type { get; set; } = string.Empty; // From report_type
+    public string Format { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public DateTime CreatedAt { get; set; } // From requested_at
+    public string? ErrorMessage { get; set; }
+}

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { TopHeader } from "../components/layout/TopHeader.jsx";
+import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import {
     BookOpen,
     LayoutDashboard,
@@ -27,7 +27,8 @@ const navSections = [
         label: "Quản lý",
         items: [
             { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lớp của tôi" },
-            { to: "/lecturer/groups", icon: Users, label: "Nhóm & Dự án" },
+            { to: "/lecturer/groups", icon: Users, label: "Theo dõi nhóm" },
+            { to: "/lecturer/projects", icon: GraduationCap, label: "Tổng quan dự án" },
         ],
     },
     {
@@ -143,3 +144,9 @@ export default function LecturerLayout({ children }) {
         </div>
     );
 }
+
+
+
+
+
+

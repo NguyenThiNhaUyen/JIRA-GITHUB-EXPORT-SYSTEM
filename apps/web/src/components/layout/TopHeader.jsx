@@ -12,17 +12,17 @@ import {
   X
 } from "lucide-react";
 
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 import {
   useGetNotifications,
   useMarkAsRead
-} from "../../features/notifications/hooks/useNotifications.js";
+} from "@/features/notifications/hooks/useNotifications.js";
 import {
   useAcceptInvitation,
   useRejectInvitation
-} from "../../features/projects/hooks/useInvitations.js";
+} from "@/features/projects/hooks/useInvitations.js";
 
-import { useToast } from "../../components/ui/toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 
 export function TopHeader() {
   const { user, logout } = useAuth();
@@ -106,16 +106,14 @@ export function TopHeader() {
 
         connection.on("ReceiveNotification", (notification) => {
           if (!isMounted) return;
-          console.log("[SignalR] Received notification:", notification);
           info?.(notification.message || "Bạn có thông báo mới", { title: "Thông báo" });
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         });
 
         try {
             await connection.start();
-            if (isMounted) console.log("[SignalR] Connected");
         } catch (err) {
-            if (isMounted) console.error("[SignalR] Connection Error: ", err);
+            // SignalR Connection Error
         }
     };
 
@@ -334,3 +332,9 @@ export function TopHeader() {
     </header>
   );
 }
+
+
+
+
+
+

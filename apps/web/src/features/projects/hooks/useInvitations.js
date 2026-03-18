@@ -12,7 +12,7 @@ export const useGetMyPendingInvitations = () => {
     return useQuery({
         queryKey: INVITATION_KEYS.myPending(),
         queryFn: async () => {
-            const res = await client.get("/invitations/my-pending");
+            const res = await client.get("/student/me/invitations");
             const data = unwrap(res);
             return data?.items || [];
         },
@@ -73,3 +73,9 @@ export const useCreateInvitation = () => {
         },
     });
 };
+
+
+
+
+
+

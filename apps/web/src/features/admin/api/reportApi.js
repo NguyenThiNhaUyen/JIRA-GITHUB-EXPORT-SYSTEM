@@ -14,9 +14,9 @@ export async function generateCommitStats(courseId, format = "PDF") {
 /**
  * Tạo báo cáo Team Roster
  */
-export async function generateTeamRoster(projectId, format = "PDF") {
+export async function generateTeamRoster({ projectId, courseId, format = "PDF" }) {
     const res = await client.post(`/reports/team-roster`, null, {
-        params: { projectId, format }
+        params: { projectId, courseId, format }
     });
     return unwrap(res);
 }
@@ -34,9 +34,9 @@ export async function generateActivitySummary(projectId, startDate, endDate, for
 /**
  * Tạo báo cáo SRS
  */
-export async function generateSrs(projectId, format = "PDF") {
+export async function generateSrs({ projectId, courseId, format = "PDF" }) {
     const res = await client.post(`/reports/srs`, null, {
-        params: { projectId, format }
+        params: { projectId, courseId, format }
     });
     return unwrap(res);
 }
@@ -58,11 +58,11 @@ export async function getMyReports() {
 }
 
 /**
- * Láy báo cáo theo Project và Type
+ * Láy báo cáo theo Project/Course và Type
  */
-export async function getProjectReports(projectId, type) {
+export async function getReports({ projectId, courseId, type, status, milestone, page = 1, pageSize = 50 }) {
     const res = await client.get(`/reports`, {
-        params: { projectId, type }
+        params: { projectId, courseId, type, status, milestone, page, pageSize }
     });
     return unwrap(res);
 }
@@ -74,3 +74,9 @@ export async function updateReportStatus(reportId, status) {
     const res = await client.put(`/reports/${reportId}/status`, { status });
     return unwrap(res);
 }
+
+
+
+
+
+

@@ -14,6 +14,11 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
+        // Global DateOnly converters
+        CreateMap<DateOnly, DateTime>().ConvertUsing(src => src.ToDateTime(TimeOnly.MinValue));
+        CreateMap<DateOnly?, DateTime>().ConvertUsing(src => src.HasValue ? src.Value.ToDateTime(TimeOnly.MinValue) : DateTime.MinValue);
+        CreateMap<DateTime, DateOnly>().ConvertUsing(src => DateOnly.FromDateTime(src));
+
         // ============================================
         // USER MAPPINGS
         // ============================================
@@ -40,8 +45,8 @@ public class MappingProfile : Profile
 
         CreateMap<semester, SemesterInfo>()
             .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name))
-            .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.start_date ?? DateOnly.MinValue))
-            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date ?? DateOnly.MinValue));
+            .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.start_date))
+            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date));
 
         CreateMap<subject, SubjectInfo>()
             .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.subject_code))

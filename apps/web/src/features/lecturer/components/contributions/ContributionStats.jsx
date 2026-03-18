@@ -1,6 +1,6 @@
 import React from "react";
 import { GitBranch, Users, Target, GitPullRequest, ShieldAlert } from "lucide-react";
-import { StatsCard } from "../../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function ContributionStats({ 
   totalCommits, 
@@ -46,3 +46,9 @@ export function ContributionStats({
     </div>
   );
 }
+
+
+
+
+
+

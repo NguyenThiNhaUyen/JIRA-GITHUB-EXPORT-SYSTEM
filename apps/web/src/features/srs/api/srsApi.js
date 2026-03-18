@@ -55,25 +55,34 @@ export async function remindOverdueSrs() {
 }
 
 /**
- * Đánh giá SRS (Giảng viên)
+ * Đánh giá SRS (Giảng viên) - Combined action
  */
 export async function reviewSrs(reportId, { status, feedback, score, metadata }) {
-    const res = await client.post(`/srs/${reportId}/review`, {
+    // Backend has separate endpoints for status and feedback
+    // First update status (which includes feedback in the request body usually)
+    const resStatus = await client.patch(`/srs/${reportId}/status`, {
         status,
         feedback,
         score,
         metadata: metadata || "{}"
     });
-    return mapSrs(unwrap(res));
+    
+    // If feedback is provided separately or needs another call
+    if (feedback && !resStatus.data.success) {
+         await client.patch(`/srs/${reportId}/feedback`, { feedback });
+    }
+
+    return mapSrs(unwrap(resStatus));
 }
 
 /**
  * Cập nhật status SRS
  */
-export async function updateSrsStatus(reportId, newStatus, feedback) {
+export async function updateSrsStatus(reportId, newStatus, feedback, score) {
     const res = await client.patch(`/srs/${reportId}/status`, {
         status: newStatus,
-        ...(feedback ? { feedback } : {}),
+        feedback,
+        score
     });
     return mapSrs(unwrap(res));
 }
@@ -111,3 +120,9 @@ function mapSrs(s) {
         reviewerName: s.reviewerName,
     };
 }
+
+
+
+
+
+

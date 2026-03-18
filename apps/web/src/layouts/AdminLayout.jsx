@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
-import { TopHeader } from "../components/layout/TopHeader.jsx";
+import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import {
     BookOpen, LayoutDashboard, CalendarDays, Library,
     Users, GraduationCap, UserCog, FileBarChart,
@@ -25,6 +25,7 @@ const NAV = [
             { to: "/admin/subjects", icon: Library, label: "Môn học" },
             { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
             { to: "/admin/lecturer-assignment", icon: UserCog, label: "Phân công giảng viên" },
+            { to: "/admin/workload", icon: BarChart3, label: "Khối lượng giảng dạy" },
         ],
     },
     {
@@ -126,3 +127,9 @@ export default function AdminLayout({ children }) {
         </div>
     );
 }
+
+
+
+
+
+

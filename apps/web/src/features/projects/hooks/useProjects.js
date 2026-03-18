@@ -13,7 +13,12 @@ import {
     rejectIntegration,
     getProjectMetrics,
     getProjectCommitHistory,
-    syncProjectCommits
+    syncProjectCommits,
+    getProjectRoadmap,
+    getProjectCfd,
+    getProjectCycleTime,
+    getProjectKanban,
+    getProjectAgingWip
 } from '../api/projectApi.js';
 
 export const PROJECT_KEYS = {
@@ -179,3 +184,50 @@ export const useCourseCommitHistories = (projectIds) => {
         }))
     });
 };
+
+export const useGetProjectRoadmap = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'roadmap'],
+        queryFn: () => getProjectRoadmap(projectId),
+        enabled: !!projectId,
+    });
+};
+
+export const useGetProjectCfd = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'cfd'],
+        queryFn: () => getProjectCfd(projectId),
+        enabled: !!projectId,
+    });
+};
+
+export const useGetProjectCycleTime = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'cycle-time'],
+        queryFn: () => getProjectCycleTime(projectId),
+        enabled: !!projectId,
+    });
+};
+
+export const useGetProjectKanban = (projectId) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'kanban'],
+        queryFn: () => getProjectKanban(projectId),
+        enabled: !!projectId,
+    });
+};
+
+export const useGetProjectAgingWip = (projectId, limit = 5) => {
+    return useQuery({
+        queryKey: [...PROJECT_KEYS.detail(projectId), 'aging-wip', limit],
+        queryFn: () => getProjectAgingWip(projectId, limit),
+        enabled: !!projectId,
+    });
+};
+
+
+
+
+
+
+

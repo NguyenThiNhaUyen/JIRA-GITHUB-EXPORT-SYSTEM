@@ -65,3 +65,9 @@ export const useDeleteSubject = () => {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
     });
 };
+
+
+
+
+
+

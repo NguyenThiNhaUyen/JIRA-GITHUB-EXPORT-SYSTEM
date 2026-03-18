@@ -275,15 +275,14 @@ app.UseForwardedHeaders();
 app.UseCustomExceptionHandler();
 
 
-           if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-                c.RoutePrefix = "swagger"; // Swagger at /swagger
-            });
-          }
+// Swagger is always enabled for demo and grading purposes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+    c.RoutePrefix = "swagger"; // Swagger at /swagger
+    c.DocumentTitle = "PBL Platform – Jira & GitHub Export API";
+});
 
             // Render/Cloud handles SSL/TLS termination at the proxy level.
             // We use HttpsRedirection only for local development or non-Render environments.

@@ -59,3 +59,9 @@ export async function deleteSubject(id) {
     const res = await client.delete(`/subjects/${id}`);
     return unwrap(res);
 }
+
+
+
+
+
+
