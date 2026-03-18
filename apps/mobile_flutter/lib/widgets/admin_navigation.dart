@@ -61,7 +61,7 @@ class AdminSidebar extends StatelessWidget {
                   _SidebarItem(
                     icon: Icons.grid_view_rounded,
                     label: 'Dashboard',
-                    route: '/admin',
+                    route: '/admin/dashboard',
                   ),
                   _SidebarItem(
                     icon: Icons.bar_chart_rounded,
@@ -197,7 +197,7 @@ class AdminDrawer extends StatelessWidget {
                   _SidebarItem(
                     icon: Icons.grid_view_rounded,
                     label: 'Dashboard',
-                    route: '/admin',
+                    route: '/admin/dashboard',
                   ),
                   _SidebarItem(
                     icon: Icons.bar_chart_rounded,
@@ -289,7 +289,7 @@ class _SidebarItem extends StatelessWidget {
     final String location = GoRouterState.of(context).uri.toString();
 
     final bool active =
-        location == route || (route != '/admin' && location.startsWith(route));
+        location == route || (route != '/admin/dashboard' && location.startsWith(route));
 
     const Color activeBg = Color(0xFF0E746E);
     const Color activeText = Colors.white;

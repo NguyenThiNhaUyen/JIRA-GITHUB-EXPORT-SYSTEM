@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class AdminSubjectsScreen extends StatefulWidget {
   const AdminSubjectsScreen({super.key});
@@ -20,52 +20,9 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
     "Business Administration": "BUS",
   };
 
-  final List<Map<String, dynamic>> _subjects = [
-    {
-      "id": 1,
-      "department": "Software Engineering",
-      "courseNumber": "392",
-      "code": "SWD392",
-      "name": "Software Architecture",
-      "description": "Learn software architecture principles",
-      "credits": 3,
-      "maxStudents": 40,
-      "status": "ACTIVE",
-    },
-    {
-      "id": 2,
-      "department": "Artificial Intelligence",
-      "courseNumber": "301",
-      "code": "AI301",
-      "name": "Machine Learning",
-      "description": "Introduction to machine learning",
-      "credits": 3,
-      "maxStudents": 35,
-      "status": "ACTIVE",
-    },
-    {
-      "id": 3,
-      "department": "Information Security",
-      "courseNumber": "220",
-      "code": "SEC220",
-      "name": "Network Security",
-      "description": "Fundamentals of network security",
-      "credits": 4,
-      "maxStudents": 45,
-      "status": "INACTIVE",
-    },
-    {
-      "id": 4,
-      "department": "Business Administration",
-      "courseNumber": "101",
-      "code": "BUS101",
-      "name": "Business Fundamentals",
-      "description": "Introduction to core business concepts",
-      "credits": 2,
-      "maxStudents": 50,
-      "status": "ACTIVE",
-    },
-  ];
+  final AdminService _adminService = AdminService();
+  bool _isLoading = false;
+  final List<Map<String, dynamic>> _subjects = [];
 
   String _filter = "ALL";
   String _search = "";
@@ -101,6 +58,29 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
             .map((e) => e["id"] as int)
             .reduce((value, element) => value > element ? value : element) +
         1;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final subjects = await _adminService.getSubjects();
+      setState(() {
+        _subjects.clear();
+        _subjects.addAll(subjects);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnack("Lỗi tải danh sách môn học", success: false);
+      }
+    }
   }
 
   @override
@@ -1089,7 +1069,9 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                   children: [
                     _buildTopNavbar(),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
                         padding: EdgeInsets.all(horizontalPadding),
                         child: Center(
                           child: ConstrainedBox(

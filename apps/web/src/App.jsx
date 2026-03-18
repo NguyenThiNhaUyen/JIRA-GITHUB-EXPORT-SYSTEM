@@ -63,10 +63,13 @@ export default function App() {
 
   const getDefaultRedirect = () => {
     if (!userRole) return "/login";
+
     const role = String(userRole).toUpperCase();
+
     if (role === "ADMIN") return "/admin";
     if (role === "LECTURER") return "/lecturer";
     if (role === "STUDENT") return "/student";
+
     return "/login";
   };
 
@@ -74,9 +77,9 @@ export default function App() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public routes */}
-        <Route 
-          path="/login" 
-          element={userRole ? <Navigate to={getDefaultRedirect()} replace /> : <Login />} 
+        <Route
+          path="/login"
+          element={userRole ? <Navigate to={getDefaultRedirect()} replace /> : <Login />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />

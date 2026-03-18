@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 // ────────────────────────────────────────────────────────────
 // Lecturer Assignment Screen  (Admin)
@@ -17,141 +18,56 @@ class LecturerAssignmentScreen extends StatefulWidget {
 }
 
 class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
+  final AdminService _adminService = AdminService();
   // ─── Controllers ────────────────────────────────────────
   final TextEditingController _searchController = TextEditingController();
 
   // ─── Mock Data ──────────────────────────────────────────
 
-  final List<Map<String, dynamic>> _semesters = [
-    {"id": 1, "code": "FA24", "name": "Fall 2024"},
-    {"id": 2, "code": "SP25", "name": "Spring 2025"},
-    {"id": 3, "code": "SU25", "name": "Summer 2025"},
-  ];
+  final List<Map<String, dynamic>> _semesters = [];
 
-  final List<Map<String, dynamic>> _subjects = [
-    {"id": 1, "code": "SWD392", "name": "Software Architecture"},
-    {"id": 2, "code": "PRJ301", "name": "Java Web Application"},
-    {"id": 3, "code": "SWP391", "name": "Software Engineering Project"},
-    {"id": 4, "code": "AI301", "name": "Machine Learning"},
-  ];
+  final List<Map<String, dynamic>> _subjects = [];
 
-  final List<Map<String, dynamic>> _lecturers = [
-    {"id": "L1", "name": "Nguyễn Văn Nam"},
-    {"id": "L2", "name": "Trần Thị Lan"},
-    {"id": "L3", "name": "Lê Văn Hùng"},
-    {"id": "L4", "name": "Phạm Minh Tuấn"},
-    {"id": "L5", "name": "Hoàng Thị Mai"},
-  ];
+  final List<Map<String, dynamic>> _lecturers = [];
 
   late List<Map<String, dynamic>> _courses;
 
   @override
   void initState() {
     super.initState();
-    _courses = [
-      {
-        "id": "C1",
-        "code": "SWD392-01",
-        "name": "Software Architecture – Lớp 01",
-        "subjectId": 1,
-        "semesterId": 1,
-        "currentStudents": 32,
-        "maxStudents": 40,
-        "lecturers": [
-          {"id": "L1", "name": "Nguyễn Văn Nam"},
-        ],
-      },
-      {
-        "id": "C2",
-        "code": "PRJ301-01",
-        "name": "Java Web Application – Lớp 01",
-        "subjectId": 2,
-        "semesterId": 1,
-        "currentStudents": 38,
-        "maxStudents": 40,
-        "lecturers": [
-          {"id": "L2", "name": "Trần Thị Lan"},
-          {"id": "L3", "name": "Lê Văn Hùng"},
-        ],
-      },
-      {
-        "id": "C3",
-        "code": "SWP391-01",
-        "name": "SE Project – Lớp 01",
-        "subjectId": 3,
-        "semesterId": 2,
-        "currentStudents": 15,
-        "maxStudents": 35,
-        "lecturers": [],
-      },
-      {
-        "id": "C4",
-        "code": "AI301-01",
-        "name": "Machine Learning – Lớp 01",
-        "subjectId": 4,
-        "semesterId": 2,
-        "currentStudents": 28,
-        "maxStudents": 45,
-        "lecturers": [
-          {"id": "L4", "name": "Phạm Minh Tuấn"},
-        ],
-      },
-      {
-        "id": "C5",
-        "code": "SWD392-02",
-        "name": "Software Architecture – Lớp 02",
-        "subjectId": 1,
-        "semesterId": 3,
-        "currentStudents": 0,
-        "maxStudents": 40,
-        "lecturers": [],
-      },
-      {
-        "id": "C6",
-        "code": "PRJ301-02",
-        "name": "Java Web Application – Lớp 02",
-        "subjectId": 2,
-        "semesterId": 3,
-        "currentStudents": 22,
-        "maxStudents": 40,
-        "lecturers": [
-          {"id": "L5", "name": "Hoàng Thị Mai"},
-        ],
-      },
-      {
-        "id": "C7",
-        "code": "SWP391-02",
-        "name": "SE Project – Lớp 02",
-        "subjectId": 3,
-        "semesterId": 1,
-        "currentStudents": 41,
-        "maxStudents": 45,
-        "lecturers": [],
-      },
-      {
-        "id": "C8",
-        "code": "AI301-02",
-        "name": "Machine Learning – Lớp 02",
-        "subjectId": 4,
-        "semesterId": 1,
-        "currentStudents": 10,
-        "maxStudents": 35,
-        "lecturers": [
-          {"id": "L1", "name": "Nguyễn Văn Nam"},
-          {"id": "L2", "name": "Trần Thị Lan"},
-        ],
-      },
-      {
-        "id": "C9",
-        "code": "SWD392-03",
-        "name": "Software Architecture – Lớp 03",
-        "subjectId": 1,
-        "semesterId": 2,
-        "currentStudents": 5,
-        "maxStudents": 40,
-        "lecturers": [],
-      },
-    ];
+    _courses = [];
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _adminService.getSemesters(),
+        _adminService.getSubjects(),
+        _adminService.getUsers(),
+        _adminService.getCourses(),
+      ]);
+
+      setState(() {
+        _semesters.clear();
+        _semesters.addAll(List<Map<String, dynamic>>.from(results[0]));
+        _subjects.clear();
+        _subjects.addAll(List<Map<String, dynamic>>.from(results[1]));
+
+        _lecturers.clear();
+        _lecturers.addAll(List<Map<String, dynamic>>.from(results[2])
+            .where((u) => u['role'] == 'LECTURER' || u['role'] == 'lecturer'));
+
+        _courses = List<Map<String, dynamic>>.from(results[3]);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnack("Lỗi tải dữ liệu", success: false);
+      }
+    }
   }
 
   // ─── State ──────────────────────────────────────────────
@@ -445,7 +361,9 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
                   children: [
                     _buildTopNavbar(isMobile),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
                         padding: EdgeInsets.all(horizontalPadding),
                         child: Center(
                           child: ConstrainedBox(
@@ -501,7 +419,7 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
     return Row(
       children: [
         GestureDetector(
-          onTap: () => context.go("/admin"),
+          onTap: () => context.go("/admin/dashboard"),
           child: const Text(
             "Admin",
             style: TextStyle(
@@ -809,7 +727,7 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
         border: Border.all(color: const Color(0xFFF1F5F9)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

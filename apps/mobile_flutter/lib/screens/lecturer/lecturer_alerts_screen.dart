@@ -235,7 +235,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
         gradient: const LinearGradient(colors: [Color(0xFFF0FDFA), Colors.white, Color(0xFFF0FDF4)]),
         border: Border.all(color: const Color(0xFF99F6E4)),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('TRUNG TÂM XỬ LÝ CẢNH BÁO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _kTeal, letterSpacing: 1.5)),
@@ -300,7 +300,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: Colors.white, border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6)]),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)]),
       child: Column(children: [
         SingleChildScrollView(scrollDirection: Axis.horizontal,
           child: Row(children: [
@@ -342,7 +342,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
   Widget _buildAlertList() {
     return Container(
       decoration: BoxDecoration(color: Colors.white, border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), child: Row(children: [
           Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(10)),
@@ -458,7 +458,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     final metrics = a['metrics'] as Map<String, dynamic>;
     return Container(
       decoration: BoxDecoration(color: Colors.white, border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), child: Row(children: [
           Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFF5F3FF), borderRadius: BorderRadius.circular(10)),
@@ -580,7 +580,7 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
   Widget _sideCard(IconData icon, Color iconBg, Color iconColor, String title, Widget child) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, border: Border.all(color: _kBorder), borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 12), child: Row(children: [
           Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
