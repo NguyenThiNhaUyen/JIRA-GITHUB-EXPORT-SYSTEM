@@ -1,6 +1,6 @@
 // Tabs Component - Part of UI Kit
 import React, { useState, useEffect } from 'react';
-import { Button } from './Button.jsx';
+import { Button } from '../Button.jsx';
 
 export function Tabs({ children, defaultValue, className = '', ...props }) {
   const [activeTab, setActiveTab] = useState(defaultValue);
@@ -25,7 +25,7 @@ export function TabsList({ children, activeTab, setActiveTab, className = '', ..
     <div className={`flex space-x-1 border-b border-secondary-200 ${className}`} {...props}>
       {children.map((child, index) => {
         if (child.type === TabsTrigger) {
-          return React.cloneElement(child, { 
+          return React.cloneElement(child, {
             isActive: child.props.value === activeTab,
             onClick: () => setActiveTab(child.props.value)
           });
@@ -37,11 +37,11 @@ export function TabsList({ children, activeTab, setActiveTab, className = '', ..
 }
 
 export function TabsTrigger({ children, value, isActive, onClick, className = '', ...props }) {
-  const baseClasses = 'px-4 py-2 text-sm font-medium border-b-2 transition-colors';
-  const activeClasses = isActive 
-    ? 'text-primary-600 border-primary-600' 
-    : 'text-secondary-500 border-transparent hover:text-secondary-700 hover:border-secondary-300';
-  
+  const baseClasses = 'px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] font-display rounded-2xl transition-all duration-300 active:scale-95';
+  const activeClasses = isActive
+    ? 'bg-teal-600 text-white shadow-xl shadow-teal-100 -translate-y-0.5'
+    : 'text-gray-400 bg-gray-100/50 hover:bg-gray-100 hover:text-gray-600';
+
   return (
     <button
       className={`${baseClasses} ${activeClasses} ${className}`}
@@ -55,9 +55,9 @@ export function TabsTrigger({ children, value, isActive, onClick, className = ''
 
 export function TabsContent({ children, value, activeTab, className = '', ...props }) {
   if (value !== activeTab) return null;
-  
+
   return (
-    <div className={`pt-4 ${className}`} {...props}>
+    <div className={`animate-in fade-in slide-in-from-bottom-2 duration-500 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -71,7 +71,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -87,26 +87,28 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div 
-          className="fixed inset-0 bg-secondary-900 bg-opacity-50 transition-opacity"
-          onClick={onClose}
-        />
-        <div className={`relative bg-white rounded-xl shadow-xl w-full ${sizes[size]} ${className}`}>
-          {title && (
-            <div className="px-6 py-4 border-b border-secondary-200">
-              <h3 className="text-lg font-semibold text-secondary-900">{title}</h3>
-            </div>
-          )}
-          <div className="px-6 py-4">
-            {children}
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      <div className={`relative bg-white rounded-[40px] shadow-premium w-full border border-gray-100 overflow-hidden animate-in zoom-in-95 fade-in duration-300 ${sizes[size]} ${className}`}>
+        {title && (
+          <div className="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+            <h3 className="text-xl font-black text-gray-800 uppercase tracking-widest font-display">{title}</h3>
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-200 transition-all">✕</button>
           </div>
-          <div className="px-6 py-4 border-t border-secondary-200 flex justify-end">
-            <Button variant="outline" onClick={onClose}>
-              Đóng
-            </Button>
-          </div>
+        )}
+        <div className="px-10 py-8">
+          {children}
+        </div>
+        <div className="px-10 py-8 border-t border-gray-50 bg-gray-50/10 flex justify-end gap-3">
+          <Button variant="outline" onClick={onClose} className="rounded-2xl h-12 px-8">
+            Hủy
+          </Button>
+          <Button onClick={onClose} className="rounded-2xl h-12 px-8 bg-black text-white hover:bg-zinc-800 border-0">
+            Xác nhận
+          </Button>
         </div>
       </div>
     </div>

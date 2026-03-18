@@ -11,6 +11,8 @@ import {
 import {
   useMyWorkload,
   useMyCourses,
+  useLecturerActivityLogs,
+  useAnalyticsRadar as useGroupRadarMetrics
 } from "../../../features/dashboard/hooks/useDashboard.js";
 import {
   useApproveIntegration,
@@ -20,7 +22,7 @@ import {
   useGetAlerts,
   useResolveAlert
 } from "../../../features/system/hooks/useAlerts.js";
-import { useGroupRadarMetrics, useLecturerActivityLogs } from "../../../hooks/use-api.js";
+// Activity log icon helpers moved up if needed, but keeping them here for now
 import { GitBranch, BookOpen, FileText, CheckCircle, Users } from "lucide-react";
 
 const getActivityIconInfo = (type) => {

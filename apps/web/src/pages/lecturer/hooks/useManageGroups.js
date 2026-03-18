@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "../../../components/ui/Toast.jsx";
+import { useToast } from "../components/ui/Toast.jsx";
 import {
   useGetCourseById,
   useGetEnrolledStudents,
-} from "../../../features/courses/hooks/useCourses.js";
+} from "../features/courses/hooks/useCourses.js";
 import {
   useGetProjects,
   useCreateProject,
@@ -29,7 +29,7 @@ export function useManageGroups() {
   const [groupSearch, setGroupSearch] = useState("");
   const [groupFilter, setGroupFilter] = useState("all");
   const [autoGroupSize, setAutoGroupSize] = useState(5);
-  
+
   const [showForceAddModal, setShowForceAddModal] = useState(false);
   const [forceAddGroupId, setForceAddGroupId] = useState(null);
   const [forceAddSearch, setForceAddSearch] = useState("");
@@ -71,9 +71,9 @@ export function useManageGroups() {
   const handleCreateGroup = async () => {
     if (!newGroupTopic.trim() || selectedStudents.length === 0) return showError("Vui lòng nhập đề tài và chọn sinh viên");
     try {
-      const project = await createProjectMutation.mutateAsync({ 
-        courseId: parsedCourseId, 
-        name: `Nhóm ${groups.length + 1}`, 
+      const project = await createProjectMutation.mutateAsync({
+        courseId: parsedCourseId,
+        name: `Nhóm ${groups.length + 1}`,
         description: newGroupTopic.trim(),
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
@@ -87,9 +87,9 @@ export function useManageGroups() {
           role: i === 0 ? "LEADER" : "MEMBER",
         });
       }
-      
+
       success(`Tạo nhóm "${project.name}" thành công`);
-      setSelectedStudents([]); 
+      setSelectedStudents([]);
       setNewGroupTopic("");
       setStudentSearch("");
     } catch (err) {
@@ -260,6 +260,27 @@ export function useManageGroups() {
     });
   }, [groups]);
 
+  const visibleGroups = useMemo(() => {
+    const keyword = groupSearch.trim().toLowerCase();
+    return groupsWithMetrics.filter((group) => {
+      const groupName = group.name?.toLowerCase() || "";
+      const groupDescription = group.description?.toLowerCase() || "";
+      const matchesSearch = !keyword || groupName.includes(keyword) || groupDescription.includes(keyword);
+
+      const matchesFilter =
+        groupFilter === "all" ||
+        (groupFilter === "healthy" && group.state === "healthy") ||
+        (groupFilter === "watch" && group.state === "watch") ||
+        (groupFilter === "warning" && group.state === "warning") ||
+        (groupFilter === "critical" && group.state === "critical") ||
+        (groupFilter === "missing-github" && !group.githubApproved) ||
+        (groupFilter === "missing-jira" && !group.jiraApproved) ||
+        (groupFilter === "missing-topic" && group.missingTopic);
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [groupsWithMetrics, groupSearch, groupFilter]);
+
   return {
     courseId: parsedCourseId,
     course,
@@ -290,6 +311,7 @@ export function useManageGroups() {
     forceAddSelectedIds,
     setForceAddSelectedIds,
     groupsWithMetrics,
+    visibleGroups,
     handleCreateGroup,
     handleAutoCreateGroups,
     handleDeleteGroup,

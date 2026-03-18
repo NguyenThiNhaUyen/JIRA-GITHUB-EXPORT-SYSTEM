@@ -5,7 +5,7 @@ import { Modal } from '../../components/ui/Interactive.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card.jsx';
-import { courseService } from '../../services/courseService.js';
+import { useCreateCourse } from '../../features/courses/hooks/useCourses.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 
 import { useGetSemesters, useGetSubjects } from '../../features/system/hooks/useSystem.js';
@@ -13,6 +13,7 @@ import { useGetSemesters, useGetSubjects } from '../../features/system/hooks/use
 export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   const navigate = useNavigate();
   const { success, error } = useToast();
+  const { mutateAsync: createCourseMutation } = useCreateCourse();
   
   const [formData, setFormData] = useState({
     subjectId: '',
@@ -75,7 +76,7 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
         maxStudents: Number(formData.maxStudents)
       };
 
-      const course = await courseService.createCourse(payload);
+      const course = await createCourseMutation(payload);
       success(`Course "${course.courseName || course.title}" created successfully!`);
       onSuccess?.(course);
       onClose();

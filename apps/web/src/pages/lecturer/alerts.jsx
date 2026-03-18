@@ -26,7 +26,8 @@ export default function Alerts() {
     alertsList, filtered, selectedAlert,
     isLoading, resolving, refetch,
     allGroups,
-    handleResolve, handleRemind
+    handleResolve, handleRemind,
+    now
   } = useAlertActions();
 
   return (
@@ -46,7 +47,11 @@ export default function Alerts() {
       />
 
       {/* Stats */}
-      <AlertStats alertsList={alertsList} remindedCount={remindedIds.size} />
+      <AlertStats 
+        alertsList={alertsList} 
+        remindedCount={remindedIds.size} 
+        now={now}
+      />
 
       {/* Filter Bar */}
       <AlertFilters
@@ -68,7 +73,11 @@ export default function Alerts() {
           remindedIds={remindedIds}
         />
 
-        <AlertRiskAnalysis selectedAlert={selectedAlert} />
+        <AlertRiskAnalysis 
+          selectedAlert={selectedAlert} 
+          onRemind={handleRemind}
+          remindedIds={remindedIds}
+        />
       </div>
 
       <SendAlertModal

@@ -1,12 +1,12 @@
-import { useToast } from "../../../components/ui/Toast.jsx";
+import { useToast } from "../components/ui/Toast.jsx";
 import {
     useApproveIntegration,
     useRejectIntegration,
     useUpdateTeamMember,
-} from "../../../features/projects/hooks/useProjects.js";
-import { useGenerateSrsReport } from "../../../features/projects/hooks/useReports.js";
-import { getDownloadUrl } from "../../../features/projects/api/reportApi.js";
-import { useSendAlert } from "../../../features/system/hooks/useAlerts.js";
+} from "../features/projects/hooks/useProjects.js";
+import { useGenerateSrsReport } from "../features/projects/hooks/useReports.js";
+import { getDownloadUrl } from "../features/projects/api/reportApi.js";
+import { useSendAlert } from "../features/system/hooks/useAlerts.js";
 
 export function useGroupActions(groupId) {
     const { success, error: showError } = useToast();
@@ -80,11 +80,11 @@ export function useGroupActions(groupId) {
     const handleExportSrs = async (group) => {
         try {
             success("Đang tổng hợp dữ liệu từ Jira & GitHub...");
-            
+
             // 1. Trigger the backend API to generate SRS
             const res = await generateSrsMutation.mutateAsync({ projectId: groupId, format: "PDF" });
             const reportId = res?.reportId || res?.data?.reportId;
-            
+
             if (!reportId) {
                 showError("Không nhận được mã báo cáo từ server.");
                 return;
@@ -92,14 +92,14 @@ export function useGroupActions(groupId) {
 
             // 2. Poll the download URL (in a real app, you can use the polling hook, but here we manually retry)
             success("Đang tạo PDF, vui lòng chờ trong giây lát...");
-            
+
             let downloadUrl = null;
             let attempts = 0;
-            
+
             while (!downloadUrl && attempts < 15) { // Try for ~30 seconds
                 await new Promise(r => setTimeout(r, 2000));
                 attempts++;
-                
+
                 try {
                     const urlRes = await getDownloadUrl(reportId);
                     if (urlRes?.downloadUrl || urlRes?.data?.downloadUrl) {

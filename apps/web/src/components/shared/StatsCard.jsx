@@ -33,21 +33,21 @@ export function StatsCard({
   }
 
   return (
-    <div className={`group rounded-3xl border px-5 py-5 transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 ${variants[variant]}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+    <div className={`group rounded-[32px] border px-6 py-6 transition-all duration-500 hover:shadow-premium hover:-translate-y-2 last:hover:rotate-1 first:hover:-rotate-1 ${variants[variant]}`}>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 font-display">
           {label}
         </span>
-        <div className={`p-2 rounded-xl transition-colors ${iconVariants[variant]}`}>
-          {Icon && <Icon size={16} strokeWidth={2.5} />}
+        <div className={`p-2.5 rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${iconVariants[variant]}`}>
+          {Icon && <Icon size={18} strokeWidth={2.5} />}
         </div>
       </div>
       <div className="flex items-baseline gap-2">
-        <div className="text-3xl font-black tracking-tight">{value}</div>
+        <div className="text-4xl font-black tracking-tighter font-display">{value}</div>
         {trend && (
-          <span className={`text-[10px] font-bold ${trend > 0 ? "text-emerald-500" : "text-red-500"}`}>
-            {trend > 0 ? "+" : ""}{trend}%
-          </span>
+          <div className={`flex items-center px-1.5 py-0.5 rounded-lg text-[10px] font-black ${trend > 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+            {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}%
+          </div>
         )}
       </div>
     </div>

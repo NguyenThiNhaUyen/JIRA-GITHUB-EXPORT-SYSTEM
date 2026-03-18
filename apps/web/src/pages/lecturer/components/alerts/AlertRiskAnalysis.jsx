@@ -1,8 +1,8 @@
 import { AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
-import { Button } from "../../../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
+import { Button } from "../../../components/ui/Button.jsx";
 
-export function AlertRiskAnalysis({ selectedAlert }) {
+export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new Set() }) {
   if (!selectedAlert) {
     return (
       <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
@@ -53,8 +53,12 @@ export function AlertRiskAnalysis({ selectedAlert }) {
         </div>
 
         <div className="pt-4 space-y-3">
-          <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 border-0">
-            Gửi mail thông báo
+          <Button
+            className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 border-0 disabled:opacity-50"
+            onClick={() => onRemind(selectedAlert)}
+            disabled={remindedIds.has(selectedAlert?.id)}
+          >
+            {remindedIds.has(selectedAlert?.id) ? "Đã gửi nhắc nhở" : "Gửi mail thông báo"}
           </Button>
         </div>
       </CardContent>

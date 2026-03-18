@@ -1,13 +1,12 @@
 import { AlertTriangle, ShieldAlert, CheckCircle, Clock, Users, Bell } from "lucide-react";
-import { StatsCard } from "../../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "../components/shared/StatsCard.jsx";
 
-export function AlertStats({ alertsList, remindedCount }) {
+export function AlertStats({ alertsList, remindedCount, now }) {
   const unresolvedCount = alertsList.filter(a => (a.status === 'OPEN' || a.status === null)).length;
   const highSeverityCount = alertsList.filter(a => (a.severity || "").toUpperCase() === 'HIGH' && (a.status === 'OPEN' || a.status === null)).length;
   const resolvedCount = alertsList.filter(a => a.status === 'RESOLVED').length;
   const newLast24hCount = alertsList.filter(a => {
     const createdAt = new Date(a.createdAt).getTime();
-    const now = new Date().getTime(); // Still "impure" if in render, but let's see
     return Math.abs(now - createdAt) < 86400000;
   }).length;
   const groupCount = new Set(alertsList.map(a => a.groupName)).size;

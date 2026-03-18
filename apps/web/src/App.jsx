@@ -14,7 +14,6 @@ import NotFound from "./pages/NotFound.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import LecturerLayout from "./layouts/LecturerLayout.jsx";
 import StudentLayout from "./layouts/StudentLayout.jsx";
-import { MainLayout } from "./components/layout/MainLayout.jsx";
 
 // Loading component
 const PageLoader = () => (
@@ -125,9 +124,7 @@ export default function App() {
           path="*"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <NotFound />
-              </MainLayout>
+              <NotFound />
             </ProtectedRoute>
           }
         />

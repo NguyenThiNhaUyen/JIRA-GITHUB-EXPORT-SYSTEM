@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/Button.jsx";
+import { Button } from "../components/ui/Button.jsx";
 import {
     useGetProjectById,
     useGetProjectCfd,
@@ -9,12 +9,12 @@ import {
 import { useGroupActions } from "./hooks/useGroupActions.js";
 
 // Chart & Tabs
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Interactive.jsx";
-import { CfdChart } from "../../components/charts/CfdChart.jsx";
-import { CycleTimeChart } from "../../components/charts/CycleTimeChart.jsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Interactive.jsx";
+import { CfdChart } from "../components/charts/CfdChart.jsx";
+import { CycleTimeChart } from "../components/charts/CycleTimeChart.jsx";
 
 // Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { PageHeader } from "../components/shared/PageHeader.jsx";
 import { StatsCard } from "../../components/shared/StatsCard.jsx";
 import { GroupMembers } from "./components/GroupDetail/GroupMembers.jsx";
 import { GroupIntegrations } from "./components/GroupDetail/GroupIntegrations.jsx";
@@ -51,7 +51,7 @@ export default function GroupDetail() {
     if (isLoading) {
         return (
             <div className="flex flex-col h-64 items-center justify-center gap-4">
-                <Activity className="animate-spin text-teal-600 h-10 w-10" /> 
+                <Activity className="animate-spin text-teal-600 h-10 w-10" />
                 <span className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Đang tải dữ liệu từ API...</span>
             </div>
         );
@@ -72,18 +72,18 @@ export default function GroupDetail() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <PageHeader 
+            <PageHeader
                 title={group.name}
                 subtitle={`${course?.code || ''} — ${course?.name || ''}. Quản lý trạng thái và thành viên của nhóm dự án.`}
                 breadcrumb={["Giảng viên", "Nhóm", group.name]}
                 actions={[
-                    <Button 
+                    <Button
                         key="back"
-                        variant="outline" 
+                        variant="outline"
                         onClick={() => navigate(-1)}
                         className="rounded-2xl h-11 px-6 text-[10px] font-black uppercase tracking-widest border-gray-100 hover:bg-gray-50 shadow-sm"
                     >
-                        <ArrowLeft size={14} className="mr-2"/> Quay lại
+                        <ArrowLeft size={14} className="mr-2" /> Quay lại
                     </Button>
                 ]}
             />
@@ -107,28 +107,28 @@ export default function GroupDetail() {
 
                 <TabsContent value="overview">
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        <GroupMembers 
-                            group={group} 
-                            students={students} 
-                            handleUpdateScore={handleUpdateScore} 
+                        <GroupMembers
+                            group={group}
+                            students={students}
+                            handleUpdateScore={handleUpdateScore}
                         />
 
                         {/* Right Column: Links & Controls */}
                         <div className="lg:col-span-3 space-y-8">
-                            <GroupIntegrations 
-                                group={group} 
-                                handleApproveLink={handleApproveLink} 
-                                handleRejectLink={handleRejectLink} 
+                            <GroupIntegrations
+                                group={group}
+                                handleApproveLink={handleApproveLink}
+                                handleRejectLink={handleRejectLink}
                             />
 
-                            <GroupExport 
-                                group={group} 
-                                students={students} 
-                                handleExportCsv={handleExportCsv} 
-                                handleExportSrs={handleExportSrs} 
-                                handleSendAlert={handleSendAlert} 
-                                isGeneratingSrs={isGeneratingSrs} 
-                                isSendingAlert={isSendingAlert} 
+                            <GroupExport
+                                group={group}
+                                students={students}
+                                handleExportCsv={handleExportCsv}
+                                handleExportSrs={handleExportSrs}
+                                handleSendAlert={handleSendAlert}
+                                isGeneratingSrs={isGeneratingSrs}
+                                isSendingAlert={isSendingAlert}
                             />
                         </div>
                     </div>
@@ -140,9 +140,9 @@ export default function GroupDetail() {
                         <CycleTimeChart data={cycleTimeData} isLoading={loadingCycleTime} />
                     </div>
 
-                    <AgingWipTable 
-                        agingWipData={agingWipData} 
-                        loadingAgingWip={loadingAgingWip} 
+                    <AgingWipTable
+                        agingWipData={agingWipData}
+                        loadingAgingWip={loadingAgingWip}
                     />
                 </TabsContent>
             </Tabs>
