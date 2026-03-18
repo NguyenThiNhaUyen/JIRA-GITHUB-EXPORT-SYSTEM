@@ -441,7 +441,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 1.7 : 2.2;
+    final ratio = isMobile ? 1.25 : 2.2;
 
     return _SectionCard(
       title: 'System Overview',
@@ -553,7 +553,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 1.55 : 2.2;
+    final ratio = isMobile ? 1.25 : 2.2;
 
     return _SectionCard(
       title: 'Integration Overview',
@@ -986,7 +986,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisCount: isTablet ? 3 : 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.05,
+          childAspectRatio: 0.9,
         ),
         itemBuilder: (context, index) {
           final item = actions[index];
