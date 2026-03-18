@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Requests.Users;
 using JiraGithubExport.Shared.Contracts.Responses.Users;
 using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
@@ -142,4 +143,104 @@ public class UserService : IUserService
         AssignedCourses = u.lecturer?.courses?.Select(c => c.course_code).ToList() ?? new List<string>(),
         CreatedAt = u.created_at
     };
+
+    public async Task<UserDetailResponse> CreateUserAsync(CreateUserRequest request)
+    {
+        var existingUser = await _context.users.FirstOrDefaultAsync(u => u.email == request.Email);
+        if (existingUser != null)
+        {
+            throw new BusinessException($"User with email {request.Email} already exists.");
+        }
+
+        var roleName = request.Role?.ToUpper() ?? "STUDENT";
+        var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == roleName);
+        if (role == null)
+        {
+            role = new role { role_name = roleName };
+            _context.roles.Add(role);
+        }
+
+        var user = new user
+        {
+            email = request.Email,
+            full_name = request.FullName,
+            password = _passwordHasher.HashPassword("Admin@123"),
+            enabled = true,
+            created_at = DateTime.UtcNow,
+            updated_at = DateTime.UtcNow
+        };
+
+        user.roles.Add(role);
+
+        if (roleName == "STUDENT")
+        {
+            user.student = new student
+            {
+                student_code = request.Code ?? "UNKNOWN",
+                created_at = DateTime.UtcNow,
+                updated_at = DateTime.UtcNow
+            };
+        }
+        else if (roleName == "LECTURER")
+        {
+            user.lecturer = new lecturer
+            {
+                lecturer_code = request.Code ?? "UNKNOWN",
+                created_at = DateTime.UtcNow,
+                updated_at = DateTime.UtcNow
+            };
+        }
+
+        _context.users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return MapToResponse(user);
+    }
+
+    public async Task<StudentLinksResponse> GetStudentLinksAsync(long studentId)
+    {
+        var github = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "GITHUB");
+        var jira = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "JIRA");
+
+        return new StudentLinksResponse
+        {
+            GithubUrl = github?.username,
+            JiraUrl = jira?.username
+        };
+    }
+
+    public async Task<StudentLinksResponse> LinkStudentAccountsAsync(long studentId, LinkStudentAccountsRequest request)
+    {
+        var user = await _context.users.FindAsync(studentId)
+            ?? throw new NotFoundException($"User {studentId} not found");
+
+        if (!string.IsNullOrWhiteSpace(request.GithubUrl))
+        {
+            var gh = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "GITHUB");
+            if (gh == null)
+            {
+                gh = new external_account { user_id = studentId, provider = "GITHUB", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
+                _context.external_accounts.Add(gh);
+            }
+            gh.username = request.GithubUrl;
+            gh.external_user_key = request.GithubUrl;
+            gh.updated_at = DateTime.UtcNow;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.JiraUrl))
+        {
+            var jira = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "JIRA");
+            if (jira == null)
+            {
+                jira = new external_account { user_id = studentId, provider = "JIRA", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
+                _context.external_accounts.Add(jira);
+            }
+            jira.username = request.JiraUrl;
+            jira.external_user_key = request.JiraUrl;
+            jira.updated_at = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+        return await GetStudentLinksAsync(studentId);
+    }
 }
