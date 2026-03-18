@@ -73,9 +73,7 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
 
     public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesByStudentAsync(long studentUserId, string? keyword, string? sortDir, int page, int pageSize)
     {
-        var query = _context.Set<course_enrollment>()
-            .Where(e => e.student_user_id == studentUserId && e.status == "ACTIVE")
-            .Select(e => e.course);
+        var query = _dbSet.Where(c => c.course_enrollments.Any(e => e.student_user_id == studentUserId && e.status == "ACTIVE"));
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {

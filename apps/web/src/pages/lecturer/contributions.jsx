@@ -23,263 +23,13 @@ import { StudentContributionTable } from "../../features/lecturer/components/con
 import { WeeklyActivityChart } from "../../features/lecturer/components/contributions/WeeklyActivityChart.jsx";
 
 // Hooks
+import { useQuery } from "@tanstack/react-query";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { getCourseContributions } from "../../features/analytics/api/analyticsApi.js";
 
 /* ----------------------------- HELPERS ----------------------------- */
 
-function hashString(str = "") {
-  let hash = 0;
-  const value = String(str);
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
 
-function seededNumber(seed, min, max) {
-  const hashed = hashString(seed);
-  return min + (hashed % (max - min + 1));
-}
-
-function seededPick(seed, items = []) {
-  if (!items.length) return null;
-  return items[hashString(seed) % items.length];
-}
-
-function cx(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
-
-function normalizeStudent(raw, index = 0, groupName = "Nhóm") {
-  const studentId =
-    raw?.studentId ||
-    raw?.id ||
-    raw?.userId ||
-    raw?.accountId ||
-    `${groupName}-student-${index + 1}`;
-
-  const studentCode =
-    raw?.studentCode ||
-    raw?.code ||
-    raw?.rollNumber ||
-    raw?.mssv ||
-    `SE${String(100000 + index * 17).slice(-6)}`;
-
-  const studentName =
-    raw?.studentName ||
-    raw?.name ||
-    raw?.fullName ||
-    raw?.username ||
-    `Sinh viên ${index + 1}`;
-
-  const email =
-    raw?.email ||
-    `${String(studentName)
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "")}@fpt.edu.vn`;
-
-  return {
-    studentId: String(studentId),
-    studentCode: String(studentCode),
-    studentName: String(studentName),
-    email: String(email),
-  };
-}
-
-function normalizeGroup(group, index = 0) {
-  const name =
-    group?.name || group?.groupName || group?.projectName || `Nhóm ${index + 1}`;
-
-  const teamSource =
-    group?.team || group?.members || group?.students || group?.studentList || [];
-
-  const team = Array.isArray(teamSource)
-    ? teamSource.map((member, memberIndex) =>
-        normalizeStudent(member, memberIndex, name)
-      )
-    : [];
-
-  const studentIds =
-    Array.isArray(group?.studentIds) && group.studentIds.length > 0
-      ? group.studentIds.map(String)
-      : team.map((m) => String(m.studentId));
-
-  return {
-    ...group,
-    id: group?.id || `group-${index + 1}`,
-    name,
-    team,
-    studentIds,
-  };
-}
-
-function buildMockContribution(courseId, groups) {
-  const allStudentsMap = {};
-
-  groups.forEach((group, gIndex) => {
-    group.team.forEach((member, mIndex) => {
-      if (!allStudentsMap[member.studentId]) {
-        const seed = `${courseId}-${group.id}-${member.studentId}-${gIndex}-${mIndex}`;
-
-        const profile = seededPick(`${seed}-profile`, [
-          "excellent",
-          "active",
-          "steady",
-          "warning",
-          "inactive",
-        ]);
-
-        let commits = 0;
-        let jiraDone = 0;
-        let prs = 0;
-        let reviews = 0;
-        let activeDays = 0;
-
-        if (profile === "excellent") {
-          commits = seededNumber(`${seed}-commits`, 18, 34);
-          jiraDone = seededNumber(`${seed}-jira`, 12, 22);
-          prs = seededNumber(`${seed}-prs`, 4, 9);
-          reviews = seededNumber(`${seed}-reviews`, 4, 10);
-          activeDays = seededNumber(`${seed}-days`, 8, 12);
-        } else if (profile === "active") {
-          commits = seededNumber(`${seed}-commits`, 10, 20);
-          jiraDone = seededNumber(`${seed}-jira`, 7, 14);
-          prs = seededNumber(`${seed}-prs`, 2, 6);
-          reviews = seededNumber(`${seed}-reviews`, 2, 7);
-          activeDays = seededNumber(`${seed}-days`, 6, 10);
-        } else if (profile === "steady") {
-          commits = seededNumber(`${seed}-commits`, 4, 11);
-          jiraDone = seededNumber(`${seed}-jira`, 4, 10);
-          prs = seededNumber(`${seed}-prs`, 1, 4);
-          reviews = seededNumber(`${seed}-reviews`, 0, 4);
-          activeDays = seededNumber(`${seed}-days`, 3, 8);
-        } else if (profile === "warning") {
-          commits = seededNumber(`${seed}-commits`, 1, 5);
-          jiraDone = seededNumber(`${seed}-jira`, 1, 5);
-          prs = seededNumber(`${seed}-prs`, 0, 2);
-          reviews = seededNumber(`${seed}-reviews`, 0, 2);
-          activeDays = seededNumber(`${seed}-days`, 1, 4);
-        } else {
-          commits = 0;
-          jiraDone = seededNumber(`${seed}-jira-zero`, 0, 1);
-          prs = 0;
-          reviews = 0;
-          activeDays = 0;
-        }
-
-        const overdueTasks =
-          profile === "inactive"
-            ? seededNumber(`${seed}-overdue`, 2, 5)
-            : profile === "warning"
-              ? seededNumber(`${seed}-overdue`, 1, 3)
-              : seededNumber(`${seed}-overdue`, 0, 1);
-
-        const lastActiveDaysAgo =
-          commits === 0
-            ? seededNumber(`${seed}-inactive-days`, 8, 21)
-            : seededNumber(`${seed}-recent-days`, 0, 6);
-
-        let score =
-          commits * 2.2 +
-          jiraDone * 2 +
-          prs * 3 +
-          reviews * 1.4 +
-          activeDays * 2 -
-          overdueTasks * 3;
-
-        score = Math.max(0, Math.min(100, Math.round(score)));
-
-        let status = "Ổn định";
-        if (commits === 0) status = "Chưa commit";
-        else if (score >= 82) status = "Rất tốt";
-        else if (score >= 62) status = "Tích cực";
-        else if (score >= 40) status = "Ổn định";
-        else status = "Cần chú ý";
-
-        const dailyActivity = Array.from({ length: HEATMAP_DAYS }).map(
-          (_, dayIndex) => {
-            if (commits === 0) return 0;
-            const raw = seededNumber(`${seed}-day-${dayIndex}`, 0, 100);
-            if (profile === "excellent") {
-              if (raw > 68)
-                return seededNumber(`${seed}-day-value-${dayIndex}`, 1, 5);
-              return 0;
-            }
-            if (profile === "active") {
-              if (raw > 76)
-                return seededNumber(`${seed}-day-value-${dayIndex}`, 1, 4);
-              return 0;
-            }
-            if (profile === "steady") {
-              if (raw > 83)
-                return seededNumber(`${seed}-day-value-${dayIndex}`, 1, 3);
-              return 0;
-            }
-            if (profile === "warning") {
-              if (raw > 91)
-                return seededNumber(`${seed}-day-value-${dayIndex}`, 1, 2);
-              return 0;
-            }
-            return 0;
-          }
-        );
-
-        allStudentsMap[member.studentId] = {
-          studentId: member.studentId,
-          name: member.studentName,
-          studentCode: member.studentCode,
-          email: member.email,
-          groupId: group.id,
-          groupName: group.name,
-          commits,
-          jiraDone,
-          prs,
-          reviews,
-          activeDays,
-          overdueTasks,
-          lastActiveDaysAgo,
-          score,
-          status,
-          dailyActivity,
-        };
-      }
-    });
-  });
-
-  const students = Object.values(allStudentsMap);
-
-  const weeklyCommits = WEEKS.map((_, weekIndex) => {
-    return students.reduce((sum, student) => {
-      const weekActivity = student.dailyActivity
-        .slice(weekIndex * 7, weekIndex * 7 + 7)
-        .reduce((a, b) => a + b, 0);
-      return sum + weekActivity;
-    }, 0);
-  });
-
-  const weeklyJira = WEEKS.map((_, weekIndex) => {
-    return students.reduce((sum, student) => {
-      const v =
-        student.commits === 0
-          ? 0
-          : seededNumber(
-              `${courseId}-${student.studentId}-jira-week-${weekIndex}`,
-              0,
-              4
-            );
-      return sum + v;
-    }, 0);
-  });
-
-  return {
-    studentsMap: allStudentsMap,
-    weeklyCommits,
-    weeklyJira,
-  };
-}
 
 function getStatusBadgeClass(status) {
   switch (status) {
@@ -846,11 +596,6 @@ export default function Contributions() {
     const { success } = useToast();
     const [selectedCourse, setSelectedCourse] = useState("");
     const [search, setSearch] = useState("");
-    const [commitsByStudent, setCommitsByStudent] = useState({});
-    const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0).map((_, i) => ({ 
-        name: `W${i + 1}`, 
-        count: 0 
-    })));
 
     const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const courses = coursesData.items || [];
@@ -862,48 +607,46 @@ export default function Contributions() {
         }
     }, [courses]);
 
-    const currentCourse = courses.find(c => String(c.id) === selectedCourse);
-    const groups = currentCourse?.groups || [];
+    // Fetch real contributions data
+    const { data: contributionsData, isLoading: loadingContributions } = useQuery({
+        queryKey: ['course-contributions', selectedCourse],
+        queryFn: () => getCourseContributions(selectedCourse),
+        enabled: !!selectedCourse
+    });
 
-    // Process data from selected course
-    useEffect(() => {
-        if (!currentCourse) return;
-
-        // Collect all students in this course from groups
-        const allStudents = [];
-        groups.forEach(g => {
-            (g.team || []).forEach(m => {
-                if (!allStudents.find(s => s.studentId === m.studentId)) {
-                    allStudents.push(m);
-                }
-            });
-        });
-
-        // Mock/Process commits per student (Keeping origin/main mock logic until real API supports per-student history)
-        const byStudent = {};
-        allStudents.forEach(s => {
-            const mockCommits = Math.floor(Math.random() * 50);
-            byStudent[s.studentId] = {
+    // Process data from API
+    const commitsByStudent = useMemo(() => {
+        if (!contributionsData?.students) return {};
+        const map = {};
+        contributionsData.students.forEach(s => {
+            map[s.studentId] = {
                 id: s.studentId,
-                name: s.studentName,
-                studentCode: s.studentCode || s.studentId,
-                team: groups.find(g => (g.team || []).some(m => m.studentId === s.studentId))?.name || "No Team",
-                commits: mockCommits,
-                prs: Math.floor(mockCommits / 5),
-                reviews: Math.floor(mockCommits / 4),
-                score: Math.min(100, 40 + mockCommits),
-                status: mockCommits > 10 ? "stable" : "warning"
+                name: s.name,
+                studentCode: s.studentCode,
+                team: s.groupName,
+                commits: s.commits,
+                prs: s.prs,
+                reviews: s.reviews,
+                jiraDone: s.jiraDone,
+                activeDays: s.activeDays,
+                score: s.score,
+                status: (s.status === 'Cần chú ý' || s.status === 'Chưa commit') ? 'warning' : 'stable',
+                statusText: s.status,
+                dailyActivity: s.dailyActivity
             };
         });
-        setCommitsByStudent(byStudent);
+        return map;
+    }, [contributionsData]);
 
-        // Mock weekly data
-        const mockWeekly = new Array(12).fill(0).map((_, i) => ({
+    const weeklyCommits = useMemo(() => {
+        if (!contributionsData?.weeklyCommits) {
+            return new Array(12).fill(0).map((_, i) => ({ name: `W${i + 1}`, count: 0 }));
+        }
+        return contributionsData.weeklyCommits.map((val, i) => ({
             name: `W${i + 1}`,
-            count: Math.floor(Math.random() * 50)
+            count: val
         }));
-        setWeeklyCommits(mockWeekly);
-    }, [selectedCourse, currentCourse, groups]);
+    }, [contributionsData]);
 
     const filteredStudents = useMemo(() => {
         const studentList = Object.values(commitsByStudent);
@@ -929,7 +672,7 @@ export default function Contributions() {
         };
     }, [commitsByStudent]);
 
-    if (loadingCourses) {
+    if (loadingCourses || loadingContributions) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />

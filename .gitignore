@@ -77,3 +77,10 @@ apps/web/dist/
 
 # Env files
 apps/web/.env.local
+
+# === SECRETS — KHÔNG ĐƯỢC COMMIT ===
+# File chứa token/password thật — chỉ dùng local hoặc Render env vars
+appsettings.Secrets.json
+services/**/appsettings.Production.json
+services/**/appsettings.Local.json
+*.secrets.json

@@ -34,4 +34,6 @@ public interface IAnalyticsService
     Task<List<LecturerActivityLogResponse>> GetLecturerActivityLogsAsync(long lecturerId, int limit = 10);
     
     Task<List<DailyLabeledCommitStat>> GetStudentCommitActivityAsync(long studentUserId, int days = 7);
+    
+    Task<CourseContributionResponse> GetCourseContributionsAsync(long courseId);
 }

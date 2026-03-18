@@ -34,6 +34,13 @@ export function useStudentDeadlines() {
     });
 }
 
+export function useStudentProjects(params) {
+    return useQuery({
+        queryKey: ["student", "projects", params],
+        queryFn: () => studentApi.getStudentProjects(params)
+    });
+}
+
 /* ── LECTURER DASHBOARD HOOKS ── */
 
 export function useLecturerWorkload(lecturerId) {

@@ -49,3 +49,12 @@ export async function getGroupRadarMetrics(courseId) {
     const res = await client.get("/analytics/radar", { params: { courseId } });
     return unwrap(res);
 }
+
+/**
+ * GET /api/analytics/courses/{courseId}/contributions
+ */
+export async function getCourseContributions(courseId) {
+    if (!courseId) return null;
+    const res = await client.get(`/analytics/courses/${courseId}/contributions`);
+    return unwrap(res);
+}

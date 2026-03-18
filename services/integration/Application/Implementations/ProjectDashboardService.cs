@@ -134,4 +134,205 @@ public class ProjectDashboardService : IProjectDashboardService
 
         return dashboard;
     }
+
+    public async Task<KanbanBoardResponse> GetProjectKanbanAsync(long projectId)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        var response = new KanbanBoardResponse();
+
+        if (project.project_integration?.jira_project_id != null)
+        {
+            var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
+                ji.jira_project_id == project.project_integration.jira_project_id);
+
+            var issuesList = issues.ToList();
+
+            foreach (var issue in issuesList)
+            {
+                var task = new KanbanTask
+                {
+                    Id = issue.jira_issue_key,
+                    Title = issue.title ?? "No Title",
+                    Status = issue.status ?? "To Do",
+                    Priority = issue.priority,
+                    Type = issue.issue_type
+                };
+
+                // Map assignee name if possible
+                if (!string.IsNullOrEmpty(issue.assignee_jira_account_id))
+                {
+                    var extAccount = await _unitOfWork.ExternalAccounts.FirstOrDefaultAsync(ea => 
+                        ea.provider == "JIRA" && ea.external_user_key == issue.assignee_jira_account_id);
+                    if (extAccount != null)
+                    {
+                        var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.id == extAccount.user_id);
+                        task.Assignee = user?.full_name ?? issue.assignee_jira_account_id;
+                    }
+                    else
+                    {
+                        task.Assignee = issue.assignee_jira_account_id;
+                    }
+                }
+
+                // Group by status
+                var statusLower = task.Status.ToLower();
+                if (statusLower == "done" || statusLower == "closed" || statusLower == "resolved")
+                {
+                    response.Columns.Done.Add(task);
+                }
+                else if (statusLower == "in progress" || statusLower == "doing" || statusLower == "testing")
+                {
+                    response.Columns.In_Progress.Add(task);
+                }
+                else
+                {
+                    response.Columns.Todo.Add(task);
+                }
+            }
+        }
+
+        return response;
+    }
+
+    public async Task<CfdBoardResponse> GetProjectCfdAsync(long projectId)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        var response = new CfdBoardResponse();
+        
+        // Fetch last 30 days activity
+        var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
+        var activity = await _unitOfWork.StudentActivityDailies.FindAsync(a => 
+            a.project_id == projectId && a.activity_date >= startDate);
+        
+        var activityList = activity.OrderBy(a => a.activity_date).ToList();
+        var groupedByDate = activityList.GroupBy(a => a.activity_date)
+            .Select(g => new {
+                Date = g.Key,
+                Created = g.Sum(x => x.issues_created),
+                Completed = g.Sum(x => x.issues_completed)
+            }).ToList();
+
+        int cumulativeCreated = 0;
+        int cumulativeCompleted = 0;
+
+        foreach (var day in groupedByDate)
+        {
+            cumulativeCreated += day.Created;
+            cumulativeCompleted += day.Completed;
+
+            response.Buckets.Add(new CfdBucket
+            {
+                Date = day.Date.ToString("yyyy-MM-dd"),
+                Done = cumulativeCompleted,
+                InProgress = Math.Max(0, (cumulativeCreated - cumulativeCompleted) / 2), // Approximation
+                Todo = Math.Max(0, (cumulativeCreated - cumulativeCompleted) / 2)       // Approximation
+            });
+        }
+
+        return response;
+    }
+
+    public async Task<RoadmapResponse> GetProjectRoadmapAsync(long projectId)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        var response = new RoadmapResponse();
+
+        if (project.project_integration?.jira_project_id != null)
+        {
+            var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
+                ji.jira_project_id == project.project_integration.jira_project_id);
+
+            // Filter for issues that could be roadmap items (e.g. Epics, Stories or just recently updated)
+            var roadmapIssues = issues.OrderByDescending(i => i.updated_at).Take(10);
+
+            foreach (var issue in roadmapIssues)
+            {
+                response.Items.Add(new RoadmapItem
+                {
+                    Id = issue.jira_issue_key,
+                    Title = issue.title ?? "Untitled",
+                    Status = issue.status ?? "To Do",
+                    DueDate = issue.updated_at.AddDays(7), // Mocking due date by adding 7 days to last update
+                    Assignee = issue.assignee_jira_account_id
+                });
+            }
+        }
+
+        return response;
+    }
+
+    public async Task<AgingWipResponse> GetProjectAgingWipAsync(long projectId, int limit = 5)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        var response = new AgingWipResponse();
+
+        if (project.project_integration?.jira_project_id != null)
+        {
+            var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
+                ji.jira_project_id == project.project_integration.jira_project_id && (ji.status == "In Progress" || ji.status == "Doing"));
+
+            var agingIssues = issues.OrderByDescending(i => (DateTime.UtcNow - i.updated_at).TotalDays)
+                .Take(limit)
+                .ToList();
+
+            foreach (var issue in agingIssues)
+            {
+                response.Items.Add(new AgingWipItem
+                {
+                    IssueId = issue.id.ToString(),
+                    Key = issue.jira_issue_key,
+                    Summary = issue.title ?? "No Summary",
+                    DaysInProgress = (int)(DateTime.UtcNow - issue.updated_at).TotalDays,
+                    Assignee = issue.assignee_jira_account_id
+                });
+            }
+        }
+
+        return response;
+    }
+
+    public async Task<CycleTimeResponse> GetProjectCycleTimeAsync(long projectId)
+    {
+        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException("Project not found");
+
+        var response = new CycleTimeResponse();
+
+        if (project.project_integration?.jira_project_id != null)
+        {
+            var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
+                ji.jira_project_id == project.project_integration.jira_project_id && (ji.status == "Done" || ji.status == "Closed"));
+
+            var completedIssues = issues.ToList();
+            if (completedIssues.Any())
+            {
+                var cycleTimes = completedIssues.Select(i => (int)(i.updated_at - i.created_at).TotalDays).OrderBy(d => d).ToList();
+                
+                response.MedianDays = cycleTimes[cycleTimes.Count / 2];
+                response.P75Days = cycleTimes[(int)(cycleTimes.Count * 0.75)];
+
+                // Simple histogram
+                var maxDays = cycleTimes.Max();
+                for (int i = 0; i <= maxDays; i += 5)
+                {
+                    int end = i + 4;
+                    response.Histogram.Add(new CycleTimeBucket
+                    {
+                        Range = $"{i}-{end}d",
+                        Count = cycleTimes.Count(d => d >= i && d <= end)
+                    });
+                }
+            }
+        }
+
+        return response;
+    }
 }

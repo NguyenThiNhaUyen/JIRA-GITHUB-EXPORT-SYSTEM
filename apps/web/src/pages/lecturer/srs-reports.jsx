@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useCourseProjectReports, useUpdateReportStatus } from "../../features/admin/hooks/useReports.js";
+import { useCourseProjectReports, useUpdateReportStatus, useGetReports } from "../../features/admin/hooks/useReports.js";
 import { useSendAlert } from "../../features/system/hooks/useAlerts.js";
 import { useGenerateCommitStats } from "../../features/projects/hooks/useReports.js";
 
@@ -168,57 +168,49 @@ export default function SrsReports() {
     return []; 
   }, [realCourses]);
 
-  const reportQueries = useCourseProjectReports(realCourses.length ? allProjectsList.map(p => p.id) : [], "SRS");
+  // Optimized: Single query for the whole course
+  const currentCourseId = realCourses.find(c => c.code === courseFilter)?.id;
+  const { data: srsResponse, isLoading: loadingReports } = useGetReports({ 
+    courseId: currentCourseId, 
+    type: "SRS" 
+  }, { 
+    enabled: !!currentCourseId 
+  });
 
   useEffect(() => {
-    if (!realCourses.length) {
-      setSrsList([]);
+    if (!srsResponse?.items) {
+      if (!currentCourseId) setSrsList([]);
       return;
     }
 
-    let merged = [];
-    allProjectsList.forEach((project, index) => {
-       const query = reportQueries[index];
-       if (query?.data && Array.isArray(query.data)) {
-          query.data.forEach(rpt => {
-             merged.push({
-                ...rpt,
-                id: rpt.id || rpt.reportId,
-                projectId: project.id,
-                teamName: project.teamName || "Unknown Team",
-                projectName: project.projectName || "Unknown Project",
-                leader: project.leader,
-                members: project.members || [],
-                jiraUrl: project.jiraUrl || "#",
-                githubUrl: project.githubUrl || "#",
-                courseCode: project.courseCode || "—",
-                courseName: project.courseName || "—",
-                score: rpt.score || 0,
-                githubCoverage: rpt.githubCoverage || 0,
-                fileUrl: rpt.fileUrl || "#",
-                submittedAt: rpt.submittedAt || rpt.updatedAt,
-                version: rpt.version || "1.0",
-                summary: rpt.summary || "No summary provided.",
-                notes: rpt.notes || [],
-                checklist: rpt.checklist || {
-                  introduction: "fail",
-                  stakeholders: "fail",
-                  functional: "fail",
-                  nonFunctional: "fail",
-                  useCases: "fail",
-                  consistency: "fail"
-                },
-                history: rpt.history || []
-             });
-          });
-       }
+    const items = srsResponse.items;
+    let merged = items.map(rpt => {
+       const project = allProjectsList.find(p => p.id === rpt.projectId);
+       return {
+          ...rpt,
+          id: rpt.id || rpt.reportId,
+          projectId: rpt.projectId,
+          teamName: project?.teamName || "Unknown Team",
+          projectName: project?.projectName || "Unknown Project",
+          leader: project?.leader || "N/A",
+          members: project?.members || [],
+          jiraUrl: project?.jiraUrl || "#",
+          githubUrl: project?.githubUrl || "#",
+          courseCode: project?.courseCode || courseFilter,
+          courseName: project?.courseName || "—",
+          score: rpt.score || 0,
+          fileUrl: rpt.fileUrl || "#",
+          submittedAt: rpt.submittedAt,
+          version: `Version ${rpt.versionNo || 1.0}`,
+          summary: rpt.feedback || "No feedback provided yet.",
+       };
     });
 
-    if (merged.length > 0) {
-      setSrsList(merged);
-      if (!selected) setSelected(merged[0].id || merged[0].reportId);
+    setSrsList(merged);
+    if (merged.length > 0 && !selected) {
+      setSelected(merged[0].id);
     }
-  }, [realCourses.length, allProjectsList, reportQueries.map(q => q.dataUpdatedAt).join(',')]);
+  }, [srsResponse, allProjectsList, currentCourseId]);
 
   useEffect(() => {
     const current = srsList.find((item) => item.id === selected);

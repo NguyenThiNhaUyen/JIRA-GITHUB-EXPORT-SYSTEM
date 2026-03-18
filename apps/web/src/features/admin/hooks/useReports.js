@@ -6,7 +6,7 @@ import {
     generateSrs,
     getReportDownloadLink,
     getMyReports,
-    getProjectReports,
+    getReports,
     updateReportStatus
 } from "../api/reportApi.js";
 
@@ -24,7 +24,7 @@ export function useGenerateCommitStats() {
  */
 export function useGenerateTeamRoster() {
     return useMutation({
-        mutationFn: ({ projectId, format }) => generateTeamRoster(projectId, format),
+        mutationFn: (payload) => generateTeamRoster(payload),
     });
 }
 
@@ -42,7 +42,7 @@ export function useGenerateActivitySummary() {
  */
 export function useGenerateSrs() {
     return useMutation({
-        mutationFn: ({ projectId, format }) => generateSrs(projectId, format),
+        mutationFn: (payload) => generateSrs(payload),
     });
 }
 
@@ -70,15 +70,21 @@ export function useGetMyReports(options = {}) {
 }
 
 /**
- * Hook Query cho: Get Reports by Project
+ * Hook Query cho: Lấy danh sách báo cáo hỗ trợ filter
  */
-export function useGetProjectReports(projectId, type, options = {}) {
+export function useGetReports(filters = {}, options = {}) {
     return useQuery({
-        queryKey: ["reports", "project", projectId, type],
-        queryFn: () => getProjectReports(projectId, type),
-        enabled: !!projectId && options.enabled !== false,
+        queryKey: ["reports", filters],
+        queryFn: () => getReports(filters),
         ...options
     });
+}
+
+/**
+ * Hook Query cho: Get Reports by Project (Legacy wrapper)
+ */
+export function useGetProjectReports(projectId, type, options = {}) {
+    return useGetReports({ projectId, type }, options);
 }
 
 /**
@@ -91,13 +97,13 @@ export function useUpdateReportStatus() {
 }
 
 /**
- * Hook Queries cho: Get Reports của nhiều Project cùng lúc
+ * Hook Queries cho: Get Reports của nhiều Project cùng lúc (Legacy - nên dùng useGetReports)
  */
 export function useCourseProjectReports(projectIds, type) {
     return useQueries({
         queries: (projectIds || []).map(id => ({
             queryKey: ["reports", "project", id, type],
-            queryFn: () => getProjectReports(id, type),
+            queryFn: () => getReports({ projectId: id, type }),
             enabled: !!id,
         }))
     });

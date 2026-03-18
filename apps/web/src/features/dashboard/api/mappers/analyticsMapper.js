@@ -1,13 +1,12 @@
 export function mapAnalyticsStats(data) {
     if (!data) return null;
     return {
-        totalSubjects: data.totalSubjects || 0,
-        totalCourses: data.totalCourses || 0,
-        totalUsers: data.totalUsers || 0,
-        totalProjects: data.totalProjects || 0,
-        totalCommits: data.totalCommits || 0,
-        activeGroups: data.activeGroups || 0,
-        syncSuccessRate: data.syncSuccessRate || 0
+        semesters: data.semesters || 0,
+        subjects: data.subjects || 0,
+        courses: data.courses || 0,
+        lecturers: data.lecturers || 0,
+        students: data.students || 0,
+        projects: data.projects || 0
     };
 }
 

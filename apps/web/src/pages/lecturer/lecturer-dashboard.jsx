@@ -96,8 +96,8 @@ export default function LecturerDashboard() {
   const groups = course?.groups || [];
 
   const stats = useMemo(() => ({
-    courses: workload?.coursesCount || 0,
-    students: workload?.studentsCount || 0,
+    courses: workload?.courseCount || 0,
+    students: workload?.studentCount || 0,
     github: groups.filter(g => g.integration?.githubStatus === "APPROVED").length,
     alerts: (alertsData?.items || []).filter(a => a.status === "OPEN").length,
   }), [workload, groups, alertsData]);

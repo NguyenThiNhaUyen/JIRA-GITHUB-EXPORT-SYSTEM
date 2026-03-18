@@ -17,4 +17,5 @@ public interface IStudentService
     // New methods for Phase 2
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>> GetStudentHeatmapAsync(long userId, int days = 35);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>> GetStudentCommitActivityAsync(long userId, int days = 7);
+    Task<List<object>> GetStudentDeadlinesAsync(long userId);
 }

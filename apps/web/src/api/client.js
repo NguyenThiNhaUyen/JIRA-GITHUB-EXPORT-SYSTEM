@@ -9,7 +9,11 @@
  */
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-system.onrender.com";
+// ÉP BUỘC sử dụng Backend trên Render để hỗ trợ test FE local với BE Cloud
+// Nếu bạn muốn dùng Backend Local (Visual Studio), hãy đổi thành: http://localhost:5032
+const BASE_URL = "https://jira-github-export-system.onrender.com";
+
+console.log(`[API Config] Target Backend: ${BASE_URL}`);
 
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
@@ -42,7 +46,7 @@ client.interceptors.response.use(
 
         if (status === 401 || status === 403) {
             console.warn(`[API] ${status} — Redirection to Login due to Auth failure`);
-            
+
             // Clear all auth related storage
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
