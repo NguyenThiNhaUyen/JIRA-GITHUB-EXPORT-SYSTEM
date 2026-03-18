@@ -8,16 +8,16 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Card, CardContent } from "../components/ui/Card.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { Skeleton } from "../components/ui/Skeleton.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Shared Components
-import { PageHeader } from "../components/shared/PageHeader.jsx";
-import { StatsCard } from "../components/shared/StatsCard.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 // Local Components
-import { ProjectsTable } from "./components/ProjectsOverview/ProjectsTable.jsx";
+import { ProjectsTable } from "@/pages/lecturer/components/ProjectsOverview/ProjectsTable.jsx";
 
 // Hooks
 import { useProjectsOverview } from "./hooks/useProjectsOverview.js";
@@ -110,3 +110,9 @@ export default function ProjectsOverview() {
     </div>
   );
 }
+
+
+
+
+
+

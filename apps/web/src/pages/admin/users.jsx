@@ -23,15 +23,15 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { Badge } from "../../components/ui/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { SelectField, InputField } from "../../components/shared/FormFields.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { SelectField, InputField } from "@/components/shared/FormFields.jsx";
 
 // Hooks
 import { 
@@ -39,7 +39,7 @@ import {
   useUpdateUserRole, 
   useUpdateUserStatus, 
   useResetUserPassword 
-} from "../../features/users/hooks/useUsers.js";
+} from "@/features/users/hooks/useUsers.js";
 
 const ROLE_MAP = {
     ADMIN: { label: "Admin", variant: "danger", icon: Shield },
@@ -340,3 +340,9 @@ export default function UserManagement() {
         </div>
     );
 }
+
+
+
+
+
+

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
-import { Button } from "../../../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 import { FileDown, Users, AlertTriangle } from "lucide-react";
 
 export function GroupExport({ 
@@ -77,3 +77,9 @@ export function GroupExport({
         </>
     );
 }
+
+
+
+
+
+

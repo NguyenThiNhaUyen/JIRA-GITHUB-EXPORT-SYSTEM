@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { Monitor, Eye, Trash2, PenLine, Users, Target, ShieldCheck, Zap, MoreHorizontal, UserPlus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { InputField, SelectField } from "../../../components/shared/FormFields.jsx";
-import { StatusBadge } from "../../../components/shared/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { InputField, SelectField } from "@/components/shared/FormFields.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 export function GroupListPanel({
   groupSearch,
@@ -187,3 +187,9 @@ function MetricCard({ label, value, icon: Icon, color, children }) {
     </div>
   );
 }
+
+
+
+
+
+

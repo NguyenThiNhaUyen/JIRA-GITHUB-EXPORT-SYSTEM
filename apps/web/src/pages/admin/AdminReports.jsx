@@ -16,30 +16,30 @@ import {
 } from 'lucide-react';
 
 // Components UI
-import { Button } from '../../components/ui/Button.jsx';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card.jsx';
-import { useToast } from '../../components/ui/Toast.jsx';
-import { Badge } from '../../components/ui/Badge.jsx';
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 // Charts
-import { BurndownChart } from '../../components/charts/BurndownChart.jsx';
-import { CommitFrequencyChart } from '../../components/charts/CommitFrequencyChart.jsx';
-import { ContributorsChart } from '../../components/charts/ContributorsChart.jsx';
-import { WeeklyTrendsChart } from '../../components/charts/WeeklyTrendsChart.jsx';
+import { BurndownChart } from "@/components/charts/BurndownChart.jsx";
+import { CommitFrequencyChart } from "@/components/charts/CommitFrequencyChart.jsx";
+import { ContributorsChart } from "@/components/charts/ContributorsChart.jsx";
+import { WeeklyTrendsChart } from "@/components/charts/WeeklyTrendsChart.jsx";
 
 // Shared Components
-import { PageHeader } from '../../components/shared/PageHeader.jsx';
-import { StatsCard } from '../../components/shared/StatsCard.jsx';
-import { SelectField } from '../../components/shared/FormFields.jsx';
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { SelectField } from "@/components/shared/FormFields.jsx";
 
 // Hooks
-import { useGetCourses } from '../../features/courses/hooks/useCourses.js';
-import { useGetSemesters } from '../../features/system/hooks/useSystem.js';
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { useGetSemesters } from "@/features/system/hooks/useSystem.js";
 import {
   useGenerateCommitStats,
   useGenerateTeamRoster,
   useGenerateSrs
-} from '../../features/admin/hooks/useReports.js';
+} from "@/features/admin/hooks/useReports.js";
 
 export default function AdminReports() {
   const { success, error: showError } = useToast();
@@ -292,3 +292,9 @@ export default function AdminReports() {
     </div>
   );
 }
+
+
+
+
+
+

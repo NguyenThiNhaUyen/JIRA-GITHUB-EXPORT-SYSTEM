@@ -1,17 +1,17 @@
 import { Activity, History, Zap } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
 
 // Local Components
-import { ContributionStats } from "./components/StudentContribution/ContributionStats.jsx";
-import { ActivityCharts } from "./components/StudentContribution/ActivityCharts.jsx";
-import { PerformanceRadarCard } from "./components/StudentContribution/PerformanceRadarCard.jsx";
-import { AiInsightsCard } from "./components/StudentContribution/AiInsightsCard.jsx";
-import { ProjectContributionList } from "./components/StudentContribution/ProjectContributionList.jsx";
+import { ContributionStats } from "@/pages/student/components/StudentContribution/ContributionStats.jsx";
+import { ActivityCharts } from "@/pages/student/components/StudentContribution/ActivityCharts.jsx";
+import { PerformanceRadarCard } from "@/pages/student/components/StudentContribution/PerformanceRadarCard.jsx";
+import { AiInsightsCard } from "@/pages/student/components/StudentContribution/AiInsightsCard.jsx";
+import { ProjectContributionList } from "@/pages/student/components/StudentContribution/ProjectContributionList.jsx";
 
 // Hooks
 import { useStudentContribution } from "./hooks/useStudentContribution.js";
@@ -89,3 +89,9 @@ export default function StudentContribution() {
         </div>
     );
 }
+
+
+
+
+
+

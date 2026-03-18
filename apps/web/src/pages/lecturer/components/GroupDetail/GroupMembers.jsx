@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
-import { InfoRow } from "../../../../components/shared/InfoRow.jsx";
-import { StatusBadge } from "../../../../components/shared/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { InfoRow } from "@/components/shared/InfoRow.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 export function GroupMembers({ group, students, handleUpdateScore }) {
     return (
@@ -61,3 +61,9 @@ export function GroupMembers({ group, students, handleUpdateScore }) {
         </div>
     );
 }
+
+
+
+
+
+

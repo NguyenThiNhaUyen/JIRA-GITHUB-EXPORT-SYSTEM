@@ -22,7 +22,7 @@
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

@@ -2,7 +2,7 @@ import React from "react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import { subDays } from "date-fns";
 import { Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
 export function ActivityHeatmap({ heatmapData }) {
   return (
@@ -40,3 +40,9 @@ export function ActivityHeatmap({ heatmapData }) {
     </Card>
   );
 }
+
+
+
+
+
+

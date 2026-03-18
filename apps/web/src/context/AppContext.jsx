@@ -1,6 +1,6 @@
 // AppContext: Quản lý state toàn cục (semester, week, repo) - dùng useApp() để truy cập
 import { createContext, useContext, useMemo, useState } from "react";
-import { generateWeeks } from "../utils/dateRange";
+import { generateWeeks } from "@/utils/dateRange.js";
 
 const AppContext = createContext(null);
 
@@ -60,3 +60,9 @@ export function useApp() {
   if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
+
+
+
+
+
+

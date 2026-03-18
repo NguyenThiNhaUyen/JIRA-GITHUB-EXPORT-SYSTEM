@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetProjects } from "../../../features/projects/hooks/useProjects.js";
+import { useGetProjects } from "@/features/projects/hooks/useProjects.js";
 
 export function useProjectsOverview() {
   const { courseId } = useParams();
@@ -47,3 +47,9 @@ export function useProjectsOverview() {
     refetch
   };
 }
+
+
+
+
+
+

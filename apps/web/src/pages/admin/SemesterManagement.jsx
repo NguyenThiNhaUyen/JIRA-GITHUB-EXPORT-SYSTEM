@@ -13,17 +13,17 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/Table.jsx";
-import { Modal } from "../../components/ui/Interactive.jsx";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { Badge } from "../../components/ui/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table.jsx";
+import { Modal } from "@/components/ui/Interactive.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { SelectField, InputField } from "../../components/shared/FormFields.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { SelectField, InputField } from "@/components/shared/FormFields.jsx";
 
 // Feature Hooks
 import {
@@ -32,8 +32,8 @@ import {
   useUpdateSemester,
   useDeleteSemester,
   useGenerateSemesters,
-} from "../../features/system/hooks/useSystem.js";
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+} from "@/features/system/hooks/useSystem.js";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
 
 export default function SemesterManagement() {
   const { success, error: showError } = useToast();
@@ -351,3 +351,9 @@ export default function SemesterManagement() {
     </div>
   );
 }
+
+
+
+
+
+

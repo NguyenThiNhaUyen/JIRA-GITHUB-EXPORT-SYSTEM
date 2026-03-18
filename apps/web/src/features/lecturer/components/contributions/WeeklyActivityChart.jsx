@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
 const WEEKS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
 
@@ -52,3 +52,9 @@ export function WeeklyActivityChart({ weeklyCommits }) {
     </Card>
   );
 }
+
+
+
+
+
+

@@ -91,3 +91,9 @@ export async function getLecturerCourses() {
     const res = await client.get("/analytics/lecturer/courses");
     return unwrap(res);
 }
+
+
+
+
+
+

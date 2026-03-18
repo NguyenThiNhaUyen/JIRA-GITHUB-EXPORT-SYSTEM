@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, ArrowLeft, Home, Lock } from 'lucide-react';
-import { Button } from '../components/ui/Button.jsx';
+import { Button } from "@/components/ui/Button.jsx";
 
 export default function Unauthorized() {
     const navigate = useNavigate();
@@ -61,3 +61,9 @@ export default function Unauthorized() {
         </div>
     );
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 import { Github, GitBranch, Clock, ExternalLink, RefreshCw } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function CommitHistory({ loadingCommits, myCommits, githubUrl }) {
     return (
@@ -63,3 +63,9 @@ export function CommitHistory({ loadingCommits, myCommits, githubUrl }) {
         </Card>
     );
 }
+
+
+
+
+
+

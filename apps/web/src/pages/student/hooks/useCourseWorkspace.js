@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { useToast } from "../../../components/ui/Toast.jsx";
-import { useAuth } from "../../../context/AuthContext.jsx";
-import { useGetEnrolledStudents, useGetCourseById } from "../../../features/courses/hooks/useCourses.js";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useGetEnrolledStudents, useGetCourseById } from "@/features/courses/hooks/useCourses.js";
 import { 
     useAddTeamMember, 
     useGetProjectMetrics, 
@@ -9,8 +9,8 @@ import {
     useLinkIntegration,
     useSyncProjectCommits,
     useRemoveTeamMember
-} from "../../../features/projects/hooks/useProjects.js";
-import { useGetProjectSrs } from "../../../features/srs/hooks/useSrs.js";
+} from "@/features/projects/hooks/useProjects.js";
+import { useGetProjectSrs } from "@/features/srs/hooks/useSrs.js";
 
 export function useCourseWorkspace(courseId) {
     const { user } = useAuth();
@@ -130,3 +130,9 @@ export function useCourseWorkspace(courseId) {
         handleRemoveMember
     };
 }
+
+
+
+
+
+

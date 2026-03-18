@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { TopHeader } from "../components/layout/TopHeader.jsx";
+import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import {
     BookOpen,
     LayoutDashboard,
@@ -144,3 +144,9 @@ export default function LecturerLayout({ children }) {
         </div>
     );
 }
+
+
+
+
+
+

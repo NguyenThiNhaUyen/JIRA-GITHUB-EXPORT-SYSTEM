@@ -1,15 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { format as formatDateFn } from "date-fns";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { useGetCourseById } from "../../../features/courses/hooks/useCourses.js";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useGetCourseById } from "@/features/courses/hooks/useCourses.js";
 import {
   useAnalyticsHeatmap,
   useCommitTrends,
   useTeamRankings,
   useInactiveTeams,
   useIntegrationStats
-} from "../../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/dashboard/hooks/useDashboard.js";
 
 export function useCourseAnalytics() {
   const { courseId } = useParams();
@@ -56,3 +56,9 @@ export function useCourseAnalytics() {
     loading
   };
 }
+
+
+
+
+
+

@@ -1,8 +1,8 @@
 import React from "react";
 import { Filter, Settings2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { SelectField } from "../../../components/shared/FormFields.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { SelectField } from "@/components/shared/FormFields.jsx";
 
 export function LecturerFilters({ 
   selectedSubject, 
@@ -69,3 +69,9 @@ export function LecturerFilters({
     </Card>
   );
 }
+
+
+
+
+
+

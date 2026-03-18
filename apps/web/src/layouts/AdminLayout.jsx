@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
-import { TopHeader } from "../components/layout/TopHeader.jsx";
+import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import {
     BookOpen, LayoutDashboard, CalendarDays, Library,
     Users, GraduationCap, UserCog, FileBarChart,
@@ -127,3 +127,9 @@ export default function AdminLayout({ children }) {
         </div>
     );
 }
+
+
+
+
+
+

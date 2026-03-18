@@ -1,5 +1,5 @@
 import { Users, UserPlus, Layers3, Activity, ShieldAlert, PenLine } from "lucide-react";
-import { StatsCard } from "../../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function GroupOverviewStats({ studentsLength, availableStudentsLength, groupsLength, groupsWithMetrics }) {
   const avgProgress = groupsWithMetrics.length
@@ -19,3 +19,9 @@ export function GroupOverviewStats({ studentsLength, availableStudentsLength, gr
     </div>
   );
 }
+
+
+
+
+
+

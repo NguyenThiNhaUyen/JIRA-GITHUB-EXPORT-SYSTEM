@@ -7,16 +7,16 @@ import {
   ArrowLeft
 } from "lucide-react";
 
-import { Button } from "../components/ui/Button.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Local Components
-import { ActivityHeatmap } from "./components/CourseAnalytics/ActivityHeatmap.jsx";
-import { ContributionTrends } from "./components/CourseAnalytics/ContributionTrends.jsx";
-import { JiraTaskDistribution } from "./components/CourseAnalytics/JiraTaskDistribution.jsx";
-import { TeamAnalyticsSummary } from "./components/CourseAnalytics/TeamAnalyticsSummary.jsx";
+import { ActivityHeatmap } from "@/pages/lecturer/components/CourseAnalytics/ActivityHeatmap.jsx";
+import { ContributionTrends } from "@/pages/lecturer/components/CourseAnalytics/ContributionTrends.jsx";
+import { JiraTaskDistribution } from "@/pages/lecturer/components/CourseAnalytics/JiraTaskDistribution.jsx";
+import { TeamAnalyticsSummary } from "@/pages/lecturer/components/CourseAnalytics/TeamAnalyticsSummary.jsx";
 
 // Hooks
 import { useCourseAnalytics } from "./hooks/useCourseAnalytics.js";
@@ -89,3 +89,9 @@ export default function CourseAnalytics() {
     </div>
   );
 }
+
+
+
+
+
+

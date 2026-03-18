@@ -1,5 +1,5 @@
 // Not Found Page - 404 error page
-import { Button } from "../components/ui/Button.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function NotFound() {
@@ -39,3 +39,9 @@ export default function NotFound() {
     </div>
   );
 }
+
+
+
+
+
+

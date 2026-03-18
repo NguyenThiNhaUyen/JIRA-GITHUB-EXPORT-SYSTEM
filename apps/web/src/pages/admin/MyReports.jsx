@@ -1,10 +1,10 @@
 import React from 'react';
 import { ChevronLeft, Download, FileText, Clock, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Button } from "../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 import { useNavigate } from "react-router-dom";
-import { useGetMyReports, useGetReportDownloadLink } from "../../features/admin/hooks/useReports.js";
-import { useToast } from "../../components/ui/Toast.jsx";
+import { useGetMyReports, useGetReportDownloadLink } from "@/features/admin/hooks/useReports.js";
+import { useToast } from "@/components/ui/Toast.jsx";
 
 export default function MyReports() {
     const { success, error, info } = useToast();
@@ -172,3 +172,9 @@ export default function MyReports() {
         </div>
     );
 }
+
+
+
+
+
+

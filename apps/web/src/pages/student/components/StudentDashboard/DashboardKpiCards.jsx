@@ -1,6 +1,6 @@
 import { Github, CheckSquare, GitBranch, Target } from "lucide-react";
-import { StatsCard } from "../../../components/shared/StatsCard.jsx";
-import { Skeleton } from "../../../components/ui/Skeleton.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 export function DashboardKpiCards({ isLoading, studentKPI }) {
     return (
@@ -23,3 +23,9 @@ export function DashboardKpiCards({ isLoading, studentKPI }) {
         </div>
     );
 }
+
+
+
+
+
+

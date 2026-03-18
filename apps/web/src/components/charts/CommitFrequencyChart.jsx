@@ -33,3 +33,9 @@ export function CommitFrequencyChart({ data = [], isLoading, isError }) {
 }
 
 
+
+
+
+
+
+

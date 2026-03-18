@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new Set() }) {
   if (!selectedAlert) {
@@ -65,3 +65,9 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
     </Card>
   );
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 import { Eye, ExternalLink, Users, CalendarDays, Star, RefreshCcw, CheckCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.jsx";
-import { Button } from "../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function SrsReviewPanel({
   selectedSrs,
@@ -98,3 +98,9 @@ export function SrsReviewPanel({
     </div>
   );
 }
+
+
+
+
+
+

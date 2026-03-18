@@ -1,7 +1,7 @@
 import { Bell, RefreshCw, CheckCircle, Zap, Activity, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { StatusBadge } from "../../../components/shared/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 const SEVERITY_STYLE = {
   HIGH: { dot: "bg-red-500", glow: "shadow-red-500/50", variant: "danger", label: "Nghiêm trọng", bg: "bg-red-500/5" },
@@ -124,3 +124,9 @@ function MetricBadge({ icon: Icon, label, value }) {
     </div>
   );
 }
+
+
+
+
+
+

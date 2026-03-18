@@ -1,19 +1,19 @@
 import { Download } from "lucide-react";
 
 // Components Shared
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { InputField } from "../../components/shared/FormFields.jsx";
-import { useToast } from "../components/ui/Toast.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { Card } from "../components/ui/Card.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { InputField } from "@/components/shared/FormFields.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card } from "@/components/ui/Card.jsx";
 
 // Local Sub-components (Feature)
-import { ContributionStats } from "../../features/lecturer/components/contributions/ContributionStats.jsx";
-import { StudentContributionTable } from "../../features/lecturer/components/contributions/StudentContributionTable.jsx";
-import { WeeklyActivityChart } from "../../features/lecturer/components/contributions/WeeklyActivityChart.jsx";
+import { ContributionStats } from "@/features/lecturer/components/contributions/ContributionStats.jsx";
+import { StudentContributionTable } from "@/features/lecturer/components/contributions/StudentContributionTable.jsx";
+import { WeeklyActivityChart } from "@/features/lecturer/components/contributions/WeeklyActivityChart.jsx";
 
 // Local Components (Refactored)
-import { TopContributors } from "./components/contributions/TopContributors.jsx";
+import { TopContributors } from "@/pages/lecturer/components/contributions/TopContributors.jsx";
 
 // Hooks
 import { useContributions } from "./hooks/useContributions.js";
@@ -103,3 +103,9 @@ export default function Contributions() {
     </div>
   );
 }
+
+
+
+
+
+

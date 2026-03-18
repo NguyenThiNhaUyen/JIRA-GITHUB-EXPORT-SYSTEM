@@ -7,19 +7,19 @@ import {
 } from "lucide-react";
 
 // Components
-import { Button } from "../components/ui/Button.jsx";
-import { useToast } from "../components/ui/Toast.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { LecturerStats } from "../../features/dashboard/components/LecturerStats.jsx";
-import { LecturerFilters } from "../../features/dashboard/components/LecturerFilters.jsx";
-import { SendAlertModal } from "../../features/dashboard/components/SendAlertModal.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { LecturerStats } from "@/features/dashboard/components/LecturerStats.jsx";
+import { LecturerFilters } from "@/features/dashboard/components/LecturerFilters.jsx";
+import { SendAlertModal } from "@/features/dashboard/components/SendAlertModal.jsx";
 
 // Local Components
-import { ActivityFeed } from "./components/LecturerDashboard/ActivityFeed.jsx";
-import { SystemAlerts } from "./components/LecturerDashboard/SystemAlerts.jsx";
-import { IntegrationApproval } from "./components/LecturerDashboard/IntegrationApproval.jsx";
-import { GroupTrackingTable } from "./components/LecturerDashboard/GroupTrackingTable.jsx";
-import { RadarPerformanceMap } from "./components/LecturerDashboard/RadarPerformanceMap.jsx";
+import { ActivityFeed } from "@/pages/lecturer/components/LecturerDashboard/ActivityFeed.jsx";
+import { SystemAlerts } from "@/pages/lecturer/components/LecturerDashboard/SystemAlerts.jsx";
+import { IntegrationApproval } from "@/pages/lecturer/components/LecturerDashboard/IntegrationApproval.jsx";
+import { GroupTrackingTable } from "@/pages/lecturer/components/LecturerDashboard/GroupTrackingTable.jsx";
+import { RadarPerformanceMap } from "@/pages/lecturer/components/LecturerDashboard/RadarPerformanceMap.jsx";
 
 // Hooks
 import { useLecturerDashboard } from "./hooks/useLecturerDashboard.js";
@@ -128,3 +128,9 @@ export default function LecturerDashboard() {
     </div>
   );
 }
+
+
+
+
+
+

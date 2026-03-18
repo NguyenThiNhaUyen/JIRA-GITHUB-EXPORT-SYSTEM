@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useGetCourses } from "../../../features/courses/hooks/useCourses.js";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
 
 export function useMyCoursesHook() {
   const [search, setSearch] = useState("");
@@ -30,3 +30,9 @@ export function useMyCoursesHook() {
     isLoading
   };
 }
+
+
+
+
+
+

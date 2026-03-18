@@ -1,6 +1,6 @@
 import { Upload } from "lucide-react";
-import { Button } from "../../../components/ui/Button.jsx";
-import { Card } from "../../../components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card } from "@/components/ui/Card.jsx";
 
 export function UploadSrsCard({ onOpenModal }) {
     return (
@@ -36,3 +36,9 @@ export function UploadSrsCard({ onOpenModal }) {
         </Card>
     );
 }
+
+
+
+
+
+

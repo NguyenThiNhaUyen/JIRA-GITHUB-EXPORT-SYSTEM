@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useAuth } from "../../../context/AuthContext.jsx";
-import { useToast } from "../../../components/ui/Toast.jsx";
-import { useStudentProjects } from "../../../features/dashboard/hooks/useDashboard.js";
-import { useSubmitSrs } from "../../../features/srs/hooks/useSrs.js";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useStudentProjects } from "@/features/dashboard/hooks/useDashboard.js";
+import { useSubmitSrs } from "@/features/srs/hooks/useSrs.js";
 
 export function useStudentSrs() {
     const { user } = useAuth();
@@ -58,3 +58,9 @@ export function useStudentSrs() {
         handleUpload
     };
 }
+
+
+
+
+
+

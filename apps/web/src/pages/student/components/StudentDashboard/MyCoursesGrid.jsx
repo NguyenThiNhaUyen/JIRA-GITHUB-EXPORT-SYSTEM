@@ -1,8 +1,8 @@
 import { ChevronRight, RefreshCw } from "lucide-react";
-import { Button } from "../../../components/ui/Button.jsx";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Skeleton } from "../../../components/ui/Skeleton.jsx";
-import { StatusBadge } from "../../../components/shared/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 export function MyCoursesGrid({ isLoading, courses, onCourseNavigate, onSeeAll }) {
     return (
@@ -67,3 +67,9 @@ export function MyCoursesGrid({ isLoading, courses, onCourseNavigate, onSeeAll }
         </Card>
     );
 }
+
+
+
+
+
+

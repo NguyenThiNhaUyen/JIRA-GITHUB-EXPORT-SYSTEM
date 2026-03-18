@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useToast } from "../../../components/ui/Toast.jsx";
-import { useAuth } from "../../../context/AuthContext.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 import {
     useGetProjectById,
     useGetProjectMetrics,
@@ -11,8 +11,8 @@ import {
     useGetProjectCycleTime,
     useGetProjectKanban,
     useGetProjectAgingWip
-} from "../../../features/projects/hooks/useProjects.js";
-import { useGetProjectSrs, useSubmitSrs } from "../../../features/srs/hooks/useSrs.js";
+} from "@/features/projects/hooks/useProjects.js";
+import { useGetProjectSrs, useSubmitSrs } from "@/features/srs/hooks/useSrs.js";
 
 export function useStudentProject(projectId) {
     const { user } = useAuth();
@@ -91,3 +91,9 @@ export function useStudentProject(projectId) {
         handleSrsSubmit
     };
 }
+
+
+
+
+
+

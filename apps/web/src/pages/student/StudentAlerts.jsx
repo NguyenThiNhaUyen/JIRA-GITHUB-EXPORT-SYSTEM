@@ -1,11 +1,11 @@
 import { AlertTriangle, CheckCircle, Activity, Clock } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useGetAlerts } from "@/features/system/hooks/useAlerts.js";
 
 // Components UI
-import { Card, CardContent } from "../../components/ui/Card.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 export default function StudentAlertsPage() {
     const { user } = useAuth();
@@ -69,3 +69,9 @@ export default function StudentAlertsPage() {
         </div>
     );
 }
+
+
+
+
+
+

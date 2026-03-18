@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, Upload, Eye, RefreshCcw, CheckCheck, AlertTriangle } from "lucide-react";
-import { StatsCard } from "../../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function SrsStats({ stats }) {
   const items = [
@@ -56,3 +56,9 @@ export function SrsStats({ stats }) {
     </div>
   );
 }
+
+
+
+
+
+

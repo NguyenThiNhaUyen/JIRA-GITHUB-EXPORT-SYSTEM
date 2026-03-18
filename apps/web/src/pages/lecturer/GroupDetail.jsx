@@ -1,25 +1,25 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/Button.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 import {
     useGetProjectById,
     useGetProjectCfd,
     useGetProjectCycleTime,
     useGetProjectAgingWip
-} from "../../features/projects/hooks/useProjects.js";
+} from "@/features/projects/hooks/useProjects.js";
 import { useGroupActions } from "./hooks/useGroupActions.js";
 
 // Chart & Tabs
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Interactive.jsx";
-import { CfdChart } from "../components/charts/CfdChart.jsx";
-import { CycleTimeChart } from "../components/charts/CycleTimeChart.jsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Interactive.jsx";
+import { CfdChart } from "@/components/charts/CfdChart.jsx";
+import { CycleTimeChart } from "@/components/charts/CycleTimeChart.jsx";
 
 // Components
-import { PageHeader } from "../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { GroupMembers } from "./components/GroupDetail/GroupMembers.jsx";
-import { GroupIntegrations } from "./components/GroupDetail/GroupIntegrations.jsx";
-import { GroupExport } from "./components/GroupDetail/GroupExport.jsx";
-import { AgingWipTable } from "./components/GroupDetail/AgingWipTable.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { GroupMembers } from "@/pages/lecturer/components/GroupDetail/GroupMembers.jsx";
+import { GroupIntegrations } from "@/pages/lecturer/components/GroupDetail/GroupIntegrations.jsx";
+import { GroupExport } from "@/pages/lecturer/components/GroupDetail/GroupExport.jsx";
+import { AgingWipTable } from "@/pages/lecturer/components/GroupDetail/AgingWipTable.jsx";
 
 import { ArrowLeft, GitBranch, BookOpen, Users, Calendar, Activity } from "lucide-react";
 
@@ -149,3 +149,9 @@ export default function GroupDetail() {
         </div>
     );
 }
+
+
+
+
+
+

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "../components/ui/Toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 import {
   useGetCourseById,
   useGetEnrolledStudents,
-} from "../features/courses/hooks/useCourses.js";
+} from "@/features/courses/hooks/useCourses.js";
 import {
   useGetProjects,
   useCreateProject,
@@ -12,7 +12,7 @@ import {
   useUpdateProject,
   useAddTeamMember,
   useRemoveTeamMember,
-} from "../../../features/projects/hooks/useProjects.js";
+} from "@/features/projects/hooks/useProjects.js";
 
 const MIN_MEMBERS = 4;
 const MAX_MEMBERS = 6;
@@ -322,3 +322,9 @@ export function useManageGroups() {
     navigate
   };
 }
+
+
+
+
+
+

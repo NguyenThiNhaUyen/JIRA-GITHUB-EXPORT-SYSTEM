@@ -37,3 +37,9 @@ export async function updateStudentScore(groupId, studentId, score) {
     const res = await client.put(`/projects/${groupId}/students/${studentId}/score`, { score });
     return unwrap(res);
 }
+
+
+
+
+
+

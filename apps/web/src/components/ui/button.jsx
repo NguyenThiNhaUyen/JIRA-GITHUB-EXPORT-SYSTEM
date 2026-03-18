@@ -1,5 +1,5 @@
 // Button Component - Part of UI Kit
-import { theme } from '../../lib/uiTheme.js';
+import { theme } from "@/lib/uiTheme.js";
 
 const buttonVariants = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500',
@@ -43,5 +43,11 @@ export function Button({
     </button>
   );
 }
+
+
+
+
+
+
 
 

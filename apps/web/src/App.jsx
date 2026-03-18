@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import RoleGuard from "./components/RoleGuard.jsx";
-import { useAuth } from "./context/AuthContext.jsx";
+import ProtectedRoute from "@/components/ProtectedRoute.jsx";
+import RoleGuard from "@/components/RoleGuard.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 
 // Public pages (Keep sync for initial load)
 import Login from "./pages/Login.jsx";
@@ -135,3 +135,9 @@ export default function App() {
     </Suspense>
   );
 }
+
+
+
+
+
+

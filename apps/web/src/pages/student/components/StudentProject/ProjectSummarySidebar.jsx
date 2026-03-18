@@ -1,8 +1,8 @@
 import { Target, Github, Link2, RefreshCw, Clock, AlertTriangle, CheckCircle, ShieldAlert, Clock3, GitCommit } from "lucide-react";
-import { Card, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { Skeleton } from "../../../components/ui/Skeleton.jsx";
-import { StatusBadge } from "../../../components/shared/Badge.jsx";
+import { Card, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 export function ProjectSummarySidebar({ loadingProject, project, onSync, isSyncing, roadmapData }) {
     return (
@@ -133,3 +133,9 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
         </div>
     );
 }
+
+
+
+
+
+

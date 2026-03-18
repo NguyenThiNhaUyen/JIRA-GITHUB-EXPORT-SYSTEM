@@ -1,5 +1,5 @@
 import { ShieldAlert, AlertCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
 
 export function ImportantWarnings({ studentWarnings }) {
     if (studentWarnings.length === 0) return null;
@@ -23,3 +23,9 @@ export function ImportantWarnings({ studentWarnings }) {
         </Card>
     );
 }
+
+
+
+
+
+

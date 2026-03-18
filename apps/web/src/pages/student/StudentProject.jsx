@@ -10,26 +10,26 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Interactive.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Interactive.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 // Local Components
-import { CommitHistory } from "./components/StudentProject/CommitHistory.jsx";
-import { PerformanceMetrics } from "./components/StudentProject/PerformanceMetrics.jsx";
-import { StudentTeamList } from "./components/StudentProject/StudentTeamList.jsx";
-import { ProjectProgress } from "./components/StudentProject/ProjectProgress.jsx";
-import { SrsSubmissions } from "./components/StudentProject/SrsSubmissions.jsx";
-import { ProjectSummarySidebar } from "./components/StudentProject/ProjectSummarySidebar.jsx";
-import { SrsUploadModal } from "./components/StudentProject/SrsUploadModal.jsx";
+import { CommitHistory } from "@/pages/student/components/StudentProject/CommitHistory.jsx";
+import { PerformanceMetrics } from "@/pages/student/components/StudentProject/PerformanceMetrics.jsx";
+import { StudentTeamList } from "@/pages/student/components/StudentProject/StudentTeamList.jsx";
+import { ProjectProgress } from "@/pages/student/components/StudentProject/ProjectProgress.jsx";
+import { SrsSubmissions } from "@/pages/student/components/StudentProject/SrsSubmissions.jsx";
+import { ProjectSummarySidebar } from "@/pages/student/components/StudentProject/ProjectSummarySidebar.jsx";
+import { SrsUploadModal } from "@/pages/student/components/StudentProject/SrsUploadModal.jsx";
 
 // Hooks
 import { useStudentProject } from "./hooks/useStudentProject.js";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 
 export default function StudentProject() {
     const { projectId } = useParams();
@@ -232,3 +232,9 @@ export default function StudentProject() {
         </div>
     );
 }
+
+
+
+
+
+

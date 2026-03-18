@@ -1,7 +1,7 @@
 import { Sparkles, Wand2, UserPlus, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { InputField, SelectField } from "../../../../components/shared/FormFields.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { InputField, SelectField } from "@/components/shared/FormFields.jsx";
 
 export function GroupCreationPanel({
   newGroupTopic,
@@ -124,3 +124,9 @@ export function GroupCreationPanel({
     </div>
   );
 }
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 import { Clock, CheckCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Badge } from "../../../components/ui/Badge.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 export function ProjectProgress({ cycleTime, metrics, roadmapData, agingWip, cfdData }) {
     return (
@@ -106,3 +106,9 @@ export function ProjectProgress({ cycleTime, metrics, roadmapData, agingWip, cfd
         </div>
     );
 }
+
+
+
+
+
+

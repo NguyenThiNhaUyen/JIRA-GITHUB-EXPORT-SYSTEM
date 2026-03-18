@@ -1,6 +1,6 @@
 import { TrendingUp } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
 export function ContributionTrends({ chartData }) {
   return (
@@ -47,3 +47,9 @@ export function ContributionTrends({ chartData }) {
     </Card>
   );
 }
+
+
+
+
+
+

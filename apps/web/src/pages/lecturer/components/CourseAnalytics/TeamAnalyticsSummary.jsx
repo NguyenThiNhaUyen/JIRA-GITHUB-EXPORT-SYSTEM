@@ -1,7 +1,7 @@
 import { Sparkles, Users, GitBranch, MousePointer2, ChevronRight, AlertTriangle, Clock, CheckCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card.jsx";
-import { Badge } from "../../../components/ui/Badge.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function TeamAnalyticsSummary({
   courseRankings,
@@ -82,3 +82,9 @@ export function TeamAnalyticsSummary({
     </div>
   );
 }
+
+
+
+
+
+

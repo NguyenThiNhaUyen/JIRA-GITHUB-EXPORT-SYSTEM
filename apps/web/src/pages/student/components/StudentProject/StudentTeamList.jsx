@@ -1,5 +1,5 @@
-import { Badge } from "../../../components/ui/Badge.jsx";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
 
 export function StudentTeamList({ project, metrics, userId }) {
     const teamMembers = project?.team || [];
@@ -58,3 +58,9 @@ export function StudentTeamList({ project, metrics, userId }) {
         </Card>
     );
 }
+
+
+
+
+
+

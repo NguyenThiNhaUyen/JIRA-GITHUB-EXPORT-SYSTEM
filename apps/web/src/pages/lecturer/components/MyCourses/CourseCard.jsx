@@ -1,7 +1,7 @@
 import { GraduationCap, Users, BookOpen, GitBranch, AlertTriangle, ChevronRight } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line } from "recharts";
-import { Card, CardContent } from "../../../components/ui/Card.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function CourseCard({ course, onNavigate }) {
   const groupCount = course.projects?.length || 0;
@@ -156,3 +156,9 @@ function StatusBadge({ status }) {
     </span>
   );
 }
+
+
+
+
+
+

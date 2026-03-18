@@ -17,22 +17,22 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { AdminStats } from "../../features/dashboard/components/AdminStats.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { AdminStats } from "@/features/dashboard/components/AdminStats.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Hooks
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
-import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { useGetSemesters, useGetSubjects } from "@/features/system/hooks/useSystem.js";
+import { useGetUsers } from "@/features/users/hooks/useUsers.js";
 import {
   useAdminStats,
   useIntegrationStats,
   useActivityLog,
-} from "../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/dashboard/hooks/useDashboard.js";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -283,3 +283,9 @@ function CourseStatusBadge({ status }) {
     </span>
   );
 }
+
+
+
+
+
+

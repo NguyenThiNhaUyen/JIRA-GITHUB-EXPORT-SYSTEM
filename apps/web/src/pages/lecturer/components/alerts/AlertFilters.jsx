@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui/Card.jsx";
-import { InputField } from "../../../components/shared/FormFields.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { InputField } from "@/components/shared/FormFields.jsx";
 
 export function AlertFilters({ filter, setFilter, search, setSearch }) {
   const filters = [
@@ -42,3 +42,9 @@ export function AlertFilters({ filter, setFilter, search, setSearch }) {
     </Card>
   );
 }
+
+
+
+
+
+

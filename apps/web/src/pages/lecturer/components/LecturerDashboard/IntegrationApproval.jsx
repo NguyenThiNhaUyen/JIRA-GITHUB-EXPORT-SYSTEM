@@ -1,5 +1,5 @@
 import { GitBranch, BookOpen, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
 export function IntegrationApproval({ pendingIntegrations, handleApprovePending }) {
   if (pendingIntegrations.length === 0) return null;
@@ -44,3 +44,9 @@ export function IntegrationApproval({ pendingIntegrations, handleApprovePending 
     </Card>
   );
 }
+
+
+
+
+
+

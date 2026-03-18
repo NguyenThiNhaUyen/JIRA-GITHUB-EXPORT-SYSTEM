@@ -11,16 +11,16 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Button } from "../../components/ui/Button.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { InputField, SelectField } from "@/components/shared/FormFields.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Hooks
-import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { useGetUsers } from "@/features/users/hooks/useUsers.js";
 
 export default function LecturerWorkload() {
   const [search, setSearch] = useState("");
@@ -186,3 +186,9 @@ export default function LecturerWorkload() {
     </div>
   );
 }
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import { Link2, Github, Star, RefreshCw, CheckCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Badge } from "../../../components/ui/Badge.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function IntegrationPanel({ group, isLeader, githubInput, setGithubInput, jiraInput, setJiraInput, onLinkSubmit, isLinking }) {
     return (
@@ -70,3 +70,9 @@ export function IntegrationPanel({ group, isLeader, githubInput, setGithubInput,
         </Card>
     );
 }
+
+
+
+
+
+

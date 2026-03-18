@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Bell, RefreshCw, Send, ShieldAlert, AlertTriangle, Info } from "lucide-react";
-import { Modal } from "../../../components/ui/Interactive.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
-import { SelectField, InputField } from "../../../components/shared/FormFields.jsx";
+import { Modal } from "@/components/ui/Interactive.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { SelectField, InputField } from "@/components/shared/FormFields.jsx";
 import { useSendAlert } from "../hooks/useDashboard.js";
-import { useToast } from "../../../components/ui/Toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 
 const SEVERITIES = [
     { id: 'HIGH', label: 'Nghiêm trọng (High)', icon: ShieldAlert, color: 'text-red-500' },
@@ -94,3 +94,9 @@ export function SendAlertModal({ isOpen, onClose, groups = [], initialGroupId = 
         </Modal>
     );
 }
+
+
+
+
+
+

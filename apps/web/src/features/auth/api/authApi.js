@@ -27,3 +27,9 @@ export async function loginWithCredentials(email, password) {
 export async function loginWithGoogle(idToken) {
     return client.post("/sessions/google", { idToken, IdToken: idToken });
 }
+
+
+
+
+
+

@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { FolderKanban, Users, Activity, Target } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useStudentProjects } from "../../features/dashboard/hooks/useDashboard.js";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useStudentProjects } from "@/features/dashboard/hooks/useDashboard.js";
 
 // Components UI
-import { Card, CardContent } from "../../components/ui/Card.jsx";
-import { Button } from "../../components/ui/Button.jsx";
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { StatusBadge } from "../../components/shared/Badge.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 export default function StudentMyProjectPage() {
     const { user } = useAuth();
@@ -95,3 +95,9 @@ export default function StudentMyProjectPage() {
         </div>
     );
 }
+
+
+
+
+
+

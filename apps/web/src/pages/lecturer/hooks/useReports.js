@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
-import { useToast } from "../../components/ui/Toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useGetMyReports,
     useGenerateCommitStats,
     useGenerateTeamRoster,
     useGenerateSrs,
     useGenerateActivitySummary
-} from "../../../features/admin/hooks/useReports.js";
-import { useGetCourses } from "../../../features/courses/hooks/useCourses.js";
-import { useGetProjects } from "../../../features/projects/hooks/useProjects.js";
-import { useInactiveTeams } from "../../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/admin/hooks/useReports.js";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { useGetProjects } from "@/features/projects/hooks/useProjects.js";
+import { useInactiveTeams } from "@/features/dashboard/hooks/useDashboard.js";
 import {
     FileSpreadsheet,
     FileText,
@@ -124,3 +124,9 @@ export function useReports() {
         EXPORT_TYPES
     };
 }
+
+
+
+
+
+

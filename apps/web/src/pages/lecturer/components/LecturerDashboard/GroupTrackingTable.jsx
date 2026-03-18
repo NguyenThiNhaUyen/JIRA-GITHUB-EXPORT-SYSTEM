@@ -1,7 +1,7 @@
 import { LayoutList, Eye, Bell } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
-import { Button } from "../../../../components/ui/Button.jsx";
-import { Badge } from "../../../../components/ui/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 export function GroupTrackingTable({ groups, navigate, success }) {
   return (
@@ -74,3 +74,9 @@ function StatusBadge({ label, active }) {
     </span>
   );
 }
+
+
+
+
+
+

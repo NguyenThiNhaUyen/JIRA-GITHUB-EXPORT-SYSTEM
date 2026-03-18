@@ -2,17 +2,17 @@ import { useState, useMemo, useEffect } from "react";
 import { Plus, Library, Trash2, Edit2, Search, BookOpen, CheckCircle } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/Table.jsx";
-import { Modal } from "../../components/ui/Interactive.jsx";
-import { useToast } from "../../components/ui/Toast.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table.jsx";
+import { Modal } from "@/components/ui/Interactive.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { SelectField, InputField } from "../../components/shared/FormFields.jsx";
-import { StatusBadge } from "../../components/shared/Badge.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { SelectField, InputField } from "@/components/shared/FormFields.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 // Feature Hooks
 import {
@@ -20,7 +20,7 @@ import {
     useCreateSubject,
     useUpdateSubject,
     useDeleteSubject
-} from "../../features/system/hooks/useSystem.js";
+} from "@/features/system/hooks/useSystem.js";
 
 const DEPARTMENTS = [
     "Software Engineering",
@@ -287,3 +287,9 @@ export default function SubjectManagement() {
         </div>
     );
 }
+
+
+
+
+
+

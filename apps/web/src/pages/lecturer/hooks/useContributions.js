@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useGetCourses } from "../../../features/courses/hooks/useCourses.js";
-import { getCourseContributions } from "../../../features/analytics/api/analyticsApi.js";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { getCourseContributions } from "@/features/analytics/api/analyticsApi.js";
 
 export function useContributions() {
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -93,3 +93,9 @@ export function useContributions() {
     refetch
   };
 }
+
+
+
+
+
+

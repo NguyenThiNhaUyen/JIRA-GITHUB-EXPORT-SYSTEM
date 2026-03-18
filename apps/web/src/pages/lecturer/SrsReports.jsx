@@ -5,22 +5,21 @@ import {
   RefreshCcw,
   CheckCheck,
   Download,
-  Star,
-  Button as ButtonIcon
+  Star
 } from "lucide-react";
 
 // Components UI
-import { CardContent } from "../components/ui/Card.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { Badge } from "../components/ui/Badge.jsx";
+import { CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 // Local Components
-import { SrsListTable } from "./components/SrsReports/SrsListTable.jsx";
-import { SrsReviewPanel } from "./components/SrsReports/SrsReviewPanel.jsx";
+import { SrsListTable } from "@/pages/lecturer/components/SrsReports/SrsListTable.jsx";
+import { SrsReviewPanel } from "@/pages/lecturer/components/SrsReports/SrsReviewPanel.jsx";
 
 // Hooks
 import { useSrsReports } from "./hooks/useSrsReports.js";
@@ -104,3 +103,9 @@ export default function SrsReports() {
     </div>
   );
 }
+
+
+
+
+
+

@@ -1,9 +1,9 @@
 import { Activity, Clock, FileDown, FileText } from "lucide-react";
-import { useGetProjectSrs } from "../../../features/srs/hooks/useSrs.js";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
-import { Skeleton } from "../../../components/ui/Skeleton.jsx";
-import { StatusBadge } from "../../../components/shared/Badge.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { useGetProjectSrs } from "@/features/srs/hooks/useSrs.js";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function SrsProjectHistory({ project, index }) {
     const { data: srsList = [], isLoading } = useGetProjectSrs(project.id);
@@ -77,3 +77,9 @@ export function SrsProjectHistory({ project, index }) {
         </Card>
     );
 }
+
+
+
+
+
+

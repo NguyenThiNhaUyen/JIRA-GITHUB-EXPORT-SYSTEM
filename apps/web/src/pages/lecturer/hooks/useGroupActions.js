@@ -1,12 +1,12 @@
-import { useToast } from "../components/ui/Toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useApproveIntegration,
     useRejectIntegration,
     useUpdateTeamMember,
-} from "../features/projects/hooks/useProjects.js";
-import { useGenerateSrsReport } from "../features/projects/hooks/useReports.js";
-import { getDownloadUrl } from "../features/projects/api/reportApi.js";
-import { useSendAlert } from "../features/system/hooks/useAlerts.js";
+} from "@/features/projects/hooks/useProjects.js";
+import { useGenerateSrsReport } from "@/features/projects/hooks/useReports.js";
+import { getDownloadUrl } from "@/features/projects/api/reportApi.js";
+import { useSendAlert } from "@/features/system/hooks/useAlerts.js";
 
 export function useGroupActions(groupId) {
     const { success, error: showError } = useToast();
@@ -149,3 +149,9 @@ export function useGroupActions(groupId) {
         isSendingAlert
     };
 }
+
+
+
+
+
+

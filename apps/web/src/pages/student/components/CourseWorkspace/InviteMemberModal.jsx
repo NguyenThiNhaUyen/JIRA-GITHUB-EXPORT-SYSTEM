@@ -1,6 +1,6 @@
 import { Search, UserPlus, CheckCircle, RefreshCw, X, Users } from "lucide-react";
-import { Modal } from "../../../components/ui/Interactive.jsx";
-import { Button } from "../../../components/ui/Button.jsx";
+import { Modal } from "@/components/ui/Interactive.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents, inviteSelectedIds, setInviteSelectedIds, isInviting, onInviteSubmit }) {
     const availableStudents = (enrolledData.items || []).filter(s => !groupStudents.find(m => String(m.studentId) === String(s.id)));
@@ -87,3 +87,9 @@ export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents
         </Modal>
     );
 }
+
+
+
+
+
+

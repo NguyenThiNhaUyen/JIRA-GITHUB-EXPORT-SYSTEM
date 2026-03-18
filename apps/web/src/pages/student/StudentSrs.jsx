@@ -1,17 +1,17 @@
 import { FileText } from "lucide-react";
 
 // Components UI
-import { Card } from "../../components/ui/Card.jsx";
+import { Card } from "@/components/ui/Card.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Local Components
-import { SrsProjectHistory } from "./components/StudentSrs/SrsProjectHistory.jsx";
-import { UploadSrsCard } from "./components/StudentSrs/UploadSrsCard.jsx";
-import { SrsTemplatesCard } from "./components/StudentSrs/SrsTemplatesCard.jsx";
-import { SubmitSrsModal } from "./components/StudentSrs/SubmitSrsModal.jsx";
+import { SrsProjectHistory } from "@/pages/student/components/StudentSrs/SrsProjectHistory.jsx";
+import { UploadSrsCard } from "@/pages/student/components/StudentSrs/UploadSrsCard.jsx";
+import { SrsTemplatesCard } from "@/pages/student/components/StudentSrs/SrsTemplatesCard.jsx";
+import { SubmitSrsModal } from "@/pages/student/components/StudentSrs/SubmitSrsModal.jsx";
 
 // Hooks
 import { useStudentSrs } from "./hooks/useStudentSrs.js";
@@ -87,3 +87,9 @@ export default function StudentSrsPage() {
         </div>
     );
 }
+
+
+
+
+
+

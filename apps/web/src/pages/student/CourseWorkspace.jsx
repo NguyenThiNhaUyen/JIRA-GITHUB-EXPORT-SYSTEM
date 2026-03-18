@@ -6,16 +6,16 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
-import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Local Components
-import { WorkspaceHeader } from "./components/CourseWorkspace/WorkspaceHeader.jsx";
-import { IntegrationPanel } from "./components/CourseWorkspace/IntegrationPanel.jsx";
-import { TeamManagement } from "./components/CourseWorkspace/TeamManagement.jsx";
-import { ProjectKpiSidebar } from "./components/CourseWorkspace/ProjectKpiSidebar.jsx";
-import { SrsSidebar } from "./components/CourseWorkspace/SrsSidebar.jsx";
-import { InviteMemberModal } from "./components/CourseWorkspace/InviteMemberModal.jsx";
+import { WorkspaceHeader } from "@/pages/student/components/CourseWorkspace/WorkspaceHeader.jsx";
+import { IntegrationPanel } from "@/pages/student/components/CourseWorkspace/IntegrationPanel.jsx";
+import { TeamManagement } from "@/pages/student/components/CourseWorkspace/TeamManagement.jsx";
+import { ProjectKpiSidebar } from "@/pages/student/components/CourseWorkspace/ProjectKpiSidebar.jsx";
+import { SrsSidebar } from "@/pages/student/components/CourseWorkspace/SrsSidebar.jsx";
+import { InviteMemberModal } from "@/pages/student/components/CourseWorkspace/InviteMemberModal.jsx";
 
 // Hooks
 import { useCourseWorkspace } from "./hooks/useCourseWorkspace.js";
@@ -150,3 +150,9 @@ export default function CourseWorkspace() {
         </div>
     );
 }
+
+
+
+
+
+

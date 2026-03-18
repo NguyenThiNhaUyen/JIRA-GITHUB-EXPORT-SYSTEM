@@ -1,5 +1,5 @@
-import { useAuth } from "../../../context/AuthContext.jsx";
-import { useToast } from "../../../components/ui/Toast.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 import {
   useStudentDeadlines,
   useStudentProjects,
@@ -10,7 +10,7 @@ import {
   useStudentStats,
   useStudentHeatmap,
   useStudentCommitActivity
-} from "../../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/dashboard/hooks/useDashboard.js";
 
 export function useStudentDashboard() {
   const { user, logout } = useAuth();
@@ -63,3 +63,9 @@ export function useStudentDashboard() {
     success
   };
 }
+
+
+
+
+
+

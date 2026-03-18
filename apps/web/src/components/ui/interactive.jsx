@@ -1,6 +1,6 @@
 // Tabs Component - Part of UI Kit
 import React, { useState, useEffect } from 'react';
-import { Button } from '../Button.jsx';
+import { Button } from "./Button.jsx";
 
 export function Tabs({ children, defaultValue, className = '', ...props }) {
   const [activeTab, setActiveTab] = useState(defaultValue);
@@ -159,3 +159,9 @@ export function Alert({ children, variant = 'default', className = '', ...props 
     </div>
   );
 }
+
+
+
+
+
+

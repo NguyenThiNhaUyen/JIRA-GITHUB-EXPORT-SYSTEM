@@ -6,3 +6,9 @@ export function InfoRow({ label, value }) {
         </div>
     );
 }
+
+
+
+
+
+

@@ -1,17 +1,17 @@
 import { ArrowLeft, Download, Activity } from "lucide-react";
 
 // Components UI
-import { Button } from "../components/ui/Button.jsx";
-import { useToast } from "../components/ui/Toast.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 
 // Shared Components
-import { PageHeader } from "../components/shared/PageHeader.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
 
 // Local Components
-import { GroupOverviewStats } from "./components/ManageGroups/GroupOverviewStats.jsx";
-import { GroupCreationPanel } from "./components/ManageGroups/GroupCreationPanel.jsx";
-import { GroupListPanel } from "./components/ManageGroups/GroupListPanel.jsx";
-import { ForceAddModal } from "./components/ManageGroups/ForceAddModal.jsx";
+import { GroupOverviewStats } from "@/pages/lecturer/components/ManageGroups/GroupOverviewStats.jsx";
+import { GroupCreationPanel } from "@/pages/lecturer/components/ManageGroups/GroupCreationPanel.jsx";
+import { GroupListPanel } from "@/pages/lecturer/components/ManageGroups/GroupListPanel.jsx";
+import { ForceAddModal } from "@/pages/lecturer/components/ManageGroups/ForceAddModal.jsx";
 
 // Hooks
 import { useManageGroups } from "./hooks/useManageGroups.js";
@@ -118,3 +118,9 @@ export default function ManageGroups() {
     </div>
   );
 }
+
+
+
+
+
+

@@ -57,3 +57,9 @@ export function CfdChart({ data = [], isLoading, isError }) {
 }
 
 
+
+
+
+
+
+

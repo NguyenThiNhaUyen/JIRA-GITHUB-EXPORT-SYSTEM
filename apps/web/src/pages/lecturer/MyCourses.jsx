@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, BookOpen, Users, Search } from "lucide-react";
 
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { InputField } from "../../components/shared/FormFields.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { InputField } from "@/components/shared/FormFields.jsx";
 
 // Local Components
-import { CourseCard } from "./components/MyCourses/CourseCard.jsx";
+import { CourseCard } from "@/pages/lecturer/components/MyCourses/CourseCard.jsx";
 
 // Hooks
 import { useMyCoursesHook } from "./hooks/useMyCoursesHook.js";
@@ -71,3 +71,9 @@ export default function MyCourses() {
     </div>
   );
 }
+
+
+
+
+
+

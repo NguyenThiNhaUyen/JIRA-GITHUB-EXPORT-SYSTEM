@@ -1,27 +1,27 @@
 import { useState, useMemo } from "react";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { useAuth } from "../../../context/AuthContext.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 import {
   useGetSemesters,
   useGetSubjects
-} from "../../../features/system/hooks/useSystem.js";
+} from "@/features/system/hooks/useSystem.js";
 import {
   useGetCourseById
-} from "../../../features/courses/hooks/useCourses.js";
+} from "@/features/courses/hooks/useCourses.js";
 import {
   useMyWorkload,
   useMyCourses,
   useLecturerActivityLogs,
   useAnalyticsRadar as useGroupRadarMetrics
-} from "../../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/dashboard/hooks/useDashboard.js";
 import {
   useApproveIntegration,
   useRejectIntegration
-} from "../../../features/projects/hooks/useProjects.js";
+} from "@/features/projects/hooks/useProjects.js";
 import {
   useGetAlerts,
   useResolveAlert
-} from "../../../features/system/hooks/useAlerts.js";
+} from "@/features/system/hooks/useAlerts.js";
 // Activity log icon helpers moved up if needed, but keeping them here for now
 import { GitBranch, BookOpen, FileText, CheckCircle, Users } from "lucide-react";
 
@@ -159,3 +159,9 @@ export function useLecturerDashboard() {
     handleResolveAlert
   };
 }
+
+
+
+
+
+

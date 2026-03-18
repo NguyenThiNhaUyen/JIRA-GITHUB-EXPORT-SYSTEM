@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { useGetCourses } from "../../../features/courses/hooks/useCourses.js";
-import { useGetReports } from "../../../features/admin/hooks/useReports.js";
-import { useSendAlert } from "../../../features/system/hooks/useAlerts.js";
-import { useGenerateCommitStats } from "../../../features/projects/hooks/useReports.js";
-import { useReviewSrs } from "../../../features/srs/hooks/useSrs.js";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
+import { useGetReports } from "@/features/admin/hooks/useReports.js";
+import { useSendAlert } from "@/features/system/hooks/useAlerts.js";
+import { useGenerateCommitStats } from "@/features/projects/hooks/useReports.js";
+import { useReviewSrs } from "@/features/srs/hooks/useSrs.js";
 
 const STATUS_META = {
   NOT_SUBMITTED: { label: "Chưa nộp", variant: "secondary", color: "text-gray-500 bg-gray-50 border-gray-100" },
@@ -168,3 +168,9 @@ export function useSrsReports() {
     STATUS_META
   };
 }
+
+
+
+
+
+

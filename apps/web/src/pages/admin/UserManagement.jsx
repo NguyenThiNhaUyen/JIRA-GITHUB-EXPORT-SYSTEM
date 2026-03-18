@@ -1,11 +1,11 @@
 // User Management - ADMIN user management page
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/Interactive.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/Table.jsx";
-import { Badge } from "../../components/ui/Badge.jsx";
-import { Button } from "../../components/ui/Button.jsx";
-import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Interactive.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { useGetUsers } from "@/features/users/hooks/useUsers.js";
 
 export default function UserManagement() {
   const [activeTab, setActiveTab] = useState('lecturers');
@@ -154,3 +154,9 @@ export default function UserManagement() {
     </div>
   );
 }
+
+
+
+
+
+

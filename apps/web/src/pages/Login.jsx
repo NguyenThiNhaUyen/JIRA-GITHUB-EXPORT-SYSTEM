@@ -1,9 +1,9 @@
 // Login page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { Alert } from "../components/ui/Interactive.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { Alert } from "@/components/ui/Interactive.jsx";
 import { BookOpen, Shield, GraduationCap, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
@@ -234,3 +234,9 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+
+
+

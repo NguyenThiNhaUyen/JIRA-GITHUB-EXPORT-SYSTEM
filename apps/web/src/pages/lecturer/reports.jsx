@@ -10,19 +10,19 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Card, CardContent } from "../components/ui/Card.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { useToast } from "../components/ui/Toast.jsx";
-import { Skeleton } from "../components/ui/Skeleton.jsx";
+import { Card, CardContent } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Shared Components
-import { PageHeader } from "../components/shared/PageHeader.jsx";
-import { StatsCard } from "../components/shared/StatsCard.jsx";
-import { SelectField, InputField } from "../../components/shared/FormFields.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { SelectField, InputField } from "@/components/shared/FormFields.jsx";
 
 // Local Components
-import { ReportPreview } from "./components/Reports/ReportPreview.jsx";
-import { ReportHistory } from "./components/Reports/ReportHistory.jsx";
+import { ReportPreview } from "@/pages/lecturer/components/Reports/ReportPreview.jsx";
+import { ReportHistory } from "@/pages/lecturer/components/Reports/ReportHistory.jsx";
 
 // Hooks
 import { useReports } from "./hooks/useReports.js";
@@ -140,3 +140,9 @@ export default function Reports() {
         </div>
     );
 }
+
+
+
+
+
+

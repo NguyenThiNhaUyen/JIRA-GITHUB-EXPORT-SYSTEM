@@ -4,7 +4,7 @@ import {
     useStudentHeatmap, 
     useStudentCommitActivity,
     useStudentProjects
-} from "../../../features/dashboard/hooks/useDashboard.js";
+} from "@/features/dashboard/hooks/useDashboard.js";
 
 export function useStudentContribution() {
     // Data Hooks
@@ -39,3 +39,9 @@ export function useStudentContribution() {
         handleRefresh
     };
 }
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import { Eye, Download } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card.jsx";
-import { Button } from "../components/ui/Button.jsx";
-import { StatusBadge } from "../../../../components/shared/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { StatusBadge } from "@/components/shared/Badge.jsx";
 
 export function ReportPreview({ selectedConfig, previewData, handleExport }) {
   return (
@@ -51,3 +51,9 @@ export function ReportPreview({ selectedConfig, previewData, handleExport }) {
     </Card>
   );
 }
+
+
+
+
+
+

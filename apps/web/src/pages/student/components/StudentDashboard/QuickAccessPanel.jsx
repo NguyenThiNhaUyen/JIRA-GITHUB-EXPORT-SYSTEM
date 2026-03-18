@@ -1,5 +1,5 @@
 import { Target, BookOpen, FolderKanban, BarChart3, FileText, ChevronRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card.jsx";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card.jsx";
 
 export function QuickAccessPanel({ onNavigate }) {
     const items = [
@@ -43,3 +43,9 @@ export function QuickAccessPanel({ onNavigate }) {
         </Card>
     );
 }
+
+
+
+
+
+

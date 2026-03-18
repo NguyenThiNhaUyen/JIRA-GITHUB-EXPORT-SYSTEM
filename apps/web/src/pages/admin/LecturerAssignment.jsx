@@ -13,24 +13,24 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card.jsx";
-import { Button } from "../../components/ui/Button.jsx";
-import { useToast } from "../../components/ui/Toast.jsx";
-import { Badge } from "../../components/ui/Badge.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
+import { Button } from "@/components/ui/Button.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
+import { Badge } from "@/components/ui/Badge.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { StatsCard } from "../../components/shared/StatsCard.jsx";
-import { InputField, SelectField } from "../../components/shared/FormFields.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
+import { InputField, SelectField } from "@/components/shared/FormFields.jsx";
 
 // Feature Hooks
 import {
   useGetCourses,
   useAssignLecturer,
   useRemoveLecturer
-} from "../../features/courses/hooks/useCourses.js";
-import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
-import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+} from "@/features/courses/hooks/useCourses.js";
+import { useGetSemesters, useGetSubjects } from "@/features/system/hooks/useSystem.js";
+import { useGetUsers } from "@/features/users/hooks/useUsers.js";
 
 export default function LecturerAssignment() {
   const navigate = useNavigate();
@@ -268,3 +268,9 @@ export default function LecturerAssignment() {
     </div>
   );
 }
+
+
+
+
+
+

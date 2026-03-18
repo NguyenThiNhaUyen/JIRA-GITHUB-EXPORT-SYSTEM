@@ -1,17 +1,17 @@
 import { RefreshCw, Plus } from "lucide-react";
 
 // Components UI
-import { Button } from "../components/ui/Button.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
-import { SendAlertModal } from "../../features/dashboard/components/SendAlertModal.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
+import { SendAlertModal } from "@/features/dashboard/components/SendAlertModal.jsx";
 
 // Local Components
-import { AlertStats } from "./components/alerts/AlertStats.jsx";
-import { AlertFilters } from "./components/alerts/AlertFilters.jsx";
-import { AlertList } from "./components/alerts/AlertList.jsx";
-import { AlertRiskAnalysis } from "./components/alerts/AlertRiskAnalysis.jsx";
+import { AlertStats } from "@/pages/lecturer/components/alerts/AlertStats.jsx";
+import { AlertFilters } from "@/pages/lecturer/components/alerts/AlertFilters.jsx";
+import { AlertList } from "@/pages/lecturer/components/alerts/AlertList.jsx";
+import { AlertRiskAnalysis } from "@/pages/lecturer/components/alerts/AlertRiskAnalysis.jsx";
 
 // Hooks
 import { useAlertActions } from "./hooks/useAlertActions.js";
@@ -88,3 +88,9 @@ export default function Alerts() {
     </div>
   );
 }
+
+
+
+
+
+

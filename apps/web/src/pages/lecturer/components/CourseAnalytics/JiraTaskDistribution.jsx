@@ -1,6 +1,6 @@
 import { PieChart as PieChartIcon } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
 export function JiraTaskDistribution({ jiraData, integrationStats }) {
   const donePercent = Math.round((integrationStats?.jiraStats?.done / (Object.values(integrationStats?.jiraStats || {}).reduce((a, b) => a + b, 0) || 1)) * 100);
@@ -55,3 +55,9 @@ export function JiraTaskDistribution({ jiraData, integrationStats }) {
     </Card>
   );
 }
+
+
+
+
+
+

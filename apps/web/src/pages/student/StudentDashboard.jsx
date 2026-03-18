@@ -6,20 +6,20 @@ import {
 } from "lucide-react";
 
 // Components UI
-import { Button } from "../../components/ui/Button.jsx";
+import { Button } from "@/components/ui/Button.jsx";
 
 // Shared Components
-import { PageHeader } from "../../components/shared/PageHeader.jsx";
+import { PageHeader } from "@/components/shared/PageHeader.jsx";
 
 // Local Components
-import { DashboardKpiCards } from "./components/StudentDashboard/DashboardKpiCards.jsx";
-import { ImportantWarnings } from "./components/StudentDashboard/ImportantWarnings.jsx";
-import { MyCoursesGrid } from "./components/StudentDashboard/MyCoursesGrid.jsx";
-import { WeeklyActivityCharts } from "./components/StudentDashboard/WeeklyActivityCharts.jsx";
-import { RecentActivitySidebar } from "./components/StudentDashboard/RecentActivitySidebar.jsx";
-import { AcademicGradesCard } from "./components/StudentDashboard/AcademicGradesCard.jsx";
-import { QuickAccessPanel } from "./components/StudentDashboard/QuickAccessPanel.jsx";
-import { UpcomingDeadlines } from "./components/StudentDashboard/UpcomingDeadlines.jsx";
+import { DashboardKpiCards } from "@/pages/student/components/StudentDashboard/DashboardKpiCards.jsx";
+import { ImportantWarnings } from "@/pages/student/components/StudentDashboard/ImportantWarnings.jsx";
+import { MyCoursesGrid } from "@/pages/student/components/StudentDashboard/MyCoursesGrid.jsx";
+import { WeeklyActivityCharts } from "@/pages/student/components/StudentDashboard/WeeklyActivityCharts.jsx";
+import { RecentActivitySidebar } from "@/pages/student/components/StudentDashboard/RecentActivitySidebar.jsx";
+import { AcademicGradesCard } from "@/pages/student/components/StudentDashboard/AcademicGradesCard.jsx";
+import { QuickAccessPanel } from "@/pages/student/components/StudentDashboard/QuickAccessPanel.jsx";
+import { UpcomingDeadlines } from "@/pages/student/components/StudentDashboard/UpcomingDeadlines.jsx";
 
 // Hooks
 import { useStudentDashboard } from "./hooks/useStudentDashboard.js";
@@ -124,3 +124,9 @@ export default function StudentDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
