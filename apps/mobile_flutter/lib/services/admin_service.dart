@@ -47,10 +47,6 @@ class AdminService {
     return _request('POST', '/semesters/generate', body: {'year': year});
   }
 
-  Future<bool> deleteSemester(int id) async {
-    return _request('DELETE', '/semesters/$id');
-  }
-
   // ─── POST / PUT / DELETE Methods (Subjects) ──────────────
 
   Future<Map<String, dynamic>?> createSubject(Map<String, dynamic> data) async {

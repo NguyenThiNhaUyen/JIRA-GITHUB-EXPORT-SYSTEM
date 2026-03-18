@@ -87,14 +87,14 @@ class AdminSidebar extends StatelessWidget {
                     route: '/admin/courses',
                   ),
                   _SidebarItem(
-                    icon: Icons.folder_open_outlined,
-                    label: 'Nhóm dự án',
-                    route: '/admin/groups',
-                  ),
-                  _SidebarItem(
                     icon: Icons.account_tree_outlined,
                     label: 'Phân công giảng viên',
                     route: '/admin/lecturer-assignment',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.trending_up,
+                    label: 'Khối lượng giảng dạy',
+                    route: '/admin/workload',
                   ),
                   SizedBox(height: 18),
                   _SidebarSectionTitle('NGƯỜI DÙNG'),
@@ -223,14 +223,14 @@ class AdminDrawer extends StatelessWidget {
                     route: '/admin/courses',
                   ),
                   _SidebarItem(
-                    icon: Icons.folder_open_outlined,
-                    label: 'Nhóm dự án',
-                    route: '/admin/groups',
-                  ),
-                  _SidebarItem(
                     icon: Icons.account_tree_outlined,
                     label: 'Phân công giảng viên',
                     route: '/admin/lecturer-assignment',
+                  ),
+                  _SidebarItem(
+                    icon: Icons.trending_up,
+                    label: 'Khối lượng giảng dạy',
+                    route: '/admin/workload',
                   ),
                   SizedBox(height: 18),
                   _SidebarSectionTitle('NGƯỜI DÙNG'),

@@ -19,8 +19,8 @@ import '../screens/admin/admin_semesters_screen.dart';
 import '../screens/admin/admin_subjects_screen.dart';
 import '../screens/admin/lecturer_assignment_screen.dart';
 import '../screens/admin/course_management_screen.dart';
-import '../screens/admin/admin_groups_screen.dart';
 import '../screens/admin/admin_users_screen.dart';
+import '../screens/admin/lecturer_workload_screen.dart';
 
 // LECTURER
 import '../screens/lecturer/lecturer_dashboard_screen.dart';
@@ -173,12 +173,12 @@ GoRouter createRouter(AuthProvider authProvider) {
         builder: (context, state) => const AdminReportsScreen(),
       ),
       GoRoute(
-        path: '/admin/groups',
-        builder: (context, state) => const AdminGroupsScreen(),
-      ),
-      GoRoute(
         path: '/admin/users',
         builder: (context, state) => const AdminUsersScreen(),
+      ),
+      GoRoute(
+        path: '/admin/workload',
+        builder: (context, state) => const LecturerWorkloadScreen(),
       ),
     ],
   );
