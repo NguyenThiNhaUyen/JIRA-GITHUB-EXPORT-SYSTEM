@@ -77,26 +77,24 @@ class LecturerService {
     return [];
   }
 
-  /// POST /api/projects/{id}/integrations/approve
+  /// Duyệt dự án (Bắt đầu cho hệ thống Sync code)
   Future<bool> approveIntegration(dynamic projectId) async {
     return _post("/projects/$projectId/integrations/approve", {});
   }
 
-  /// POST /api/projects/{id}/integrations/reject
+  /// Từ chối dự án (Yêu cầu nhóm gửi lại link đúng)
   Future<bool> rejectIntegration(dynamic projectId, String reason) async {
     return _post("/projects/$projectId/integrations/reject", {"reason": reason});
   }
 
-  /// Chấm báo cáo SRS (Review status & feedback)
-  Future<bool> reviewSrs(dynamic srsId, {String? status, String? feedback, double? score}) async {
-    bool ok = true;
-    if (status != null) {
-      ok = ok && await _patch("/srs/$srsId/status", {"status": status, "score": score});
-    }
-    if (feedback != null) {
-      ok = ok && await _patch("/srs/$srsId/feedback", {"feedback": feedback});
-    }
-    return ok;
+  /// Chấm báo cáo SRS (Gán trạng thái, điểm và feedback)
+  /// POST /api/srs/{id}/review
+  Future<bool> reviewSrs(dynamic srsId, {required String status, required String feedback, required double score}) async {
+    return _post("/srs/$srsId/review", {
+      "status": status,
+      "feedback": feedback,
+      "score": score
+    });
   }
 
   /// GET /api/srs
@@ -129,10 +127,9 @@ class LecturerService {
   }
 
   /// GET /api/analytics/courses/{id}/contributions
-  Future<List<Map<String, dynamic>>> getCourseContributions(dynamic courseId) async {
+  Future<dynamic> getCourseContributions(dynamic courseId) async {
     final data = await _get("/analytics/courses/$courseId/contributions");
-    if (data is List) return data.cast<Map<String, dynamic>>();
-    return [];
+    return data;
   }
 
   // --- New Advanced Analytics APIs (Lecturer) ---
@@ -177,6 +174,84 @@ class LecturerService {
     final data = await _get("/analytics/lecturer/activity-logs?limit=$limit");
     if (data is List) return data.cast<Map<String, dynamic>>();
     return [];
+  }
+
+  // --- Export / Reports ---
+
+  /// POST /api/reports/commit-statistics
+  Future<Map<String, dynamic>?> generateCommitStats({required String courseId, String format = "PDF"}) async {
+    final response = await http.post(
+      Uri.parse("$_baseUrl/api/reports/commit-statistics?courseId=$courseId&format=$format"),
+      headers: await _headers(),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json['data'] ?? json['Data'] ?? json;
+    }
+    return null;
+  }
+
+  /// POST /api/reports/team-roster
+  Future<Map<String, dynamic>?> generateTeamRoster({required String projectId, String format = "PDF"}) async {
+    final response = await http.post(
+      Uri.parse("$_baseUrl/api/reports/team-roster?projectId=$projectId&format=$format"),
+      headers: await _headers(),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json['data'] ?? json['Data'] ?? json;
+    }
+    return null;
+  }
+
+  /// POST /api/reports/srs
+  Future<Map<String, dynamic>?> generateSrsReport({required String projectId, String format = "PDF"}) async {
+    final response = await http.post(
+      Uri.parse("$_baseUrl/api/reports/srs?projectId=$projectId&format=$format"),
+      headers: await _headers(),
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json['data'] ?? json['Data'] ?? json;
+    }
+    return null;
+  }
+
+  /// GET /api/reports/{id}/download-link
+  Future<String?> getDownloadLink(dynamic reportId) async {
+    final data = await _get("/reports/$reportId/download-link");
+    if (data is Map) return data['downloadUrl'] ?? data['url'] ?? data['link'];
+    if (data is String) return data;
+    return null;
+  }
+
+  /// GET /api/reports (My Reports)
+  Future<List<Map<String, dynamic>>> getMyReports() async {
+    final data = await _get("/reports");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+  /// GET /api/projects - Tổng quan dự án (lọc theo courseId nếu có)
+  Future<List<Map<String, dynamic>>> getProjects({dynamic courseId}) async {
+    final path = courseId != null ? "/projects?courseId=$courseId" : "/projects";
+    final data = await _get(path);
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    if (data is Map && (data['items'] != null || data['Items'] != null)) {
+      final items = data['items'] ?? data['Items'];
+      if (items is List) return items.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  /// GET /api/projects/{id}/metrics - Chỉ số chi tiết dự án
+  Future<Map<String, dynamic>?> getProjectMetrics(dynamic projectId) async {
+    final data = await _get("/projects/$projectId/metrics");
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// POST /api/projects/{id}/sync-commits - Bắt đầu đồng bộ code (Sync Now)
+  Future<bool> syncProject(dynamic projectId) async {
+    return _post("/projects/$projectId/sync-commits", {});
   }
 
   Future<List<Map<String, dynamic>>> getCourseGroups(dynamic courseId) async {

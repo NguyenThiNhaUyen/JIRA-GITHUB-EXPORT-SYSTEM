@@ -705,42 +705,7 @@ class _DemoAccountsCard extends StatelessWidget {
         color: const Color(0xFFF8FBFB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2ECEB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Demo accounts',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _DemoAccountTile(
-            role: 'Admin',
-            email: 'admin@fpt.edu.vn',
-            password: 'admin123',
-            onTap: onDemoTap,
-          ),
-          const SizedBox(height: 8),
-          _DemoAccountTile(
-            role: 'Lecturer',
-            email: 'namngv@fpt.edu.vn',
-            password: 'lecturer123',
-            onTap: onDemoTap,
-          ),
-          const SizedBox(height: 8),
-          _DemoAccountTile(
-            role: 'Student',
-            email: 'anvse2026001@fpt.edu.vn',
-            password: 'student123',
-            onTap: onDemoTap,
-          ),
-        ],
-      ),
+      )
     );
   }
 }

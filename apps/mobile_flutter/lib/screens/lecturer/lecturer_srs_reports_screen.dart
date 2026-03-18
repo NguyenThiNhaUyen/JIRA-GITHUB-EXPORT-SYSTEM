@@ -118,7 +118,9 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
     if (_selectedId == null) return;
     setState(() => _isReviewing = true);
     
-    final score = double.tryParse(_scoreCtrl.text) ?? 0.0;
+    final scoreText = _scoreCtrl.text.replaceAll(',', '.');
+    final score = double.tryParse(scoreText) ?? 0.0;
+    
     final ok = await _lecturerService.reviewSrs(
       _selectedId!, 
       status: status, 
@@ -131,14 +133,26 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
       if (ok) {
         final idx = _srsList.indexWhere((s) => s['id'] == _selectedId);
         if (idx >= 0) {
-          _srsList[idx] = {
-            ..._srsList[idx],
-            'status': status,
-            'feedback': _feedbackCtrl.text,
-            'score': score
-          };
+          setState(() {
+            _srsList[idx] = {
+              ..._srsList[idx],
+              'status': status,
+              'feedback': _feedbackCtrl.text,
+              'score': score
+            };
+          });
         }
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật Review thành công')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Cập nhật Review thành công'),
+          backgroundColor: _kTeal,
+          behavior: SnackBarBehavior.floating,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Lỗi khi cập nhật Review'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ));
       }
     }
   }

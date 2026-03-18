@@ -30,10 +30,10 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = true;
   User? _currentUser;
-  
   List<Map<String, dynamic>> _groups = [];
   List<Map<String, dynamic>> _allStudents = [];
   Map<String, dynamic>? _courseInfo;
+  List<Map<String, dynamic>> _pendingIntegrations = [];
 
   @override
   void initState() {
@@ -49,6 +49,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
         _lecturerService.getMyCourses(),
         _lecturerService.getCourseGroups(widget.courseId),
         _lecturerService.getCourseStudents(widget.courseId),
+        _lecturerService.getPendingIntegrations(widget.courseId),
       ]);
 
       final allCourses = results[0] as List<Map<String, dynamic>>;
@@ -63,13 +64,13 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
           _courseInfo = course.isNotEmpty ? _normalizeCourse(course) : null;
           _groups = (results[1] as List).map((e) => _normalizeGroup(e as Map<String, dynamic>)).toList();
           _allStudents = (results[2] as List).map((e) => _normalizeStudent(e as Map<String, dynamic>)).toList();
+          _pendingIntegrations = (results[3] as List).map((e) => _normalizeGroup(e as Map<String, dynamic>)).toList();
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        print("Error loading manage groups data: $e");
         _snack('Lỗi khi tải dữ liệu nhóm', err: true);
       }
     }
@@ -230,6 +231,8 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
             const SizedBox(height: 14),
             _buildGovernanceCard(available.length, allGroups.length, avgP, healthy, risk, noGh, noJr, noTopic),
             const SizedBox(height: 14),
+            _buildPendingIntegrationsCard(),
+            const SizedBox(height: 14),
             _buildCreateGroupCard(available),
             const SizedBox(height: 14),
             _buildAutoGroupCard(available.length, estGroups),
@@ -237,6 +240,138 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
             _buildGroupListCard(noTopic),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingIntegrationsCard() {
+    if (_pendingIntegrations.isEmpty) return const SizedBox.shrink();
+
+    return _cardWrap(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.sync_problem_rounded, size: 16, color: Color(0xFFF97316)),
+            ),
+            const SizedBox(width: 8),
+            const Text('Yêu cầu Tích hợp chờ duyệt', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: tp)),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: const Color(0xFFF97316), borderRadius: BorderRadius.circular(20)),
+              child: Text('${_pendingIntegrations.length}', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ]),
+          const SizedBox(height: 14),
+          ..._pendingIntegrations.map((g) => _buildPendingItem(g)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingItem(Map<String, dynamic> g) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAFAFA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text(g['name'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: tp))),
+          const Text('Vừa gửi yêu cầu', style: TextStyle(fontSize: 10, color: ts)),
+        ]),
+        const SizedBox(height: 8),
+        _integrationLink(Icons.account_tree_outlined, 'GitHub', g['integration']['github_url'] ?? 'Link GitHub'),
+        const SizedBox(height: 4),
+        _integrationLink(Icons.book_outlined, 'Jira', g['integration']['jira_url'] ?? 'Link Jira'),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: _actionBtnMini('Từ chối', const Color(0xFFEF4444), () => _showRejectDialog(g))),
+          const SizedBox(width: 8),
+          Expanded(child: _actionBtnMini('Duyệt ngay', teal, () => _handleApproveIntegration(g))),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _integrationLink(IconData icon, String label, String url) => Row(children: [
+    Icon(icon, size: 12, color: ts),
+    const SizedBox(width: 6),
+    Text('$label: ', style: const TextStyle(fontSize: 11, color: ts)),
+    Expanded(child: Text(url, style: const TextStyle(fontSize: 11, color: teal, decoration: TextDecoration.underline), overflow: TextOverflow.ellipsis)),
+  ]);
+
+  Widget _actionBtnMini(String label, Color color, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      alignment: Alignment.center,
+      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+    ),
+  );
+
+  Future<void> _handleApproveIntegration(Map g) async {
+    setState(() => _isLoading = true);
+    final ok = await _lecturerService.approveIntegration(g['id']);
+    if (ok) {
+      _snack('Đã duyệt tích hợp cho nhóm ${g['name']}');
+      _loadData();
+    } else {
+      setState(() => _isLoading = false);
+      _snack('Lỗi khi duyệt tích hợp', err: true);
+    }
+  }
+
+  void _showRejectDialog(Map g) {
+    String reason = "";
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Từ chối tích hợp', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Lý do cung cấp cho nhóm sinh viên:', style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 10),
+          TextField(
+            onChanged: (v) => reason = v,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Link không đúng, repository private...',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy', style: TextStyle(color: ts))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _isLoading = true);
+              final ok = await _lecturerService.rejectIntegration(g['id'], reason);
+              if (ok) {
+                _snack('Đã từ chối tích hợp nhóm ${g['name']}');
+                _loadData();
+              } else {
+                setState(() => _isLoading = false);
+                _snack('Lỗi khi từ chối tích hợp', err: true);
+              }
+            },
+            child: const Text('Từ chối'),
+          ),
+        ],
       ),
     );
   }
