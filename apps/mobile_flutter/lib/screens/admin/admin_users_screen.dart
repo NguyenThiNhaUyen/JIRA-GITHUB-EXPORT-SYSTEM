@@ -1,9 +1,9 @@
 // Admin User Management Screen (Flutter Mobile)
 // Converted from users.jsx
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -18,6 +18,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   static const Color txtPrimary = Color(0xFF0F172A);
   static const Color txtSec = Color(0xFF64748B);
   static const Color teal = Color(0xFF0F766E);
+
+  final AdminService _adminService = AdminService();
+  bool _isLoading = false;
 
   // ── Role config ─────────────────────────────────────────
   static const Map<String, Map<String, dynamic>> _roleCfg = {
@@ -38,94 +41,28 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     },
   };
 
-  // ── Mock data ────────────────────────────────────────────
+  // ── State ────────────────────────────────────────────────
   late List<Map<String, dynamic>> _users;
 
   @override
   void initState() {
     super.initState();
-    _users = [
-      {
-        'id': 'U1',
-        'name': 'Super Admin',
-        'email': 'admin@fe.edu.vn',
-        'role': 'ADMIN',
-        'status': 'ACTIVE',
-        'studentId': null,
-      },
-      {
-        'id': 'U2',
-        'name': 'Nguyễn Văn Nam',
-        'email': 'namnv@fe.edu.vn',
-        'role': 'LECTURER',
-        'status': 'ACTIVE',
-        'studentId': null,
-      },
-      {
-        'id': 'U3',
-        'name': 'Trần Thị Lan',
-        'email': 'lantt@fe.edu.vn',
-        'role': 'LECTURER',
-        'status': 'ACTIVE',
-        'studentId': null,
-      },
-      {
-        'id': 'U4',
-        'name': 'Lê Văn Hùng',
-        'email': 'hunglv@fe.edu.vn',
-        'role': 'LECTURER',
-        'status': 'DISABLED',
-        'studentId': null,
-      },
-      {
-        'id': 'U5',
-        'name': 'Nguyễn Thị An',
-        'email': 'anse161234@fpt.edu.vn',
-        'role': 'STUDENT',
-        'status': 'ACTIVE',
-        'studentId': 'SE161234',
-      },
-      {
-        'id': 'U6',
-        'name': 'Trần Văn Bình',
-        'email': 'binhtvse161235@fpt.edu.vn',
-        'role': 'STUDENT',
-        'status': 'ACTIVE',
-        'studentId': 'SE161235',
-      },
-      {
-        'id': 'U7',
-        'name': 'Lê Thị Chi',
-        'email': 'chiltse161236@fpt.edu.vn',
-        'role': 'STUDENT',
-        'status': 'DISABLED',
-        'studentId': 'SE161236',
-      },
-      {
-        'id': 'U8',
-        'name': 'Phạm Văn Dũng',
-        'email': 'dungpvse161237@fpt.edu.vn',
-        'role': 'STUDENT',
-        'status': 'ACTIVE',
-        'studentId': 'SE161237',
-      },
-      {
-        'id': 'U9',
-        'name': 'Hoàng Thị Em',
-        'email': 'emhtse161238@fpt.edu.vn',
-        'role': 'STUDENT',
-        'status': 'ACTIVE',
-        'studentId': 'SE161238',
-      },
-      {
-        'id': 'U10',
-        'name': 'Phạm Minh Tuấn',
-        'email': 'tuanpm@fe.edu.vn',
-        'role': 'LECTURER',
-        'status': 'ACTIVE',
-        'studentId': null,
-      },
-    ];
+    _users = [];
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() => _isLoading = true);
+    try {
+      final users = await _adminService.getUsers();
+      setState(() {
+        _users = users;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _snack('Lỗi tải danh sách người dùng', ok: false);
+    }
   }
 
   // ── State ────────────────────────────────────────────────
@@ -224,7 +161,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   const SizedBox(height: 12),
                                   _buildSearchFilter(),
                                   const SizedBox(height: 12),
-                                  if (_filtered.isEmpty)
+                                  if (_isLoading)
+                                    const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(40),
+                                        child: CircularProgressIndicator(color: teal),
+                                      ),
+                                    )
+                                  else if (_filtered.isEmpty)
                                     _buildEmpty()
                                   else
                                     ListView.builder(
@@ -497,7 +441,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         decoration: BoxDecoration(
                           color: roleBg,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: roleColor.withOpacity(0.3)),
+                          border: Border.all(color: roleColor.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           cfg['label'] as String,
@@ -597,7 +541,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             child: Material(
               elevation: 8,
               borderRadius: BorderRadius.circular(16),
-              shadowColor: Colors.black.withOpacity(0.12),
+              shadowColor: Colors.black.withValues(alpha: 0.12),
               child: GestureDetector(
                 onTap: () {}, // prevent closing
                 child: Container(

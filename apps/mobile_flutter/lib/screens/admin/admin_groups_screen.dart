@@ -1,8 +1,8 @@
 // Admin Groups Screen (Flutter Mobile)
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class AdminGroupsScreen extends StatefulWidget {
   const AdminGroupsScreen({super.key});
@@ -12,7 +12,6 @@ class AdminGroupsScreen extends StatefulWidget {
 }
 
 class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
-  static const Color bgColor = Color(0xFFEFF7F5);
   static const Color cardBorder = Color(0xFFE7ECF3);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
@@ -21,87 +20,10 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
   String _searchQuery = '';
   String _courseFilter = 'all';
   String _statusFilter = 'all';
+  final AdminService _adminService = AdminService();
+  bool _isLoading = false;
 
-  static final List<Map<String, dynamic>> _groups = [
-    {
-      'id': 'SE001',
-      'topic': 'AI Interview System',
-      'course': 'SWD392',
-      'class': 'SE1830',
-      'lecturer': 'Nguyễn Văn Nam',
-      'memberCount': 4,
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'APPROVED',
-      'commits': 145,
-      'lastCommit': '2 giờ trước',
-      'srsStatus': 'Submitted',
-    },
-    {
-      'id': 'SE002',
-      'topic': 'Job Matching Platform',
-      'course': 'SWD392',
-      'class': 'SE1830',
-      'lecturer': 'Nguyễn Văn Nam',
-      'memberCount': 3,
-      'githubStatus': 'PENDING',
-      'jiraStatus': 'APPROVED',
-      'commits': 32,
-      'lastCommit': '1 ngày trước',
-      'srsStatus': 'Draft',
-    },
-    {
-      'id': 'SE003',
-      'topic': 'Smart Resume Analyzer',
-      'course': 'PRJ301',
-      'class': 'SE1825',
-      'lecturer': 'Trần Thị Lan',
-      'memberCount': 5,
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'PENDING',
-      'commits': 88,
-      'lastCommit': '5 giờ trước',
-      'srsStatus': 'Submitted',
-    },
-    {
-      'id': 'SE004',
-      'topic': 'E-learning Platform',
-      'course': 'PRJ301',
-      'class': 'SE1825',
-      'lecturer': 'Trần Thị Lan',
-      'memberCount': 4,
-      'githubStatus': 'MISSING',
-      'jiraStatus': 'MISSING',
-      'commits': 0,
-      'lastCommit': '7 ngày trước',
-      'srsStatus': 'Not started',
-    },
-    {
-      'id': 'SE005',
-      'topic': 'Food Delivery App',
-      'course': 'PRN222',
-      'class': 'SE1831',
-      'lecturer': 'Lê Văn Hùng',
-      'memberCount': 4,
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'APPROVED',
-      'commits': 210,
-      'lastCommit': '30 phút trước',
-      'srsStatus': 'Submitted',
-    },
-    {
-      'id': 'SE006',
-      'topic': 'Hospital Management',
-      'course': 'PRN222',
-      'class': 'SE1831',
-      'lecturer': 'Lê Văn Hùng',
-      'memberCount': 5,
-      'githubStatus': 'PENDING',
-      'jiraStatus': 'PENDING',
-      'commits': 18,
-      'lastCommit': '3 ngày trước',
-      'srsStatus': 'Draft',
-    },
-  ];
+  final List<Map<String, dynamic>> _groups = [];
 
   List<Map<String, dynamic>> get _filteredGroups {
     return _groups.where((g) {
@@ -149,6 +71,28 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
       .length;
 
   @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final groups = await _adminService.getGroups();
+      setState(() {
+        _groups.clear();
+        _groups.addAll(groups);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 900;
@@ -171,9 +115,11 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    _buildTopHeader(isMobile),
+                    _buildTopHeader(),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
                         padding: EdgeInsets.all(horizontalPadding),
                         child: Center(
                           child: ConstrainedBox(
@@ -212,7 +158,7 @@ class _AdminGroupsScreenState extends State<AdminGroupsScreen> {
     );
   }
 
-  Widget _buildTopHeader(bool isMobile) {
+  Widget _buildTopHeader() {
     return AppTopHeader(
       title: 'Quản lý nhóm dự án',
       primary: false,

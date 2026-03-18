@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
-
+import '../../services/admin_dashboard_service.dart';
+import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -11,6 +13,13 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final AdminDashboardService _dashboardService = AdminDashboardService();
+  final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
+  bool _isLoading = true;
+  String _error = '';
+  AppUser? _currentUser;
+
   String semester = '';
   String major = '';
   String subject = '';
@@ -25,171 +34,94 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   static const Color cyan = Color(0xFF0891B2);
   static const Color blue = Color(0xFF2563EB);
 
-  static const Map<String, dynamic> integrationStats = {
-    'repoConnected': 70,
-    'repoMissing': 15,
-    'jiraConnected': 60,
-    'syncErrors': 2,
-    'reportsExported': 120,
+  Map<String, dynamic> stats = {
+    'semesters': 0,
+    'subjects': 0,
+    'courses': 0,
+    'lecturers': 0,
+    'students': 0,
+    'projects': 0,
+    'activeSemesters': 0,
   };
 
-  static const List<Map<String, dynamic>> commitData = [
-    {'day': 'Mon', 'commits': 45},
-    {'day': 'Tue', 'commits': 60},
-    {'day': 'Wed', 'commits': 72},
-    {'day': 'Thu', 'commits': 30},
-    {'day': 'Fri', 'commits': 90},
-    {'day': 'Sat', 'commits': 40},
-    {'day': 'Sun', 'commits': 15},
-  ];
+  Map<String, dynamic> integrationStats = {
+    'repoConnected': 0,
+    'repoMissing': 0,
+    'jiraConnected': 0,
+    'syncErrors': 0,
+    'reportsExported': 0,
+  };
 
-  static const List<Map<String, dynamic>> heatmapData = [
-    {'date': '2026-02-01', 'count': 3},
-    {'date': '2026-02-02', 'count': 7},
-    {'date': '2026-02-03', 'count': 2},
-    {'date': '2026-02-04', 'count': 10},
-    {'date': '2026-02-05', 'count': 1},
-    {'date': '2026-02-06', 'count': 5},
-    {'date': '2026-02-07', 'count': 8},
-    {'date': '2026-02-08', 'count': 4},
-    {'date': '2026-02-09', 'count': 6},
-    {'date': '2026-02-10', 'count': 9},
-    {'date': '2026-02-11', 'count': 2},
-    {'date': '2026-02-12', 'count': 1},
-    {'date': '2026-02-13', 'count': 7},
-    {'date': '2026-02-14', 'count': 8},
-    {'date': '2026-02-15', 'count': 5},
-    {'date': '2026-02-16', 'count': 6},
-    {'date': '2026-02-17', 'count': 3},
-    {'date': '2026-02-18', 'count': 8},
-    {'date': '2026-02-19', 'count': 4},
-    {'date': '2026-02-20', 'count': 9},
-  ];
+  List<Map<String, dynamic>> commitData = [];
+  List<Map<String, dynamic>> heatmapData = [];
+  List<Map<String, dynamic>> teamRanking = [];
+  List<Map<String, dynamic>> inactiveTeams = [];
+  List<Map<String, dynamic>> teamActivity = [];
+  List<Map<String, dynamic>> systemActivity = [];
+  List<Map<String, dynamic>> recentCourses = [];
+  List<Map<String, dynamic>> recentGroups = [];
 
-  static const List<Map<String, dynamic>> teamRanking = [
-    {'team': 'SE021', 'commits': 520},
-    {'team': 'SE003', 'commits': 480},
-    {'team': 'SE015', 'commits': 430},
-    {'team': 'SE018', 'commits': 390},
-  ];
+  List<Map<String, dynamic>> _semestersData = [];
+  List<Map<String, dynamic>> _subjectsData = [];
+  List<Map<String, dynamic>> _coursesData = [];
+  List<String> _majorsData = ['Software Engineering', 'Artificial Intelligence', 'Information Systems', 'Graphic Design'];
 
-  static const List<Map<String, dynamic>> inactiveTeams = [
-    {'team': 'SE007', 'reason': 'No commits 14 days'},
-    {'team': 'SE014', 'reason': 'Repository empty'},
-    {'team': 'SE020', 'reason': 'No Jira updates'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    _loadDashboardData();
+  }
 
-  static const List<Map<String, dynamic>> teamActivity = [
-    {
-      'team': 'SE001',
-      'repo': true,
-      'commits': 320,
-      'lastCommit': '2 hours ago',
-      'status': 'ACTIVE',
-    },
-    {
-      'team': 'SE002',
-      'repo': true,
-      'commits': 48,
-      'lastCommit': '3 days ago',
-      'status': 'LOW',
-    },
-    {
-      'team': 'SE003',
-      'repo': false,
-      'commits': 0,
-      'lastCommit': '-',
-      'status': 'MISSING_REPO',
-    },
-  ];
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
+  }
 
-  static final List<Map<String, dynamic>> systemActivity = [
-    {
-      'icon': Icons.folder_open_outlined,
-      'bg': const Color(0xFFECFDF5),
-      'fg': const Color(0xFF16A34A),
-      'msg': 'Group SE001 submitted GitHub repository',
-      'time': '5 phút trước',
-    },
-    {
-      'icon': Icons.check_circle_outline,
-      'bg': const Color(0xFFEFF6FF),
-      'fg': const Color(0xFF2563EB),
-      'msg': 'GitHub repo connected successfully',
-      'time': '10 phút trước',
-    },
-    {
-      'icon': Icons.trending_up,
-      'bg': const Color(0xFFEEF2FF),
-      'fg': const Color(0xFF4F46E5),
-      'msg': 'Export report generated',
-      'time': '1 giờ trước',
-    },
-    {
-      'icon': Icons.error_outline,
-      'bg': const Color(0xFFFEF2F2),
-      'fg': const Color(0xFFDC2626),
-      'msg': 'Webhook sync failed for group SE005',
-      'time': '2 giờ trước',
-    },
-  ];
+  Future<void> _loadDashboardData() async {
+    try {
+      final results = await Future.wait([
+        _dashboardService.getDashboardData(),
+        _adminService.getSemesters(),
+        _adminService.getSubjects(),
+        _adminService.getCourses(),
+      ]);
 
-  static const List<Map<String, dynamic>> recentCourses = [
-    {
-      'id': '1',
-      'code': 'SWD392',
-      'name': 'Project Management',
-      'subjectCode': 'SWD392',
-      'semesterName': 'Spring 2026',
-      'currentStudents': 26,
-      'maxStudents': 30,
-      'status': 'ACTIVE',
-    },
-    {
-      'id': '2',
-      'code': 'PRN222',
-      'name': 'Mobile Development',
-      'subjectCode': 'PRN222',
-      'semesterName': 'Summer 2026',
-      'currentStudents': 28,
-      'maxStudents': 30,
-      'status': 'UPCOMING',
-    },
-    {
-      'id': '3',
-      'code': 'SWP391',
-      'name': 'Software Project',
-      'subjectCode': 'SWP391',
-      'semesterName': 'Spring 2026',
-      'currentStudents': 30,
-      'maxStudents': 30,
-      'status': 'COMPLETED',
-    },
-  ];
+      final data = results[0] as Map<String, dynamic>;
+      
+      setState(() {
+        stats = Map<String, dynamic>.from(data['stats'] ?? {});
+        integrationStats = Map<String, dynamic>.from(data['integrationStats'] ?? {});
+        commitData = List<Map<String, dynamic>>.from(data['commitData'] ?? []);
+        heatmapData = List<Map<String, dynamic>>.from(data['heatmapData'] ?? []);
+        teamRanking = List<Map<String, dynamic>>.from(data['teamRanking'] ?? []);
+        inactiveTeams = List<Map<String, dynamic>>.from(data['inactiveTeams'] ?? []);
+        teamActivity = List<Map<String, dynamic>>.from(data['teamActivity'] ?? []);
+        systemActivity = List<Map<String, dynamic>>.from(data['systemActivity'] ?? []);
+        recentCourses = List<Map<String, dynamic>>.from(data['recentCourses'] ?? []);
+        recentGroups = List<Map<String, dynamic>>.from(data['recentGroups'] ?? []);
 
-  static const List<Map<String, dynamic>> recentGroups = [
-    {
-      'id': 'SE001',
-      'course': 'SWD392',
-      'github': true,
-      'jira': true,
-      'status': 'ACTIVE',
-    },
-    {
-      'id': 'SE002',
-      'course': 'PRN222',
-      'github': true,
-      'jira': false,
-      'status': 'MISSING_JIRA',
-    },
-    {
-      'id': 'SE003',
-      'course': 'SWP391',
-      'github': false,
-      'jira': false,
-      'status': 'MISSING_REPO',
-    },
-  ];
+        _semestersData = List<Map<String, dynamic>>.from(results[1] as List);
+        _subjectsData = List<Map<String, dynamic>>.from(results[2] as List);
+        _coursesData = List<Map<String, dynamic>>.from(results[3] as List);
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   bool get isMobile => MediaQuery.of(context).size.width < 900;
   bool get isTablet =>
@@ -198,16 +130,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const stats = {
-      'semesters': 3,
-      'subjects': 12,
-      'courses': 28,
-      'lecturers': 18,
-      'students': 560,
-      'projects': 76,
-      'activeSemesters': 1,
-    };
-
     return Scaffold(
       backgroundColor: bgColor,
       drawer: isMobile ? const AdminDrawer() : null,
@@ -227,8 +149,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   children: [
                     _buildTopBar(),
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(isMobile ? 16 : 24),
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(color: blue))
+                          : _error.isNotEmpty
+                              ? Center(
+                                  child: Text('Error: $_error',
+                                      style: const TextStyle(color: Colors.red)))
+                              : SingleChildScrollView(
+                                  padding: EdgeInsets.all(isMobile ? 16 : 24),
                         child: Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 1400),
@@ -330,7 +259,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return AppTopHeader(
       title: 'Tổng quan',
       primary: false,
-      user: const AppUser(
+      user: _currentUser ?? const AppUser(
         name: 'Super Admin',
         email: 'admin@fe.edu.vn',
         role: 'ADMIN',
@@ -339,28 +268,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildBreadcrumb() {
-    return Row(
-      children: const [
-        Text(
-          'Admin',
-          style: TextStyle(
-            color: teal,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: const [
+          Text(
+            'Admin',
+            style: TextStyle(
+              color: teal,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
-        ),
-        SizedBox(width: 4),
-        Icon(Icons.chevron_right, size: 14, color: textSecondary),
-        SizedBox(width: 4),
-        Text(
-          'Tổng quan hệ thống',
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
+          SizedBox(width: 4),
+          Icon(Icons.chevron_right, size: 14, color: textSecondary),
+          SizedBox(width: 4),
+          Text(
+            'Tổng quan hệ thống',
+            style: TextStyle(
+              color: textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -373,28 +305,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 _buildDropdown(
                   value: semester,
                   hint: 'Semester',
-                  items: const ['Spring 2026', 'Summer 2026'],
+                  items: _semestersData.map((e) => e['name']?.toString() ?? '').toList(),
                   onChanged: (value) => setState(() => semester = value ?? ''),
                 ),
                 const SizedBox(height: 12),
                 _buildDropdown(
                   value: major,
                   hint: 'Major',
-                  items: const ['SE', 'AI'],
+                  items: _majorsData,
                   onChanged: (value) => setState(() => major = value ?? ''),
                 ),
                 const SizedBox(height: 12),
                 _buildDropdown(
                   value: subject,
                   hint: 'Subject',
-                  items: const ['SWD392', 'PRN222'],
+                  items: _subjectsData.map((e) => e['code']?.toString() ?? '').toList(),
                   onChanged: (value) => setState(() => subject = value ?? ''),
                 ),
                 const SizedBox(height: 12),
                 _buildDropdown(
                   value: classId,
                   hint: 'Class',
-                  items: const ['SE1830', 'SE1825'],
+                  items: _coursesData.map((e) => e['code']?.toString() ?? '').toList(),
                   onChanged: (value) => setState(() => classId = value ?? ''),
                 ),
               ],
@@ -405,7 +337,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _buildDropdown(
                     value: semester,
                     hint: 'Semester',
-                    items: const ['Spring 2026', 'Summer 2026'],
+                    items: _semestersData.map((e) => e['name']?.toString() ?? '').toList(),
                     onChanged: (value) =>
                         setState(() => semester = value ?? ''),
                   ),
@@ -415,7 +347,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _buildDropdown(
                     value: major,
                     hint: 'Major',
-                    items: const ['SE', 'AI'],
+                    items: _majorsData,
                     onChanged: (value) => setState(() => major = value ?? ''),
                   ),
                 ),
@@ -424,7 +356,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _buildDropdown(
                     value: subject,
                     hint: 'Subject',
-                    items: const ['SWD392', 'PRN222'],
+                    items: _subjectsData.map((e) => e['code']?.toString() ?? '').toList(),
                     onChanged: (value) => setState(() => subject = value ?? ''),
                   ),
                 ),
@@ -433,7 +365,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _buildDropdown(
                     value: classId,
                     hint: 'Class',
-                    items: const ['SE1830', 'SE1825'],
+                    items: _coursesData.map((e) => e['code']?.toString() ?? '').toList(),
                     onChanged: (value) => setState(() => classId = value ?? ''),
                   ),
                 ),
@@ -479,48 +411,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final items = [
       {
         'label': 'Học kỳ',
-        'value': '${stats['semesters']}',
+        'value': '${stats['semesters'] ?? stats['Semesters'] ?? 0}',
         'icon': Icons.calendar_month_outlined,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Môn học',
-        'value': '${stats['subjects']}',
+        'value': '${stats['subjects'] ?? stats['Subjects'] ?? 0}',
         'icon': Icons.library_books_outlined,
         'color': const Color(0xFF6366F1),
       },
       {
         'label': 'Lớp học phần',
-        'value': '${stats['courses']}',
+        'value': '${stats['courses'] ?? stats['Courses'] ?? 0}',
         'icon': Icons.menu_book_outlined,
         'color': const Color(0xFF2563EB),
       },
       {
         'label': 'Giảng viên',
-        'value': '${stats['lecturers']}',
+        'value': '${stats['lecturers'] ?? stats['Lecturers'] ?? 0}',
         'icon': Icons.manage_accounts_outlined,
         'color': const Color(0xFF8B5CF6),
       },
       {
         'label': 'Sinh viên',
-        'value': '${stats['students']}',
+        'value': '${stats['students'] ?? stats['Students'] ?? 0}',
         'icon': Icons.school_outlined,
         'color': const Color(0xFF14B8A6),
       },
       {
         'label': 'Nhóm dự án',
-        'value': '${stats['projects']}',
+        'value': '${stats['projects'] ?? stats['Projects'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFFF59E0B),
       },
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 2.0 : 2.4;
+    final ratio = isMobile ? 1.7 : 2.2;
 
     return _SectionCard(
       title: 'System Overview',
-      subtitle: '${stats['activeSemesters']} học kỳ đang mở',
+      subtitle: '${stats['activeSemesters'] ?? stats['ActiveSemesters'] ?? 0} học kỳ đang mở',
       child: GridView.builder(
         itemCount: items.length,
         shrinkWrap: true,
@@ -547,7 +479,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: (item['color'] as Color).withOpacity(0.12),
+                    color: (item['color'] as Color).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -562,12 +494,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item['value'] as String,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: textPrimary,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item['value'] as String,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -593,38 +529,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final items = [
       {
         'label': 'Repo Connected',
-        'value': '${integrationStats['repoConnected']}',
+        'value': '${integrationStats['repoConnected'] ?? integrationStats['RepoConnected'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFF10B981),
       },
       {
         'label': 'Missing Repo',
-        'value': '${integrationStats['repoMissing']}',
+        'value': '${integrationStats['repoMissing'] ?? integrationStats['RepoMissing'] ?? 0}',
         'icon': Icons.error_outline,
         'color': const Color(0xFFEF4444),
       },
       {
         'label': 'Jira Project',
-        'value': '${integrationStats['jiraConnected']}',
+        'value': '${integrationStats['jiraConnected'] ?? integrationStats['JiraConnected'] ?? 0}',
         'icon': Icons.check_circle_outline,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Sync Errors',
-        'value': '${integrationStats['syncErrors']}',
+        'value': '${integrationStats['syncErrors'] ?? integrationStats['SyncErrors'] ?? 0}',
         'icon': Icons.warning_amber_rounded,
         'color': const Color(0xFFF59E0B),
       },
       {
         'label': 'Reports Exported',
-        'value': '${integrationStats['reportsExported']}',
+        'value': '${integrationStats['reportsExported'] ?? integrationStats['ReportsExported'] ?? 0}',
         'icon': Icons.trending_up,
         'color': const Color(0xFF6366F1),
       },
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 2.0 : 2.4;
+    final ratio = isMobile ? 1.7 : 2.2;
 
     return _SectionCard(
       title: 'Integration Overview',
@@ -655,7 +591,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: (item['color'] as Color).withOpacity(0.12),
+                    color: (item['color'] as Color).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -670,12 +606,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item['value'] as String,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: textPrimary,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item['value'] as String,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -711,7 +651,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: commitData.map((item) {
             final commits = item['commits'] as int;
-            final ratio = commits / maxCommit;
+            final ratio = maxCommit > 0 ? commits / maxCommit : 0.0;
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -936,7 +876,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               cells: [
                 DataCell(Text('${item['team']}')),
                 DataCell(
-                  Text((item['repo'] as bool) ? 'Connected' : 'Missing'),
+                  Text((item['repo'] == true) ? 'Connected' : 'Missing'),
                 ),
                 DataCell(Text('${item['commits']}')),
                 DataCell(Text('${item['lastCommit']}')),
@@ -1235,9 +1175,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       const SizedBox(height: 8),
                       Text('Class: ${g['course']}'),
                       const SizedBox(height: 6),
-                      Text('GitHub: ${(g['github'] as bool) ? "✓" : "✗"}'),
+                      Text('GitHub: ${(g['github'] == true) ? "✓" : "✗"}'),
                       const SizedBox(height: 6),
-                      Text('Jira: ${(g['jira'] as bool) ? "✓" : "✗"}'),
+                      Text('Jira: ${(g['jira'] == true) ? "✓" : "✗"}'),
                       const SizedBox(height: 8),
                       _statusChip('${g['status']}'),
                     ],
@@ -1256,13 +1196,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Expanded(child: Text('${g['course']}')),
                       Expanded(
                         child: Text(
-                          (g['github'] as bool) ? '✓' : '✗',
+                          (g['github'] == true) ? '✓' : '✗',
                           textAlign: TextAlign.center,
                         ),
                       ),
                       Expanded(
                         child: Text(
-                          (g['jira'] as bool) ? '✓' : '✗',
+                          (g['jira'] == true) ? '✓' : '✗',
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -1387,7 +1327,7 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),

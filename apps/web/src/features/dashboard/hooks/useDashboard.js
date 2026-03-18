@@ -41,13 +41,64 @@ export function useStudentProjects(params) {
     });
 }
 
+export function useStudentWarnings() {
+    return useQuery({
+        queryKey: ["student", "warnings"],
+        queryFn: studentApi.getStudentWarnings
+    });
+}
+
+export function useStudentTasks(params) {
+    return useQuery({
+        queryKey: ["student", "tasks", params],
+        queryFn: () => studentApi.getStudentTasks(params)
+    });
+}
+
+export function useStudentCommits(params) {
+    return useQuery({
+        queryKey: ["student", "commits", params],
+        queryFn: () => studentApi.getStudentCommits(params)
+    });
+}
+
+export function useStudentGrades() {
+    return useQuery({
+        queryKey: ["student", "grades"],
+        queryFn: studentApi.getStudentGrades
+    });
+}
+
+export function useStudentMeCourses(params) {
+    return useQuery({
+        queryKey: ["student", "me-courses", params],
+        queryFn: () => studentApi.getStudentCourses(params)
+    });
+}
+
 /* ── LECTURER DASHBOARD HOOKS ── */
 
-export function useLecturerWorkload(lecturerId) {
+export function useMyWorkload() {
     return useQuery({
-        queryKey: ["lecturer", "workload", lecturerId],
-        queryFn: () => lecturerApi.getLecturerWorkload(lecturerId),
-        enabled: !!lecturerId
+        queryKey: ["lecturer", "me", "workload"],
+        queryFn: lecturerApi.getMyWorkload
+    });
+}
+
+export function useMyCourses() {
+    return useQuery({
+        queryKey: ["lecturer", "me", "courses"],
+        queryFn: lecturerApi.getMyCourses
+    });
+}
+
+export function useSendAlert() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: lecturerApi.sendAlert,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["alerts"] });
+        }
     });
 }
 
@@ -142,3 +193,9 @@ export function useBulkAssignLecturers() {
         }
     });
 }
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class AdminSemestersScreen extends StatefulWidget {
   const AdminSemestersScreen({super.key});
@@ -12,175 +12,20 @@ class AdminSemestersScreen extends StatefulWidget {
 
 class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final AdminService _adminService = AdminService();
 
-  final List<Map<String, dynamic>> _semesters = [
-    {"id": 1, "name": "Spring 2026"},
-    {"id": 2, "name": "Summer 2026"},
-    {"id": 3, "name": "Fall 2025"},
-  ];
+  final List<Map<String, dynamic>> _semesters = [];
 
-  final List<Map<String, dynamic>> _subjects = [
-    {"id": 1, "code": "SWD392", "name": "Software Architecture"},
-    {"id": 2, "code": "PRN222", "name": "Mobile Programming"},
-    {"id": 3, "code": "SWR302", "name": "Software Requirements"},
-    {"id": 4, "code": "PRJ301", "name": "Project Management"},
-    {"id": 5, "code": "MAD101", "name": "Mobile App Development"},
-  ];
+  final List<Map<String, dynamic>> _subjects = [];
 
-  final List<Map<String, dynamic>> _lecturers = [
-    {
-      "id": 101,
-      "name": "Nguyen Van A",
-      "email": "a.nguyen@fpt.edu.vn",
-      "role": "LECTURER",
-    },
-    {
-      "id": 102,
-      "name": "Tran Thi B",
-      "email": "b.tran@fpt.edu.vn",
-      "role": "LECTURER",
-    },
-    {
-      "id": 103,
-      "name": "Le Van C",
-      "email": "c.le@fpt.edu.vn",
-      "role": "LECTURER",
-    },
-  ];
+  final List<Map<String, dynamic>> _lecturers = [];
 
-  final List<Map<String, dynamic>> _allStudents = [
-    {
-      "id": 201,
-      "name": "Pham Minh Anh",
-      "studentId": "HE180001",
-      "email": "anhpmhe180001@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-    {
-      "id": 202,
-      "name": "Nguyen Quoc Bao",
-      "studentId": "HE180002",
-      "email": "baonqhe180002@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-    {
-      "id": 203,
-      "name": "Tran Gia Han",
-      "studentId": "HE180003",
-      "email": "han.tghe180003@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-    {
-      "id": 204,
-      "name": "Le Hoang Nam",
-      "studentId": "HE180004",
-      "email": "namlhhe180004@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-    {
-      "id": 205,
-      "name": "Vo Minh Khang",
-      "studentId": "HE180005",
-      "email": "khangvmhe180005@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-    {
-      "id": 206,
-      "name": "Doan Thu Trang",
-      "studentId": "HE180006",
-      "email": "trangdthe180006@fpt.edu.vn",
-      "role": "STUDENT",
-    },
-  ];
-
-  final List<Map<String, dynamic>> _courses = [
-    {
-      "id": 1,
-      "code": "se1821",
-      "name": "SE1821",
-      "description": "Class for software engineering students",
-      "subjectId": 1,
-      "semesterId": 1,
-      "room": "BE-203",
-      "startDate": "2026-01-10",
-      "endDate": "2026-04-20",
-      "minStudents": 10,
-      "maxStudents": 40,
-      "currentStudents": 2,
-      "status": "ACTIVE",
-      "lecturers": [
-        {"id": 101, "name": "Nguyen Van A", "email": "a.nguyen@fpt.edu.vn"},
-      ],
-      "students": [
-        {
-          "id": 201,
-          "name": "Pham Minh Anh",
-          "studentId": "HE180001",
-          "email": "anhpmhe180001@fpt.edu.vn",
-          "enrollmentId": 9001,
-        },
-        {
-          "id": 202,
-          "name": "Nguyen Quoc Bao",
-          "studentId": "HE180002",
-          "email": "baonqhe180002@fpt.edu.vn",
-          "enrollmentId": 9002,
-        },
-      ],
-    },
-    {
-      "id": 2,
-      "code": "exe1822",
-      "name": "EXE1822",
-      "description": "Execution class demo",
-      "subjectId": 2,
-      "semesterId": 1,
-      "room": "AL-101",
-      "startDate": "2026-01-15",
-      "endDate": "2026-04-25",
-      "minStudents": 10,
-      "maxStudents": 35,
-      "currentStudents": 1,
-      "status": "UPCOMING",
-      "lecturers": [],
-      "students": [
-        {
-          "id": 203,
-          "name": "Tran Gia Han",
-          "studentId": "HE180003",
-          "email": "han.tghe180003@fpt.edu.vn",
-          "enrollmentId": 9003,
-        },
-      ],
-    },
-    {
-      "id": 3,
-      "code": "prn1823",
-      "name": "PRN1823",
-      "description": "Mobile programming course class",
-      "subjectId": 2,
-      "semesterId": 2,
-      "room": "DE-402",
-      "startDate": "2026-05-03",
-      "endDate": "2026-08-18",
-      "minStudents": 12,
-      "maxStudents": 45,
-      "currentStudents": 0,
-      "status": "COMPLETED",
-      "lecturers": [
-        {"id": 102, "name": "Tran Thi B", "email": "b.tran@fpt.edu.vn"},
-      ],
-      "students": [],
-    },
-  ];
+  final List<Map<String, dynamic>> _courses = [];
 
   bool _isLoading = false;
 
   String _filterSemester = "";
   String _search = "";
-
-  Map<String, dynamic>? _selectedCourse;
-  Map<String, dynamic>? _viewStudentsCourse;
 
   List<Map<String, dynamic>> _viewStudentsList = [];
 
@@ -222,18 +67,44 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
         1;
   }
 
-  int get _nextEnrollmentId {
-    int maxId = 10000;
-    for (final course in _courses) {
-      final students = List<Map<String, dynamic>>.from(
-        course["students"] ?? [],
-      );
-      for (final student in students) {
-        final enrollmentId = (student["enrollmentId"] as int?) ?? 0;
-        if (enrollmentId > maxId) maxId = enrollmentId;
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _adminService.getSemesters(),
+        _adminService.getSubjects(),
+        _adminService.getUsers(),
+        _adminService.getCourses(),
+      ]);
+
+      if (!mounted) return;
+      setState(() {
+        _semesters.clear();
+        _semesters.addAll(List<Map<String, dynamic>>.from(results[0]));
+        _subjects.clear();
+        _subjects.addAll(List<Map<String, dynamic>>.from(results[1]));
+
+        _lecturers.clear();
+        _lecturers.addAll(List<Map<String, dynamic>>.from(results[2])
+            .where((u) => u['role'] == 'LECTURER' || u['role'] == 'lecturer'));
+
+        _courses.clear();
+        _courses.addAll(List<Map<String, dynamic>>.from(results[3]));
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnack("Lỗi tải dữ liệu", success: false);
       }
     }
-    return maxId + 1;
   }
 
   @override
@@ -1038,7 +909,6 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   Future<void> _showViewStudentsDialog(Map<String, dynamic> course) async {
     setState(() {
-      _viewStudentsCourse = course;
       _viewStudentsList = List<Map<String, dynamic>>.from(
         course["students"] ?? [],
       );

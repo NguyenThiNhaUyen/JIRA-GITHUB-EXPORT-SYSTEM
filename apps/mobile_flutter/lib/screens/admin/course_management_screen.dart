@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class CourseManagementScreen extends StatefulWidget {
   const CourseManagementScreen({super.key});
@@ -16,111 +16,56 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   static const Color txtSec = Color(0xFF64748B);
   static const Color blue = Color(0xFF2563EB);
 
+  final AdminService _adminService = AdminService();
+  bool _isLoading = false;
   final _searchCtrl = TextEditingController();
   String _search = '';
   String _filterSem = '';
 
-  final List<Map<String, dynamic>> _semesters = [
-    {'id': 1, 'code': 'FA24', 'name': 'Fall 2024'},
-    {'id': 2, 'code': 'SP25', 'name': 'Spring 2025'},
-    {'id': 3, 'code': 'SU25', 'name': 'Summer 2025'},
-  ];
+  final List<Map<String, dynamic>> _semesters = [];
 
-  final List<Map<String, dynamic>> _subjects = [
-    {'id': 1, 'code': 'SWD392', 'name': 'Software Architecture'},
-    {'id': 2, 'code': 'PRJ301', 'name': 'Java Web Application'},
-    {'id': 3, 'code': 'SWP391', 'name': 'Software Engineering Project'},
-    {'id': 4, 'code': 'AI301', 'name': 'Machine Learning'},
-  ];
+  final List<Map<String, dynamic>> _subjects = [];
 
-  final List<Map<String, dynamic>> _lecturers = [
-    {'id': 'L1', 'name': 'Nguyễn Văn Nam', 'email': 'namnv@fe.edu.vn'},
-    {'id': 'L2', 'name': 'Trần Thị Lan', 'email': 'lantt@fe.edu.vn'},
-    {'id': 'L3', 'name': 'Lê Văn Hùng', 'email': 'hunglv@fe.edu.vn'},
-    {'id': 'L4', 'name': 'Phạm Minh Tuấn', 'email': 'tuanpm@fe.edu.vn'},
-    {'id': 'L5', 'name': 'Hoàng Thị Mai', 'email': 'maiht@fe.edu.vn'},
-  ];
-
-  final List<Map<String, dynamic>> _allStudents = List.generate(
-    20,
-    (i) => {
-      'id': i + 1,
-      'name': 'Sinh viên ${i + 1}',
-      'studentId': 'SE18${(100 + i).toString().padLeft(3, '0')}',
-      'email': 'sv${i + 1}@fpt.edu.vn',
-    },
-  );
+  final List<Map<String, dynamic>> _lecturers = [];
 
   late List<Map<String, dynamic>> _courses;
 
   @override
   void initState() {
     super.initState();
-    _courses = [
-      {
-        'id': 'C1',
-        'code': 'se1821',
-        'name': 'Software Architecture – Lớp 01',
-        'subjectId': 1,
-        'semesterId': 1,
-        'currentStudents': 32,
-        'maxStudents': 40,
-        'status': 'ACTIVE',
-        'lecturers': [
-          {'id': 'L1', 'name': 'Nguyễn Văn Nam'},
-        ],
-        'students': _allStudents
-            .take(32)
-            .map((s) => {...s, 'enrollmentId': 'E${s["id"]}'})
-            .toList(),
-      },
-      {
-        'id': 'C2',
-        'code': 'prj1801',
-        'name': 'Java Web Application – Lớp 01',
-        'subjectId': 2,
-        'semesterId': 1,
-        'currentStudents': 15,
-        'maxStudents': 40,
-        'status': 'UPCOMING',
-        'lecturers': [],
-        'students': [],
-      },
-      {
-        'id': 'C3',
-        'code': 'swp1810',
-        'name': 'SE Project – Lớp 01',
-        'subjectId': 3,
-        'semesterId': 2,
-        'currentStudents': 15,
-        'maxStudents': 35,
-        'status': 'COMPLETED',
-        'lecturers': [
-          {'id': 'L3', 'name': 'Lê Văn Hùng'},
-        ],
-        'students': _allStudents
-            .take(15)
-            .map((s) => {...s, 'enrollmentId': 'E${s["id"]}'})
-            .toList(),
-      },
-      {
-        'id': 'C4',
-        'code': 'ai1820',
-        'name': 'Machine Learning – Lớp 01',
-        'subjectId': 4,
-        'semesterId': 2,
-        'currentStudents': 28,
-        'maxStudents': 45,
-        'status': 'ACTIVE',
-        'lecturers': [
-          {'id': 'L4', 'name': 'Phạm Minh Tuấn'},
-        ],
-        'students': _allStudents
-            .take(5)
-            .map((s) => {...s, 'enrollmentId': 'E${s["id"]}'})
-            .toList(),
-      },
-    ];
+    _courses = [];
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _adminService.getSemesters(),
+        _adminService.getSubjects(),
+        _adminService.getUsers(),
+        _adminService.getCourses(),
+      ]);
+
+      setState(() {
+        _semesters.clear();
+        _semesters.addAll(List<Map<String, dynamic>>.from(results[0]));
+        _subjects.clear();
+        _subjects.addAll(List<Map<String, dynamic>>.from(results[1]));
+
+        _lecturers.clear();
+        _lecturers.addAll(List<Map<String, dynamic>>.from(results[2])
+            .where((u) => u['role'] == 'LECTURER' || u['role'] == 'lecturer'));
+
+        _courses = List<Map<String, dynamic>>.from(results[3]);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _snack("Lỗi tải dữ liệu", ok: false);
+      }
+    }
   }
 
   @override
@@ -194,7 +139,9 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                   children: [
                     _buildTopHeader(isMobile),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
                         padding: EdgeInsets.all(horizontalPadding),
                         child: Center(
                           child: ConstrainedBox(
@@ -352,9 +299,9 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -613,7 +560,7 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

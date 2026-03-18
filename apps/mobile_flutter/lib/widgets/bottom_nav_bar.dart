@@ -69,7 +69,7 @@ class CustomBottomNavBar extends StatelessWidget {
           if (index == 0) context.go('/lecturer');
           if (index == 1) context.go('/lecturer/groups');
         } else if (user.isAdmin) {
-          if (index == 0) context.go('/admin');
+          if (index == 0) context.go('/admin/dashboard');
           if (index == 1) context.go('/admin/courses');
           if (index == 2) context.go('/admin/semesters');
         }

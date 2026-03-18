@@ -1,4 +1,105 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 161 75% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 226 100% 64%;
+    --secondary-foreground: 0 0% 100%;
+
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --border: 214 32% 91%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  }
+
+  .premium-shadow {
+    @apply shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)];
+  }
+
+  .premium-gradient-primary {
+    @apply bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600;
+  }
+
+  .premium-gradient-indigo {
+    @apply bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700;
+  }
+
+  .premium-transition {
+    @apply transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)];
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl;
+  }
+
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+}
+
+/* Page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms, transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}

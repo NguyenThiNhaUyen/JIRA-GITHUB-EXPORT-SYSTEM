@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
-import '../../widgets/lecturer_navigation.dart';
+import '../../services/lecturer_service.dart';
+import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 
 class LecturerDashboardScreen extends StatefulWidget {
   const LecturerDashboardScreen({super.key});
@@ -21,151 +24,139 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   static const Color teal = Color(0xFF0F766E);
   static const Color tealLight = Color(0xFF14B8A6);
 
-  // ─── Mock data: subjects ──────────────────────────
-  static const List<Map<String, dynamic>> _subjects = [
-    {'id': '1', 'code': 'SWD392', 'name': 'Software Architecture'},
-    {'id': '2', 'code': 'PRJ301', 'name': 'Project Management'},
-  ];
+  final LecturerService _lecturerService = LecturerService();
+  final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
 
-  // ─── Mock data: courses ───────────────────────────
-  static const List<Map<String, dynamic>> _allCourses = [
-    {'id': '1', 'code': 'SWD392-SE1831', 'subjectId': '1'},
-    {'id': '2', 'code': 'SWD392-SE1832', 'subjectId': '1'},
-    {'id': '3', 'code': 'PRJ301-SE1841', 'subjectId': '2'},
-  ];
+  bool _isLoading = true;
+  User? _currentUser;
+  Map<String, dynamic> _workload = {};
+  List<Map<String, dynamic>> _activities = [];
+  List<Map<String, dynamic>> _subjects = [];
+  List<Map<String, dynamic>> _courses = [];
+  List<Map<String, dynamic>> _groups = [];
 
-  // ─── Mock data: groups ────────────────────────────
-  static const List<Map<String, dynamic>> _demoGroups = [
-    {
-      'id': '1',
-      'name': 'Team Alpha',
-      'topic': 'AI Interview System',
-      'team': [
-        {'id': '1', 'name': 'An'},
-        {'id': '2', 'name': 'Binh'},
-        {'id': '3', 'name': 'Chi'},
-      ],
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'APPROVED',
-      'githubUrl': 'https://github.com/team-alpha/repo',
-      'jiraUrl': 'https://jira.example.com/team-alpha',
-    },
-    {
-      'id': '2',
-      'name': 'Team Beta',
-      'topic': 'Job Matching Platform',
-      'team': [
-        {'id': '4', 'name': 'Dung'},
-        {'id': '5', 'name': 'Huy'},
-      ],
-      'githubStatus': 'PENDING',
-      'jiraStatus': 'APPROVED',
-      'githubUrl': 'https://github.com/team-beta/repo',
-      'jiraUrl': 'https://jira.example.com/team-beta',
-    },
-    {
-      'id': '3',
-      'name': 'Team Gamma',
-      'topic': 'Smart Resume Analyzer',
-      'team': [
-        {'id': '6', 'name': 'Lan'},
-        {'id': '7', 'name': 'Minh'},
-      ],
-      'githubStatus': 'APPROVED',
-      'jiraStatus': 'PENDING',
-      'githubUrl': 'https://github.com/team-gamma/repo',
-      'jiraUrl': 'https://jira.example.com/team-gamma',
-    },
-  ];
-
-  // ─── Mock data: activities ────────────────────────
-  static const List<Map<String, dynamic>> _recentActivities = [
-    {
-      'icon': Icons.account_tree_outlined,
-      'colorVal': 0xFF14B8A6,
-      'bgVal': 0xFFF0FDFA,
-      'msg': 'Nhóm A đã submit GitHub repo',
-      'time': '5 phút trước',
-    },
-    {
-      'icon': Icons.book_outlined,
-      'colorVal': 0xFF3B82F6,
-      'bgVal': 0xFFEFF6FF,
-      'msg': 'Nhóm B đã kết nối Jira project',
-      'time': '1 giờ trước',
-    },
-    {
-      'icon': Icons.description_outlined,
-      'colorVal': 0xFF6366F1,
-      'bgVal': 0xFFEEF2FF,
-      'msg': 'SRS Draft từ Nhóm C đang chờ review',
-      'time': '3 giờ trước',
-    },
-    {
-      'icon': Icons.check_circle_outline,
-      'colorVal': 0xFF16A34A,
-      'bgVal': 0xFFF0FDF4,
-      'msg': 'Nhóm D: GitHub đã được phê duyệt',
-      'time': 'Hôm qua',
-    },
-  ];
-
-  // ─── Mock commit trend data ───────────────────────
   static const List<Map<String, dynamic>> _commits = [
-    {'day': 'Mon', 'commits': 5},
-    {'day': 'Tue', 'commits': 7},
-    {'day': 'Wed', 'commits': 3},
-    {'day': 'Thu', 'commits': 9},
-    {'day': 'Fri', 'commits': 12},
+    {'day': 'Mon', 'commits': 12},
+    {'day': 'Tue', 'commits': 19},
+    {'day': 'Wed', 'commits': 15},
+    {'day': 'Thu', 'commits': 22},
+    {'day': 'Fri', 'commits': 30},
+    {'day': 'Sat', 'commits': 10},
+    {'day': 'Sun', 'commits': 8},
   ];
 
-  // ─── State ────────────────────────────────────────
-  String _selectedSubject = '1';
-  String _selectedCourse = '1';
+  String _selectedSubject = '';
+  String _selectedCourse = '';
   String _filter = 'all';
 
-  // ─── Derived lists ────────────────────────────────
-  List<Map<String, dynamic>> get _courses => _allCourses
-      .where((c) => c['subjectId'] == _selectedSubject)
-      .toList();
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      if (user != null) {
+        final results = await Future.wait([
+          _lecturerService.getWorkload(user.id),
+          _adminService.getSubjects(),
+          _adminService.getCourses(),
+          _lecturerService.getActivityLogs(),
+        ]);
+
+        setState(() {
+          _currentUser = user;
+          _workload = results[0] as Map<String, dynamic>;
+          _subjects = List<Map<String, dynamic>>.from(results[1] as List);
+          _courses = List<Map<String, dynamic>>.from(results[2] as List);
+          _activities = List<Map<String, dynamic>>.from(results[3] as List);
+
+          if (_subjects.isNotEmpty) {
+            _selectedSubject = _subjects[0]['id'].toString();
+            _onSubjectChanged(_selectedSubject);
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnack("Lỗi tải dữ liệu", isError: true);
+    }
+  }
+
+  void _onSubjectChanged(String? subId) {
+    setState(() {
+      _selectedSubject = subId ?? '';
+      final courses = _courses.where((c) => c['subjectId'].toString() == _selectedSubject).toList();
+      if (courses.isNotEmpty) {
+        _selectedCourse = courses[0]['id'].toString();
+        _loadCourseDetail(_selectedCourse);
+      } else {
+        _selectedCourse = '';
+        _groups = [];
+      }
+    });
+  }
+
+  Future<void> _loadCourseDetail(String courseId) async {
+    // In a real app, we might call getCourseById
+    // For now we can find in _allCourses or call a detail API
+    try {
+      // Find course in _courses to get groups
+      final course = _courses.firstWhere((c) => c['id'].toString() == courseId, orElse: () => {});
+      setState(() {
+        _groups = List<Map<String, dynamic>>.from(course['groups'] ?? []);
+      });
+    } catch (e) {
+      print("Error loading course detail: $e");
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredGroups {
-    return _demoGroups.where((g) {
+    return _groups.where((g) {
       if (_filter == 'inactive-students') {
-        return (g['team'] as List).length <= 2;
+        // Mock logic for less commit
+        return true; 
       }
       if (_filter == 'inactive-groups') {
-        return g['githubStatus'] != 'APPROVED' || g['jiraStatus'] != 'APPROVED';
+        final githubOk = g['githubStatus'] == 'APPROVED' || (g['integration']?['githubStatus'] == 'APPROVED');
+        final jiraOk = g['jiraStatus'] == 'APPROVED' || (g['integration']?['jiraStatus'] == 'APPROVED');
+        return !githubOk || !jiraOk;
       }
       return true;
     }).toList();
   }
 
-  List<Map<String, dynamic>> get _pendingIntegrations => _filteredGroups
-      .where((g) =>
-          g['githubStatus'] == 'PENDING' || g['jiraStatus'] == 'PENDING')
-      .toList();
-
   Map<String, dynamic>? get _currentSubject => _subjects.firstWhere(
-        (s) => s['id'] == _selectedSubject,
+        (s) => s['id'].toString() == _selectedSubject,
         orElse: () => {},
       );
 
-  Map<String, dynamic>? get _currentCourse => _allCourses.firstWhere(
-        (c) => c['id'] == _selectedCourse,
+  Map<String, dynamic>? get _currentCourse => _courses.firstWhere(
+        (c) => c['id'].toString() == _selectedCourse,
         orElse: () => {},
       );
 
   // ─── Stats ────────────────────────────────────────
-  int get _totalGroups => _filteredGroups.length;
-  int get _githubApproved =>
-      _filteredGroups.where((g) => g['githubStatus'] == 'APPROVED').length;
-  int get _jiraApproved =>
-      _filteredGroups.where((g) => g['jiraStatus'] == 'APPROVED').length;
-  int get _needAlert => _filteredGroups
-      .where((g) =>
-          g['githubStatus'] != 'APPROVED' || g['jiraStatus'] != 'APPROVED')
-      .length;
+  int get _totalGroups => _groups.length;
+  int get _githubApproved => _groups.where((g) {
+    final status = g['githubStatus'] ?? g['integration']?['githubStatus'];
+    return status == 'APPROVED';
+  }).length;
+  int get _jiraApproved => _groups.where((g) {
+    final status = g['jiraStatus'] ?? g['integration']?['jiraStatus'];
+    return status == 'APPROVED';
+  }).length;
+  int get _needAlert => _totalGroups - _githubApproved; // Simplification
+  List<Map<String, dynamic>> get _pendingIntegrations => _groups.where((g) {
+    final gStatus = g['githubStatus'] ?? g['integration']?['githubStatus'];
+    final jStatus = g['jiraStatus'] ?? g['integration']?['jiraStatus'];
+    return gStatus == 'PENDING' || jStatus == 'PENDING';
+  }).toList();
 
   // ─── Handlers ─────────────────────────────────────
   void _showSnack(String msg, {bool isError = false}) {
@@ -221,15 +212,16 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(
+      appBar: AppTopHeader(
         title: 'Tổng quan Giảng viên',
         user: AppUser(
-            name: 'Nguyễn Văn Nam',
-            email: 'namnv@fe.edu.vn',
+            name: _currentUser?.fullName ?? 'Giảng viên',
+            email: _currentUser?.email ?? '',
             role: 'LECTURER'),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: teal))
+          : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +319,6 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
 
   // ─── 2. Filter Card ────────────────────────────────
   Widget _buildFilterCard() {
-    final courses = _courses;
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,26 +371,26 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                     child: Text('${s['code']} – ${s['name']}'),
                   )),
             ],
-            onChanged: (v) => setState(() {
-              _selectedSubject = v ?? '';
-              _selectedCourse = '';
-            }),
+            onChanged: (v) => _onSubjectChanged(v),
           ),
           const SizedBox(height: 12),
           _buildSelectField(
             label: 'Lớp học',
-            value: courses.any((c) => c['id'] == _selectedCourse)
+            value: _courses.any((c) => c['id'].toString() == _selectedCourse)
                 ? _selectedCourse
                 : '',
-            enabled: _selectedSubject.isNotEmpty && courses.isNotEmpty,
+            enabled: _selectedSubject.isNotEmpty && _courses.where((c) => c['subjectId'].toString() == _selectedSubject).isNotEmpty,
             items: [
               const DropdownMenuItem(value: '', child: Text('— Chọn lớp học —')),
-              ...courses.map((c) => DropdownMenuItem(
-                    value: c['id'] as String,
+              ..._courses.where((c) => c['subjectId'].toString() == _selectedSubject).map((c) => DropdownMenuItem(
+                    value: c['id'].toString(),
                     child: Text(c['code'] as String),
                   )),
             ],
-            onChanged: (v) => setState(() => _selectedCourse = v ?? ''),
+            onChanged: (v) => setState(() {
+              _selectedCourse = v ?? '';
+              if (_selectedCourse.isNotEmpty) _loadCourseDetail(_selectedCourse);
+            }),
           ),
           const SizedBox(height: 12),
           _buildSelectField(
@@ -471,10 +462,16 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
     final hasData = _selectedCourse.isNotEmpty;
     final stats = [
       {
-        'label': 'Tổng nhóm',
-        'value': hasData ? '$_totalGroups' : '—',
-        'icon': Icons.list_alt_outlined,
+        'label': 'Lớp đang dạy',
+        'value': hasData ? '${_workload['coursesCount'] ?? 0}' : '—',
+        'icon': Icons.book_outlined,
         'color': const Color(0xFF3B82F6),
+      },
+      {
+        'label': 'Tổng sinh viên',
+        'value': hasData ? '${_workload['studentsCount'] ?? 0}' : '—',
+        'icon': Icons.people_outline,
+        'color': const Color(0xFF6366F1),
       },
       {
         'label': 'GitHub đã duyệt',
@@ -517,7 +514,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
             border: Border.all(color: cardBorder),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2))
             ],
@@ -649,7 +646,10 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ..._recentActivities.map((a) => Padding(
+          if (_activities.isEmpty)
+            const Center(child: Text('Không có hoạt động', style: TextStyle(fontSize: 11, color: textSecondary)))
+          else
+            ..._activities.map((a) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -658,18 +658,18 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Color(a['bgVal'] as int),
+                        color: teal.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(a['icon'] as IconData,
-                          size: 15, color: Color(a['colorVal'] as int)),
+                      child: const Icon(Icons.history,
+                          size: 15, color: teal),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(a['msg'] as String,
+                          Text(a['message'] ?? a['msg'] ?? '',
                               style: const TextStyle(
                                   fontSize: 11, color: textPrimary),
                               maxLines: 2),
@@ -679,7 +679,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                               const Icon(Icons.access_time_outlined,
                                   size: 9, color: textSecondary),
                               const SizedBox(width: 2),
-                              Text(a['time'] as String,
+                              Text(a['createdAt'] ?? a['time'] ?? 'Vừa xong',
                                   style: const TextStyle(
                                       fontSize: 9, color: textSecondary)),
                             ],
@@ -1033,7 +1033,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3))
         ],
@@ -1551,7 +1551,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3))
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
+import '../../services/admin_service.dart';
 
 class AdminReportsScreen extends StatefulWidget {
   const AdminReportsScreen({super.key});
@@ -13,6 +14,8 @@ class AdminReportsScreen extends StatefulWidget {
 class _AdminReportsScreenState extends State<AdminReportsScreen> {
   String selectedSemester = '';
   String selectedCourse = '';
+  final AdminService _adminService = AdminService();
+  bool _isLoading = false;
 
   static const Color bgColor = Color(0xFFEFF7F5);
   static const Color contentBg = Color(0xFFF8FAFC);
@@ -28,54 +31,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       MediaQuery.of(context).size.width >= 900 &&
       MediaQuery.of(context).size.width < 1200;
 
-  static const List<Map<String, dynamic>> semesters = [
-    {'id': 'sem1', 'name': 'Spring 2026'},
-    {'id': 'sem2', 'name': 'Summer 2026'},
-    {'id': 'sem3', 'name': 'Fall 2026'},
-  ];
+  List<Map<String, dynamic>> semesters = [];
 
-  static const List<Map<String, dynamic>> allCoursesRaw = [
-    {
-      'id': 'c1',
-      'semesterId': 'sem1',
-      'code': 'SWD392',
-      'name': 'Project Management',
-      'currentStudents': 26,
-      'maxStudents': 30,
-      'projectsCount': 7,
-      'status': 'ACTIVE',
-    },
-    {
-      'id': 'c2',
-      'semesterId': 'sem1',
-      'code': 'PRN222',
-      'name': 'Mobile Development',
-      'currentStudents': 28,
-      'maxStudents': 30,
-      'projectsCount': 8,
-      'status': 'ACTIVE',
-    },
-    {
-      'id': 'c3',
-      'semesterId': 'sem2',
-      'code': 'SWP391',
-      'name': 'Software Project',
-      'currentStudents': 30,
-      'maxStudents': 30,
-      'projectsCount': 10,
-      'status': 'UPCOMING',
-    },
-    {
-      'id': 'c4',
-      'semesterId': 'sem2',
-      'code': 'SWR302',
-      'name': 'Software Requirements',
-      'currentStudents': 24,
-      'maxStudents': 30,
-      'projectsCount': 6,
-      'status': 'CLOSED',
-    },
-  ];
+  List<Map<String, dynamic>> allCoursesRaw = [];
 
   List<Map<String, dynamic>> get allCourses {
     if (selectedSemester.isEmpty) return allCoursesRaw;
@@ -120,14 +78,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     };
   }
 
-  List<Map<String, dynamic>> get commitChartData => const [
-    {'label': 'W1', 'value': 18},
-    {'label': 'W2', 'value': 32},
-    {'label': 'W3', 'value': 26},
-    {'label': 'W4', 'value': 40},
-    {'label': 'W5', 'value': 35},
-    {'label': 'W6', 'value': 44},
-  ];
+  List<Map<String, dynamic>> get commitChartData => const [];
 
   List<Map<String, dynamic>> get projectDistribution => filteredCourses
       .map<Map<String, dynamic>>(
@@ -139,12 +90,33 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       )
       .toList();
 
-  List<Map<String, dynamic>> get srsStatusData => const [
-    {'name': 'Draft', 'value': 2, 'color': Color(0xFF64748B)},
-    {'name': 'Review', 'value': 5, 'color': Color(0xFFF59E0B)},
-    {'name': 'Final', 'value': 8, 'color': Color(0xFF22C55E)},
-    {'name': 'Rejected', 'value': 1, 'color': Color(0xFFEF4444)},
-  ];
+  List<Map<String, dynamic>> get srsStatusData => const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _adminService.getSemesters(),
+        _adminService.getCourses(),
+      ]);
+
+      setState(() {
+        semesters = List<Map<String, dynamic>>.from(results[0]);
+        allCoursesRaw = List<Map<String, dynamic>>.from(results[1]);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> handleGenerateReport(String type, String id) async {
     String message;
@@ -188,7 +160,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   children: [
                     _buildTopBar(),
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
                         padding: EdgeInsets.all(isMobile ? 16 : 24),
                         child: Center(
                           child: ConstrainedBox(
@@ -463,7 +437,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       width: isNarrow ? 36 : 46,
                       height: isNarrow ? 36 : 46,
                       decoration: BoxDecoration(
-                        color: (item['color'] as Color).withOpacity(0.12),
+                        color: (item['color'] as Color).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -1021,7 +995,7 @@ class _IconActionButton extends StatelessWidget {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 18, color: color),

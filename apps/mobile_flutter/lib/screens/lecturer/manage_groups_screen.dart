@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../services/lecturer_service.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 
 class ManageGroupsScreen extends StatefulWidget {
   final String courseId;
@@ -23,69 +26,46 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
   static const int minM        = 4;
   static const int maxM        = 6;
 
-  // ── mock data ─────────────────────────────────────
-  static final List<Map<String, dynamic>> _groups = [
-    {
-      'id': '101', 'name': 'Nhóm 1',
-      'description': 'Hệ thống quản lý đồ án sinh viên tích hợp Jira & GitHub',
-      'progressPercent': 82, 'riskScore': 18,
-      'commitCount': 124, 'issueCount': 21, 'lastActivity': '45 phút trước',
-      'githubStatus': 'APPROVED', 'jiraStatus': 'APPROVED',
-      'team': [
-        {'studentId': '1', 'name': 'Nguyễn Minh Anh', 'role': 'LEADER'},
-        {'studentId': '2', 'name': 'Trần Gia Huy',    'role': 'MEMBER'},
-        {'studentId': '3', 'name': 'Lê Hoàng Nam',    'role': 'MEMBER'},
-        {'studentId': '4', 'name': 'Phạm Khánh Linh', 'role': 'MEMBER'},
-        {'studentId': '5', 'name': 'Võ Nhật Quang',   'role': 'MEMBER'},
-      ],
-    },
-    {
-      'id': '102', 'name': 'Nhóm 2',
-      'description': 'Nền tảng đánh giá CV và mô phỏng phỏng vấn AI',
-      'progressPercent': 61, 'riskScore': 39,
-      'commitCount': 89, 'issueCount': 16, 'lastActivity': '3 giờ trước',
-      'githubStatus': 'APPROVED', 'jiraStatus': 'PENDING',
-      'team': [
-        {'studentId': '6', 'name': 'Bùi Thanh Hằng', 'role': 'LEADER'},
-        {'studentId': '7', 'name': 'Ngô Đức Mạnh',   'role': 'MEMBER'},
-        {'studentId': '8', 'name': 'Đinh Quốc Bảo',  'role': 'MEMBER'},
-        {'studentId': '9', 'name': 'Phan Mỹ Tiên',   'role': 'MEMBER'},
-      ],
-    },
-    {
-      'id': '103', 'name': 'Nhóm 3',
-      'description': '',
-      'progressPercent': 27, 'riskScore': 72,
-      'commitCount': 22, 'issueCount': 5, 'lastActivity': '2 ngày trước',
-      'githubStatus': 'PENDING', 'jiraStatus': 'PENDING',
-      'team': [
-        {'studentId': '10', 'name': 'Nguyễn Thế Anh',  'role': 'LEADER'},
-        {'studentId': '11', 'name': 'Huỳnh Gia Bảo',   'role': 'MEMBER'},
-        {'studentId': '12', 'name': 'Trương Ngọc Ánh', 'role': 'MEMBER'},
-      ],
-    },
-  ];
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  bool _isLoading = true;
+  User? _currentUser;
+  
+  List<Map<String, dynamic>> _groups = [];
+  List<Map<String, dynamic>> _allStudents = [];
+  Map<String, dynamic>? _courseInfo;
 
-  static final List<Map<String, dynamic>> _allStudents = [
-    {'id': '1',  'name': 'Nguyễn Minh Anh',  'code': 'SE180001'},
-    {'id': '2',  'name': 'Trần Gia Huy',      'code': 'SE180002'},
-    {'id': '3',  'name': 'Lê Hoàng Nam',      'code': 'SE180003'},
-    {'id': '4',  'name': 'Phạm Khánh Linh',   'code': 'SE180004'},
-    {'id': '5',  'name': 'Võ Nhật Quang',     'code': 'SE180005'},
-    {'id': '6',  'name': 'Bùi Thanh Hằng',   'code': 'SE180006'},
-    {'id': '7',  'name': 'Ngô Đức Mạnh',      'code': 'SE180007'},
-    {'id': '8',  'name': 'Đinh Quốc Bảo',     'code': 'SE180008'},
-    {'id': '9',  'name': 'Phan Mỹ Tiên',      'code': 'SE180009'},
-    {'id': '10', 'name': 'Nguyễn Thế Anh',    'code': 'SE180010'},
-    {'id': '11', 'name': 'Huỳnh Gia Bảo',     'code': 'SE180011'},
-    {'id': '12', 'name': 'Trương Ngọc Ánh',   'code': 'SE180012'},
-    {'id': '13', 'name': 'Lý Thanh Trúc',     'code': 'SE180013'},
-    {'id': '14', 'name': 'Đỗ Minh Khoa',      'code': 'SE180014'},
-    {'id': '15', 'name': 'Mai Khánh Vy',       'code': 'SE180015'},
-    {'id': '16', 'name': 'Phùng Quốc Thịnh',  'code': 'SE180016'},
-    {'id': '17', 'name': 'Tạ Hoài Phương',    'code': 'SE180017'},
-    {'id': '18', 'name': 'Lâm Tuấn Kiệt',     'code': 'SE180018'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final results = await Future.wait([
+        _lecturerService.getMyCourses(), // To find course name
+        _lecturerService.getCourseGroups(widget.courseId),
+        _lecturerService.getCourseStudents(widget.courseId),
+      ]);
+
+      final allCourses = results[0] as List<Map<String, dynamic>>;
+      final course = allCourses.firstWhere((c) => c['id'].toString() == widget.courseId, orElse: () => {});
+
+      setState(() {
+        _currentUser = user;
+        _courseInfo = course;
+        _groups = results[1] as List<Map<String, dynamic>>;
+        _allStudents = results[2] as List<Map<String, dynamic>>;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _snack('Lỗi khi tải dữ liệu nhóm', err: true);
+    }
+  }
 
   // ── state ─────────────────────────────────────────
   String _groupSearch   = '';
@@ -97,7 +77,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
 
   // ── computed ──────────────────────────────────────
   Set<String> get _assignedIds => _groups
-      .expand((g) => (g['team'] as List).map((m) => m['studentId'] as String))
+      .expand((g) => (g['students'] as List? ?? []).map((m) => m['id'].toString()))
       .toSet();
 
   List<Map<String, dynamic>> get _available => _allStudents
@@ -115,7 +95,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
   String _state(Map g) {
     final gh = g['githubStatus'] == 'APPROVED';
     final jr = g['jiraStatus']   == 'APPROVED';
-    final risk = g['riskScore'] as int;
+    final risk = (g['riskScore'] ?? 0) as int;
     if (!gh && !jr) return 'critical';
     if (risk >= 55) return 'warning';
     if (risk >= 30) return 'watch';
@@ -132,7 +112,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
       final state = _state(g);
       final ghOk  = g['githubStatus'] == 'APPROVED';
       final jrOk  = g['jiraStatus']   == 'APPROVED';
-      final noTopic = (g['description'] as String).trim().isEmpty;
+      final noTopic = (g['description'] as String? ?? '').trim().isEmpty;
       switch (_groupFilter) {
         case 'healthy':       return state == 'healthy';
         case 'watch':         return state == 'watch';
@@ -172,18 +152,24 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
     final risk       = allGroups.where((g) => _state(g) == 'warning' || _state(g) == 'critical').length;
     final noGh       = allGroups.where((g) => g['githubStatus'] != 'APPROVED').length;
     final noJr       = allGroups.where((g) => g['jiraStatus']   != 'APPROVED').length;
-    final noTopic    = allGroups.where((g) => (g['description'] as String).trim().isEmpty).length;
+    final noTopic    = allGroups.where((g) => (g['description'] as String? ?? "").trim().isEmpty).length;
     final avgP       = allGroups.isEmpty ? 0 :
-        (allGroups.fold<int>(0, (s, g) => s + (g['progressPercent'] as int)) / allGroups.length).round();
+        (allGroups.fold<int>(0, (s, g) => s + ((g['progressPercent'] ?? 0) as int)) / allGroups.length).round();
     final estGroups  = available.isEmpty ? 0 : (available.length / _autoSize).ceil();
 
     return Scaffold(
       backgroundColor: bg,
-      appBar: const AppTopHeader(
+      appBar: AppTopHeader(
         title: 'Quản lý nhóm',
-        user: AppUser(name: 'Nguyễn Văn Nam', email: 'namnv@fe.edu.vn', role: 'LECTURER'),
+        user: AppUser(
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
+          role: 'LECTURER',
+        ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: teal))
+          : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +205,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
       const Text('Quản lý nhóm',
           style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
       const Icon(Icons.chevron_right, size: 14, color: Color(0xFF94A3B8)),
-      Text('SWD392-SE1831',
+      Text(_courseInfo?['code']?.toString() ?? widget.courseId,
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: tp)),
     ],
   );
@@ -238,8 +224,8 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
         Wrap(
           spacing: 6, runSpacing: 6,
           children: [
-            _chip(Icons.book_outlined,          'SWD392-SE1831'),
-            _chip(Icons.school_outlined,        'Software Architecture'),
+            _chip(Icons.book_outlined,          _courseInfo?['code']?.toString() ?? ''),
+            _chip(Icons.school_outlined,        _courseInfo?['name']?.toString() ?? ''),
             _chip(Icons.people_outline,         '${_allStudents.length} sinh viên'),
             _chip(Icons.folder_outlined,        '${_groups.length} nhóm'),
             _chip(Icons.shield_outlined,        '$riskCount nhóm rủi ro'),
@@ -265,7 +251,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: const Color(0xFFE2E8F0)),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
+      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 1))],
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -355,7 +341,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
               Row(children: [
                 Container(
                   width: 28, height: 28,
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(8)),
                   child: const Icon(Icons.auto_awesome, size: 14, color: teal),
                 ),
                 const SizedBox(width: 8),
@@ -658,11 +644,11 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
   Widget _buildGroupItem(Map<String, dynamic> g) {
     final ghOk     = g['githubStatus'] == 'APPROVED';
     final jrOk     = g['jiraStatus']   == 'APPROVED';
-    final progress = g['progressPercent'] as int;
+    final progress = (g['progressPercent'] ?? 0) as int;
     final state    = _state(g);
-    final team     = g['team'] as List;
-    final noTopic  = (g['description'] as String).trim().isEmpty;
-    final leader   = team.firstWhere((m) => m['role'] == 'LEADER', orElse: () => {})['name'] ?? 'Chưa có';
+    final team     = g['students'] as List? ?? [];
+    final noTopic  = (g['description'] as String? ?? '').trim().isEmpty;
+    final leader   = (team.firstWhere((m) => m['role'] == 'LEADER', orElse: () => {}))['fullName'] ?? 'Chưa có';
 
     return Container(
       margin: const EdgeInsets.only(top: 12),
@@ -711,8 +697,8 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
             _metricChip(Icons.school_outlined,          'Leader: $leader'),
             _metricChip(Icons.commit,                   '${g['commitCount']} commits'),
             _metricChip(Icons.book_outlined,            '${g['issueCount']} issues'),
-            _metricChip(Icons.access_time_outlined,     g['lastActivity'] as String),
-            _metricChip(Icons.shield_outlined,          'Risk ${g['riskScore']}%'),
+            _metricChip(Icons.access_time_outlined,     g['lastActivity']?.toString() ?? 'N/A'),
+            _metricChip(Icons.shield_outlined,          'Risk ${g['riskScore'] ?? 0}%'),
           ]),
           const SizedBox(height: 10),
           // topic field
@@ -723,7 +709,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
           ]),
           const SizedBox(height: 5),
           TextField(
-            controller: TextEditingController(text: g['description'] as String),
+            controller: TextEditingController(text: g['description'] as String? ?? ''),
             style: const TextStyle(fontSize: 12, color: tp),
             onSubmitted: (v) => _snack('Đã cập nhật đề tài'),
             decoration: _inputDeco('Chưa có đề tài...'),
@@ -776,18 +762,18 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white, borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0,1))],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0,1))],
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         Container(
                           width: 16, height: 16,
                           decoration: BoxDecoration(color: const Color(0xFFCCFBF1), shape: BoxShape.circle),
                           child: Center(child: Text(
-                            (m['name'] as String).substring(0, 1),
+                            (m['fullName'] as String? ?? '?').substring(0, 1),
                             style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: teal))),
                         ),
                         const SizedBox(width: 5),
-                        Text(m['name'] as String, style: const TextStyle(fontSize: 11, color: tp, fontWeight: FontWeight.w500)),
+                        Text(m['fullName'] as String? ?? 'Chưa có tên', style: const TextStyle(fontSize: 11, color: tp, fontWeight: FontWeight.w500)),
                         if (m['role'] == 'LEADER') ...[
                           const SizedBox(width: 4),
                           Container(
@@ -802,7 +788,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
                         ],
                         const SizedBox(width: 4),
                         GestureDetector(
-                          onTap: () => _snack('Đã xóa ${m['name']} khỏi nhóm'),
+                          onTap: () => _snack('Đã xóa ${m['fullName']} khỏi nhóm'),
                           child: const Text('×', style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
                         ),
                       ]),

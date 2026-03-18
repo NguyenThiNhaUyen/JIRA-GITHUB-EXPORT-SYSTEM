@@ -1,7 +1,7 @@
 // StudentLayout — Enterprise SaaS App Shell (đồng bộ Admin/Lecturer)
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { TopHeader } from "../components/layout/TopHeader.jsx";
+import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import {
     BookOpen, LayoutDashboard, Library, Users,
     GitBranch, Bell, FileText, Menu,
@@ -130,3 +130,9 @@ export default function StudentLayout({ children }) {
         </div>
     );
 }
+
+
+
+
+
+

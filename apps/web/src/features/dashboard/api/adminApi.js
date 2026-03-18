@@ -17,3 +17,9 @@ export async function bulkAssignLecturers(assignments) {
     const res = await client.post("/admin/bulk-assign", { assignments });
     return unwrap(res);
 }
+
+
+
+
+
+

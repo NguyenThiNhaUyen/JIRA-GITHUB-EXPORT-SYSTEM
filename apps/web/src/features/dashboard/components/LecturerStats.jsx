@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen, Users, GitBranch, AlertTriangle } from "lucide-react";
-import { StatsCard } from "../../../components/shared/StatsCard.jsx";
+import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function LecturerStats({ stats }) {
   return (
@@ -32,3 +32,9 @@ export function LecturerStats({ stats }) {
     </div>
   );
 }
+
+
+
+
+
+

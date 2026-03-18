@@ -22,3 +22,9 @@ export function mapRadarData(data) {
     if (!data) return [];
     return data;
 }
+
+
+
+
+
+
