@@ -73,8 +73,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   List<Map<String, dynamic>> get _filtered => _users.where((u) {
     final matchSearch =
         _search.isEmpty ||
-        (u['name'] as String).toLowerCase().contains(_search.toLowerCase()) ||
-        (u['email'] as String).toLowerCase().contains(_search.toLowerCase());
+        '${u['name']}'.toLowerCase().contains(_search.toLowerCase()) ||
+        '${u['email']}'.toLowerCase().contains(_search.toLowerCase());
     final matchRole = _filterRole == 'all' || u['role'] == _filterRole;
     return matchSearch && matchRole;
   }).toList();
@@ -96,7 +96,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   void _changeRole(String userId, String newRole) {
     setState(() {
-      final idx = _users.indexWhere((u) => u['id'] == userId);
+      final idx = _users.indexWhere((u) => u['id'].toString() == userId);
       if (idx != -1) _users[idx]['role'] = newRole;
       _openMenuId = null;
     });
@@ -105,7 +105,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   void _toggleStatus(String userId, String currentStatus) {
     setState(() {
-      final idx = _users.indexWhere((u) => u['id'] == userId);
+      final idx = _users.indexWhere((u) => u['id'].toString() == userId);
       if (idx != -1) {
         _users[idx]['status'] = currentStatus == 'DISABLED'
             ? 'ACTIVE'
@@ -356,8 +356,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final cfg = _roleCfg[role] ?? _roleCfg['STUDENT']!;
     final roleColor = cfg['color'] as Color;
     final roleBg = cfg['bg'] as Color;
-    final initials = (u['name'] as String).isNotEmpty
-        ? (u['name'] as String)[0]
+    final initials = '${u['name']}'.isNotEmpty
+        ? '${u['name']}'[0]
         : '?';
 
     return Container(
@@ -402,7 +402,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    u['name'] as String,
+                    '${u['name']}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
@@ -413,7 +413,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    u['email'] as String,
+                    '${u['email']}',
                     style: const TextStyle(fontSize: 11, color: txtSec),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -421,7 +421,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   if (u['studentId'] != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      u['studentId'] as String,
+                      '${u['studentId']}',
                       style: const TextStyle(
                         fontSize: 10,
                         color: txtSec,
@@ -518,7 +518,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       children: [
         GestureDetector(
           onTap: () {
-            setState(() => _openMenuId = isOpen ? null : u['id'] as String);
+            setState(() => _openMenuId = isOpen ? null : u['id'].toString());
           },
           child: Container(
             width: 32,
@@ -574,7 +574,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       ].where((r) => r != u['role']).map((r) {
                         final cfg = _roleCfg[r]!;
                         return InkWell(
-                          onTap: () => _changeRole(u['id'] as String, r),
+                          onTap: () => _changeRole(u['id'].toString(), r),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -616,8 +616,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                               ? Colors.red
                               : const Color(0xFF16A34A),
                           onConfirm: () => _toggleStatus(
-                            u['id'] as String,
-                            u['status'] as String,
+                            u['id'].toString(),
+                            '${u['status']}',
                           ),
                         ),
                         child: Padding(
@@ -660,8 +660,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           confirmLabel: 'Gửi email',
                           confirmColor: const Color(0xFF2563EB),
                           onConfirm: () => _resetPassword(
-                            u['id'] as String,
-                            u['name'] as String,
+                            u['id'].toString(),
+                            '${u['name']}',
                           ),
                         ),
                         child: Padding(

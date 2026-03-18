@@ -37,10 +37,10 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
     if (_search.trim().isNotEmpty) {
       final keyword = _search.trim().toLowerCase();
       result = result.where((s) {
-        final code = (s["code"] as String).toLowerCase();
-        final name = (s["name"] as String).toLowerCase();
-        final department = (s["department"] as String).toLowerCase();
-        final description = (s["description"] as String? ?? "").toLowerCase();
+        final code = '${s["code"]}'.toLowerCase();
+        final name = '${s["name"]}'.toLowerCase();
+        final department = '${s["department"] ?? ""}'.toLowerCase();
+        final description = '${s["description"] ?? ""}'.toLowerCase();
 
         return code.contains(keyword) ||
             name.contains(keyword) ||
@@ -55,7 +55,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
   int get _nextId {
     if (_subjects.isEmpty) return 1;
     return _subjects
-            .map((e) => e["id"] as int)
+            .map((e) => (e["id"] as num).toInt())
             .reduce((value, element) => value > element ? value : element) +
         1;
   }
@@ -590,7 +590,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
           icon: Icons.account_balance_outlined,
           title: "Bộ môn",
           value: _subjects
-              .map((s) => s["department"] as String)
+              .map((s) => '${s["department"] ?? ""}')
               .toSet()
               .length
               .toString(),
@@ -616,8 +616,8 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
           ),
           const SizedBox(height: 20),
           ..._subjects.map((s) {
-            final color = _statusColor(s["status"] as String);
-            final progress = _statusProgress(s["status"] as String);
+            final color = _statusColor('${s["status"]}');
+            final progress = _statusProgress('${s["status"]}');
 
             if (isNarrow) {
               return Padding(
@@ -626,7 +626,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      s["code"] as String,
+                      '${s["code"]}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -653,7 +653,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      s["name"] as String,
+                      '${s["name"]}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6B7280),
@@ -671,7 +671,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                   SizedBox(
                     width: 140,
                     child: Text(
-                      s["code"] as String,
+                      '${s["code"]}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -705,7 +705,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                   SizedBox(
                     width: 180,
                     child: Text(
-                      s["name"] as String,
+                      '${s["name"]}',
                       textAlign: TextAlign.right,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -739,7 +739,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
           ),
           const SizedBox(height: 20),
           ..._subjects.map((s) {
-            final credits = s["credits"] as int;
+            final credits = (s["credits"] as num).toInt();
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 18),
@@ -749,7 +749,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          s["name"] as String,
+                          '${s["name"]}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -962,12 +962,12 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                     rows: _filteredSubjects.map<DataRow>((s) {
                       return DataRow(
                         cells: [
-                          DataCell(Text(s["code"] as String)),
+                          DataCell(Text('${s["code"]}')),
                           DataCell(
                             SizedBox(
                               width: 220,
                               child: Text(
-                                s["name"] as String,
+                                '${s["name"]}',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -977,7 +977,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                             SizedBox(
                               width: 190,
                               child: Text(
-                                s["department"] as String,
+                                '${s["department"] ?? ""}',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -986,7 +986,7 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                           DataCell(Text("${s["credits"]}")),
                           DataCell(Text("${s["maxStudents"]}")),
                           DataCell(
-                            SubjectStatusBadge(status: s["status"] as String),
+                            SubjectStatusBadge(status: '${s["status"]}'),
                           ),
                           DataCell(
                             Row(
