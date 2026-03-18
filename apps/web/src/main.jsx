@@ -7,8 +7,8 @@ import App from "./App.jsx";
 import "./index.css";
 import { AuthProvider } from "@/context/AuthContext.jsx";
 import { AppProvider } from "@/context/AppContext.jsx";
-import { ToastProvider } from "@/components/ui/Toast.jsx";
-import ErrorBoundary from "@/components/ErrorBoundary.jsx";
+import { ToastProvider } from "./components/ui/Toast.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // TanStack Query client
 const queryClient = new QueryClient({
