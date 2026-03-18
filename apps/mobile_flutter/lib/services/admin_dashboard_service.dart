@@ -9,80 +9,51 @@ class AdminDashboardService {
 
   Future<Map<String, dynamic>> getDashboardData() async {
     try {
+      // 1. Lấy thống kê cơ bản và chi tiết tích hợp thông qua Analytics API
       final results = await Future.wait([
+        getAdminStats(),
+        getIntegrationStats(),
+        getCommitTrends(),
+        getHeatmap(),
+        getTeamRankings(),
+        getInactiveTeams(),
+        getAuditLogs(),
+        getTeamActivities(),
+        _adminService.getCourses(), // Vẫn giữ các thông tin thô để phụ trợ UI nếu cần
         _adminService.getSemesters(),
         _adminService.getSubjects(),
-        _adminService.getCourses(),
-        _adminService.getUsers(),
-        _adminService.getGroups(),
       ]);
 
-      final semesters = results[0];
-      final subjects = results[1];
-      final courses = results[2];
-      final users = results[3];
-      final groups = results[4];
-
-      // Calculate roles safely based on 'roles' array or 'role' map
-      int lecturersCount = 0;
-      int studentsCount = 0;
-      for (var u in users) {
-        bool isLecturer = false;
-        bool isStudent = false;
-
-        if (u['roles'] is List) {
-           isLecturer = (u['roles'] as List).any((r) => r.toString().toUpperCase() == 'LECTURER');
-           isStudent = (u['roles'] as List).any((r) => r.toString().toUpperCase() == 'STUDENT');
-        } else if (u['role'] != null) {
-           if (u['role'] is Map && u['role']['name'] != null) {
-              isLecturer = u['role']['name'].toString().toUpperCase() == 'LECTURER';
-              isStudent = u['role']['name'].toString().toUpperCase() == 'STUDENT';
-           } else {
-              isLecturer = u['role'].toString().toUpperCase() == 'LECTURER';
-              isStudent = u['role'].toString().toUpperCase() == 'STUDENT';
-           }
-        }
-        
-        if (isLecturer) lecturersCount++;
-        if (isStudent) studentsCount++;
-      }
-
-      final activeSemesters = semesters.where((s) => s['status'] == 'ACTIVE' || s['status'] == 'Active').length;
-
-      final stats = {
-        'semesters': semesters.length,
-        'subjects': subjects.length,
-        'courses': courses.length,
-        'projects': groups.length,
-        'lecturers': lecturersCount,
-        'students': studentsCount,
-        'activeSemesters': activeSemesters,
+      final stats = results[0] ?? {
+        'semesters': 0, 'subjects': 0, 'courses': 0, 
+        'lecturers': 0, 'students': 0, 'projects': 0,
+      };
+      
+      final integrationStats = results[1] ?? {
+        'repoConnected': 0, 'repoMissing': 0, 
+        'jiraConnected': 0, 'syncErrors': 0, 'reportsExported': 0,
       };
 
-      final integrationStats = {
-        'repoConnected': groups.where((g) => g['githubRepo'] != null && g['githubRepo'].toString().isNotEmpty).length,
-        'repoMissing': groups.where((g) => g['githubRepo'] == null || g['githubRepo'].toString().isEmpty).length,
-        'jiraConnected': groups.where((g) => g['jiraInstance'] != null && g['jiraInstance'].toString().isNotEmpty).length,
-        'syncErrors': 0,
-        'reportsExported': 0,
-      };
-
-      // Fallback arrays for UI components that don't have backend logic yet
       return {
         'stats': stats,
         'integrationStats': integrationStats,
-        'commitData': [],
-        'heatmapData': [],
-        'teamRanking': [],
-        'inactiveTeams': [],
-        'teamActivity': [],
-        'systemActivity': [],
-        'recentCourses': courses.take(5).toList(),
-        'recentGroups': groups.take(5).toList(),
-        'semestersData': semesters,
-        'subjectsData': subjects,
-        'coursesData': courses,
+        'commitData': results[2] ?? [],
+        'heatmapData': results[3] ?? [],
+        'teamRanking': results[4] ?? [],
+        'inactiveTeams': results[5] ?? [],
+        'systemActivity': results[6] ?? [],
+        'teamActivity': results[7] ?? [],
+        'recentCourses': (results[8] as List? ?? []).take(5).toList(),
+        'coursesData': results[8] ?? [],
+        'semestersData': results[9] ?? [],
+        'subjectsData': results[10] ?? [],
       };
+    } catch (e) {
+      print('AdminDashboardService Error: $e');
+      throw Exception('Lỗi nạp dữ liệu Dashboard từ Analytics: $e');
+    }
+  }
+
   // --- New Advanced Analytics APIs ---
 
   /// GET /api/analytics/stats - Thống kê tổng quan Admin

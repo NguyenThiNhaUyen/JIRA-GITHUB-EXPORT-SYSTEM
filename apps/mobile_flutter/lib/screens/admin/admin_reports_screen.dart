@@ -35,40 +35,32 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       MediaQuery.of(context).size.width < 1200;
 
   List<Map<String, dynamic>> semesters = [];
-
-  List<Map<String, dynamic>> allCoursesRaw = [];
+  List<Map<String, dynamic>> courses = [];
 
   List<Map<String, dynamic>> get allCourses {
-    if (selectedSemester.isEmpty) return allCoursesRaw;
-    return allCoursesRaw
-        .where((c) => c['semesterId'].toString() == selectedSemester)
-        .toList();
+    if (selectedSemester.isEmpty) return courses;
+    return courses.where((c) => c['semesterId'].toString() == selectedSemester).toList();
   }
 
   List<Map<String, dynamic>> get filteredCourses {
-    if (selectedCourse.isEmpty) return allCourses;
-    return allCourses.where((c) => c['id'].toString() == selectedCourse).toList();
+    List<Map<String, dynamic>> result = courses;
+    if (selectedSemester.isNotEmpty) {
+      result = result.where((c) => c['semesterId'].toString() == selectedSemester).toList();
+    }
+    if (selectedCourse.isNotEmpty) {
+      result = result.where((c) => c['id'].toString() == selectedCourse).toList();
+    }
+    return result;
   }
 
   Map<String, dynamic> get stats {
-    final totalCourses = allCourses.length;
-    final totalStudents = allCourses.fold<int>(
-      0,
-      (sum, c) => sum + ((c['currentStudents'] as num?)?.toInt() ?? 0),
-    );
-    final totalProjects = allCourses.fold<int>(
-      0,
-      (sum, c) => sum + ((c['projectsCount'] as num?)?.toInt() ?? 0),
-    );
-    final activeCourses = allCourses
-        .where((c) => c['status'] == 'ACTIVE')
-        .length;
-
+    final resultCourses = courses; // Always calculate based on all for overview if needed, or filtered?
+    // AdminReports.jsx uses allCourses for stats overview usually
     return {
-      'totalCourses': totalCourses,
-      'totalStudents': totalStudents,
-      'totalProjects': totalProjects,
-      'activeCourses': activeCourses,
+      'totalCourses': resultCourses.length,
+      'activeCourses': resultCourses.where((c) => c['status'] == 'ACTIVE').length,
+      'totalStudents': resultCourses.fold<int>(0, (sum, c) => sum + ((c['currentStudents'] as num?)?.toInt() ?? 0)),
+      'totalProjects': resultCourses.fold<int>(0, (sum, c) => sum + ((c['projectsCount'] as num?)?.toInt() ?? 0)),
     };
   }
 
@@ -93,7 +85,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       )
       .toList();
 
-  List<Map<String, dynamic>> get srsStatusData => const [];
 
   @override
   void initState() {
@@ -125,7 +116,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
       setState(() {
         semesters = List<Map<String, dynamic>>.from(results[0]);
-        allCoursesRaw = List<Map<String, dynamic>>.from(results[1]);
+        courses = List<Map<String, dynamic>>.from(results[1]);
         _isLoading = false;
       });
     } catch (e) {
@@ -187,7 +178,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildBreadcrumb(),
+                                _buildPageHeader(),
+                                if (isMobile) _buildMobileActions(),
                                 const SizedBox(height: 18),
                                 _buildFiltersCard(),
                                 const SizedBox(height: 18),
@@ -196,8 +188,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 _buildChartsGrid(),
                                 const SizedBox(height: 18),
                                 _buildCourseReportTable(),
-                                const SizedBox(height: 18),
-                                _buildSilentProjectsAlert(),
                                 const SizedBox(height: 24),
                               ],
                             ),
@@ -217,13 +207,113 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
   Widget _buildTopBar() {
     return AppTopHeader(
-      title: 'Phân tích hệ thống',
+      title: 'Trung tâm Báo cáo',
       primary: false,
       user: _currentUser ?? const AppUser(
         name: 'Admin',
         email: '',
         role: 'ADMIN',
       ),
+    );
+  }
+
+  Widget _buildPageHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildBreadcrumb(),
+              const SizedBox(height: 8),
+              const Text(
+                'Trung tâm Báo cáo',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Tổng hợp dữ liệu, thống kê hiệu suất và xuất các báo cáo chuyên sâu.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isMobile)
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.print_outlined, size: 16),
+                label: const Text('In báo cáo'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _handleExportAll,
+                icon: const Icon(Icons.download, size: 16),
+                label: const Text('Export Tổng hợp'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMobileActions() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('In báo cáo'),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: _handleExportAll,
+              icon: const Icon(Icons.download, size: 16),
+              label: const Text('Export'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: teal,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleExportAll() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đang trích xuất báo cáo tổng hợp...'), backgroundColor: teal),
     );
   }
 
@@ -261,14 +351,55 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 _buildSemesterDropdown(),
                 const SizedBox(height: 12),
                 _buildCourseDropdown(),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.filter_list, size: 18),
+                    label: const Text('Áp dụng lọc'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: teal,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(child: _buildSemesterDropdown()),
+                Expanded(flex: 3, child: _buildSemesterDropdown()),
                 const SizedBox(width: 16),
-                Expanded(child: _buildCourseDropdown()),
+                Expanded(flex: 3, child: _buildCourseDropdown()),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: SizedBox(
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã cập nhật bộ lọc'), backgroundColor: teal),
+                        );
+                      },
+                      icon: const Icon(Icons.filter_list, size: 18),
+                      label: const Text('Áp dụng lọc'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: teal,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
     );
@@ -383,33 +514,25 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         'title': 'Tổng số lớp',
         'value': '${stats['totalCourses']}',
         'icon': Icons.book_outlined,
-        'color': const Color(0xFF3B82F6),
-        'sub': '${stats['activeCourses']} đang mở',
-        'subColor': const Color(0xFF16A34A),
+        'color': const Color(0xFF6366F1), // indigo
+      },
+      {
+        'title': 'Lớp đang mở',
+        'value': '${stats['activeCourses']}',
+        'icon': Icons.check_circle_outline,
+        'color': const Color(0xFF10B981), // success/teal
       },
       {
         'title': 'Tổng sinh viên',
         'value': '${stats['totalStudents']}',
         'icon': Icons.people_outline,
-        'color': const Color(0xFF6366F1),
-        'sub': 'Toàn hệ thống',
-        'subColor': textSecondary,
+        'color': const Color(0xFF3B82F6), // info/blue
       },
       {
-        'title': 'Số lượng dự án',
+        'title': 'Dự án/Nhóm',
         'value': '${stats['totalProjects']}',
         'icon': Icons.folder_copy_outlined,
-        'color': const Color(0xFF8B5CF6),
-        'sub': '${projectStats['activeProjects']} đang hoạt động',
-        'subColor': const Color(0xFF2563EB),
-      },
-      {
-        'title': 'Dự án cần chú ý',
-        'value': '${projectStats['silentProjects']}',
-        'icon': Icons.warning_amber_rounded,
-        'color': const Color(0xFFF87171),
-        'sub': 'Không có hoạt động 7 ngày',
-        'subColor': const Color(0xFFEF4444),
+        'color': const Color(0xFFF59E0B), // warning/amber
       },
     ];
 
@@ -489,15 +612,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                               color: textPrimary,
                             ),
                           ),
-                          Text(
-                            '${item['sub']}',
-                            style: TextStyle(
-                              fontSize: isNarrow ? 9 : 10,
-                              color: item['subColor'] as Color,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                         ],
                       ),
                     ),
@@ -514,41 +628,18 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   Widget _buildChartsGrid() {
     final children = [
       _SectionCard(
-        title: 'Lịch sử Commit (30 ngày qua)',
+        title: 'Commit Trends',
+        subtitle: '30 Ngày qua',
         child: SizedBox(
           height: 250,
-          child: _SimpleLineChart(data: commitChartData),
+          child: _SimpleLineChart(data: const []),
         ),
       ),
       _SectionCard(
-        title: 'Tình trạng Báo cáo SRS',
-        child: SizedBox(
-          height: 250,
-          child: _SimpleDonutLegendChart(data: srsStatusData),
-        ),
-      ),
-      _SectionCard(
-        title: 'Dự án theo Lớp học',
+        title: 'Phân bổ dự án',
         child: SizedBox(
           height: 250,
           child: _SimpleBarChart(data: projectDistribution),
-        ),
-      ),
-      _SectionCard(
-        title: 'Tiến độ Các môn học',
-        child: SizedBox(
-          height: 250,
-          child: _SimpleProgressChart(
-            data: filteredCourses
-                .map<Map<String, dynamic>>(
-                  (course) => <String, dynamic>{
-                    'name': course['code'],
-                    'completed': ((course['projectsCount'] as num?)?.toInt() ?? 0) + 4,
-                    'remaining': 5,
-                  },
-                )
-                .toList(),
-          ),
         ),
       ),
     ];
@@ -748,114 +839,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     );
   }
 
-  Widget _buildSilentProjectsAlert() {
-    final int silentProjects = (projectStats['silentProjects'] as num?)?.toInt() ?? 0;
-
-    if (silentProjects > 0) {
-      return _SectionCard(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF2F2),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFFECACA)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
-                  SizedBox(width: 8),
-                  Text(
-                    'Cảnh báo Dự án',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFB91C1C),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEE2E2),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$silentProjects',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFDC2626),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Dự án chưa hoạt động',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Các dự án này không có hoạt động cập nhật mã nguồn trong 7 ngày qua.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: textSecondary),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
-      ),
-      child: Column(
-        children: const [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Color(0xFFDCFCE7),
-            child: Icon(
-              Icons.check_circle_outline,
-              size: 32,
-              color: Color(0xFF16A34A),
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Tất cả dự án đang hoạt động',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: textPrimary,
-            ),
-          ),
-          SizedBox(height: 6),
-          Text(
-            'Không có dự án nào bị bỏ trống tuần này',
-            style: TextStyle(fontSize: 13, color: textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildHeaderCell(String text, {TextAlign align = TextAlign.left}) {
     return Padding(
@@ -938,7 +921,7 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -1169,150 +1152,3 @@ class _SimpleLineChart extends StatelessWidget {
   }
 }
 
-class _SimpleDonutLegendChart extends StatelessWidget {
-  final List<Map<String, dynamic>> data;
-
-  const _SimpleDonutLegendChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final total = data.fold<int>(0, (sum, e) => sum + (e['value'] as int));
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Center(
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 18),
-              ),
-              child: Center(
-                child: Text(
-                  '$total',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: _AdminReportsScreenState.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 5,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: data.map((item) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: item['color'] as Color,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${item['name']}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: _AdminReportsScreenState.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${item['value']}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: _AdminReportsScreenState.textSecondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SimpleProgressChart extends StatelessWidget {
-  final List<Map<String, dynamic>> data;
-
-  const _SimpleProgressChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    if (data.isEmpty) {
-      return const Center(
-        child: Text(
-          'Không có dữ liệu',
-          style: TextStyle(color: _AdminReportsScreenState.textSecondary),
-        ),
-      );
-    }
-
-    return Column(
-      children: data.map((item) {
-        final int completed = (item['completed'] as num?)?.toInt() ?? 0;
-        final int remaining = (item['remaining'] as num?)?.toInt() ?? 0;
-        final int total = completed + remaining;
-        final double ratio = total == 0 ? 0 : completed / total;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 64,
-                child: Text(
-                  '${item['name']}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: _AdminReportsScreenState.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: ratio,
-                    minHeight: 12,
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      _AdminReportsScreenState.teal,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '${(ratio * 100).round()}%',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: _AdminReportsScreenState.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-}

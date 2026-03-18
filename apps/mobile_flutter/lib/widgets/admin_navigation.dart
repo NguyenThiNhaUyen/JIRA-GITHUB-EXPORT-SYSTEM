@@ -104,6 +104,15 @@ class AdminSidebar extends StatelessWidget {
                     label: 'Tài khoản',
                     route: '/admin/users',
                   ),
+                  const SizedBox(height: 18),
+                  const _SidebarSectionTitle('HÀNH ĐỘNG'),
+                  const SizedBox(height: 8),
+                  const _SidebarItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Đăng xuất',
+                    route: '/logout',
+                    color: Colors.redAccent,
+                  ),
                 ],
               ),
             ),
@@ -240,7 +249,15 @@ class AdminDrawer extends StatelessWidget {
                     label: 'Tài khoản',
                     route: '/admin/users',
                   ),
-
+                  const SizedBox(height: 18),
+                  const _SidebarSectionTitle('HÀNH ĐỘNG'),
+                  const SizedBox(height: 8),
+                  const _SidebarItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Đăng xuất',
+                    route: '/logout',
+                    color: Colors.redAccent,
+                  ),
                 ],
               ),
             ),
@@ -277,11 +294,13 @@ class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String route;
+  final Color? color;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.route,
+    this.color,
   });
 
   @override
@@ -322,13 +341,13 @@ class _SidebarItem extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 22, color: active ? activeText : inactiveText),
+                Icon(icon, size: 22, color: color ?? (active ? activeText : inactiveText)),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: active ? activeText : inactiveText,
+                      color: color ?? (active ? activeText : inactiveText),
                       fontSize: 15,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w600,
                     ),

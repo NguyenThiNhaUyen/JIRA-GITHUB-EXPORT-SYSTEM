@@ -180,6 +180,13 @@ GoRouter createRouter(AuthProvider authProvider) {
         path: '/admin/workload',
         builder: (context, state) => const LecturerWorkloadScreen(),
       ),
+      GoRoute(
+        path: '/logout',
+        builder: (context, state) {
+          Future.microtask(() => authProvider.logout());
+          return const LoginScreen();
+        },
+      ),
     ],
   );
 }

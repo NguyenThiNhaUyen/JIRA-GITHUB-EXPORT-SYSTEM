@@ -133,7 +133,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
             ),
             onPressed: () {
               Navigator.pop(ctx);
-              context.go('/login');
+              context.go('/logout');
             },
             child: const Text('Đăng xuất'),
           ),
