@@ -186,6 +186,7 @@ builder.Services.AddHttpClient<IJiraClient, JiraClient>();
                 {
                     options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();

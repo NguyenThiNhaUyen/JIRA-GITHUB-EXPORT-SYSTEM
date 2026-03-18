@@ -88,8 +88,13 @@ public class CourseService : ICourseService
         _unitOfWork.Courses.Add(course);
         await _unitOfWork.SaveChangesAsync();
 
-        // Reload with navigation properties
-        var createdCourse = await _unitOfWork.Courses
+        // Reload with navigation properties for Mapper
+        var createdCourse = await _unitOfWork.Courses.Query()
+            .AsNoTracking()
+            .Include(c => c.subject)
+            .Include(c => c.semester)
+            .Include(c => c.lecturer_users)
+            .Include(c => c.course_enrollments)
             .FirstOrDefaultAsync(c => c.id == course.id);
 
         return _mapper.Map<CourseDetailResponse>(createdCourse);
