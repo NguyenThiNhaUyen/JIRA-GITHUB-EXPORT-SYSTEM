@@ -22,7 +22,7 @@ export default function ForgotPassword() {
             if (email) {
                 setIsSubmitted(true);
             } else {
-                setError("Vui lĂ²ng nháº­p email há»£p lá»‡");
+                setError("Vui lòng nhập email hợp lệ");
             }
             setLoading(false);
         }, 1000);
@@ -54,21 +54,21 @@ export default function ForgotPassword() {
                         >
                             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                         </button>
-                        <div className="font-bold text-xl text-teal-900 cursor-pointer" onClick={handleBackToLogin}>
-                            Quay láº¡i Ä‘Äƒng nháº­p
+                        <div className="font-bold text-xl text-teal-900 tracking-wide cursor-pointer" onClick={handleBackToLogin}>
+                            Quay lại đăng nhập
                         </div>
                     </div>
 
                     <div className="max-w-[400px] w-full mx-auto mt-6 text-gray-900">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2 mt-2">KhĂ´i phá»¥c máº­t kháº©u</h1>
-                        <p className="text-gray-500 mb-6 text-sm">Há»‡ thá»‘ng quáº£n lĂ½ dá»± Ă¡n há»c táº­p</p>
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2 mt-2">Khôi phục mật khẩu</h1>
+                        <p className="text-gray-500 mb-6 text-sm">Hệ thống quản lý dự án học tập</p>
 
                         {!isSubmitted ? (
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="bg-teal-50/50 p-4 rounded-2xl border border-teal-100 mb-6 flex items-start gap-3">
                                     <Mail className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
                                     <p className="text-sm text-gray-600 leading-relaxed">
-                                        Vui lĂ²ng nháº­p Ä‘á»‹a chá»‰ email Ä‘Ă£ Ä‘Äƒng kĂ½ cá»§a báº¡n. ChĂºng tĂ´i sáº½ gá»­i má»™t liĂªn káº¿t Ä‘á»ƒ báº¡n cĂ³ thá»ƒ Ä‘áº·t láº¡i máº­t kháº©u má»›i.
+                                        Vui lòng nhập địa chỉ email đã đăng ký của bạn. Chúng tôi sẽ gửi một liên kết để bạn có thể đặt lại mật khẩu mới.
                                     </p>
                                 </div>
 
@@ -80,7 +80,7 @@ export default function ForgotPassword() {
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Nháº­p email cá»§a báº¡n"
+                                        placeholder="Nhập email của bạn"
                                         required
                                         disabled={loading}
                                         className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
@@ -98,12 +98,12 @@ export default function ForgotPassword() {
                                     disabled={loading}
                                     className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-full shadow-[0_4px_15px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.4)] transition-all duration-300 text-sm mt-4"
                                 >
-                                    {loading ? "Äang gá»­i..." : "Gá»­i link khĂ´i phá»¥c"}
+                                    {loading ? "Đang gửi..." : "Gửi link khôi phục"}
                                 </Button>
 
                                 <div className="mt-6 text-center text-xs text-gray-500 pt-4">
                                     <p>
-                                        đŸ’¡ <span className="font-semibold text-gray-600">LÆ°u Ă½:</span> Link khĂ´i phá»¥c sáº½ háº¿t háº¡n sau 1 giá».
+                                        💡 <span className="font-semibold text-gray-600">Lưu ý:</span> Link khôi phục sẽ hết hạn sau 1 giờ.
                                     </p>
                                 </div>
                             </form>
@@ -114,22 +114,22 @@ export default function ForgotPassword() {
                                         <CheckCircle className="w-16 h-16 text-teal-500" />
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-gray-800">Email Ä‘Ă£ Ä‘Æ°á»£c gá»­i!</h3>
+                                <h3 className="text-2xl font-bold text-gray-800">Email đã được gửi!</h3>
                                 <div className="bg-white/50 p-4 rounded-2xl border border-gray-100">
                                     <p className="text-gray-600 text-sm mb-2">
-                                        ChĂºng tĂ´i Ä‘Ă£ gá»­i link khĂ´i phá»¥c máº­t kháº©u Ä‘áº¿n:
+                                        Chúng tôi đã gửi link khôi phục mật khẩu đến:
                                     </p>
                                     <p className="font-bold text-teal-700 text-lg">{email}</p>
                                 </div>
                                 <p className="text-sm text-gray-500 leading-relaxed px-4">
-                                    Vui lĂ²ng kiá»ƒm tra há»™p thÆ° Ä‘áº¿n (hoáº·c thÆ° má»¥c spam) vĂ  lĂ m theo hÆ°á»›ng dáº«n trong email Ä‘á»ƒ Ä‘áº·t láº¡i máº­t kháº©u cá»§a báº¡n.
+                                    Vui lòng kiểm tra hộp thư đến (hoặc thư mục spam) và làm theo hướng dẫn trong email để đặt lại mật khẩu của bạn.
                                 </p>
                                 <div className="pt-4">
                                     <Button
                                         onClick={handleBackToLogin}
                                         className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-full shadow-md transition-all duration-300 text-sm"
                                     >
-                                        Quay láº¡i Ä‘Äƒng nháº­p
+                                        Quay lại đăng nhập
                                     </Button>
                                 </div>
                             </div>
@@ -142,14 +142,14 @@ export default function ForgotPassword() {
 
                     <div className="relative z-10 max-w-lg mt-2 mb-8">
                         <h2 className="text-4xl lg:text-5xl font-bold leading-tight">
-                            Báº£o máº­t tĂ i khoáº£n<br />cá»§a báº¡n.
+                            Bảo mật tài khoản<br />của bạn.
                         </h2>
                     </div>
 
                     <div className="relative mb-auto z-10">
                         <Shield className="w-10 h-10 text-teal-300 mb-6 opacity-80" />
                         <p className="text-xl lg:text-2xl text-teal-50 font-medium leading-relaxed mb-6">
-                            "ChĂºng tĂ´i cam káº¿t báº£o vá»‡ thĂ´ng tin vĂ  dá»¯ liá»‡u há»c táº­p cá»§a báº¡n á»Ÿ má»©c cao nháº¥t. KhĂ´i phá»¥c quyá»n truy cáº­p nhanh chĂ³ng vĂ  an toĂ n."
+                            "Chúng tôi cam kết bảo vệ thông tin và dữ liệu học tập của bạn ở mức cao nhất. Khôi phục quyền truy cập nhanh chóng và an toàn."
                         </p>
                     </div>
 
@@ -180,7 +180,7 @@ export default function ForgotPassword() {
                             <div className="min-w-0">
                                 <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Education Management System</h3>
                                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium truncate">
-                                    Ná»n táº£ng Quáº£n lĂ½ GiĂ¡o dá»¥c
+                                    Nền tảng Quản lý Giáo dục
                                 </p>
                             </div>
                         </div>
@@ -190,3 +190,9 @@ export default function ForgotPassword() {
         </div>
     );
 }
+
+
+
+
+
+

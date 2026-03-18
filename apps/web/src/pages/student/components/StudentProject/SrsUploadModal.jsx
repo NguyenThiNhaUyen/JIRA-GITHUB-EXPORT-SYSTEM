@@ -4,7 +4,7 @@ import { Button } from"@/components/ui/Button.jsx";
 
 export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onSrsSubmit, isSubmitting }) {
  return (
- <Modal isOpen={isOpen} onClose={onClose} title="Ná»™p tĂ i liá»‡u SRS má»›i" size="md">
+ <Modal isOpen={isOpen} onClose={onClose} title="Nộp tài liệu SRS mới" size="md">
  <div className="p-4 space-y-12 animate-in fade-in zoom-in-95 duration-500">
  <div 
  className={`p-16 border-3 border-dashed rounded-[48px] text-center group cursor-pointer transition-all hover:scale-[1.02] active:scale-95 relative overflow-hidden ${uploadFile ? 'border-teal-500 bg-teal-50/20 shadow-2xl shadow-teal-100' : 'border-teal-100 bg-teal-50/5 hover:bg-teal-50/15'}`}
@@ -25,9 +25,9 @@ export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onS
  {uploadFile ? <Check size={48} className="animate-in zoom-in duration-300" /> : <Upload size={48} className="animate-pulse" />}
  </div>
  
- <p className="text-xl font-black text-gray-800 tracking-tight font-display mb-3">{uploadFile ? uploadFile.name :"Chá»n hoáº·c KĂ©o tháº£ file SRS"}</p>
+ <p className="text-xl font-black text-gray-800 tracking-tight font-display mb-3">{uploadFile ? uploadFile.name :"Chọn hoặc Kéo thả file SRS"}</p>
  <p className="text-[11px] text-gray-400 font-black tracking-[0.2em] opacity-60">
- {uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` :"Äá»‹nh dáº¡ng há»— trá»£: PDF (Tá»‘i Ä‘a 20MB)"}
+ {uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` :"Định dạng hỗ trợ: PDF (Tối đa 20MB)"}
  </p>
  </div>
  
@@ -35,18 +35,18 @@ export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onS
  <div className="space-y-4">
  <label className="text-[10px] font-black text-gray-400 ml-4 flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
- PhiĂªn báº£n tĂ i liá»‡u
+ Phiên bản tài liệu
  </label>
  <input type="text" placeholder="VD: 1.0.1-RC" className="w-full h-16 rounded-[24px] bg-gray-50 border border-gray-100 px-8 text-sm font-black focus:ring-8 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all placeholder:font-bold placeholder:text-gray-300 font-mono tracking-tighter" />
  </div>
  <div className="space-y-4">
  <label className="text-[10px] font-black text-gray-400 ml-4 flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
- PhĂ¢n loáº¡i ná»™p
+ Phân loại nộp
  </label>
  <select className="w-full h-16 rounded-[24px] bg-gray-50 border border-gray-100 px-8 text-sm font-black focus:ring-8 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white outline-none transition-all cursor-pointer appearance-none shadow-sm hover:bg-gray-100/50">
- <option>Báº£n nhĂ¡p (Draft)</option>
- <option>Báº£n chĂ­nh thá»©c (Final)</option>
+ <option>Bản nháp (Draft)</option>
+ <option>Bản chính thức (Final)</option>
  </select>
  </div>
  </div>
@@ -57,7 +57,7 @@ export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onS
  variant="ghost" 
  className="rounded-[24px] h-16 px-12 font-black tracking-[0.2em] text-[11px] text-gray-400 hover:text-gray-800 hover:bg-gray-50 transition-all font-display"
  >
- Há»§y bá»
+ Hủy bỏ
  </Button>
  <Button 
  onClick={onSrsSubmit} 
@@ -65,10 +65,16 @@ export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onS
  className="bg-teal-600 hover:bg-teal-700 text-white rounded-[32px] h-16 px-20 font-black tracking-[0.3em] shadow-2xl shadow-teal-200 disabled:opacity-30 transition-all hover:scale-105 active:scale-95 border-0 font-display group/btn"
  >
  {isSubmitting ? <RefreshCw className="animate-spin mr-4" size={24}/> : null} 
- <span className="relative z-10">Gá»­i ná»™p tĂ i liá»‡u</span>
+ <span className="relative z-10">Gửi nộp tài liệu</span>
  </Button>
  </div>
  </div>
  </Modal>
  );
 }
+
+
+
+
+
+

@@ -33,13 +33,19 @@ export function TopContributors({ students }) {
  ))}
  {topStudents.length === 0 && (
  <p className="text-center text-[10px] font-black text-gray-400 py-4">
- KhĂ´ng cĂ³ dá»¯ liá»‡u
+ Không có dữ liệu
  </p>
  )}
  </div>
  <Button className="w-full mt-8 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl h-11 text-xs font-black border-0">
- Xem táº¥t cáº£
+ Xem tất cả
  </Button>
  </Card>
  );
 }
+
+
+
+
+
+

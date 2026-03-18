@@ -17,12 +17,12 @@ export function AdminStats({ stats, integrationStats, activeSemesters }) {
     <div className="space-y-6">
       {/* Hero Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatsCard label="Há»c ká»³" value={stats.semesters} icon={CalendarDays} variant="indigo" trend={activeSemesters} />
-        <StatsCard label="MĂ´n há»c" value={stats.subjects} icon={Library} variant="indigo" />
-        <StatsCard label="Lá»›p há»c pháº§n" value={stats.courses} icon={BookOpen} variant="info" />
-        <StatsCard label="Giáº£ng viĂªn" value={stats.lecturers} icon={UserCog} variant="info" />
-        <StatsCard label="Sinh viĂªn" value={stats.students} icon={GraduationCap} variant="success" />
-        <StatsCard label="NhĂ³m dá»± Ă¡n" value={stats.projects} icon={FolderKanban} variant="warning" />
+        <StatsCard label="Học kỳ" value={stats.semesters} icon={CalendarDays} variant="indigo" trend={activeSemesters} />
+        <StatsCard label="Môn học" value={stats.subjects} icon={Library} variant="indigo" />
+        <StatsCard label="Lớp học phần" value={stats.courses} icon={BookOpen} variant="info" />
+        <StatsCard label="Giảng viên" value={stats.lecturers} icon={UserCog} variant="info" />
+        <StatsCard label="Sinh viên" value={stats.students} icon={GraduationCap} variant="success" />
+        <StatsCard label="Nhóm dự án" value={stats.projects} icon={FolderKanban} variant="warning" />
       </div>
 
       {/* GitHub KPI */}
@@ -36,3 +36,9 @@ export function AdminStats({ stats, integrationStats, activeSemesters }) {
     </div>
   );
 }
+
+
+
+
+
+

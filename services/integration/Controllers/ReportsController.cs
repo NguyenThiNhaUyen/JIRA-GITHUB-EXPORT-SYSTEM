@@ -69,9 +69,9 @@ public class ReportsController : ControllerBase
     /// Generate commit statistics report
     /// </summary>
     [HttpPost("commit-statistics")]
-    public async Task<IActionResult> GenerateCommitStats([FromQuery] long courseId, [FromQuery] string Format = "PDF")
+    public async Task<IActionResult> GenerateCommitStats([FromQuery] long courseId, [FromQuery] string format = "PDF")
     {
-        var reportId = await _reportService.GenerateCommitStatisticsReportAsync(courseId, "N/A");
+        var reportId = await _reportService.GenerateCommitStatisticsReportAsync(courseId, format);
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Report generation started"));
     }
 
@@ -79,14 +79,14 @@ public class ReportsController : ControllerBase
     /// Generate team roster report
     /// </summary>
     [HttpPost("team-roster")]
-    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string Format = "PDF")
+    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
     {
         if (courseId.HasValue)
         {
-            var reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, "N/A");
+            var reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, format);
             return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide roster generation started"));
         }
-        var reportIdProj = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, "N/A");
+        var reportIdProj = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, format);
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "Report generation started"));
     }
 
@@ -98,9 +98,9 @@ public class ReportsController : ControllerBase
         [FromQuery] long projectId,
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
-        [FromQuery] string Format = "PDF")
+        [FromQuery] string format = "PDF")
     {
-        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, "N/A");
+        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, format);
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Activity summary report generation started"));
     }
 
@@ -108,14 +108,14 @@ public class ReportsController : ControllerBase
     /// Generate ISO 29148 SRS report from Jira
     /// </summary>
     [HttpPost("srs")]
-    public async Task<IActionResult> GenerateSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string Format = "PDF")
+    public async Task<IActionResult> GenerateSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
     {
         if (courseId.HasValue)
         {
-            var reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, "N/A");
+            var reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, format);
             return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide SRS generation started"));
         }
-        var reportIdProj = await _reportService.GenerateSrsReportAsync(projectId!.Value, "N/A");
+        var reportIdProj = await _reportService.GenerateSrsReportAsync(projectId!.Value, format);
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "SRS Report generation started"));
     }
 

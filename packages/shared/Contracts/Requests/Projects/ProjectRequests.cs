@@ -35,10 +35,17 @@ public class LinkIntegrationRequest
 
 public class ApproveIntegrationRequest
 {
-    // No body needed â€” approver ID comes from JWT token
+    // No body needed — approver ID comes from JWT token
 }
 
 public class RejectIntegrationRequest
 {
     public string? Reason { get; set; }
 }
+
+
+
+
+
+
+

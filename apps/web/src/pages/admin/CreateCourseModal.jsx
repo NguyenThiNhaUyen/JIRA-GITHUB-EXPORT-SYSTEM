@@ -5,10 +5,10 @@ import { Modal } from "@/components/ui/Interactive.jsx";
 import { Button } from "@/components/ui/Button.jsx";
 import { Input } from "@/components/ui/Input.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
-import { useCreateCourse } from "@/features/courses/hooks/useCourses.js';
+import { useCreateCourse } from "@/features/courses/hooks/useCourses.js";
 import { useToast } from "@/components/ui/Toast.jsx";
 
-import { useGetSemesters, useGetSubjects } from "@/features/system/hooks/useSystem.js';
+import { useGetSemesters, useGetSubjects } from "@/features/system/hooks/useSystem.js";
 
 export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   const navigate = useNavigate();
@@ -256,3 +256,9 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
     </Modal>
   );
 }
+
+
+
+
+
+

@@ -32,9 +32,9 @@ export function useCourseAnalytics() {
   })), [commitTrends]);
 
   const jiraData = useMemo(() => [
-    { name: "Sáºµn sĂ ng", value: integrationStats?.jiraStats?.todo || 0, color: "#94a3b8" },
-    { name: "Äang lĂ m", value: integrationStats?.jiraStats?.inProgress || 0, color: "#6366f1" },
-    { name: "HoĂ n táº¥t", value: integrationStats?.jiraStats?.done || 1, color: "#14b8a6" }
+    { name: "Sẵn sàng", value: integrationStats?.jiraStats?.todo || 0, color: "#94a3b8" },
+    { name: "Đang làm", value: integrationStats?.jiraStats?.inProgress || 0, color: "#6366f1" },
+    { name: "Hoàn tất", value: integrationStats?.jiraStats?.done || 1, color: "#14b8a6" }
   ], [integrationStats]);
 
   const loading = loadingCourse || loadingHeatmap || loadingTrends || loadingRankings || loadingInactive;
@@ -56,3 +56,9 @@ export function useCourseAnalytics() {
     loading
   };
 }
+
+
+
+
+
+

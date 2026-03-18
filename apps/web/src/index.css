@@ -37,7 +37,7 @@
 @layer components {
   .glass-card {
     @apply bg-white/70 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
-    /* XĂ³a viá»n tráº¯ng Ä‘á»ƒ mÆ°á»£t hÆ¡n giá»‘ng áº£nh cÅ© */
+    /* Xóa viền trắng để mượt hơn giống ảnh cũ */
   }
 
   .premium-shadow {

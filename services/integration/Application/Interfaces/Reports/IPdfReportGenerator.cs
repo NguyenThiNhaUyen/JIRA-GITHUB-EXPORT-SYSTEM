@@ -4,9 +4,9 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 public interface IPdfReportGenerator
 {
-    byte[] GenerateCommitStatisticsPdf(string courseName, List<Project> projects);
-    byte[] GenerateTeamRosterPdf(Project project);
-    byte[] GenerateActivitySummaryPdf(Project project, List<dynamic> activityList);
+    byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects);
+    byte[] GenerateTeamRosterPdf(project project);
+    byte[] GenerateActivitySummaryPdf(project project, List<dynamic> activityList);
     byte[] GenerateSrsReportPdf(SrsReportData data);
 }
 
@@ -16,7 +16,7 @@ public interface IPdfReportGenerator
 public class SrsReportData
 {
     // Project info
-    public Project Project { get; set; } = null!;
+    public project Project { get; set; } = null!;
     public string JiraProjectKey { get; set; } = "";
     public string JiraSiteUrl { get; set; } = "";
     public string GithubRepoUrl { get; set; } = "";

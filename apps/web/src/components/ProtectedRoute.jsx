@@ -1,4 +1,4 @@
-// ProtectedRoute: Component báº£o vá»‡ routes cáº§n authentication
+// ProtectedRoute: Component bảo vệ routes cần authentication
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
@@ -11,3 +11,11 @@ export default function ProtectedRoute({ children }) {
 
   return children;
 }
+
+
+
+
+
+
+
+

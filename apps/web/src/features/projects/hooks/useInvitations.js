@@ -7,7 +7,7 @@ export const INVITATION_KEYS = {
     myPending: () => [...INVITATION_KEYS.all, "my-pending"],
 };
 
-/** Láº¥y danh sĂ¡ch lá»i má»i nhĂ³m (STUDENT) */
+/** Lấy danh sách lời mời nhóm (STUDENT) */
 export const useGetMyPendingInvitations = () => {
     return useQuery({
         queryKey: INVITATION_KEYS.myPending(),
@@ -19,7 +19,7 @@ export const useGetMyPendingInvitations = () => {
     });
 };
 
-/** Äá»“ng Ă½ lá»i má»i nhĂ³m */
+/** Đồng ý lời mời nhóm */
 export const useAcceptInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -34,13 +34,13 @@ export const useAcceptInvitation = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.all });
-            // Cáº§n invalidate luĂ´n projects/groups vĂ¬ Ä‘Ă£ vĂ o nhĂ³m má»›i
+            // Cần invalidate luôn projects/groups vì đã vào nhóm mới
             queryClient.invalidateQueries({ queryKey: ["projects"] });
         },
     });
 };
 
-/** Tá»« chá»‘i/Decline lá»i má»i nhĂ³m */
+/** Từ chối/Decline lời mời nhóm */
 export const useRejectInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -60,7 +60,7 @@ export const useRejectInvitation = () => {
     });
 };
 
-/** Gá»­i lá»i má»i gia nháº­p nhĂ³m */
+/** Gửi lời mời gia nhập nhóm */
 export const useCreateInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -73,3 +73,9 @@ export const useCreateInvitation = () => {
         },
     });
 };
+
+
+
+
+
+

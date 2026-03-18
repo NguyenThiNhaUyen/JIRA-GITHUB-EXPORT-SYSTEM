@@ -10,7 +10,7 @@ export function SystemAlerts({ alertsList, handleResolveAlert, onNavigate }) {
  <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shadow-sm">
  <AlertTriangle size={18} className="text-amber-600" />
  </div>
- <CardTitle className="text-sm font-black text-gray-800 leading-none">Cáº£nh bĂ¡o há»‡ thá»‘ng</CardTitle>
+ <CardTitle className="text-sm font-black text-gray-800 leading-none">Cảnh báo hệ thống</CardTitle>
  </div>
  </CardHeader>
  <CardContent className="p-8">
@@ -18,7 +18,7 @@ export function SystemAlerts({ alertsList, handleResolveAlert, onNavigate }) {
  {alertsList.length === 0 ? (
  <div className="text-center py-4">
  <CheckCircle size={32} className="text-emerald-400 mx-auto mb-2" />
- <p className="text-[10px] font-black text-gray-400">Má»i thá»© Ä‘á»u á»•n Ä‘á»‹nh</p>
+ <p className="text-[10px] font-black text-gray-400">Mọi thứ đều ổn định</p>
  </div>
  ) : alertsList.map(a => (
  <div key={a.id} className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex justify-between items-center group transition-all hover:bg-amber-50">
@@ -36,10 +36,16 @@ export function SystemAlerts({ alertsList, handleResolveAlert, onNavigate }) {
  className="w-full h-12 rounded-2xl text-[10px] font-black text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-all border border-dashed border-gray-100"
  onClick={onNavigate}
  >
- Trung tĂ¢m cáº£nh bĂ¡o â†’
+ Trung tâm cảnh báo →
  </Button>
  </div>
  </CardContent>
  </Card>
  );
 }
+
+
+
+
+
+

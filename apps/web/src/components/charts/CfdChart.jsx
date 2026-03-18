@@ -8,7 +8,7 @@ export function CfdChart({ data = [], isLoading, isError }) {
   return (
     <ChartContainer
       title="Cumulative Flow Diagram"
-      subtitle="Work in progress theo thá»i gian"
+      subtitle="Work in progress theo thời gian"
       isLoading={isLoading}
       isError={isError}
       isEmpty={isEmpty}
@@ -55,3 +55,11 @@ export function CfdChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
+
+
+
+
+
+
+
+

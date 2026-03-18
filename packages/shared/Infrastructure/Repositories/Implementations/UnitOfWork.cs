@@ -4,7 +4,6 @@ using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore.Storage;
-using System.Collections.Concurrent;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
 
@@ -12,48 +11,74 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly JiraGithubToolDbContext _context;
     private IDbContextTransaction? _transaction;
-    private readonly ConcurrentDictionary<string, object> _repositories;
+
+    // Repositories
+    private IGenericRepository<user>? _users;
+    private IGenericRepository<student>? _students;
+    private IGenericRepository<lecturer>? _lecturers;
+    private IGenericRepository<role>? _roles;
+    private IGenericRepository<semester>? _semesters;
+    private IGenericRepository<subject>? _subjects;
+    private ICourseRepository? _courses;
+    private IGenericRepository<course_enrollment>? _courseEnrollments;
+    private IProjectRepository? _projects;
+    private IGenericRepository<team_member>? _teamMembers;
+    private IGenericRepository<project_integration>? _projectIntegrations;
+    private IGenericRepository<project_document>? _projectDocuments;
+    private IGenericRepository<github_repository>? _githubRepositories;
+    private IGenericRepository<github_commit>? _githubCommits;
+    private IGenericRepository<github_pull_request>? _githubPullRequests;
+    private IGenericRepository<github_user>? _githubUsers;
+    private IGenericRepository<jira_project>? _jiraProjects;
+    private IGenericRepository<jira_issue>? _jiraIssues;
+    private IGenericRepository<student_activity_daily>? _studentActivityDailies;
+    private IGenericRepository<inactive_alert>? _inactiveAlerts;
+    private IGenericRepository<report_export>? _reportExports;
+    private IGenericRepository<audit_log>? _auditLogs;
+    private IGenericRepository<team_invitation>? _teamInvitations;
+    private IGenericRepository<external_account>? _externalAccounts;
+    private IGenericRepository<notification>? _notifications;
 
     public UnitOfWork(JiraGithubToolDbContext context)
     {
         _context = context;
-        _repositories = new ConcurrentDictionary<string, object>();
     }
 
-    public IGenericRepository<User> Users => Repository<User>();
-    public IGenericRepository<Student> Students => Repository<Student>();
-    public IGenericRepository<Lecturer> Lecturers => Repository<Lecturer>();
-    public IGenericRepository<Role> Roles => Repository<Role>();
-    public IGenericRepository<Semester> Semesters => Repository<Semester>();
-    public IGenericRepository<Subject> Subjects => Repository<Subject>();
-    public ICourseRepository Courses => (ICourseRepository)_repositories.GetOrAdd("Course", _ => new CourseRepository(_context));
-    public IGenericRepository<CourseEnrollment> CourseEnrollments => Repository<CourseEnrollment>();
-    public IProjectRepository Projects => (IProjectRepository)_repositories.GetOrAdd("Project", _ => new ProjectRepository(_context));
-    public IGenericRepository<TeamMember> TeamMembers => Repository<TeamMember>();
-    public IGenericRepository<ProjectIntegration> ProjectIntegrations => Repository<ProjectIntegration>();
-    public IGenericRepository<ProjectDocument> ProjectDocuments => Repository<ProjectDocument>();
-    public IGenericRepository<GithubRepository> GitHubRepositories => Repository<GithubRepository>();
-    public IGenericRepository<GithubCommit> GitHubCommits => Repository<GithubCommit>();
-    public IGenericRepository<GithubPullRequest> GitHubPullRequests => Repository<GithubPullRequest>();
-    public IGenericRepository<GithubUser> GitHubUsers => Repository<GithubUser>();
-    public IGenericRepository<JiraProject> JiraProjects => Repository<JiraProject>();
-    public IGenericRepository<JiraIssue> JiraIssues => Repository<JiraIssue>();
-    public IGenericRepository<StudentActivityDaily> StudentActivityDailies => Repository<StudentActivityDaily>();
-    public IGenericRepository<InactiveAlert> InactiveAlerts => Repository<InactiveAlert>();
-    public IGenericRepository<ReportExport> ReportExports => Repository<ReportExport>();
-    public IGenericRepository<AuditLog> AuditLogs => Repository<AuditLog>();
-    public IGenericRepository<TeamInvitation> TeamInvitations => Repository<TeamInvitation>();
-    public IGenericRepository<ExternalAccount> ExternalAccounts => Repository<ExternalAccount>();
-    public IGenericRepository<Notification> Notifications => Repository<Notification>();
+    public IGenericRepository<user> Users => _users ??= new GenericRepository<user>(_context);
+    public IGenericRepository<student> Students => _students ??= new GenericRepository<student>(_context);
+    public IGenericRepository<lecturer> Lecturers => _lecturers ??= new GenericRepository<lecturer>(_context);
+    public IGenericRepository<role> Roles => _roles ??= new GenericRepository<role>(_context);
+    public IGenericRepository<semester> Semesters => _semesters ??= new GenericRepository<semester>(_context);
+    public IGenericRepository<subject> Subjects => _subjects ??= new GenericRepository<subject>(_context);
+    public ICourseRepository Courses => _courses ??= new CourseRepository(_context);
+    public IGenericRepository<course_enrollment> CourseEnrollments => _courseEnrollments ??= new GenericRepository<course_enrollment>(_context);
+    public IProjectRepository Projects => _projects ??= new ProjectRepository(_context);
+    public IGenericRepository<team_member> TeamMembers => _teamMembers ??= new GenericRepository<team_member>(_context);
+    public IGenericRepository<project_integration> ProjectIntegrations => _projectIntegrations ??= new GenericRepository<project_integration>(_context);
+    public IGenericRepository<project_document> ProjectDocuments => _projectDocuments ??= new GenericRepository<project_document>(_context);
+    public IGenericRepository<github_repository> GitHubRepositories => _githubRepositories ??= new GenericRepository<github_repository>(_context);
+    public IGenericRepository<github_commit> GitHubCommits => _githubCommits ??= new GenericRepository<github_commit>(_context);
+    public IGenericRepository<github_pull_request> GitHubPullRequests => _githubPullRequests ??= new GenericRepository<github_pull_request>(_context);
+    public IGenericRepository<github_user> GitHubUsers => _githubUsers ??= new GenericRepository<github_user>(_context);
+    public IGenericRepository<jira_project> JiraProjects => _jiraProjects ??= new GenericRepository<jira_project>(_context);
+    public IGenericRepository<jira_issue> JiraIssues => _jiraIssues ??= new GenericRepository<jira_issue>(_context);
+    public IGenericRepository<student_activity_daily> StudentActivityDailies => _studentActivityDailies ??= new GenericRepository<student_activity_daily>(_context);
+    public IGenericRepository<inactive_alert> InactiveAlerts => _inactiveAlerts ??= new GenericRepository<inactive_alert>(_context);
+    public IGenericRepository<report_export> ReportExports => _reportExports ??= new GenericRepository<report_export>(_context);
+    public IGenericRepository<audit_log> AuditLogs => _auditLogs ??= new GenericRepository<audit_log>(_context);
+    public IGenericRepository<team_invitation> TeamInvitations => _teamInvitations ??= new GenericRepository<team_invitation>(_context);
+    public IGenericRepository<external_account> ExternalAccounts => _externalAccounts ??= new GenericRepository<external_account>(_context);
+    public IGenericRepository<notification> Notifications => _notifications ??= new GenericRepository<notification>(_context);
 
-    public IGenericRepository<T> Repository<T>() where T : class
+    public async Task<int> SaveChangesAsync()
     {
-        return (IGenericRepository<T>)_repositories.GetOrAdd(typeof(T).Name, _ => new GenericRepository<T>(_context));
+        return await _context.SaveChangesAsync();
     }
 
-    public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
-
-    public async Task BeginTransactionAsync() => _transaction = await _context.Database.BeginTransactionAsync();
+    public async Task BeginTransactionAsync()
+    {
+        _transaction = await _context.Database.BeginTransactionAsync();
+    }
 
     public async Task CommitTransactionAsync()
     {
@@ -77,8 +102,14 @@ public class UnitOfWork : IUnitOfWork
 
     public void Dispose()
     {
-        _context.Dispose();
         _transaction?.Dispose();
-        GC.SuppressFinalize(this);
+        _context.Dispose();
     }
 }
+
+
+
+
+
+
+

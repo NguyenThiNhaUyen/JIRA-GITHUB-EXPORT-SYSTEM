@@ -4,9 +4,9 @@ import { Button } from"@/components/ui/Button.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
 
 const SEVERITY_STYLE = {
- HIGH: { dot:"bg-red-500", glow:"shadow-red-500/50", variant:"danger", label:"NghiĂªm trá»ng", bg:"bg-red-500/5" },
- MEDIUM: { dot:"bg-amber-500", glow:"shadow-amber-500/50", variant:"warning", label:"Trung bĂ¬nh", bg:"bg-amber-500/5" },
- LOW: { dot:"bg-blue-500", glow:"shadow-blue-500/50", variant:"info", label:"Nháº¹", bg:"bg-blue-500/5" }
+ HIGH: { dot:"bg-red-500", glow:"shadow-red-500/50", variant:"danger", label:"Nghiêm trọng", bg:"bg-red-500/5" },
+ MEDIUM: { dot:"bg-amber-500", glow:"shadow-amber-500/50", variant:"warning", label:"Trung bình", bg:"bg-amber-500/5" },
+ LOW: { dot:"bg-blue-500", glow:"shadow-blue-500/50", variant:"info", label:"Nhẹ", bg:"bg-blue-500/5" }
 };
 
 export function AlertList({
@@ -27,14 +27,14 @@ export function AlertList({
  <div className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
  <Bell size={18} className="text-red-500" />
  </div>
- <CardTitle className="font-display">Danh sĂ¡ch Cáº£nh bĂ¡o</CardTitle>
+ <CardTitle className="font-display">Danh sách Cảnh báo</CardTitle>
  </div>
  </CardHeader>
  <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar">
  {isLoading ? (
  <div className="p-32 text-center space-y-4">
  <RefreshCw className="w-12 h-12 animate-spin text-teal-600 mx-auto" />
- <p className="text-[10px] font-black text-gray-400 animate-pulse">Äang Ä‘á»“ng bá»™ dá»¯ liá»‡u cáº£nh bĂ¡o...</p>
+ <p className="text-[10px] font-black text-gray-400 animate-pulse">Đang đồng bộ dữ liệu cảnh báo...</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -67,7 +67,7 @@ export function AlertList({
  <MetricBadge icon={Bell} label="Overdue" value={a.metrics?.overdueTasks ?? 0} />
  {remindedIds.has(a.id) && (
  <div className="bg-blue-600 text-white px-5 py-2 rounded-2xl text-[9px] font-black shadow-lg shadow-blue-100 animate-in zoom-in-95">
- ÄĂ£ nháº¯c nhá»Ÿ
+ Đã nhắc nhở
  </div>
  )}
  </div>
@@ -81,14 +81,14 @@ export function AlertList({
  onClick={(e) => { e.stopPropagation(); handleRemind(a); }}
  disabled={remindedIds.has(a.id)}
  >
- Nháº¯c nhá»Ÿ <Bell size={14} className="ml-3" />
+ Nhắc nhở <Bell size={14} className="ml-3" />
  </Button>
  <Button
  className="h-12 px-6 rounded-2xl text-[10px] font-black bg-gray-900 hover:bg-black text-white border-0 shadow-lg shadow-black/10 transition-all active:scale-95"
  onClick={(e) => { e.stopPropagation(); handleResolve(a.id); }}
  disabled={resolving}
  >
- HoĂ n táº¥t <CheckCircle size={14} className="ml-3" />
+ Hoàn tất <CheckCircle size={14} className="ml-3" />
  </Button>
  </div>
  )}
@@ -100,7 +100,7 @@ export function AlertList({
  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100">
  <Info size={32} className="text-gray-200" />
  </div>
- <p className="text-[10px] font-black text-gray-300 tracking-[0.2em] leading-relaxed">Há»‡ thá»‘ng hiá»‡n khĂ´ng ghi nháº­n<br />cáº£nh bĂ¡o nĂ o cáº§n xá»­ lĂ½.</p>
+ <p className="text-[10px] font-black text-gray-300 tracking-[0.2em] leading-relaxed">Hệ thống hiện không ghi nhận<br />cảnh báo nào cần xử lý.</p>
  </div>
  )}
  </div>
@@ -124,3 +124,9 @@ function MetricBadge({ icon: Icon, label, value }) {
  </div>
  );
 }
+
+
+
+
+
+

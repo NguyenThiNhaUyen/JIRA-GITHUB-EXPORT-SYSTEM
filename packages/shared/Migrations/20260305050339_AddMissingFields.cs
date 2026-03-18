@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -13,31 +13,31 @@ namespace JiraGithubExport.Shared.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "password_reset_token",
-                table: "Users",
+                table: "users",
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "password_reset_token_expires_at",
-                table: "Users",
+                table: "users",
                 type: "timestamp with time zone",
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "contribution_score",
-                table: "TeamMembers",
+                table: "team_members",
                 type: "numeric",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "max_students",
-                table: "Courses",
+                table: "courses",
                 type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "status",
-                table: "Courses",
+                table: "courses",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -48,23 +48,23 @@ namespace JiraGithubExport.Shared.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "password_reset_token",
-                table: "Users");
+                table: "users");
 
             migrationBuilder.DropColumn(
                 name: "password_reset_token_expires_at",
-                table: "Users");
+                table: "users");
 
             migrationBuilder.DropColumn(
                 name: "contribution_score",
-                table: "TeamMembers");
+                table: "team_members");
 
             migrationBuilder.DropColumn(
                 name: "max_students",
-                table: "Courses");
+                table: "courses");
 
             migrationBuilder.DropColumn(
                 name: "status",
-                table: "Courses");
+                table: "courses");
         }
     }
 }

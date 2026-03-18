@@ -26,9 +26,15 @@ export async function resolveAlert(id) {
 
 /**
  * POST /api/alerts/send
- * Frontend cĂ³ thá»ƒ cho Giáº£ng ViĂªn gá»­i cáº£nh bĂ¡o thá»§ cĂ´ng.
+ * Frontend có thể cho Giảng Viên gửi cảnh báo thủ công.
  */
 export async function sendAlert(payload) {
     const res = await client.post("/alerts/send", payload);
     return unwrap(res);
 }
+
+
+
+
+
+

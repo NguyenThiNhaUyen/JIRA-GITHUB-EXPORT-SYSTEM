@@ -1,4 +1,4 @@
-// RoleGuard: Component báº£o vá»‡ routes cáº§n specific role
+// RoleGuard: Component bảo vệ routes cần specific role
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
@@ -18,3 +18,9 @@ export default function RoleGuard({ children, requiredRole }) {
 
   return children;
 }
+
+
+
+
+
+

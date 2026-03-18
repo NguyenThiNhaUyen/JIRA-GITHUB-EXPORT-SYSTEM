@@ -116,12 +116,12 @@ export default function SubjectManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Báº¡n cĂ³ cháº¯c cháº¯n muá»‘n xĂ³a mĂ´n há»c nĂ y?")) return;
+        if (!confirm("Bạn có chắc chắn muốn xóa môn học này?")) return;
         try {
             await deleteMutation.mutateAsync(id);
-            success("XĂ³a mĂ´n há»c thĂ nh cĂ´ng");
+            success("Xóa môn học thành công");
         } catch (err) {
-            showError(err.message || "XĂ³a mĂ´n há»c tháº¥t báº¡i");
+            showError(err.message || "Xóa môn học thất bại");
         }
     };
 
@@ -142,46 +142,46 @@ export default function SubjectManagement() {
                     id: editingSubject.id,
                     updates: payload
                 });
-                success("Cáº­p nháº­t mĂ´n há»c thĂ nh cĂ´ng!");
+                success("Cập nhật môn học thành công!");
             } else {
                 await createMutation.mutateAsync(payload);
-                success("Táº¡o mĂ´n há»c thĂ nh cĂ´ng!");
+                success("Tạo môn học thành công!");
             }
             setShowModal(false);
         } catch (err) {
             console.error(err);
-            showError(err.message || "Thao tĂ¡c tháº¥t báº¡i");
+            showError(err.message || "Thao tác thất bại");
         }
     };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <PageHeader
-                title="Quáº£n lĂ½ MĂ´n há»c"
-                subtitle="Danh má»¥c chÆ°Æ¡ng trĂ¬nh Ä‘Ă o táº¡o vĂ  cáº¥u trĂºc cĂ¡c há»c pháº§n."
-                breadcrumb={["Admin", "Há»‡ thá»‘ng", "MĂ´n há»c"]}
+                title="Quản lý Môn học"
+                subtitle="Danh mục chương trình đào tạo và cấu trúc các học phần."
+                breadcrumb={["Admin", "Hệ thống", "Môn học"]}
                 actions={[
                     <Button key="add" onClick={handleCreate} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black shadow-lg shadow-teal-100 border-0">
-                        <Plus size={16} className="mr-2" /> ThĂªm MĂ´n há»c
+                        <Plus size={16} className="mr-2" /> Thêm Môn học
                     </Button>
                 ]}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatsCard label="Tá»•ng mĂ´n há»c" value={subjects.length} icon={Library} variant="indigo" />
-                <StatsCard label="Äang hoáº¡t Ä‘á»™ng" value={subjects.filter(s => s.status === 'ACTIVE').length} icon={CheckCircle} variant="success" />
-                <StatsCard label="TĂ­n chá»‰ trung bĂ¬nh" value={(subjects.reduce((sum, s) => sum + (s.credits || 0), 0) / (subjects.length || 1)).toFixed(1)} icon={BookOpen} variant="info" />
+                <StatsCard label="Tổng môn học" value={subjects.length} icon={Library} variant="indigo" />
+                <StatsCard label="Đang hoạt động" value={subjects.filter(s => s.status === 'ACTIVE').length} icon={CheckCircle} variant="success" />
+                <StatsCard label="Tín chỉ trung bình" value={(subjects.reduce((sum, s) => sum + (s.credits || 0), 0) / (subjects.length || 1)).toFixed(1)} icon={BookOpen} variant="info" />
             </div>
 
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                 <CardHeader className="border-b border-gray-50 py-5 px-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                        <CardTitle className="text-base font-black text-gray-800 leading-none">Danh má»¥c há»c pháº§n</CardTitle>
+                        <CardTitle className="text-base font-black text-gray-800 leading-none">Danh mục học phần</CardTitle>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <InputField placeholder="TĂ¬m mĂ£ hoáº·c tĂªn mĂ´n..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
+                            <InputField placeholder="Tìm mã hoặc tên môn..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
                             <div className="min-w-[200px]">
                                 <SelectField value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
-                                    <option value="ALL">Táº¥t cáº£ khoa</option>
+                                    <option value="ALL">Tất cả khoa</option>
                                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                                 </SelectField>
                             </div>
@@ -192,11 +192,11 @@ export default function SubjectManagement() {
                     <Table>
                         <TableHeader className="bg-gray-50/50">
                             <TableRow className="border-b border-gray-100 hover:bg-transparent">
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400">MĂ£ mĂ´n / TĂªn mĂ´n</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">TĂ­n chá»‰</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">SV tá»‘i Ä‘a</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">Tráº¡ng thĂ¡i</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-right">Thao tĂ¡c</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400">Mã môn / Tên môn</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">Tín chỉ</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">SV tối đa</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">Trạng thái</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-right">Thao tác</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-gray-50">
@@ -214,13 +214,13 @@ export default function SubjectManagement() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
-                                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">{s.credits} tĂ­n chá»‰</span>
+                                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">{s.credits} tín chỉ</span>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
                                         <span className="text-xs font-bold text-gray-600">{s.maxStudents || s.max_students || 40}</span>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
-                                        <StatusBadge status={s.status} variant={s.status === 'ACTIVE' ? 'success' : 'default'} label={s.status === 'ACTIVE' ? 'Hoáº¡t Ä‘á»™ng' : 'Táº¡m dá»«ng'} />
+                                        <StatusBadge status={s.status} variant={s.status === 'ACTIVE' ? 'success' : 'default'} label={s.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'} />
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-right">
                                         <div className="flex justify-end gap-2">
@@ -233,7 +233,7 @@ export default function SubjectManagement() {
                             {filteredSubjects.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={5} className="py-12 text-center text-gray-400">
-                                        KhĂ´ng tĂ¬m tháº¥y mĂ´n há»c nĂ o
+                                        Không tìm thấy môn học nào
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -242,33 +242,33 @@ export default function SubjectManagement() {
                 </CardContent>
             </Card>
 
-            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingSubject ? "Sá»­a mĂ´n há»c" : "ThĂªm mĂ´n há»c má»›i"}>
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingSubject ? "Sửa môn học" : "Thêm môn học mới"}>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <SelectField label="Bá»™ mĂ´n *" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required>
-                            <option value="">Chá»n bá»™ mĂ´n</option>
+                        <SelectField label="Bộ môn *" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required>
+                            <option value="">Chọn bộ môn</option>
                             {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                         </SelectField>
                         <InputField label="Course Number *" type="number" value={formData.courseNumber} onChange={e => setFormData({ ...formData, courseNumber: e.target.value })} placeholder="VD: 392" required />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <InputField label="MĂ£ mĂ´n há»c (Tá»± Ä‘á»™ng)" value={formData.code} readOnly className="bg-gray-50 font-bold" />
-                        <InputField label="Sá»‘ tĂ­n chá»‰" type="number" value={formData.credits} onChange={e => setFormData({ ...formData, credits: Number(e.target.value) })} />
+                        <InputField label="Mã môn học (Tự động)" value={formData.code} readOnly className="bg-gray-50 font-bold" />
+                        <InputField label="Số tín chỉ" type="number" value={formData.credits} onChange={e => setFormData({ ...formData, credits: Number(e.target.value) })} />
                     </div>
 
-                    <InputField label="TĂªn mĂ´n há»c *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="VD: Software Architecture" required />
+                    <InputField label="Tên môn học *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="VD: Software Architecture" required />
 
                     <div className="grid grid-cols-2 gap-4">
-                        <InputField label="SV tá»‘i Ä‘a" type="number" value={formData.maxStudents} onChange={e => setFormData({ ...formData, maxStudents: Number(e.target.value) })} />
-                        <SelectField label="Tráº¡ng thĂ¡i" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                        <InputField label="SV tối đa" type="number" value={formData.maxStudents} onChange={e => setFormData({ ...formData, maxStudents: Number(e.target.value) })} />
+                        <SelectField label="Trạng thái" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                             <option value="ACTIVE">ACTIVE</option>
                             <option value="INACTIVE">INACTIVE</option>
                         </SelectField>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-black text-gray-400">MĂ´ táº£ mĂ´n há»c</label>
+                        <label className="text-xs font-black text-gray-400">Mô tả môn học</label>
                         <textarea
                             className="w-full p-4 rounded-xl border border-gray-100 focus:ring-2 focus:ring-teal-100 outline-none text-sm transition-all min-h-[100px]"
                             value={formData.description}
@@ -277,9 +277,9 @@ export default function SubjectManagement() {
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Há»§y</Button>
+                        <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Hủy</Button>
                         <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-11 px-8 font-black shadow-lg shadow-teal-100 border-0">
-                            {editingSubject ? "LÆ°u thay Ä‘á»•i" : "Táº¡o mĂ´n há»c"}
+                            {editingSubject ? "Lưu thay đổi" : "Tạo môn học"}
                         </Button>
                     </div>
                 </form>
@@ -287,3 +287,9 @@ export default function SubjectManagement() {
         </div>
     );
 }
+
+
+
+
+
+

@@ -6,7 +6,7 @@ export function PerformanceMetrics({ metrics, commitHistory }) {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <Card className="border border-gray-100 shadow-sm rounded-[44px] overflow-hidden bg-white glass-card">
  <CardHeader className="border-b border-gray-50/50 py-8 px-10 bg-gray-50/10">
- <CardTitle className="text-xs font-black text-gray-400 font-display">PhĂ¢n bá»• Ä‘Ă³ng gĂ³p thĂ nh viĂªn</CardTitle>
+ <CardTitle className="text-xs font-black text-gray-400 font-display">Phân bổ đóng góp thành viên</CardTitle>
  </CardHeader>
  <CardContent className="p-10">
  <div className="h-72 w-full">
@@ -38,7 +38,7 @@ export function PerformanceMetrics({ metrics, commitHistory }) {
 
  <Card className="border border-gray-100 shadow-sm rounded-[44px] overflow-hidden bg-white glass-card">
  <CardHeader className="border-b border-gray-50/50 py-8 px-10 bg-gray-50/10">
- <CardTitle className="text-xs font-black text-gray-400 font-display">Táº§n suáº¥t commit dá»± Ă¡n</CardTitle>
+ <CardTitle className="text-xs font-black text-gray-400 font-display">Tần suất commit dự án</CardTitle>
  </CardHeader>
  <CardContent className="p-10">
  <div className="h-72 w-full">
@@ -58,9 +58,15 @@ export function PerformanceMetrics({ metrics, commitHistory }) {
  </AreaChart>
  </ResponsiveContainer>
  </div>
- <p className="text-center text-[10px] font-black text-gray-300 tracking-[0.3em] mt-8 opacity-60">Dá»¯ liá»‡u 15 ngĂ y gáº§n nháº¥t</p>
+ <p className="text-center text-[10px] font-black text-gray-300 tracking-[0.3em] mt-8 opacity-60">Dữ liệu 15 ngày gần nhất</p>
  </CardContent>
  </Card>
  </div>
  );
 }
+
+
+
+
+
+

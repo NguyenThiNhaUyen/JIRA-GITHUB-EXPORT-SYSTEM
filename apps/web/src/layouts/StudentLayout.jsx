@@ -6,27 +6,27 @@ import {
 
 const NAV = [
     {
-        label: "Tá»•ng quan",
+        label: "Tổng quan",
         items: [
             { to: "/student", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
     {
-        label: "Há»c táº­p",
+        label: "Học tập",
         items: [
-            { to: "/student/courses", icon: Library, label: "Lá»›p cá»§a tĂ´i" },
-            { to: "/student/my-project", icon: GitBranch, label: "NhĂ³m cá»§a tĂ´i" },
+            { to: "/student/courses", icon: Library, label: "Lớp của tôi" },
+            { to: "/student/my-project", icon: GitBranch, label: "Nhóm của tôi" },
         ],
     },
     {
-        label: "Theo dĂµi",
+        label: "Theo dõi",
         items: [
-            { to: "/student/contribution", icon: Users, label: "ÄĂ³ng gĂ³p" },
-            { to: "/student/alerts", icon: Bell, label: "ThĂ´ng bĂ¡o / Cáº£nh bĂ¡o" },
+            { to: "/student/contribution", icon: Users, label: "Đóng góp" },
+            { to: "/student/alerts", icon: Bell, label: "Thông báo / Cảnh báo" },
         ],
     },
     {
-        label: "TĂ i liá»‡u",
+        label: "Tài liệu",
         items: [
             { to: "/student/srs", icon: FileText, label: "SRS" },
         ],

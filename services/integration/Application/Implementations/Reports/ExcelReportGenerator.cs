@@ -6,7 +6,7 @@ namespace JiraGithubExport.IntegrationService.Application.Implementations.Report
 
 public class ExcelReportGenerator : IExcelReportGenerator
 {
-    public byte[] GenerateCommitStatisticsReport(string courseName, List<Project> projects)
+    public byte[] GenerateCommitStatisticsReport(string courseName, List<project> projects)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Commit Statistics");
@@ -18,14 +18,14 @@ public class ExcelReportGenerator : IExcelReportGenerator
         int row = 2;
         foreach (var p in projects)
         {
-            if (p.TeamMembers != null)
+            if (p.team_members != null)
             {
-                foreach (var tm in p.TeamMembers)
+                foreach (var tm in p.team_members)
                 {
-                    worksheet.Cell(row, 1).Value = p.Name;
-                    worksheet.Cell(row, 2).Value = tm.StudentUser?.User?.FullName ?? "";
-                    worksheet.Cell(row, 3).Value = tm.StudentUser?.StudentCode ?? "";
-                    worksheet.Cell(row, 4).Value = tm.TeamRole ?? "";
+                    worksheet.Cell(row, 1).Value = p.name;
+                    worksheet.Cell(row, 2).Value = tm.student_user?.user?.full_name ?? "";
+                    worksheet.Cell(row, 3).Value = tm.student_user?.student_code ?? "";
+                    worksheet.Cell(row, 4).Value = tm.team_role ?? "";
                     row++;
                 }
             }
@@ -38,7 +38,7 @@ public class ExcelReportGenerator : IExcelReportGenerator
         return stream.ToArray();
     }
 
-    public byte[] GenerateTeamRosterReport(Project Project)
+    public byte[] GenerateTeamRosterReport(project project)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Team Roster");
@@ -47,13 +47,13 @@ public class ExcelReportGenerator : IExcelReportGenerator
         worksheet.Cell(1, 3).Value = "Role";
 
         int row = 2;
-        if (Project.TeamMembers != null)
+        if (project.team_members != null)
         {
-            foreach (var tm in Project.TeamMembers)
+            foreach (var tm in project.team_members)
             {
-                worksheet.Cell(row, 1).Value = tm.StudentUser?.User?.FullName ?? "";
-                worksheet.Cell(row, 2).Value = tm.StudentUser?.StudentCode ?? "";
-                worksheet.Cell(row, 3).Value = tm.TeamRole ?? "";
+                worksheet.Cell(row, 1).Value = tm.student_user?.user?.full_name ?? "";
+                worksheet.Cell(row, 2).Value = tm.student_user?.student_code ?? "";
+                worksheet.Cell(row, 3).Value = tm.team_role ?? "";
                 row++;
             }
         }
@@ -65,7 +65,7 @@ public class ExcelReportGenerator : IExcelReportGenerator
         return stream.ToArray();
     }
 
-    public byte[] GenerateActivitySummaryReport(Project Project, List<dynamic> activityList)
+    public byte[] GenerateActivitySummaryReport(project project, List<dynamic> activityList)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Activity Summary");
@@ -76,13 +76,13 @@ public class ExcelReportGenerator : IExcelReportGenerator
         worksheet.Cell(1, 5).Value = "Issues Completed";
 
         int row = 2;
-        if (Project.TeamMembers != null)
+        if (project.team_members != null)
         {
-            foreach (var tm in Project.TeamMembers)
+            foreach (var tm in project.team_members)
             {
-                var stat = activityList.FirstOrDefault(a => a.StudentId == tm.StudentUserId);
-                worksheet.Cell(row, 1).Value = tm.StudentUser?.User?.FullName ?? "";
-                worksheet.Cell(row, 2).Value = tm.StudentUser?.StudentCode ?? "";
+                var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
+                worksheet.Cell(row, 1).Value = tm.student_user?.user?.full_name ?? "";
+                worksheet.Cell(row, 2).Value = tm.student_user?.student_code ?? "";
                 worksheet.Cell(row, 3).Value = (int)(stat?.Commits ?? 0);
                 worksheet.Cell(row, 4).Value = (int)(stat?.PRs ?? 0);
                 worksheet.Cell(row, 5).Value = (int)(stat?.Issues ?? 0);

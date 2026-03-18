@@ -21,7 +21,7 @@ export const useApproveLink = () => {
     return useMutation({
         mutationFn: ({ groupId, linkType }) => approveGroupLink(groupId, linkType),
         onSuccess: (_, variables) => {
-            // áº¢o thuáº­t náº±m Ä‘Ă¢y: Gá»i API OK -> XoĂ¡ Cache bĂ¡o React táº£i láº¡i giao diá»‡n NhĂ³m Ä‘Ă³ láº­p tá»©c
+            // Ảo thuật nằm đây: Gọi API OK -> Xoá Cache báo React tải lại giao diện Nhóm đó lập tức
             queryClient.invalidateQueries({ queryKey: GROUP_KEYS.detail(variables.groupId) });
         },
     });
@@ -46,3 +46,9 @@ export const useUpdateStudentScore = () => {
         },
     });
 };
+
+
+
+
+
+

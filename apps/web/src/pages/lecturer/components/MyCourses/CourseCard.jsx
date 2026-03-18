@@ -15,7 +15,7 @@ export function CourseCard({ course, onNavigate }) {
  course.semester ||"N/A";
 
  const progress = Math.min(100, Math.round((activeTeams / (groupCount || 1)) * 100));
- const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString('vi-VN') :"â€”";
+ const lastCommit = course.lastActivityAt ? new Date(course.lastActivityAt).toLocaleDateString('vi-VN') :"—";
 
  let status ="ACTIVE";
  if (activeTeams === 0 && groupCount > 0) {
@@ -48,13 +48,13 @@ export function CourseCard({ course, onNavigate }) {
  <div className="flex items-start justify-between">
  <div className="w-16 h-16 rounded-3xl bg-white border border-gray-100 shadow-xl flex items-center justify-center -mt-8 relative z-10 transition-transform group-hover:rotate-6">
  <span className="text-lg font-black text-teal-600 font-display">
- {course.subject?.code?.substring(0, 3) || course.subjectCode?.substring(0, 3) ||"Lá»›p"}
+ {course.subject?.code?.substring(0, 3) || course.subjectCode?.substring(0, 3) ||"Lớp"}
  </span>
  </div>
  {alerts > 0 && (
  <div className="mt-4 flex items-center gap-1 px-3 py-1 bg-red-50 text-red-600 rounded-full border border-red-100 animate-pulse">
  <AlertTriangle size={12} strokeWidth={3} />
- <span className="text-[10px] font-black">{alerts} Cáº£nh bĂ¡o</span>
+ <span className="text-[10px] font-black">{alerts} Cảnh báo</span>
  </div>
  )}
  </div>
@@ -68,13 +68,13 @@ export function CourseCard({ course, onNavigate }) {
  </div>
 
  <div className="grid grid-cols-2 gap-4">
- <StatMini label="Sinh viĂªn" value={course.currentStudents || 0} icon={Users} color="teal" />
- <StatMini label="NhĂ³m dá»± Ă¡n" value={groupCount} icon={BookOpen} color="indigo" />
+ <StatMini label="Sinh viên" value={course.currentStudents || 0} icon={Users} color="teal" />
+ <StatMini label="Nhóm dự án" value={groupCount} icon={BookOpen} color="indigo" />
  </div>
 
  <div className="space-y-3 pt-2">
  <div className="flex justify-between items-end">
- <span className="text-[10px] font-black text-gray-400">Tiáº¿n Ä‘á»™ tĂ­ch há»£p</span>
+ <span className="text-[10px] font-black text-gray-400">Tiến độ tích hợp</span>
  <span className="text-lg font-black text-gray-800 font-display">{progress}%</span>
  </div>
  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner flex">
@@ -97,7 +97,7 @@ export function CourseCard({ course, onNavigate }) {
  </div>
  </div>
  <div className="text-right">
- <p className="text-[9px] font-black text-gray-400">Cuá»‘i cĂ¹ng</p>
+ <p className="text-[9px] font-black text-gray-400">Cuối cùng</p>
  <p className="text-[10px] font-bold text-gray-500">{lastCommit}</p>
  </div>
  </div>
@@ -109,13 +109,13 @@ export function CourseCard({ course, onNavigate }) {
  className="flex-1 h-12 rounded-2xl border-gray-100 hover:border-teal-200 hover:text-teal-600 hover:bg-teal-50/30 text-[10px]"
  onClick={(e) => { e.stopPropagation(); onNavigate(`/lecturer/course/${course.id}/alerts`); }}
  >
- Cáº£nh bĂ¡o
+ Cảnh báo
  </Button>
  <Button 
  className="flex-1 h-12 rounded-2xl bg-gray-900 hover:bg-black text-white shadow-xl shadow-gray-200 border-0 text-[10px]"
  onClick={(e) => { e.stopPropagation(); onNavigate(`/lecturer/course/${course.id}/manage-groups`); }}
  >
- Chi tiáº¿t <ChevronRight size={14} className="ml-2" />
+ Chi tiết <ChevronRight size={14} className="ml-2" />
  </Button>
  </div>
  </CardContent>
@@ -154,3 +154,9 @@ function StatusBadge({ status }) {
  </span>
  );
 }
+
+
+
+
+
+

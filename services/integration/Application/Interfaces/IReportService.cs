@@ -14,3 +14,7 @@ public interface IReportService
     Task<string?> GetReportFileUrlAsync(long reportExportId);
     Task<List<ReportExportResponse>> GetUserReportsAsync(long userId);
 }
+
+
+
+

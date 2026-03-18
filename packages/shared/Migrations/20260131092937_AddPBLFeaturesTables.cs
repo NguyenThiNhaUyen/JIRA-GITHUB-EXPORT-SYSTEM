@@ -13,456 +13,456 @@ namespace JiraGithubExport.Shared.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "GithubRepositories",
+                name: "github_repositories",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    GithubRepoId = table.Column<long>(type: "bigint", nullable: true),
-                    OwnerLogin = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    github_repo_id = table.Column<long>(type: "bigint", nullable: true),
+                    owner_login = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    FullName = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
-                    RepoUrl = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
+                    full_name = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
+                    repo_url = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     visibility = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    DefaultBranch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    default_branch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_repositories_pkey", x => x.Id);
+                    table.PrimaryKey("github_repositories_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GithubUsers",
+                name: "github_users",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    GithubUserId = table.Column<long>(type: "bigint", nullable: true),
+                    github_user_id = table.Column<long>(type: "bigint", nullable: true),
                     login = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    DisplayName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    AvatarUrl = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
-                    UserType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    display_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    avatar_url = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
+                    user_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_users_pkey", x => x.Id);
+                    table.PrimaryKey("github_users_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraProjects",
+                name: "jira_projects",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    JiraProjectKey = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    JiraProjectId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    ProjectName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    JiraUrl = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    jira_project_key = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    jira_project_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    project_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    jira_url = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_projects_pkey", x => x.Id);
+                    table.PrimaryKey("jira_projects_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Roles",
+                name: "roles",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RoleName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false)
+                    role_name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("roles_pkey", x => x.Id);
+                    table.PrimaryKey("roles_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Semesters",
+                name: "semesters",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    StartDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    EndDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    start_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    end_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("semesters_pkey", x => x.Id);
+                    table.PrimaryKey("semesters_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subjects",
+                name: "subjects",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    SubjectCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    SubjectName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    subject_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    subject_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("subjects_pkey", x => x.Id);
+                    table.PrimaryKey("subjects_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "users",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    Password = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    FullName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    Enabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    password = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    full_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    enabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("users_pkey", x => x.Id);
+                    table.PrimaryKey("users_pkey", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "github_branches",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RepoId = table.Column<long>(type: "bigint", nullable: false),
-                    BranchName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    IsDefault = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    HeadCommitSha = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    repo_id = table.Column<long>(type: "bigint", nullable: false),
+                    branch_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    is_default = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    head_commit_sha = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_branches_pkey", x => x.Id);
+                    table.PrimaryKey("github_branches_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_github_branches_repo",
-                        column: x => x.RepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GithubCommits",
+                name: "github_commits",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RepoId = table.Column<long>(type: "bigint", nullable: false),
-                    CommitSha = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    repo_id = table.Column<long>(type: "bigint", nullable: false),
+                    commit_sha = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     message = table.Column<string>(type: "text", nullable: true),
-                    AuthorGithubUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CommitterGithubUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CommittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    author_github_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    committer_github_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    committed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     additions = table.Column<int>(type: "integer", nullable: true),
                     deletions = table.Column<int>(type: "integer", nullable: true),
-                    ChangedFiles = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    changed_files = table.Column<int>(type: "integer", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_commits_pkey", x => x.Id);
+                    table.PrimaryKey("github_commits_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_github_commits_author",
-                        column: x => x.AuthorGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.author_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_commits_committer",
-                        column: x => x.CommitterGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.committer_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_commits_repo",
-                        column: x => x.RepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GithubIssues",
+                name: "github_issues",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RepoId = table.Column<long>(type: "bigint", nullable: false),
-                    IssueNumber = table.Column<int>(type: "integer", nullable: false),
+                    repo_id = table.Column<long>(type: "bigint", nullable: false),
+                    issue_number = table.Column<int>(type: "integer", nullable: false),
                     title = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     body = table.Column<string>(type: "text", nullable: true),
                     state = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    AuthorGithubUserId = table.Column<long>(type: "bigint", nullable: true),
-                    AssigneeGithubUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    ClosedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    author_github_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    assignee_github_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    closed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_issues_pkey", x => x.Id);
+                    table.PrimaryKey("github_issues_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_github_issues_assignee",
-                        column: x => x.AssigneeGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.assignee_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_issues_author",
-                        column: x => x.AuthorGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.author_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_issues_repo",
-                        column: x => x.RepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GithubPullRequests",
+                name: "github_pull_requests",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RepoId = table.Column<long>(type: "bigint", nullable: false),
-                    PrNumber = table.Column<int>(type: "integer", nullable: false),
+                    repo_id = table.Column<long>(type: "bigint", nullable: false),
+                    pr_number = table.Column<int>(type: "integer", nullable: false),
                     title = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                     body = table.Column<string>(type: "text", nullable: true),
                     state = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    AuthorGithubUserId = table.Column<long>(type: "bigint", nullable: true),
-                    SourceBranch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    TargetBranch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    ClosedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    MergedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    author_github_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    source_branch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    target_branch = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    closed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    merged_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_pull_requests_pkey", x => x.Id);
+                    table.PrimaryKey("github_pull_requests_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_github_pull_requests_author",
-                        column: x => x.AuthorGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.author_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_pull_requests_repo",
-                        column: x => x.RepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraIssues",
+                name: "jira_issues",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    JiraIssueKey = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    JiraProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    jira_issue_key = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    jira_project_id = table.Column<long>(type: "bigint", nullable: false),
                     title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     description = table.Column<string>(type: "text", nullable: true),
-                    IssueType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    issue_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     priority = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    AssigneeJiraAccountId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    ReporterJiraAccountId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    assignee_jira_account_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    reporter_jira_account_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_issues_pkey", x => x.Id);
+                    table.PrimaryKey("jira_issues_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_jira_issues_project",
-                        column: x => x.JiraProjectId,
-                        principalTable: "JiraProjects",
+                        column: x => x.jira_project_id,
+                        principalTable: "jira_projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "AuditLogs",
+                name: "audit_logs",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    EntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    EntityId = table.Column<long>(type: "bigint", nullable: false),
-                    PerformedByUserId = table.Column<long>(type: "bigint", nullable: true),
+                    entity_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    entity_id = table.Column<long>(type: "bigint", nullable: false),
+                    performed_by_user_id = table.Column<long>(type: "bigint", nullable: true),
                     timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    UserAgent = table.Column<string>(type: "text", nullable: true),
-                    OldValues = table.Column<string>(type: "jsonb", nullable: true),
-                    NewValues = table.Column<string>(type: "jsonb", nullable: true),
+                    ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    user_agent = table.Column<string>(type: "text", nullable: true),
+                    old_values = table.Column<string>(type: "jsonb", nullable: true),
+                    new_values = table.Column<string>(type: "jsonb", nullable: true),
                     metadata = table.Column<string>(type: "jsonb", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("audit_logs_pkey", x => x.Id);
+                    table.PrimaryKey("audit_logs_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_audit_logs_performed_by",
-                        column: x => x.PerformedByUserId,
-                        principalTable: "Users",
+                        column: x => x.performed_by_user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Courses",
+                name: "courses",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    SemesterId = table.Column<long>(type: "bigint", nullable: false),
-                    SubjectId = table.Column<long>(type: "bigint", nullable: false),
-                    CourseCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    CourseName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedByUserId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    semester_id = table.Column<long>(type: "bigint", nullable: false),
+                    subject_id = table.Column<long>(type: "bigint", nullable: false),
+                    course_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    course_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    created_by_user_id = table.Column<long>(type: "bigint", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("courses_pkey", x => x.Id);
+                    table.PrimaryKey("courses_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_courses_created_by",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "Users",
+                        column: x => x.created_by_user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_courses_semester",
-                        column: x => x.SemesterId,
-                        principalTable: "Semesters",
+                        column: x => x.semester_id,
+                        principalTable: "semesters",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_courses_subject",
-                        column: x => x.SubjectId,
-                        principalTable: "Subjects",
+                        column: x => x.subject_id,
+                        principalTable: "subjects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExternalAccounts",
+                name: "external_accounts",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
                     provider = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    ExternalUserKey = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    external_user_key = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     username = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("external_accounts_pkey", x => x.Id);
+                    table.PrimaryKey("external_accounts_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_external_accounts_user",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        column: x => x.user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Lecturers",
+                name: "lecturers",
                 columns: table => new
                 {
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    LecturerCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
+                    lecturer_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     department = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    OfficeEmail = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    office_email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("lecturers_pkey", x => x.UserId);
+                    table.PrimaryKey("lecturers_pkey", x => x.user_id);
                     table.ForeignKey(
                         name: "fk_lecturers_user",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        column: x => x.user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ReportExports",
+                name: "report_exports",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ReportType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    report_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     scope = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    ScopeEntityId = table.Column<long>(type: "bigint", nullable: false),
+                    scope_entity_id = table.Column<long>(type: "bigint", nullable: false),
                     format = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'PENDING'::character varying"),
-                    FileUrl = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
-                    FileSizeBytes = table.Column<long>(type: "bigint", nullable: true),
-                    RequestedByUserId = table.Column<long>(type: "bigint", nullable: false),
-                    RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ErrorMessage = table.Column<string>(type: "text", nullable: true),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    file_url = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: true),
+                    file_size_bytes = table.Column<long>(type: "bigint", nullable: true),
+                    requested_by_user_id = table.Column<long>(type: "bigint", nullable: false),
+                    requested_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    error_message = table.Column<string>(type: "text", nullable: true),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("report_exports_pkey", x => x.Id);
+                    table.PrimaryKey("report_exports_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_report_exports_requested_by",
-                        column: x => x.RequestedByUserId,
-                        principalTable: "Users",
+                        column: x => x.requested_by_user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Students",
+                name: "students",
                 columns: table => new
                 {
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    StudentCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
+                    student_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     major = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    IntakeYear = table.Column<int>(type: "integer", nullable: true),
+                    intake_year = table.Column<int>(type: "integer", nullable: true),
                     department = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("students_pkey", x => x.UserId);
+                    table.PrimaryKey("students_pkey", x => x.user_id);
                     table.ForeignKey(
                         name: "fk_students_user",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        column: x => x.user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -471,22 +471,22 @@ namespace JiraGithubExport.Shared.Migrations
                 name: "user_roles",
                 columns: table => new
                 {
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
                     role_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("user_roles_pkey", x => new { x.UserId, x.role_id });
+                    table.PrimaryKey("user_roles_pkey", x => new { x.user_id, x.role_id });
                     table.ForeignKey(
                         name: "fk_user_roles_role",
                         column: x => x.role_id,
-                        principalTable: "Roles",
+                        principalTable: "roles",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_user_roles_user",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        column: x => x.user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -495,217 +495,217 @@ namespace JiraGithubExport.Shared.Migrations
                 name: "github_commit_branches",
                 columns: table => new
                 {
-                    BranchId = table.Column<long>(type: "bigint", nullable: false),
-                    CommitId = table.Column<long>(type: "bigint", nullable: false)
+                    branch_id = table.Column<long>(type: "bigint", nullable: false),
+                    commit_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_commit_branches_pkey", x => new { x.BranchId, x.CommitId });
+                    table.PrimaryKey("github_commit_branches_pkey", x => new { x.branch_id, x.commit_id });
                     table.ForeignKey(
                         name: "fk_github_commit_branches_branch",
-                        column: x => x.BranchId,
+                        column: x => x.branch_id,
                         principalTable: "github_branches",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_github_commit_branches_commit",
-                        column: x => x.CommitId,
-                        principalTable: "GithubCommits",
+                        column: x => x.commit_id,
+                        principalTable: "github_commits",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GithubIssueComments",
+                name: "github_issue_comments",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    IssueId = table.Column<long>(type: "bigint", nullable: false),
-                    AuthorGithubUserId = table.Column<long>(type: "bigint", nullable: true),
+                    issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    author_github_user_id = table.Column<long>(type: "bigint", nullable: true),
                     body = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("github_issue_comments_pkey", x => x.Id);
+                    table.PrimaryKey("github_issue_comments_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_github_issue_comments_author",
-                        column: x => x.AuthorGithubUserId,
-                        principalTable: "GithubUsers",
+                        column: x => x.author_github_user_id,
+                        principalTable: "github_users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_github_issue_comments_issue",
-                        column: x => x.IssueId,
-                        principalTable: "GithubIssues",
+                        column: x => x.issue_id,
+                        principalTable: "github_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraAttachments",
+                name: "jira_attachments",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    IssueId = table.Column<long>(type: "bigint", nullable: false),
+                    issue_id = table.Column<long>(type: "bigint", nullable: false),
                     filename = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     url = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
-                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    uploaded_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_attachments_pkey", x => x.Id);
+                    table.PrimaryKey("jira_attachments_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_jira_attachments_issue",
-                        column: x => x.IssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraIssueComments",
+                name: "jira_issue_comments",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    IssueId = table.Column<long>(type: "bigint", nullable: false),
-                    AuthorJiraAccountId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    author_jira_account_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     body = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_issue_comments_pkey", x => x.Id);
+                    table.PrimaryKey("jira_issue_comments_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_jira_issue_comments_issue",
-                        column: x => x.IssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraIssueLinks",
+                name: "jira_issue_links",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ParentIssueId = table.Column<long>(type: "bigint", nullable: false),
-                    ChildIssueId = table.Column<long>(type: "bigint", nullable: false),
-                    LinkType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    parent_issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    child_issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    link_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_issue_links_pkey", x => x.Id);
+                    table.PrimaryKey("jira_issue_links_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_jira_issue_links_child",
-                        column: x => x.ChildIssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.child_issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_jira_issue_links_parent",
-                        column: x => x.ParentIssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.parent_issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JiraWorklogs",
+                name: "jira_worklogs",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    IssueId = table.Column<long>(type: "bigint", nullable: false),
-                    AuthorJiraAccountId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    TimeSpent = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    author_jira_account_id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    time_spent = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("jira_worklogs_pkey", x => x.Id);
+                    table.PrimaryKey("jira_worklogs_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_jira_worklogs_issue",
-                        column: x => x.IssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "WorkLinks",
+                name: "work_links",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    JiraIssueId = table.Column<long>(type: "bigint", nullable: false),
-                    RepoId = table.Column<long>(type: "bigint", nullable: false),
-                    LinkType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    CommitId = table.Column<long>(type: "bigint", nullable: true),
-                    PrId = table.Column<long>(type: "bigint", nullable: true),
-                    BranchId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    jira_issue_id = table.Column<long>(type: "bigint", nullable: false),
+                    repo_id = table.Column<long>(type: "bigint", nullable: false),
+                    link_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    commit_id = table.Column<long>(type: "bigint", nullable: true),
+                    pr_id = table.Column<long>(type: "bigint", nullable: true),
+                    branch_id = table.Column<long>(type: "bigint", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("work_links_pkey", x => x.Id);
+                    table.PrimaryKey("work_links_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_work_links_branch",
-                        column: x => x.BranchId,
+                        column: x => x.branch_id,
                         principalTable: "github_branches",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_work_links_commit",
-                        column: x => x.CommitId,
-                        principalTable: "GithubCommits",
+                        column: x => x.commit_id,
+                        principalTable: "github_commits",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_work_links_issue",
-                        column: x => x.JiraIssueId,
-                        principalTable: "JiraIssues",
+                        column: x => x.jira_issue_id,
+                        principalTable: "jira_issues",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_work_links_pr",
-                        column: x => x.PrId,
-                        principalTable: "GithubPullRequests",
+                        column: x => x.pr_id,
+                        principalTable: "github_pull_requests",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_work_links_repo",
-                        column: x => x.RepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Projects",
+                name: "projects",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CourseId = table.Column<long>(type: "bigint", nullable: false),
+                    course_id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'ACTIVE'::character varying"),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("projects_pkey", x => x.Id);
+                    table.PrimaryKey("projects_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_projects_course",
-                        column: x => x.CourseId,
-                        principalTable: "Courses",
+                        column: x => x.course_id,
+                        principalTable: "courses",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -714,245 +714,245 @@ namespace JiraGithubExport.Shared.Migrations
                 name: "course_lecturers",
                 columns: table => new
                 {
-                    CourseId = table.Column<long>(type: "bigint", nullable: false),
-                    LecturerUserId = table.Column<long>(type: "bigint", nullable: false)
+                    course_id = table.Column<long>(type: "bigint", nullable: false),
+                    lecturer_user_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("course_lecturers_pkey", x => new { x.CourseId, x.LecturerUserId });
+                    table.PrimaryKey("course_lecturers_pkey", x => new { x.course_id, x.lecturer_user_id });
                     table.ForeignKey(
                         name: "fk_course_lecturers_course",
-                        column: x => x.CourseId,
-                        principalTable: "Courses",
+                        column: x => x.course_id,
+                        principalTable: "courses",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_course_lecturers_lecturer",
-                        column: x => x.LecturerUserId,
-                        principalTable: "Lecturers",
+                        column: x => x.lecturer_user_id,
+                        principalTable: "lecturers",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CourseEnrollments",
+                name: "course_enrollments",
                 columns: table => new
                 {
-                    CourseId = table.Column<long>(type: "bigint", nullable: false),
-                    StudentUserId = table.Column<long>(type: "bigint", nullable: false),
+                    course_id = table.Column<long>(type: "bigint", nullable: false),
+                    student_user_id = table.Column<long>(type: "bigint", nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'ACTIVE'::character varying"),
-                    EnrolledAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    enrolled_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("course_enrollments_pkey", x => new { x.CourseId, x.StudentUserId });
+                    table.PrimaryKey("course_enrollments_pkey", x => new { x.course_id, x.student_user_id });
                     table.ForeignKey(
                         name: "fk_course_enrollments_course",
-                        column: x => x.CourseId,
-                        principalTable: "Courses",
+                        column: x => x.course_id,
+                        principalTable: "courses",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_course_enrollments_student",
-                        column: x => x.StudentUserId,
-                        principalTable: "Students",
+                        column: x => x.student_user_id,
+                        principalTable: "students",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "InactiveAlerts",
+                name: "inactive_alerts",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AlertType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    TargetEntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    TargetEntityId = table.Column<long>(type: "bigint", nullable: false),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: true),
+                    alert_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    target_entity_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    target_entity_id = table.Column<long>(type: "bigint", nullable: false),
+                    project_id = table.Column<long>(type: "bigint", nullable: true),
                     severity = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'WARNING'::character varying"),
                     message = table.Column<string>(type: "text", nullable: false),
-                    ThresholdDays = table.Column<int>(type: "integer", nullable: false),
-                    LastActivityAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsResolved = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    ResolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ResolvedByUserId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    threshold_days = table.Column<int>(type: "integer", nullable: false),
+                    last_activity_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_resolved = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    resolved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    resolved_by_user_id = table.Column<long>(type: "bigint", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("inactive_alerts_pkey", x => x.Id);
+                    table.PrimaryKey("inactive_alerts_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_inactive_alerts_project",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        column: x => x.project_id,
+                        principalTable: "projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_inactive_alerts_resolved_by",
-                        column: x => x.ResolvedByUserId,
-                        principalTable: "Users",
+                        column: x => x.resolved_by_user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProjectDocuments",
+                name: "project_documents",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
-                    DocType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    VersionNo = table.Column<int>(type: "integer", nullable: false),
+                    project_id = table.Column<long>(type: "bigint", nullable: false),
+                    doc_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    version_no = table.Column<int>(type: "integer", nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'DRAFT'::character varying"),
-                    FileUrl = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
-                    SubmittedByUserId = table.Column<long>(type: "bigint", nullable: false),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    file_url = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
+                    submitted_by_user_id = table.Column<long>(type: "bigint", nullable: false),
+                    submitted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("project_documents_pkey", x => x.Id);
+                    table.PrimaryKey("project_documents_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_project_documents_project",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        column: x => x.project_id,
+                        principalTable: "projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_project_documents_submitted_by",
-                        column: x => x.SubmittedByUserId,
-                        principalTable: "Users",
+                        column: x => x.submitted_by_user_id,
+                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProjectIntegrations",
+                name: "project_integrations",
                 columns: table => new
                 {
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
-                    JiraProjectId = table.Column<long>(type: "bigint", nullable: true),
-                    GithubRepoId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    project_id = table.Column<long>(type: "bigint", nullable: false),
+                    jira_project_id = table.Column<long>(type: "bigint", nullable: true),
+                    github_repo_id = table.Column<long>(type: "bigint", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("project_integrations_pkey", x => x.ProjectId);
+                    table.PrimaryKey("project_integrations_pkey", x => x.project_id);
                     table.ForeignKey(
                         name: "fk_project_integrations_github_repo",
-                        column: x => x.GithubRepoId,
-                        principalTable: "GithubRepositories",
+                        column: x => x.github_repo_id,
+                        principalTable: "github_repositories",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_project_integrations_jira_project",
-                        column: x => x.JiraProjectId,
-                        principalTable: "JiraProjects",
+                        column: x => x.jira_project_id,
+                        principalTable: "jira_projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_project_integrations_project",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        column: x => x.project_id,
+                        principalTable: "projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "StudentActivityDailies",
+                name: "student_activity_dailies",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    StudentUserId = table.Column<long>(type: "bigint", nullable: false),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
-                    ActivityDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    CommitsCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    LinesAdded = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    LinesDeleted = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    PullRequestsCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    CodeReviewsCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    IssuesCreated = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    IssuesCompleted = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    StoryPoints = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    TimeLoggedHours = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: false, defaultValue: 0m),
-                    CommentsCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    student_user_id = table.Column<long>(type: "bigint", nullable: false),
+                    project_id = table.Column<long>(type: "bigint", nullable: false),
+                    activity_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    commits_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    lines_added = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    lines_deleted = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    pull_requests_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    code_reviews_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    issues_created = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    issues_completed = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    story_points = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    time_logged_hours = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: false, defaultValue: 0m),
+                    comments_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("student_activity_dailies_pkey", x => x.Id);
+                    table.PrimaryKey("student_activity_dailies_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_student_activity_dailies_project",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        column: x => x.project_id,
+                        principalTable: "projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_student_activity_dailies_student",
-                        column: x => x.StudentUserId,
-                        principalTable: "Students",
+                        column: x => x.student_user_id,
+                        principalTable: "students",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TeamMembers",
+                name: "team_members",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
-                    StudentUserId = table.Column<long>(type: "bigint", nullable: false),
-                    TeamRole = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'MEMBER'::character varying"),
+                    project_id = table.Column<long>(type: "bigint", nullable: false),
+                    student_user_id = table.Column<long>(type: "bigint", nullable: false),
+                    team_role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'MEMBER'::character varying"),
                     responsibility = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    ParticipationStatus = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'ACTIVE'::character varying"),
-                    JoinedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LeftAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    participation_status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValueSql: "'ACTIVE'::character varying"),
+                    joined_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    left_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("team_members_pkey", x => x.Id);
+                    table.PrimaryKey("team_members_pkey", x => x.id);
                     table.ForeignKey(
                         name: "fk_team_members_project",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
+                        column: x => x.project_id,
+                        principalTable: "projects",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_team_members_student",
-                        column: x => x.StudentUserId,
-                        principalTable: "Students",
+                        column: x => x.student_user_id,
+                        principalTable: "students",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "idx_audit_logs_entity",
-                table: "AuditLogs",
+                table: "audit_logs",
                 columns: new[] { "entity_type", "entity_id" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_audit_logs_timestamp",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "timestamp");
 
             migrationBuilder.CreateIndex(
                 name: "idx_audit_logs_user",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "performed_by_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_course_enrollments_course_status",
-                table: "CourseEnrollments",
+                table: "course_enrollments",
                 columns: new[] { "course_id", "status" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_course_enrollments_student_user_id",
-                table: "CourseEnrollments",
+                table: "course_enrollments",
                 column: "student_user_id");
 
             migrationBuilder.CreateIndex(
@@ -962,39 +962,39 @@ namespace JiraGithubExport.Shared.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "idx_courses_semester_id",
-                table: "Courses",
+                table: "courses",
                 column: "semester_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_courses_subject_id",
-                table: "Courses",
+                table: "courses",
                 column: "subject_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_courses_created_by_user_id",
-                table: "Courses",
+                table: "courses",
                 column: "created_by_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_courses_semester_subject_code",
-                table: "Courses",
+                table: "courses",
                 columns: new[] { "semester_id", "subject_id", "course_code" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_external_accounts_user_provider",
-                table: "ExternalAccounts",
+                table: "external_accounts",
                 columns: new[] { "user_id", "provider" });
 
             migrationBuilder.CreateIndex(
                 name: "uq_external_accounts_provider_key",
-                table: "ExternalAccounts",
+                table: "external_accounts",
                 columns: new[] { "provider", "external_user_key" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "uq_external_accounts_user_provider_key",
-                table: "ExternalAccounts",
+                table: "external_accounts",
                 columns: new[] { "user_id", "provider", "external_user_key" },
                 unique: true);
 
@@ -1011,305 +1011,305 @@ namespace JiraGithubExport.Shared.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_commits_author",
-                table: "GithubCommits",
+                table: "github_commits",
                 column: "author_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_commits_repo_committed_at",
-                table: "GithubCommits",
+                table: "github_commits",
                 columns: new[] { "repo_id", "committed_at" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_github_commits_committer_github_user_id",
-                table: "GithubCommits",
+                table: "github_commits",
                 column: "committer_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_github_commits_repo_sha",
-                table: "GithubCommits",
+                table: "github_commits",
                 columns: new[] { "repo_id", "commit_sha" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_issue_comments_issue_created",
-                table: "GithubIssueComments",
-                columns: new[] { "issue_id", "CreatedAt" });
+                table: "github_issue_comments",
+                columns: new[] { "issue_id", "created_at" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_github_issue_comments_author_github_user_id",
-                table: "GithubIssueComments",
+                table: "github_issue_comments",
                 column: "author_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_issues_repo_state",
-                table: "GithubIssues",
+                table: "github_issues",
                 columns: new[] { "repo_id", "state" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_github_issues_assignee_github_user_id",
-                table: "GithubIssues",
+                table: "github_issues",
                 column: "assignee_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_github_issues_author_github_user_id",
-                table: "GithubIssues",
+                table: "github_issues",
                 column: "author_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_github_issues_repo_number",
-                table: "GithubIssues",
+                table: "github_issues",
                 columns: new[] { "repo_id", "issue_number" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_pull_requests_author",
-                table: "GithubPullRequests",
+                table: "github_pull_requests",
                 column: "author_github_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_github_pull_requests_repo_state",
-                table: "GithubPullRequests",
+                table: "github_pull_requests",
                 columns: new[] { "repo_id", "state" });
 
             migrationBuilder.CreateIndex(
                 name: "uq_github_pull_requests_repo_number",
-                table: "GithubPullRequests",
+                table: "github_pull_requests",
                 columns: new[] { "repo_id", "pr_number" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "github_repositories_full_name_key",
-                table: "GithubRepositories",
-                column: "FullName",
+                table: "github_repositories",
+                column: "full_name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "github_repositories_github_repo_id_key",
-                table: "GithubRepositories",
+                table: "github_repositories",
                 column: "github_repo_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "uq_github_repositories_owner_name",
-                table: "GithubRepositories",
+                table: "github_repositories",
                 columns: new[] { "owner_login", "name" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "github_users_github_user_id_key",
-                table: "GithubUsers",
+                table: "github_users",
                 column: "github_user_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "github_users_login_key",
-                table: "GithubUsers",
+                table: "github_users",
                 column: "login",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_inactive_alerts_project",
-                table: "InactiveAlerts",
+                table: "inactive_alerts",
                 column: "project_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_inactive_alerts_target",
-                table: "InactiveAlerts",
+                table: "inactive_alerts",
                 columns: new[] { "target_entity_type", "target_entity_id" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_inactive_alerts_type",
-                table: "InactiveAlerts",
+                table: "inactive_alerts",
                 column: "alert_type");
 
             migrationBuilder.CreateIndex(
                 name: "idx_inactive_alerts_unresolved",
-                table: "InactiveAlerts",
+                table: "inactive_alerts",
                 column: "is_resolved",
-                filter: "IsResolved = false");
+                filter: "is_resolved = false");
 
             migrationBuilder.CreateIndex(
                 name: "IX_inactive_alerts_resolved_by_user_id",
-                table: "InactiveAlerts",
+                table: "inactive_alerts",
                 column: "resolved_by_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_attachments_issue_uploaded",
-                table: "JiraAttachments",
+                table: "jira_attachments",
                 columns: new[] { "issue_id", "uploaded_at" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_issue_comments_issue_created",
-                table: "JiraIssueComments",
-                columns: new[] { "issue_id", "CreatedAt" });
+                table: "jira_issue_comments",
+                columns: new[] { "issue_id", "created_at" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_issue_links_child",
-                table: "JiraIssueLinks",
+                table: "jira_issue_links",
                 column: "child_issue_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_issue_links_parent",
-                table: "JiraIssueLinks",
+                table: "jira_issue_links",
                 column: "parent_issue_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_jira_issue_links_parent_child_type",
-                table: "JiraIssueLinks",
+                table: "jira_issue_links",
                 columns: new[] { "parent_issue_id", "child_issue_id", "link_type" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_issues_project_id",
-                table: "JiraIssues",
+                table: "jira_issues",
                 column: "jira_project_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_issues_project_status",
-                table: "JiraIssues",
+                table: "jira_issues",
                 columns: new[] { "jira_project_id", "status" });
 
             migrationBuilder.CreateIndex(
                 name: "jira_issues_jira_issue_key_key",
-                table: "JiraIssues",
+                table: "jira_issues",
                 column: "jira_issue_key",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "jira_projects_jira_project_key_key",
-                table: "JiraProjects",
+                table: "jira_projects",
                 column: "jira_project_key",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_jira_worklogs_issue_author",
-                table: "JiraWorklogs",
+                table: "jira_worklogs",
                 columns: new[] { "issue_id", "author_jira_account_id" });
 
             migrationBuilder.CreateIndex(
                 name: "lecturers_lecturer_code_key",
-                table: "Lecturers",
+                table: "lecturers",
                 column: "lecturer_code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "lecturers_office_email_key",
-                table: "Lecturers",
+                table: "lecturers",
                 column: "office_email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_project_documents_project_doc_type",
-                table: "ProjectDocuments",
+                table: "project_documents",
                 columns: new[] { "project_id", "doc_type" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_project_documents_submitted_by",
-                table: "ProjectDocuments",
+                table: "project_documents",
                 column: "submitted_by_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_project_documents_version",
-                table: "ProjectDocuments",
+                table: "project_documents",
                 columns: new[] { "project_id", "doc_type", "version_no" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "uq_project_integrations_github_repo",
-                table: "ProjectIntegrations",
+                table: "project_integrations",
                 column: "github_repo_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "uq_project_integrations_jira_project",
-                table: "ProjectIntegrations",
+                table: "project_integrations",
                 column: "jira_project_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_projects_course_id",
-                table: "Projects",
+                table: "projects",
                 column: "course_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_projects_course_name",
-                table: "Projects",
+                table: "projects",
                 columns: new[] { "course_id", "name" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_report_exports_requested_by",
-                table: "ReportExports",
+                table: "report_exports",
                 column: "requested_by_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_report_exports_scope",
-                table: "ReportExports",
+                table: "report_exports",
                 columns: new[] { "scope", "scope_entity_id" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_report_exports_status",
-                table: "ReportExports",
+                table: "report_exports",
                 column: "status");
 
             migrationBuilder.CreateIndex(
                 name: "roles_role_name_key",
-                table: "Roles",
+                table: "roles",
                 column: "role_name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "semesters_name_key",
-                table: "Semesters",
+                table: "semesters",
                 column: "name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_student_activity_dailies_date",
-                table: "StudentActivityDailies",
+                table: "student_activity_dailies",
                 column: "activity_date");
 
             migrationBuilder.CreateIndex(
                 name: "idx_student_activity_dailies_project",
-                table: "StudentActivityDailies",
+                table: "student_activity_dailies",
                 column: "project_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_student_activity_dailies_student",
-                table: "StudentActivityDailies",
+                table: "student_activity_dailies",
                 column: "student_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_student_activity_dailies_student_project_date",
-                table: "StudentActivityDailies",
+                table: "student_activity_dailies",
                 columns: new[] { "student_user_id", "project_id", "activity_date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "students_student_code_key",
-                table: "Students",
+                table: "students",
                 column: "student_code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "subjects_subject_code_key",
-                table: "Subjects",
+                table: "subjects",
                 column: "subject_code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_team_members_project_team_role",
-                table: "TeamMembers",
+                table: "team_members",
                 columns: new[] { "project_id", "team_role" });
 
             migrationBuilder.CreateIndex(
                 name: "idx_team_members_student_user_id",
-                table: "TeamMembers",
+                table: "team_members",
                 column: "student_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_team_members_project_student",
-                table: "TeamMembers",
+                table: "team_members",
                 columns: new[] { "project_id", "student_user_id" },
                 unique: true);
 
@@ -1320,38 +1320,38 @@ namespace JiraGithubExport.Shared.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "users_email_key",
-                table: "Users",
-                column: "Email",
+                table: "users",
+                column: "email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "idx_work_links_issue_id",
-                table: "WorkLinks",
+                table: "work_links",
                 column: "jira_issue_id");
 
             migrationBuilder.CreateIndex(
                 name: "idx_work_links_repo_id",
-                table: "WorkLinks",
+                table: "work_links",
                 column: "repo_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_work_links_branch_id",
-                table: "WorkLinks",
+                table: "work_links",
                 column: "branch_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_work_links_commit_id",
-                table: "WorkLinks",
+                table: "work_links",
                 column: "commit_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_work_links_pr_id",
-                table: "WorkLinks",
+                table: "work_links",
                 column: "pr_id");
 
             migrationBuilder.CreateIndex(
                 name: "uq_work_links_compound",
-                table: "WorkLinks",
+                table: "work_links",
                 columns: new[] { "jira_issue_id", "link_type", "commit_id", "pr_id", "branch_id" },
                 unique: true);
         }
@@ -1360,106 +1360,113 @@ namespace JiraGithubExport.Shared.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AuditLogs");
+                name: "audit_logs");
 
             migrationBuilder.DropTable(
-                name: "CourseEnrollments");
+                name: "course_enrollments");
 
             migrationBuilder.DropTable(
                 name: "course_lecturers");
 
             migrationBuilder.DropTable(
-                name: "ExternalAccounts");
+                name: "external_accounts");
 
             migrationBuilder.DropTable(
                 name: "github_commit_branches");
 
             migrationBuilder.DropTable(
-                name: "GithubIssueComments");
+                name: "github_issue_comments");
 
             migrationBuilder.DropTable(
-                name: "InactiveAlerts");
+                name: "inactive_alerts");
 
             migrationBuilder.DropTable(
-                name: "JiraAttachments");
+                name: "jira_attachments");
 
             migrationBuilder.DropTable(
-                name: "JiraIssueComments");
+                name: "jira_issue_comments");
 
             migrationBuilder.DropTable(
-                name: "JiraIssueLinks");
+                name: "jira_issue_links");
 
             migrationBuilder.DropTable(
-                name: "JiraWorklogs");
+                name: "jira_worklogs");
 
             migrationBuilder.DropTable(
-                name: "ProjectDocuments");
+                name: "project_documents");
 
             migrationBuilder.DropTable(
-                name: "ProjectIntegrations");
+                name: "project_integrations");
 
             migrationBuilder.DropTable(
-                name: "ReportExports");
+                name: "report_exports");
 
             migrationBuilder.DropTable(
-                name: "StudentActivityDailies");
+                name: "student_activity_dailies");
 
             migrationBuilder.DropTable(
-                name: "TeamMembers");
+                name: "team_members");
 
             migrationBuilder.DropTable(
                 name: "user_roles");
 
             migrationBuilder.DropTable(
-                name: "WorkLinks");
+                name: "work_links");
 
             migrationBuilder.DropTable(
-                name: "Lecturers");
+                name: "lecturers");
 
             migrationBuilder.DropTable(
-                name: "GithubIssues");
+                name: "github_issues");
 
             migrationBuilder.DropTable(
-                name: "Projects");
+                name: "projects");
 
             migrationBuilder.DropTable(
-                name: "Students");
+                name: "students");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "roles");
 
             migrationBuilder.DropTable(
                 name: "github_branches");
 
             migrationBuilder.DropTable(
-                name: "GithubCommits");
+                name: "github_commits");
 
             migrationBuilder.DropTable(
-                name: "JiraIssues");
+                name: "jira_issues");
 
             migrationBuilder.DropTable(
-                name: "GithubPullRequests");
+                name: "github_pull_requests");
 
             migrationBuilder.DropTable(
-                name: "Courses");
+                name: "courses");
 
             migrationBuilder.DropTable(
-                name: "JiraProjects");
+                name: "jira_projects");
 
             migrationBuilder.DropTable(
-                name: "GithubUsers");
+                name: "github_users");
 
             migrationBuilder.DropTable(
-                name: "GithubRepositories");
+                name: "github_repositories");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "users");
 
             migrationBuilder.DropTable(
-                name: "Semesters");
+                name: "semesters");
 
             migrationBuilder.DropTable(
-                name: "Subjects");
+                name: "subjects");
         }
     }
 }
+
+
+
+
+
+
+

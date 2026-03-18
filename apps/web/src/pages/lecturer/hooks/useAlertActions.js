@@ -60,10 +60,10 @@ export function useAlertActions() {
   const handleResolve = (id) => {
     resolveMutate(id, {
       onSuccess: () => {
-        success("ÄĂ£ xá»­ lĂ½ cáº£nh bĂ¡o");
+        success("Đã xử lý cảnh báo");
         refetch();
       },
-      onError: (err) => showError(err.message || "KhĂ´ng thá»ƒ giáº£i quyáº¿t cáº£nh bĂ¡o")
+      onError: (err) => showError(err.message || "Không thể giải quyết cảnh báo")
     });
   };
 
@@ -71,7 +71,7 @@ export function useAlertActions() {
     const newReminded = new Set([...remindedIds, alert.id]);
     setRemindedIds(newReminded);
     localStorage.setItem('reminded_alerts', JSON.stringify([...newReminded]));
-    success(`ÄĂ£ gá»­i nháº¯c nhá»Ÿ Ä‘áº¿n ${alert.targetName || alert.groupName || 'nhĂ³m'}`);
+    success(`Đã gửi nhắc nhở đến ${alert.targetName || alert.groupName || 'nhóm'}`);
   };
 
   return {
@@ -87,3 +87,9 @@ export function useAlertActions() {
     now
   };
 }
+
+
+
+
+
+

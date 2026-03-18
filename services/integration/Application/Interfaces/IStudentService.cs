@@ -18,5 +18,4 @@ public interface IStudentService
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.HeatmapStat>> GetStudentHeatmapAsync(long userId, int days = 35);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.DailyCommitStat>> GetStudentCommitActivityAsync(long userId, int days = 7);
     Task<List<object>> GetStudentDeadlinesAsync(long userId);
-    Task<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentDashboardStatsResponse> GetStudentDashboardStatsAsync(long userId);
 }

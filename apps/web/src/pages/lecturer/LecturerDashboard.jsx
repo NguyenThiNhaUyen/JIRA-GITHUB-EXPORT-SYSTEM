@@ -51,16 +51,16 @@ export default function LecturerDashboard() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Dashboard Giáº£ng viĂªn"
- subtitle={`ChĂ o má»«ng trá»Ÿ láº¡i, ${user?.name || 'Giáº£ng viĂªn'}! DÆ°á»›i Ä‘Ă¢y lĂ  tĂ¬nh hĂ¬nh chuyĂªn mĂ´n cĂ¡c lá»›p há»c.`}
- breadcrumb={["Giáº£ng viĂªn","Há»‡ thá»‘ng","Tá»•ng quan"]}
+ title="Dashboard Giảng viên"
+ subtitle={`Chào mừng trở lại, ${user?.name || 'Giảng viên'}! Dưới đây là tình hình chuyên môn các lớp học.`}
+ breadcrumb={["Giảng viên","Hệ thống","Tổng quan"]}
  actions={[
  <Button key="alerts" variant="outline" className="rounded-full w-10 h-10 p-0 border-gray-100 relative" onClick={() => navigate("/lecturer/alerts")}>
  <Bell size={18} />
  {alertsList.length > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>}
  </Button>,
  <Button key="send-alert" onClick={() => setIsAlertModalOpen(true)} className="bg-red-600 hover:bg-red-700 text-white rounded-2xl h-11 px-6 text-[10px] font-black shadow-lg shadow-red-100 border-0 transition-all">
- <ShieldAlert size={16} className="mr-2" /> PhĂ¡t cáº£nh bĂ¡o
+ <ShieldAlert size={16} className="mr-2" /> Phát cảnh báo
  </Button>
  ]}
  />
@@ -116,7 +116,7 @@ export default function LecturerDashboard() {
  <div className="w-24 h-24 rounded-3xl bg-gray-50 flex items-center justify-center shadow-inner border border-gray-100">
  <LayoutList size={40} className="text-gray-300" />
  </div>
- <p className="text-[11px] font-black text-gray-400 tracking-[0.2em]">Khá»Ÿi táº¡o khĂ´ng gian lĂ m viá»‡c báº±ng cĂ¡ch chá»n Lá»›p há»c</p>
+ <p className="text-[11px] font-black text-gray-400 tracking-[0.2em]">Khởi tạo không gian làm việc bằng cách chọn Lớp học</p>
  </div>
  )}
 
@@ -128,3 +128,9 @@ export default function LecturerDashboard() {
  </div>
  );
 }
+
+
+
+
+
+

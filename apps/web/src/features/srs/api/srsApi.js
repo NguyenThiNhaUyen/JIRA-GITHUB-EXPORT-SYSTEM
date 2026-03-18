@@ -2,7 +2,7 @@ import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
- * Láº¥y danh sĂ¡ch SRS Reports
+ * Lấy danh sách SRS Reports
  */
 export async function getProjectSrs(projectIdOrParams) {
     // Determine if it's a projectId or params object
@@ -21,7 +21,7 @@ export async function getProjectSrs(projectIdOrParams) {
 export const getSrs = getProjectSrs;
 
 /**
- * Láº¥y chi tiáº¿t 1 Document báº±ng ID
+ * Lấy chi tiết 1 Document bằng ID
  */
 export async function getSrsById(id) {
     const res = await client.get(`/srs/${id}`);
@@ -29,7 +29,7 @@ export async function getSrsById(id) {
 }
 
 /**
- * Ná»™p SRS Report má»›i â€” gá»­i multipart/form-data
+ * Nộp SRS Report mới — gửi multipart/form-data
  */
 export async function submitSrsReport(projectId, { file }) {
     const formData = new FormData();
@@ -47,7 +47,7 @@ export async function submitSrsReport(projectId, { file }) {
 }
 
 /**
- * Gá»­i reminder tá»›i cĂ¡c nhĂ³m bá»‹ trá»… háº¡n ná»™p
+ * Gửi reminder tới các nhóm bị trễ hạn nộp
  */
 export async function remindOverdueSrs() {
     const res = await client.post(`/srs/remind-overdue`);
@@ -55,7 +55,7 @@ export async function remindOverdueSrs() {
 }
 
 /**
- * ÄĂ¡nh giĂ¡ SRS (Giáº£ng viĂªn) - Combined action
+ * Đánh giá SRS (Giảng viên) - Combined action
  */
 export async function reviewSrs(reportId, { status, feedback, score, metadata }) {
     // Backend has separate endpoints for status and feedback
@@ -76,7 +76,7 @@ export async function reviewSrs(reportId, { status, feedback, score, metadata })
 }
 
 /**
- * Cáº­p nháº­t status SRS
+ * Cập nhật status SRS
  */
 export async function updateSrsStatus(reportId, newStatus, feedback, score) {
     const res = await client.patch(`/srs/${reportId}/status`, {
@@ -88,7 +88,7 @@ export async function updateSrsStatus(reportId, newStatus, feedback, score) {
 }
 
 /**
- * Gá»­i feedback cho SRS
+ * Gửi feedback cho SRS
  */
 export async function provideSrsFeedback(reportId, feedback) {
     const res = await client.patch(`/srs/${reportId}/feedback`, { feedback });
@@ -96,14 +96,14 @@ export async function provideSrsFeedback(reportId, feedback) {
 }
 
 /**
- * XĂ³a SRS Report
+ * Xóa SRS Report
  */
 export async function deleteSrsReport(reportId) {
     const res = await client.delete(`/srs/${reportId}`);
     return unwrap(res);
 }
 
-/* â”€â”€â”€ mapper: BE â†’ FE shape â”€â”€â”€ */
+/* ─── mapper: BE → FE shape ─── */
 function mapSrs(s) {
     if (!s) return s;
     return {
@@ -120,3 +120,9 @@ function mapSrs(s) {
         reviewerName: s.reviewerName,
     };
 }
+
+
+
+
+
+

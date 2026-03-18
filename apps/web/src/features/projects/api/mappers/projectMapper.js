@@ -1,48 +1,32 @@
 export const mapProject = (project) => {
     if (!project) return null;
-    
-    // BE can return members as Team, Members, or TeamMembers
-    const rawMembers = project.members || project.teamMembers || project.team || project.Team || [];
-    
     return {
         id: String(project.id || project.Id || ""),
         name: project.name || project.Name || "",
         description: project.description || project.Description || "",
         status: project.status || project.Status || "ACTIVE",
         courseId: project.courseId || project.CourseId || null,
-        courseName: project.courseName || project.CourseName || project.course_name || "",
-        courseCode: project.courseCode || project.CourseCode || "",
-        
-        team: rawMembers.map(member => ({
-            studentId: String(member.studentUserId || member.userId || member.user_id || member.Id || member.id || ""),
-            studentName: member.studentName || member.fullName || member.full_name || member.FullName || "",
+        courseName: project.course_name || project.courseName || project.CourseName || "",
+        team: (project.members || project.teamMembers || project.team || []).map(member => ({
+            studentId: String(member.studentUserId || member.user_id || member.Id || ""),
+            studentName: member.studentName || member.full_name || member.FullName || "",
             studentCode: member.studentCode || member.student_code || member.StudentCode || "",
-            role: member.role || member.teamRole || member.team_role || "MEMBER",
+            role: member.role || member.team_role || "MEMBER",
             participationStatus: member.participationStatus || member.participation_status || "ACTIVE",
             contributionScore: member.contributionScore || member.contribution_score || 0
         })),
-        
-        topic: project.topic || project.description || "",
-        
         integration: project.integration ? {
-            githubUrl: project.integration.githubUrl || project.githubRepoUrl || project.github_repo_url || "",
-            jiraUrl: project.integration.jiraUrl || project.jiraProjectUrl || project.jira_project_url || "",
-            githubStatus: project.integration.githubStatus || project.githubStatus || "PENDING",
-            jiraStatus: project.integration.jiraStatus || project.jiraStatus || "PENDING",
-            lastSyncAt: project.integration.lastSyncAt || null
+            githubUrl: project.githubRepoUrl || project.github_repo_url || project.integration.githubUrl || "",
+            jiraUrl: project.jiraProjectUrl || project.jira_project_url || project.integration.jiraUrl || "",
+            githubStatus: project.integration.githubStatus || project.integration_status || "PENDING",
+            jiraStatus: project.integration.jiraStatus || project.integration_status || "PENDING",
+            lastSyncAt: project.integration.lastSyncAt || project.integration.last_sync_at || null
         } : {
-            githubUrl: project.githubRepoUrl || project.github_repo_url || "",
-            jiraUrl: project.jiraProjectUrl || project.jira_project_url || "",
-            githubStatus: project.githubStatus || "NONE",
-            jiraStatus: project.jiraStatus || "NONE",
+            githubUrl: project.github_repo_url || "",
+            jiraUrl: project.jira_project_url || "",
+            status: project.integration_status || "PENDING",
             lastSyncAt: null
         },
-        
-        // Stats aliases
-        commits: project.commitsCount || project.commits || project.commitCount || 0,
-        issues: project.issueCount || project.issues || 0,
-        issuesDone: project.issuesDone || 0,
-        
         createdAt: project.createdAt || project.created_at || null,
         updatedAt: project.updatedAt || project.updated_at || null
     };
@@ -51,7 +35,8 @@ export const mapProject = (project) => {
 export const mapProjectList = (beData) => {
     if (!beData) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 
-    if (beData.items !== undefined || beData.Items !== undefined || beData.results !== undefined || beData.Results !== undefined) {
+    // PagedResponse shape: { results: [] or items: [], totalCount, page, pageSize }
+    if (beData.results !== undefined || beData.Results !== undefined || beData.items !== undefined || beData.Items !== undefined) {
         const results = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
         return {
             items: results.map(mapProject),
@@ -75,28 +60,22 @@ export const mapProjectList = (beData) => {
 
 export const mapProjectMetrics = (metrics) => {
     if (!metrics) return null;
-    
-    // metrics is ProjectDashboardResponse: { project, teamSummary, gitHubStats, jiraStats, memberContributions }
-    const gh = metrics.gitHubStats || metrics.githubStats || {};
-    const jr = metrics.jiraStats || metrics.jiraStats || {};
-    const mems = metrics.memberContributions || [];
-
     return {
-        totalCommits: gh.totalCommits || 0,
-        totalIssues: jr.totalIssues || 0,
-        issuesInProgress: jr.inProgress || 0,
-        issuesDone: jr.done || 0,
-        
-        // Fallback for parts using flat structure
-        lastSyncAt: gh.lastCommitDate || jr.lastUpdate || null,
-        
-        contributions: mems.map(m => ({
-            studentId: m.studentUserId || m.studentCode || "", // Backend often sends Code as ID in analytics
-            studentCode: m.studentCode || "",
-            studentName: m.fullName || "",
-            commits: m.commits30d || m.commitsCount || 0,
-            issues: m.jiraIssuesCompleted30d || m.issuesCount || 0,
-            lastActivity: m.lastActivityDate || null
+        totalCommits: metrics.totalCommits || 0,
+        totalIssues: metrics.totalIssues || 0,
+        myCommits: metrics.userCommits || 0,
+        myIssues: metrics.userIssues || 0,
+        lastSyncAt: metrics.lastSyncAt,
+        contributions: (metrics.memberContributions || []).map(m => ({
+            studentId: m.studentUserId,
+            commits: m.commitsCount || 0,
+            issues: m.issuesCount || 0
         }))
     };
 };
+
+
+
+
+
+

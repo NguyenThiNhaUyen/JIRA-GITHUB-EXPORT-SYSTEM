@@ -46,3 +46,9 @@ export function ProjectKpiSidebar({ metrics, isSyncing }) {
  </Card>
  );
 }
+
+
+
+
+
+

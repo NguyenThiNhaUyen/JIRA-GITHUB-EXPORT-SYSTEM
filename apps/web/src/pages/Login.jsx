@@ -21,13 +21,13 @@ export default function Login() {
     if (result.success) {
       navigate(result.redirectPath);
     } else {
-      setError(result.error || "ÄÄƒng nháº­p tháº¥t báº¡i");
+      setError(result.error || "Đăng nhập thất bại");
     }
   };
 
   const quickLogin = async (role) => {
     setError("");
-    // TĂ i khoáº£n máº·c Ä‘á»‹nh BE seed â€” xem Program.cs
+    // Tài khoản mặc định BE seed — xem Program.cs
     const QUICK_CREDS = {
       admin: { email: "admin@truonghoc.com", password: "Admin@123" },
       lecturer: { email: "gv@fpt.edu.vn", password: "Lecturer@123" },
@@ -38,7 +38,7 @@ export default function Login() {
     if (result.success) {
       navigate(result.redirectPath);
     } else {
-      setError(result.error || "ÄÄƒng nháº­p tháº¥t báº¡i");
+      setError(result.error || "Đăng nhập thất bại");
     }
   };
 
@@ -64,8 +64,8 @@ export default function Login() {
           </div>
 
           <div className="max-w-[400px] w-full mx-auto mt-10 text-gray-900">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">ChĂ o má»«ng</h1>
-            <p className="text-gray-500 mb-8 text-sm">Vui lĂ²ng nháº­p thĂ´ng tin tĂ i khoáº£n cá»§a báº¡n</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Chào mừng</h1>
+            <p className="text-gray-500 mb-8 text-sm">Vui lòng nhập thông tin tài khoản của bạn</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -76,7 +76,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Nháº­p email cá»§a báº¡n"
+                  placeholder="Nhập email của bạn"
                   required
                   disabled={loading}
                   className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm"
@@ -84,13 +84,13 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Máº­t kháº©u</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nháº­p máº­t kháº©u cá»§a báº¡n"
+                    placeholder="Nhập mật khẩu của bạn"
                     required
                     disabled={loading}
                     className="w-full px-5 py-3.5 pr-12 bg-gray-50/50 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm"
@@ -115,13 +115,13 @@ export default function Login() {
               <div className="flex items-center justify-between px-2 pt-2 pb-4">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trĂ¬ Ä‘Äƒng nháº­p</span>
+                  <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trì đăng nhập</span>
                 </label>
                 <Link
                   to="/forgot-password"
                   className="text-sm text-teal-600 hover:text-teal-700 font-semibold transition-colors"
                 >
-                  QuĂªn máº­t kháº©u?
+                  Quên mật khẩu?
                 </Link>
               </div>
 
@@ -130,14 +130,14 @@ export default function Login() {
                 disabled={loading}
                 className="w-full bg-[#46867d] hover:bg-[#386d65] text-white font-bold py-4 rounded-md shadow-md hover:shadow-lg transition-all text-sm"
               >
-                {loading ? "Äang Ä‘Äƒng nháº­p..." : "ÄÄƒng nháº­p"}
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </form>
 
             <div className="mt-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px bg-gray-100 flex-1"></div>
-                <span className="text-xs text-gray-400 font-bold">ÄÄƒng nháº­p nhanh</span>
+                <span className="text-xs text-gray-400 font-bold">Đăng nhập nhanh</span>
                 <div className="h-px bg-gray-100 flex-1"></div>
               </div>
 
@@ -146,7 +146,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("admin")}
                   disabled={loading}
-                  title="Admin â€” admin@truonghoc.com"
+                  title="Admin — admin@truonghoc.com"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <Shield size={18} />
@@ -155,7 +155,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("lecturer")}
                   disabled={loading}
-                  title="Giáº£ng viĂªn"
+                  title="Giảng viên"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <BookOpen size={18} />
@@ -164,7 +164,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("student")}
                   disabled={loading}
-                  title="Sinh viĂªn"
+                  title="Sinh viên"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <GraduationCap size={18} />
@@ -179,7 +179,7 @@ export default function Login() {
 
           <div className="relative z-10 max-w-lg mt-10">
             <h2 className="text-4xl lg:text-5xl font-bold leading-snug mb-8">
-              Há»‡ thá»‘ng quáº£n lĂ½<br />dá»± Ă¡n há»c táº­p
+              Hệ thống quản lý<br />dự án học tập
             </h2>
           </div>
 
@@ -188,7 +188,7 @@ export default function Login() {
               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
             </svg>
             <p className="text-xl text-teal-50/90 font-medium leading-relaxed max-w-[90%]">
-              "Tráº£i nghiá»‡m phÆ°Æ¡ng thá»©c hiá»‡n Ä‘áº¡i, tá»‘i Æ°u vĂ  hiá»‡u quáº£ cao Ä‘á»ƒ quáº£n lĂ½ cĂ¡c lá»›p há»c vĂ  theo dĂµi tiáº¿n trĂ¬nh giĂ¡o dá»¥c cá»§a báº¡n."
+              "Trải nghiệm phương thức hiện đại, tối ưu và hiệu quả cao để quản lý các lớp học và theo dõi tiến trình giáo dục của bạn."
             </p>
           </div>
 
@@ -206,7 +206,7 @@ export default function Login() {
               <div className="min-w-0">
                 <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Education Management System</h3>
                 <p className="text-[10px] text-gray-500 mt-1 font-medium truncate">
-                  Ná»n táº£ng Quáº£n lĂ½ GiĂ¡o dá»¥c
+                  Nền tảng Quản lý Giáo dục
                 </p>
               </div>
             </div>
@@ -216,3 +216,9 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+
+
+

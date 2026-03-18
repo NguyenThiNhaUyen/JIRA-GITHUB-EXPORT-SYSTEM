@@ -5,25 +5,25 @@ import { StatsCard } from "@/components/shared/StatsCard.jsx";
 export function SrsStats({ stats }) {
   const items = [
     {
-      label: "Tá»•ng nhĂ³m",
+      label: "Tổng nhóm",
       value: stats.totalGroups,
       icon: Users,
       variant: "default",
     },
     {
-      label: "ÄĂ£ ná»™p",
+      label: "Đã nộp",
       value: stats.submitted,
       icon: Upload,
       variant: "info",
     },
     {
-      label: "Äang review",
+      label: "Đang review",
       value: stats.review,
       icon: Eye,
       variant: "indigo",
     },
     {
-      label: "Cáº§n chá»‰nh sá»­a",
+      label: "Cần chỉnh sửa",
       value: stats.revision,
       icon: RefreshCcw,
       variant: "warning",
@@ -35,7 +35,7 @@ export function SrsStats({ stats }) {
       variant: "success",
     },
     {
-      label: "QuĂ¡ háº¡n",
+      label: "Quá hạn",
       value: stats.overdue,
       icon: AlertTriangle,
       variant: "danger",
@@ -56,3 +56,9 @@ export function SrsStats({ stats }) {
     </div>
   );
 }
+
+
+
+
+
+

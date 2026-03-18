@@ -39,8 +39,8 @@ export function useCourseWorkspace(courseId) {
     // Initial state setup when data loads
     useEffect(() => {
         if (group?.integration) {
-            setGithubInput(group.integration.githubRepoUrl || group.integration.githubUrl || "");
-            setJiraInput(group.integration.jiraProjectKey || group.integration.jiraUrl || "");
+            setGithubInput(group.integration.githubRepo || "");
+            setJiraInput(group.integration.jiraKey || "");
         }
     }, [group]);
 
@@ -64,47 +64,38 @@ export function useCourseWorkspace(courseId) {
                     projectId: group.id,
                     studentId: studentId,
                     role: "MEMBER",
-                    responsibility: "ThĂ nh viĂªn"
+                    responsibility: "Thành viên"
                 });
                 successCount++;
             } catch (err) {}
         }
         setIsInviting(false);
-        if (successCount > 0) success(`ÄĂ£ thĂªm ${successCount} thĂ nh viĂªn!`);
+        if (successCount > 0) success(`Đã thêm ${successCount} thành viên!`);
         setShowInviteModal(false);
         setInviteSelectedIds([]);
     };
 
     const handleLinkSubmit = () => {
-        // Ensure github input is a full URL for the backend to parse
-        const githubUrl = githubInput.includes("github.com") 
-            ? (githubInput.startsWith("http") ? githubInput : `https://${githubInput}`)
-            : `https://github.com/${githubInput}`;
-
         linkIntegrationMutation.mutate({
             projectId: group.id,
-            body: { 
-                githubRepoUrl: githubUrl, 
-                jiraProjectKey: jiraInput,
-                jiraSiteUrl: "https://atlassian.net"
-            }
+            body: { githubRepo: githubInput, jiraKey: jiraInput }
         }, {
-            onSuccess: () => success("ÄĂ£ gá»­i yĂªu cáº§u liĂªn káº¿t tĂ­ch há»£p!")
+            onSuccess: () => success("Đã gửi yêu cầu liên kết tích hợp!")
         });
     };
 
     const handleSync = () => {
         syncCommitsMutation.mutate(group.id, {
-            onSuccess: () => success("ÄĂ£ Ä‘á»“ng bá»™ dá»¯ liá»‡u má»›i nháº¥t tá»« GitHub/Jira")
+            onSuccess: () => success("Đã đồng bộ dữ liệu mới nhất từ GitHub/Jira")
         });
     };
 
     const handleRemoveMember = async (studentId) => {
         try {
             await removeMemberMutateAsync({ projectId: group.id, studentId });
-            success("ÄĂ£ xĂ³a thĂ nh viĂªn khá»i nhĂ³m");
+            success("Đã xóa thành viên khỏi nhóm");
         } catch (err) {
-            showError(err.message || "XĂ³a thĂ nh viĂªn tháº¥t báº¡i");
+            showError(err.message || "Xóa thành viên thất bại");
         }
     };
 
@@ -139,3 +130,9 @@ export function useCourseWorkspace(courseId) {
         handleRemoveMember
     };
 }
+
+
+
+
+
+

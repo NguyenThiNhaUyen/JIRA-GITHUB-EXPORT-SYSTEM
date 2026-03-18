@@ -18,3 +18,10 @@ public class UserInfo
     public string? StudentCode { get; set; }
     public string? LecturerCode { get; set; }
 }
+
+
+
+
+
+
+

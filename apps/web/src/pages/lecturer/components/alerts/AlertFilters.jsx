@@ -4,12 +4,12 @@ import { InputField } from"@/components/shared/FormFields.jsx";
 
 export function AlertFilters({ filter, setFilter, search, setSearch }) {
  const filters = [
- { id: 'open', label: 'ChÆ°a xá»­ lĂ½' },
- { id: 'all', label: 'Táº¥t cáº£' },
- { id: 'high', label: 'NghiĂªm trá»ng' },
- { id: 'medium', label: 'Trung bĂ¬nh' },
- { id: 'low', label: 'Nháº¹' },
- { id: 'resolved', label: 'ÄĂ£ xá»­ lĂ½' }
+ { id: 'open', label: 'Chưa xử lý' },
+ { id: 'all', label: 'Tất cả' },
+ { id: 'high', label: 'Nghiêm trọng' },
+ { id: 'medium', label: 'Trung bình' },
+ { id: 'low', label: 'Nhẹ' },
+ { id: 'resolved', label: 'Đã xử lý' }
  ];
 
  return (
@@ -31,7 +31,7 @@ export function AlertFilters({ filter, setFilter, search, setSearch }) {
  </div>
  <div className="w-full md:w-96">
  <InputField
- placeholder="TĂ¬m tĂªn nhĂ³m, mĂ£ SV, ná»™i dung..."
+ placeholder="Tìm tên nhóm, mã SV, nội dung..."
  value={search}
  onChange={e => setSearch(e.target.value)}
  icon={Search}
@@ -42,3 +42,9 @@ export function AlertFilters({ filter, setFilter, search, setSearch }) {
  </Card>
  );
 }
+
+
+
+
+
+

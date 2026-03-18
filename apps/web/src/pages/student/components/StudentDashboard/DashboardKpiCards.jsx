@@ -14,12 +14,18 @@ export function DashboardKpiCards({ isLoading, studentKPI }) {
                 </>
             ) : (
                 <>
-                    <StatsCard label="Tá»•ng Commits" value={studentKPI.totalCommits} icon={Github} variant="success" hint="Tuáº§n nĂ y" description="Tá»”NG Sá» Láº¦N Äáº¨Y MĂƒ NGUá»’N" />
-                    <StatsCard label="Issues HoĂ n thĂ nh" value={studentKPI.totalIssues} icon={CheckSquare} variant="info" description="TASKS ÄĂƒ XONG TRĂN JIRA" />
-                    <StatsCard label="PRs Merged" value={studentKPI.totalPrs} icon={GitBranch} variant="indigo" description="PULL REQUESTS ÄĂƒ ÄÆ¯á»¢C CHáº¤P NHáº¬N" />
-                    <StatsCard label="Contribution Score" value={`${studentKPI.avgContrib}%`} icon={Target} variant="warning" description="CHá»ˆ Sá» ÄĂ“NG GĂ“P QUA Há»† THá»NG" />
+                    <StatsCard label="Tổng Commits" value={studentKPI.totalCommits} icon={Github} variant="success" hint="Tuần này" description="TỔNG SỐ LẦN ĐẨY MÃ NGUỒN" />
+                    <StatsCard label="Issues Hoàn thành" value={studentKPI.totalIssues} icon={CheckSquare} variant="info" description="TASKS ĐÃ XONG TRÊN JIRA" />
+                    <StatsCard label="PRs Merged" value={studentKPI.totalPrs} icon={GitBranch} variant="indigo" description="PULL REQUESTS ĐÃ ĐƯỢC CHẤP NHẬN" />
+                    <StatsCard label="Contribution Score" value={`${studentKPI.avgContrib}%`} icon={Target} variant="warning" description="CHỈ SỐ ĐÓNG GÓP QUA HỆ THỐNG" />
                 </>
             )}
         </div>
     );
 }
+
+
+
+
+
+

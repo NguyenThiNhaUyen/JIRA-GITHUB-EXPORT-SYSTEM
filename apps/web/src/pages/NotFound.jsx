@@ -15,27 +15,33 @@ export default function NotFound() {
             </svg>
           </div>
           <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">Trang khĂ´ng tĂ¬m tháº¥y</h2>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-2">Trang không tìm thấy</h2>
           <p className="text-gray-500 mb-8 max-w-md mx-auto">
-            Trang báº¡n Ä‘ang tĂ¬m kiáº¿m khĂ´ng tá»“n táº¡i hoáº·c Ä‘Ă£ Ä‘Æ°á»£c di chuyá»ƒn.
+            Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button onClick={() => navigate(-1)} variant="outline">
-              Quay láº¡i
+              Quay lại
             </Button>
             <Button onClick={() => navigate("/")}>
-              Vá» trang chá»§
+              Về trang chủ
             </Button>
           </div>
           
           <div className="text-sm text-gray-500">
-            <p>Náº¿u báº¡n nghÄ© Ä‘Ă¢y lĂ  lá»—i, vui lĂ²ng liĂªn há»‡ quáº£n trá»‹ viĂªn.</p>
+            <p>Nếu bạn nghĩ đây là lỗi, vui lòng liên hệ quản trị viên.</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+

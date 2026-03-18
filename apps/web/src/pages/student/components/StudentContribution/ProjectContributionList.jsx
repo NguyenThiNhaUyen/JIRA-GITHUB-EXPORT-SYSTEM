@@ -10,7 +10,7 @@ export function ProjectContributionList({ projects }) {
  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shadow-inner">
  <Code2 size={24} className="text-gray-300" />
  </div>
- ÄĂ³ng gĂ³p chi tiáº¿t theo dá»± Ă¡n ({projects.length})
+ Đóng góp chi tiết theo dự án ({projects.length})
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  {projects.map((p, i) => (
@@ -55,3 +55,9 @@ export function ProjectContributionList({ projects }) {
  </div>
  );
 }
+
+
+
+
+
+

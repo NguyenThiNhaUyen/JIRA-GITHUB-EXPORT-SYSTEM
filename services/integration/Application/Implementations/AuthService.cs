@@ -37,38 +37,38 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        // Find User by Email
-        var User = await _context.Users
-            .Include(u => u.Roles)
-            .Include(u => u.Student)
-            .Include(u => u.Lecturer)
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+        // Find user by email
+        var user = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .Include(u => u.lecturer)
+            .FirstOrDefaultAsync(u => u.email == request.Email);
 
-        if (User == null)
+        if (user == null)
         {
             _logger.LogWarning("Login failed: User not found - {Email}", request.Email);
-            throw new UnauthorizedException("Invalid Email or Password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
-        // Verify Password
-        if (!_passwordHasher.VerifyPassword(request.Password, User.Password))
+        // Verify password
+        if (!_passwordHasher.VerifyPassword(request.Password, user.password))
         {
-            _logger.LogWarning("Login failed: Invalid Password - {Email}", request.Email);
-            throw new UnauthorizedException("Invalid Email or Password");
+            _logger.LogWarning("Login failed: Invalid password - {Email}", request.Email);
+            throw new UnauthorizedException("Invalid email or password");
         }
 
-        // Check if User is Enabled
-        if (!User.Enabled)
+        // Check if user is enabled
+        if (!user.enabled)
         {
             _logger.LogWarning("Login failed: Account disabled - {Email}", request.Email);
             throw new UnauthorizedException("Account is disabled");
         }
 
-        // Get Roles
-        var Roles = User.Roles.Select(r => r.RoleName).ToList();
+        // Get roles
+        var roles = user.roles.Select(r => r.role_name).ToList();
 
         // Generate JWT token
-        var token = _jwtService.GenerateToken(User, Roles);
+        var token = _jwtService.GenerateToken(user, roles);
 
         return new LoginResponse
         {
@@ -77,13 +77,13 @@ public class AuthService : IAuthService
             ExpiresIn = 3600, // 1 hour
             User = new UserInfo
             {
-                Id = User.Id,
-                Email = User.Email,
-                FullName = User.FullName ?? User.Email,
-                Role = GetPrimaryRole(Roles),
-                Roles = Roles,
-                StudentCode = User.Student?.StudentCode,
-                LecturerCode = User.Lecturer?.LecturerCode
+                Id = user.id,
+                Email = user.email,
+                FullName = user.full_name ?? user.email,
+                Role = GetPrimaryRole(roles),
+                Roles = roles,
+                StudentCode = user.student?.student_code,
+                LecturerCode = user.lecturer?.lecturer_code
             }
         };
     }
@@ -112,55 +112,55 @@ public class AuthService : IAuthService
                 throw new UnauthorizedException("Invalid Google ID Token");
             }
 
-            // Check if User exists by Email
-            string Email = payload.Email;
-            var User = await _context.Users
-                .Include(u => u.Roles)
-                .Include(u => u.Student)
-                .Include(u => u.Lecturer)
-                .FirstOrDefaultAsync(u => u.Email == Email);
+            // Check if user exists by email
+            string email = payload.Email;
+            var user = await _context.users
+                .Include(u => u.roles)
+                .Include(u => u.student)
+                .Include(u => u.lecturer)
+                .FirstOrDefaultAsync(u => u.email == email);
 
-            if (User == null)
+            if (user == null)
             {
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try 
                 {
-                    // Create a new User if not exists
-                    User = new User
+                    // Create a new user if not exists
+                    user = new user
                     {
-                        Email = Email,
-                        FullName = payload.Name,
-                        Enabled = true,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        Password = _passwordHasher.HashPassword(Guid.NewGuid().ToString()) // Random Password for SSO Users
+                        email = email,
+                        full_name = payload.Name,
+                        enabled = true,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow,
+                        password = _passwordHasher.HashPassword(Guid.NewGuid().ToString()) // Random password for SSO users
                     };
 
-                    _context.Users.Add(User);
+                    _context.users.Add(user);
                     await _context.SaveChangesAsync();
 
                     // Role selection handling (Demo/Testing Only)
-                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "Student" : request.Role.ToUpper();
-                    var validRoles = new[] { "ADMIN", "Lecturer", "Student" };
+                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "STUDENT" : request.Role.ToUpper();
+                    var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
                     
                     if (!validRoles.Contains(requestedRole))
                     {
-                        requestedRole = "Student";
+                        requestedRole = "STUDENT";
                     }
 
-                    var Role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == requestedRole);
-                    if (Role == null)
+                    var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == requestedRole);
+                    if (role == null)
                     {
-                        Role = new Role { RoleName = requestedRole };
-                        _context.Roles.Add(Role);
+                        role = new role { role_name = requestedRole };
+                        _context.roles.Add(role);
                         await _context.SaveChangesAsync();
                     }
 
-                    User.Roles.Add(Role);
+                    user.roles.Add(role);
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    _logger.LogInformation("New User registered via Google SSO: {Email}", Email);
+                    _logger.LogInformation("New user registered via Google SSO: {Email}", email);
                 } 
                 catch 
                 {
@@ -168,19 +168,19 @@ public class AuthService : IAuthService
                     throw;
                 }
             }
-            else if (!User.Enabled)
+            else if (!user.enabled)
             {
-                _logger.LogWarning("Google Login failed: Account disabled - {Email}", Email);
+                _logger.LogWarning("Google Login failed: Account disabled - {Email}", email);
                 throw new UnauthorizedException("Your account has been disabled");
             }
 
-            // Get Roles
-            var Roles = User.Roles.Select(r => r.RoleName).ToList();
+            // Get roles
+            var roles = user.roles.Select(r => r.role_name).ToList();
 
             // Generate JWT Token exactly like standard login
-            var token = _jwtService.GenerateToken(User, Roles);
+            var token = _jwtService.GenerateToken(user, roles);
             
-            _logger.LogInformation("User logged in successfully via Google SSO: {Email}", Email);
+            _logger.LogInformation("User logged in successfully via Google SSO: {Email}", email);
 
             return new LoginResponse
             {
@@ -189,13 +189,13 @@ public class AuthService : IAuthService
                 ExpiresIn = 3600, // 1 hour
                 User = new UserInfo
                 {
-                    Id = User.Id,
-                    Email = User.Email,
-                    FullName = User.FullName ?? User.Email,
-                    Role = GetPrimaryRole(Roles),
-                    Roles = Roles,
-                    StudentCode = User.Student?.StudentCode,
-                    LecturerCode = User.Lecturer?.LecturerCode
+                    Id = user.id,
+                    Email = user.email,
+                    FullName = user.full_name ?? user.email,
+                    Role = GetPrimaryRole(roles),
+                    Roles = roles,
+                    StudentCode = user.student?.student_code,
+                    LecturerCode = user.lecturer?.lecturer_code
                 }
             };
         }
@@ -206,43 +206,43 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<string> ForgotPasswordAsync(string Email)
+    public async Task<string> ForgotPasswordAsync(string email)
     {
         // Silently ignore unknown emails for security
-        var User = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email.ToLower());
-        if (User == null) return "If this Email exists, a reset link has been sent.";
+        var user = await _context.users.FirstOrDefaultAsync(u => u.email == email.ToLower());
+        if (user == null) return "If this email exists, a reset link has been sent.";
 
         var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("=", "").Replace("/", "").Replace("+", "");
-        User.PasswordResetToken = token;
-        User.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1);
-        User.UpdatedAt = DateTime.UtcNow;
+        user.password_reset_token = token;
+        user.password_reset_token_expires_at = DateTime.UtcNow.AddHours(1);
+        user.updated_at = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // In production: send Email. In dev mode: return token directly.
-        _logger.LogInformation("Password reset token for {Email}: {Token}", Email, token);
+        // In production: send email. In dev mode: return token directly.
+        _logger.LogInformation("Password reset token for {Email}: {Token}", email, token);
         return token;
     }
 
     public async Task ResetPasswordAsync(string token, string newPassword)
     {
-        var User = await _context.Users.FirstOrDefaultAsync(u =>
-            u.PasswordResetToken == token &&
-            u.PasswordResetTokenExpiresAt > DateTime.UtcNow)
+        var user = await _context.users.FirstOrDefaultAsync(u =>
+            u.password_reset_token == token &&
+            u.password_reset_token_expires_at > DateTime.UtcNow)
             ?? throw new BusinessException("Invalid or expired reset token.");
 
-        User.Password = _passwordHasher.HashPassword(newPassword);
-        User.PasswordResetToken = null;
-        User.PasswordResetTokenExpiresAt = null;
-        User.UpdatedAt = DateTime.UtcNow;
+        user.password = _passwordHasher.HashPassword(newPassword);
+        user.password_reset_token = null;
+        user.password_reset_token_expires_at = null;
+        user.updated_at = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
-    private static string GetPrimaryRole(List<string> Roles)
+    private static string GetPrimaryRole(List<string> roles)
     {
-        var upperRoles = Roles.Select(r => r.ToUpper()).ToList();
+        var upperRoles = roles.Select(r => r.ToUpper()).ToList();
         if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN")) return "ADMIN";
-        if (upperRoles.Contains("Lecturer")) return "Lecturer";
-        return Roles.FirstOrDefault()?.ToUpper() ?? "Student";
+        if (upperRoles.Contains("LECTURER")) return "LECTURER";
+        return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
     }
 
     public async Task<LoginResponse> RefreshTokenAsync(RefreshRequest request)
@@ -259,19 +259,19 @@ public class AuthService : IAuthService
             throw new UnauthorizedException("Invalid token claims");
         }
 
-        var User = await _context.Users
-            .Include(u => u.Roles)
-            .Include(u => u.Student)
-            .Include(u => u.Lecturer)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .Include(u => u.lecturer)
+            .FirstOrDefaultAsync(u => u.id == userId);
 
-        if (User == null || !User.Enabled)
+        if (user == null || !user.enabled)
         {
             throw new UnauthorizedException("User not found or disabled");
         }
 
-        var Roles = User.Roles.Select(r => r.RoleName).ToList();
-        var token = _jwtService.GenerateToken(User, Roles);
+        var roles = user.roles.Select(r => r.role_name).ToList();
+        var token = _jwtService.GenerateToken(user, roles);
 
         return new LoginResponse
         {
@@ -280,13 +280,13 @@ public class AuthService : IAuthService
             ExpiresIn = 3600, // 1 hour
             User = new UserInfo
             {
-                Id = User.Id,
-                Email = User.Email,
-                FullName = User.FullName ?? User.Email,
-                Role = GetPrimaryRole(Roles),
-                Roles = Roles,
-                StudentCode = User.Student?.StudentCode,
-                LecturerCode = User.Lecturer?.LecturerCode
+                Id = user.id,
+                Email = user.email,
+                FullName = user.full_name ?? user.email,
+                Role = GetPrimaryRole(roles),
+                Roles = roles,
+                StudentCode = user.student?.student_code,
+                LecturerCode = user.lecturer?.lecturer_code
             }
         };
     }

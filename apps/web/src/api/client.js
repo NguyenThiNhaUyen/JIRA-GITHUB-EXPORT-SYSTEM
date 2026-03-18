@@ -1,29 +1,26 @@
 /**
- * Axios client Ă¢â‚¬â€ kĂ¡ÂºÂ¿t nĂ¡Â»â€˜i Backend ASP.NET Core
+ * Axios client — kết nối Backend ASP.NET Core
  *
  * baseURL = VITE_API_URL + "/api"
- *   Ă¢â€ â€™ Ă„ÂĂ¡ÂºÂ£m bĂ¡ÂºÂ£o KHÄ‚â€NG bao giĂ¡Â»Â cÄ‚Â³ /api/api double-prefix
+ *   → Đảm bảo KHÔNG bao giờ có /api/api double-prefix
  *
- * Ă„ÂĂ¡Â»Æ’ dÄ‚Â¹ng local BE:
- *   TĂ¡ÂºÂ¡o .env.local vÄ‚Â  thÄ‚Âªm: VITE_API_URL=http://localhost:5000
+ * Để dùng local BE:
+ *   Tạo .env.local và thêm: VITE_API_URL=http://localhost:5000
  */
 import axios from "axios";
-import { navigate } from "@/utils/navigation";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "https://jira-github-export-system.onrender.com";
 
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
     timeout: 60_000,
-    withCredentials: true, // Required for HttpOnly cookies
+    // Axios tự detect Content-Type: JSON -> application/json, FormData -> multipart/form-data
 });
 
+/* ── Request Interceptor: Tự đính kèm JWT từ localStorage ── */
 client.interceptors.request.use(
     (config) => {
-        // Primary access token check (sessionStorage for better security)
-        const token = sessionStorage.getItem("accessToken") || 
-                      localStorage.getItem("accessToken") || 
-                      localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,9 +29,9 @@ client.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-/* Ă¢â€â‚¬Ă¢â€â‚¬ Response Interceptor: BÄ‚Â³c tÄ‚Â¡ch wrapper ApiResponse<T> Ă¢â€â‚¬Ă¢â€â‚¬ */
-// BE luÄ‚Â´n trĂ¡ÂºÂ£ vĂ¡Â»Â: { success, message, data: T }
-// Interceptor nÄ‚Â y trĂ¡ÂºÂ£ vĂ¡Â»Â response.data (ApiResponse object) Ă„â€˜Ă¡Â»Æ’ FE xĂ¡Â»Â­ lÄ‚Â½
+/* ── Response Interceptor: Bóc tách wrapper ApiResponse<T> ── */
+// BE luôn trả về: { success, message, data: T }
+// Interceptor này trả về response.data (ApiResponse object) để FE xử lý
 client.interceptors.response.use(
     (response) => {
         return response.data;
@@ -45,12 +42,11 @@ client.interceptors.response.use(
 
         if (status === 401 || status === 403) {
             // Clear all auth related storage
-            sessionStorage.removeItem("accessToken");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             if (!window.location.pathname.includes("/login")) {
-                navigate("/login");
+                window.location.href = "/login";
             }
         } else if (!status) {
             // Network error
@@ -61,3 +57,9 @@ client.interceptors.response.use(
 );
 
 export default client;
+
+
+
+
+
+

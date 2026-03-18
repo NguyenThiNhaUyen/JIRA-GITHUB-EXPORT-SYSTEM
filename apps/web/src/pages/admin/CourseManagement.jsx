@@ -70,24 +70,24 @@ export default function CourseManagement() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <PageHeader
-                title="Quáº£n lĂ½ Lá»›p há»c"
-                subtitle="Quáº£n lĂ½ danh sĂ¡ch lá»›p há»c pháº§n, phĂ¢n cĂ´ng giáº£ng viĂªn vĂ  import sinh viĂªn."
-                breadcrumb={["Admin", "Lá»›p há»c"]}
+                title="Quản lý Lớp học"
+                subtitle="Quản lý danh sách lớp học phần, phân công giảng viên và import sinh viên."
+                breadcrumb={["Admin", "Lớp học"]}
                 actions={[
                     <Button key="import" variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-[10px] font-black hover:bg-gray-50 transition-all">
-                        <Download size={14} className="mr-2" /> Táº£i Template Excel
+                        <Download size={14} className="mr-2" /> Tải Template Excel
                     </Button>,
                     <Button key="add" onClick={() => { setShowModal(true); }} className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">
-                        <Plus size={16} className="mr-2" /> Táº¡o lá»›p há»c pháº§n
+                        <Plus size={16} className="mr-2" /> Tạo lớp học phần
                     </Button>
                 ]}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatsCard label="Tá»•ng sá»‘ lá»›p" value={stats.total} icon={BookOpen} variant="info" />
-                <StatsCard label="Lá»›p Ä‘ang má»Ÿ" value={stats.active} icon={PlayCircle} variant="success" />
-                <StatsCard label="Lá»›p sáº¯p má»Ÿ" value={stats.upcoming} icon={AlertCircle} variant="warning" />
-                <StatsCard label="Tá»•ng sinh viĂªn" value={stats.enrolled} icon={Users} variant="indigo" />
+                <StatsCard label="Tổng số lớp" value={stats.total} icon={BookOpen} variant="info" />
+                <StatsCard label="Lớp đang mở" value={stats.active} icon={PlayCircle} variant="success" />
+                <StatsCard label="Lớp sắp mở" value={stats.upcoming} icon={AlertCircle} variant="warning" />
+                <StatsCard label="Tổng sinh viên" value={stats.enrolled} icon={Users} variant="indigo" />
             </div>
 
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
@@ -101,14 +101,14 @@ export default function CourseManagement() {
                                     onClick={() => setFilterSemester(semId)}
                                     className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${filterSemester === semId ? 'bg-teal-600 text-white shadow-lg shadow-teal-100' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
                                 >
-                                    {semLabel || "Táº¥t cáº£ há»c ká»³"}
+                                    {semLabel || "Tất cả học kỳ"}
                                 </button>
                             );
                         })}
                     </div>
                     <div className="w-full md:w-80">
                         <InputField
-                            placeholder="TĂ¬m mĂ£ lá»›p, tĂªn lá»›p..."
+                            placeholder="Tìm mã lớp, tên lớp..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             icon={Search}
@@ -120,12 +120,12 @@ export default function CourseManagement() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100">Lá»›p há»c</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">MĂ´n / Há»c ká»³</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Giáº£ng viĂªn</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">SÄ© sá»‘</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Tráº¡ng thĂ¡i</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Thao tĂ¡c</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100">Lớp học</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Môn / Học kỳ</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Giảng viên</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Sĩ số</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Trạng thái</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -161,11 +161,11 @@ export default function CourseManagement() {
                                             {lecturer ? (
                                                 <div className="flex flex-col items-center group/lect">
                                                     <p className="text-sm font-bold text-gray-700">{lecturer.name}</p>
-                                                    <button onClick={() => handleRemoveLecturer(course)} className="text-[9px] font-black text-red-400 hover:text-red-600 opacity-0 group-hover/lect:opacity-100 transition-all">Gá»¡ giáº£ng viĂªn</button>
+                                                    <button onClick={() => handleRemoveLecturer(course)} className="text-[9px] font-black text-red-400 hover:text-red-600 opacity-0 group-hover/lect:opacity-100 transition-all">Gỡ giảng viên</button>
                                                 </div>
                                             ) : (
                                                 <Button size="sm" onClick={() => handleOpenAssign(course)} className="h-7 px-3 bg-gray-100 hover:bg-teal-600 hover:text-white text-gray-400 border-0 rounded-lg text-[9px] font-bold transition-all">
-                                                    ChÆ°a phĂ¢n cĂ´ng
+                                                    Chưa phân công
                                                 </Button>
                                             )}
                                         </td>
@@ -185,7 +185,7 @@ export default function CourseManagement() {
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex justify-end gap-1.5">
-                                                <Button onClick={() => handleOpenViewStudents(course)} variant="ghost" size="icon" className="w-9 h-9 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-indigo-600" title="Danh sĂ¡ch SV">
+                                                <Button onClick={() => handleOpenViewStudents(course)} variant="ghost" size="icon" className="w-9 h-9 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-indigo-600" title="Danh sách SV">
                                                     <Users size={16} />
                                                 </Button>
                                                 <Button onClick={() => handleOpenImport(course)} variant="ghost" size="icon" className="w-9 h-9 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-gray-100 text-emerald-600" title="Import SV">
@@ -204,7 +204,7 @@ export default function CourseManagement() {
                             })}
                             {!loadingCourses && filteredCourses.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="py-20 text-center text-gray-400 font-bold text-xs">KhĂ´ng tĂ¬m tháº¥y lá»›p há»c phĂ¹ há»£p</td>
+                                    <td colSpan={6} className="py-20 text-center text-gray-400 font-bold text-xs">Không tìm thấy lớp học phù hợp</td>
                                 </tr>
                             )}
                         </tbody>
@@ -213,44 +213,44 @@ export default function CourseManagement() {
             </Card>
 
             {/* Modal CRUD - No default footer because form has its own */}
-            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingCourse ? "Cáº­p nháº­t lá»›p há»c" : "Táº¡o lá»›p há»c má»›i"} size="lg">
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingCourse ? "Cập nhật lớp học" : "Tạo lớp học mới"} size="lg">
                 <form onSubmit={handleSubmit} className="p-2 space-y-6">
                     <div className="grid grid-cols-2 gap-6">
-                        <SelectField label="MĂ£ lá»›p chuáº©n" value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value })} required>
-                            <option value="">Chá»n mĂ£ lá»›p</option>
+                        <SelectField label="Mã lớp chuẩn" value={formData.code} onChange={e => setFormData({ ...formData, code: e.target.value })} required>
+                            <option value="">Chọn mã lớp</option>
                             {COURSE_CODES.map(c => <option key={c} value={c}>{c}</option>)}
                         </SelectField>
-                        <InputField label="TĂªn lá»›p hiá»ƒn thá»‹" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                        <InputField label="Tên lớp hiển thị" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
                     </div>
                     <div className="grid grid-cols-2 gap-6">
-                        <SelectField label="MĂ´n há»c" value={formData.subjectId} onChange={e => setFormData({ ...formData, subjectId: e.target.value })} required>
-                            <option value="">Chá»n mĂ´n há»c</option>
+                        <SelectField label="Môn học" value={formData.subjectId} onChange={e => setFormData({ ...formData, subjectId: e.target.value })} required>
+                            <option value="">Chọn môn học</option>
                             {subjects.map(s => <option key={s.id} value={s.id}>{s.subject_code || s.code} - {s.subject_name || s.name}</option>)}
                         </SelectField>
-                        <SelectField label="Há»c ká»³" value={formData.semesterId} onChange={e => setFormData({ ...formData, semesterId: e.target.value })} required>
-                            <option value="">Chá»n há»c ká»³</option>
+                        <SelectField label="Học kỳ" value={formData.semesterId} onChange={e => setFormData({ ...formData, semesterId: e.target.value })} required>
+                            <option value="">Chọn học kỳ</option>
                             {semesters.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </SelectField>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
-                        <InputField label="SÄ© sá»‘ tá»‘i Ä‘a" type="number" value={formData.maxStudents} onChange={e => setFormData({ ...formData, maxStudents: parseInt(e.target.value) })} required />
-                        <SelectField label="Tráº¡ng thĂ¡i" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                        <InputField label="Sĩ số tối đa" type="number" value={formData.maxStudents} onChange={e => setFormData({ ...formData, maxStudents: parseInt(e.target.value) })} required />
+                        <SelectField label="Trạng thái" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                             {Object.entries(COURSE_STATUSES).map(([key, val]) => (
                                 <option key={key} value={key}>{val.label} ({val.text})</option>
                             ))}
                         </SelectField>
                     </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                        <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Há»§y bá»</Button>
+                        <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Hủy bỏ</Button>
                         <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-11 px-8 font-black shadow-lg shadow-teal-100 border-0">
-                            {editingCourse ? "LÆ°u thay Ä‘á»•i" : "XĂ¡c nháº­n táº¡o"}
+                            {editingCourse ? "Lưu thay đổi" : "Xác nhận tạo"}
                         </Button>
                     </div>
                 </form>
             </Modal>
 
             {/* Assign Lecturer Modal */}
-            <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title="PhĂ¢n cĂ´ng Giáº£ng viĂªn" size="md">
+            <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title="Phân công Giảng viên" size="md">
                 <form onSubmit={handleAssignSubmit} className="p-2 space-y-4">
                     {selectedCourse && (
                         <div className="p-4 bg-teal-50 rounded-2xl border border-teal-100 flex items-center gap-3">
@@ -261,26 +261,26 @@ export default function CourseManagement() {
                             </div>
                         </div>
                     )}
-                    <SelectField label="Chá»n giáº£ng viĂªn phá»¥ trĂ¡ch" value={assignForm.lecturerId} onChange={e => setAssignForm({ lecturerId: e.target.value })} required>
-                        <option value="">-- Danh sĂ¡ch giáº£ng viĂªn --</option>
+                    <SelectField label="Chọn giảng viên phụ trách" value={assignForm.lecturerId} onChange={e => setAssignForm({ lecturerId: e.target.value })} required>
+                        <option value="">-- Danh sách giảng viên --</option>
                         {lecturers.map(l => <option key={l.id} value={l.id}>{l.name} ({l.email})</option>)}
                     </SelectField>
                     <div className="flex justify-end gap-3 pt-6">
-                        <Button type="button" variant="outline" onClick={() => setShowAssignModal(false)} className="rounded-xl border-gray-200">Há»§y</Button>
+                        <Button type="button" variant="outline" onClick={() => setShowAssignModal(false)} className="rounded-xl border-gray-200">Hủy</Button>
                         <Button type="submit" disabled={!assignForm.lecturerId} className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-8 font-black shadow-sm">
-                            XĂ¡c nháº­n phĂ¢n cĂ´ng
+                            Xác nhận phân công
                         </Button>
                     </div>
                 </form>
             </Modal>
 
             {/* Import Students Modal */}
-            <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} title="Import Sinh viĂªn" size="lg">
+            <Modal isOpen={showImportModal} onClose={() => setShowImportModal(false)} title="Import Sinh viên" size="lg">
                 <div className="p-2 space-y-6">
                     <div className="flex bg-gray-50 p-1 rounded-2xl">
                         {["manual", "excel"].map(tab => (
                             <button key={tab} onClick={() => setActiveImportTab(tab)} className={`flex-1 py-3 text-[10px] font-black rounded-xl transition-all ${activeImportTab === tab ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
-                                {tab === "manual" ? "Chá»n tá»« há»‡ thá»‘ng" : "Táº£i lĂªn Excel"}
+                                {tab === "manual" ? "Chọn từ hệ thống" : "Tải lên Excel"}
                             </button>
                         ))}
                     </div>
@@ -306,8 +306,8 @@ export default function CourseManagement() {
                                 ))}
                             </div>
                             <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                                <p className="text-[10px] font-black text-gray-400">ÄĂ£ chá»n <span className="text-teal-600">{importSelectedIds.length}</span> sinh viĂªn</p>
-                                <Button onClick={handleImportSubmit} disabled={importSelectedIds.length === 0} className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-10 font-black shadow-lg shadow-teal-100">XĂ¡c nháº­n</Button>
+                                <p className="text-[10px] font-black text-gray-400">Đã chọn <span className="text-teal-600">{importSelectedIds.length}</span> sinh viên</p>
+                                <Button onClick={handleImportSubmit} disabled={importSelectedIds.length === 0} className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-10 font-black shadow-lg shadow-teal-100">Xác nhận</Button>
                             </div>
                         </div>
                     ) : (
@@ -319,23 +319,23 @@ export default function CourseManagement() {
                                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto text-emerald-600 shadow-sm border border-emerald-100"><CheckCircle size={32} /></div>
                                         <div>
                                             <p className="text-sm font-black text-gray-800">{excelFile.name}</p>
-                                            <p className="text-[10px] text-gray-400 font-bold mt-1">{(excelFile.size / 1024).toFixed(1)} KB â€” Nháº¥n import Ä‘á»ƒ lÆ°u</p>
+                                            <p className="text-[10px] text-gray-400 font-bold mt-1">{(excelFile.size / 1024).toFixed(1)} KB — Nhấn import để lưu</p>
                                         </div>
                                     </>
                                 ) : (
                                     <>
                                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto text-teal-600 shadow-sm border border-gray-50"><Upload size={32} /></div>
                                         <div>
-                                            <p className="text-sm font-black text-gray-800">Chá»n file danh sĂ¡ch sinh viĂªn</p>
-                                            <p className="text-[10px] text-gray-400 font-bold mt-1">Há»‡ thá»‘ng cháº¥p nháº­n file .xlsx hoáº·c .xls</p>
+                                            <p className="text-sm font-black text-gray-800">Chọn file danh sách sinh viên</p>
+                                            <p className="text-[10px] text-gray-400 font-bold mt-1">Hệ thống chấp nhận file .xlsx hoặc .xls</p>
                                         </div>
                                     </>
                                 )}
                             </div>
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                <Button variant="outline" onClick={() => setShowImportModal(false)} className="rounded-xl border-gray-200">ÄĂ³ng</Button>
+                                <Button variant="outline" onClick={() => setShowImportModal(false)} className="rounded-xl border-gray-200">Đóng</Button>
                                 <Button onClick={handleExcelSubmit} disabled={!excelFile || isUploading} className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl px-10 font-black shadow-lg shadow-teal-100">
-                                    {isUploading ? "Äang xá»­ lĂ½..." : "Import Excel"}
+                                    {isUploading ? "Đang xử lý..." : "Import Excel"}
                                 </Button>
                             </div>
                         </div>
@@ -344,7 +344,7 @@ export default function CourseManagement() {
             </Modal>
 
             {/* View Enrolled Students Modal */}
-            <Modal isOpen={showViewStudentsModal} onClose={() => setShowViewStudentsModal(false)} title="Danh sĂ¡ch Sinh viĂªn" size="lg">
+            <Modal isOpen={showViewStudentsModal} onClose={() => setShowViewStudentsModal(false)} title="Danh sách Sinh viên" size="lg">
                 <div className="p-2 space-y-6">
                     <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -354,12 +354,12 @@ export default function CourseManagement() {
                                 <p className="text-[10px] text-gray-400 font-bold">{selectedCourse?.name}</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="bg-white border-indigo-200 text-indigo-700 px-4 py-1.5 rounded-xl font-black text-[10px]">{selectedCourse?.currentStudents || selectedCourse?.enrollments?.length || 0} Sinh viĂªn</Badge>
+                        <Badge variant="outline" className="bg-white border-indigo-200 text-indigo-700 px-4 py-1.5 rounded-xl font-black text-[10px]">{selectedCourse?.currentStudents || selectedCourse?.enrollments?.length || 0} Sinh viên</Badge>
                     </div>
 
                     <div className="max-h-96 overflow-y-auto divide-y divide-gray-50 border border-gray-100 rounded-3xl custom-scrollbar">
                         {(selectedCourse?.enrollments || []).length === 0 ? (
-                            <div className="py-20 text-center text-gray-300 font-bold text-[10px]">ChÆ°a cĂ³ sinh viĂªn tham gia lá»›p nĂ y</div>
+                            <div className="py-20 text-center text-gray-300 font-bold text-[10px]">Chưa có sinh viên tham gia lớp này</div>
                         ) : (
                             selectedCourse.enrollments.map(en => (
                                 <div key={en.userId} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/50 transition-all">
@@ -370,14 +370,14 @@ export default function CourseManagement() {
                                         <p className="text-sm font-bold text-gray-800 truncate">{en.user?.name || "N/A"}</p>
                                         <p className="text-[10px] text-gray-400 font-bold truncate tracking-tight">{en.user?.email || "N/A"}</p>
                                     </div>
-                                    <button onClick={() => handleKickStudent(en.userId, en.user?.name)} className="text-xs font-black text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all">Gá»¡</button>
+                                    <button onClick={() => handleKickStudent(en.userId, en.user?.name)} className="text-xs font-black text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all">Gỡ</button>
                                 </div>
                             ))
                         )}
                     </div>
 
                     <div className="flex justify-end">
-                        <Button onClick={() => setShowViewStudentsModal(false)} variant="outline" className="rounded-xl border-gray-200 px-8 font-bold">ÄĂ³ng</Button>
+                        <Button onClick={() => setShowViewStudentsModal(false)} variant="outline" className="rounded-xl border-gray-200 px-8 font-bold">Đóng</Button>
                     </div>
                 </div>
             </Modal>

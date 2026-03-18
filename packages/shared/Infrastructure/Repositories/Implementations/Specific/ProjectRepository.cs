@@ -1,41 +1,37 @@
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
 using JiraGithubExport.Shared.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
 
-public class ProjectRepository : GenericRepository<Project>, IProjectRepository
+public class ProjectRepository : GenericRepository<project>, IProjectRepository
 {
     public ProjectRepository(JiraGithubToolDbContext context) : base(context)
     {
     }
 
-    public async Task<(IEnumerable<Project> Items, int TotalCount)> GetPagedProjectsByCourseAsync(long courseId, string? keyword, string? sortDir, int page, int pageSize, bool asNoTracking = true)
+    public async Task<(IEnumerable<project> Items, int TotalCount)> GetPagedProjectsByCourseAsync(long courseId, string? keyword, string? sortDir, int page, int pageSize)
     {
-        var query = Query(asNoTracking)
-            .Where(p => p.CourseId == courseId);
+        var query = _dbSet.Where(p => p.course_id == courseId && p.status == "ACTIVE");
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(lowerKeyword) || 
-                                     (p.Description ?? "").ToLower().Contains(lowerKeyword));
+            query = query.Where(p => p.name.ToLower().Contains(lowerKeyword));
         }
 
         if (sortDir?.ToLower() == "desc")
-            query = query.OrderByDescending(x => x.CreatedAt);
+            query = query.OrderByDescending(x => x.created_at);
         else
-            query = query.OrderBy(x => x.CreatedAt);
+            query = query.OrderBy(x => x.created_at);
 
         var totalItems = await query.CountAsync();
         var items = await query
-            .Include(p => p.ProjectIntegration).ThenInclude(pi => pi.GithubRepo)
-            .Include(p => p.ProjectIntegration).ThenInclude(pi => pi.JiraProject)
+            .Include(p => p.project_integration)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(su => su.user)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

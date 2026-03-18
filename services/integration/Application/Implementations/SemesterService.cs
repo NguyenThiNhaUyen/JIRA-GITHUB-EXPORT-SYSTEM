@@ -24,24 +24,24 @@ public class SemesterService : ISemesterService
 
     public async Task<SemesterInfo> CreateSemesterAsync(CreateSemesterRequest request)
     {
-        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.Name == request.Name);
+        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name);
         if (existing != null)
         {
             throw new BusinessException("Semester with this name already exists");
         }
 
-        var Semester = new Semester
+        var semester = new semester
         {
-            Name = request.Name,
-            StartDate = DateOnly.FromDateTime(request.StartDate),
-            EndDate = DateOnly.FromDateTime(request.EndDate),
-            CreatedAt = DateTime.UtcNow
+            name = request.Name,
+            start_date = DateOnly.FromDateTime(request.StartDate),
+            end_date = DateOnly.FromDateTime(request.EndDate),
+            created_at = DateTime.UtcNow
         };
 
-        _unitOfWork.Semesters.Add(Semester);
+        _unitOfWork.Semesters.Add(semester);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<SemesterInfo>(Semester);
+        return _mapper.Map<SemesterInfo>(semester);
     }
 
     public async Task<List<SemesterInfo>> GenerateSemestersAsync(GenerateSemestersRequest request)
@@ -55,22 +55,22 @@ public class SemesterService : ISemesterService
             ($"Fall {year}", new DateOnly(year, 9, 1), new DateOnly(year, 12, 31))
         };
 
-        var createdSemesters = new List<Semester>();
+        var createdSemesters = new List<semester>();
 
         foreach (var s in semestersToCreate)
         {
-            var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(x => x.Name == s.Name);
+            var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(x => x.name == s.Name);
             if (existing == null)
             {
-                var Semester = new Semester
+                var semester = new semester
                 {
-                    Name = s.Name,
-                    StartDate = s.Start,
-                    EndDate = s.End,
-                    CreatedAt = DateTime.UtcNow
+                    name = s.Name,
+                    start_date = s.Start,
+                    end_date = s.End,
+                    created_at = DateTime.UtcNow
                 };
-                _unitOfWork.Semesters.Add(Semester);
-                createdSemesters.Add(Semester);
+                _unitOfWork.Semesters.Add(semester);
+                createdSemesters.Add(semester);
             }
             else
             {
@@ -85,42 +85,42 @@ public class SemesterService : ISemesterService
 
     public async Task<SemesterInfo> UpdateSemesterAsync(long semesterId, UpdateSemesterRequest request)
     {
-        var Semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.Id == semesterId);
-        if (Semester == null) throw new NotFoundException("Semester not found");
+        var semester = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.id == semesterId);
+        if (semester == null) throw new NotFoundException("Semester not found");
 
-        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.Name == request.Name && s.Id != semesterId);
+        var existing = await _unitOfWork.Semesters.FirstOrDefaultAsync(s => s.name == request.Name && s.id != semesterId);
         if (existing != null) throw new BusinessException("Semester with this name already exists");
 
-        Semester.Name = request.Name;
-        Semester.StartDate = DateOnly.FromDateTime(request.StartDate);
-        Semester.EndDate = DateOnly.FromDateTime(request.EndDate);
+        semester.name = request.Name;
+        semester.start_date = DateOnly.FromDateTime(request.StartDate);
+        semester.end_date = DateOnly.FromDateTime(request.EndDate);
 
-        _unitOfWork.Semesters.Update(Semester);
+        _unitOfWork.Semesters.Update(semester);
         await _unitOfWork.SaveChangesAsync();
-        return _mapper.Map<SemesterInfo>(Semester);
+        return _mapper.Map<SemesterInfo>(semester);
     }
 
     public async Task DeleteSemesterAsync(long semesterId)
     {
-        var Semester = await _unitOfWork.Semesters.Query()
-            .Include(s => s.Courses)
-            .FirstOrDefaultAsync(s => s.Id == semesterId);
+        var semester = await _unitOfWork.Semesters.Query()
+            .Include(s => s.courses)
+            .FirstOrDefaultAsync(s => s.id == semesterId);
             
-        if (Semester == null) throw new NotFoundException("Semester not found");
+        if (semester == null) throw new NotFoundException("Semester not found");
 
-        if (Semester.Courses != null && Semester.Courses.Any())
+        if (semester.courses != null && semester.courses.Any())
         {
             throw new BusinessException("Không thể xóa học kỳ vì đã có lớp học (Course) đang diễn ra trong học kỳ này. Vui lòng xóa các lớp học trước.");
         }
 
-        _unitOfWork.Semesters.Remove(Semester);
+        _unitOfWork.Semesters.Remove(semester);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<List<SemesterInfo>> GetAllSemestersAsync()
     {
-        var Semesters = await _unitOfWork.Semesters.GetAllAsync();
-        return _mapper.Map<List<SemesterInfo>>(Semesters);
+        var semesters = await _unitOfWork.Semesters.GetAllAsync();
+        return _mapper.Map<List<SemesterInfo>>(semesters);
     }
 
     public async Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request)
@@ -128,8 +128,8 @@ public class SemesterService : ISemesterService
         var (items, totalItems) = await _unitOfWork.Semesters.GetPagedAsync(
             request.Page, 
             request.PageSize,
-            string.IsNullOrWhiteSpace(request.Q) ? null : s => s.Name.ToLower().Contains(request.Q.ToLower()),
-            request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.CreatedAt) : q => q.OrderBy(x => x.CreatedAt)
+            string.IsNullOrWhiteSpace(request.Q) ? null : s => s.name.ToLower().Contains(request.Q.ToLower()),
+            request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.created_at) : q => q.OrderBy(x => x.created_at)
         );
 
         return new PagedResponse<SemesterInfo>(_mapper.Map<List<SemesterInfo>>(items), totalItems, request.Page, request.PageSize);

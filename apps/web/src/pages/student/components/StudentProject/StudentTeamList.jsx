@@ -7,7 +7,7 @@ export function StudentTeamList({ project, metrics, userId }) {
  return (
  <Card className="border border-gray-100 shadow-sm rounded-[40px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-10 px-12 bg-gray-50/10">
- <CardTitle className="text-xs font-black text-gray-400 font-display">Danh sĂ¡ch thĂ nh viĂªn & Chá»‰ sá»‘ Ä‘Ă³ng gĂ³p</CardTitle>
+ <CardTitle className="text-xs font-black text-gray-400 font-display">Danh sách thành viên & Chỉ số đóng góp</CardTitle>
  </CardHeader>
  <CardContent className="p-0">
  {teamMembers.map((m, idx) => {
@@ -25,8 +25,8 @@ export function StudentTeamList({ project, metrics, userId }) {
  <div className="flex items-center gap-4 mb-4">
  <p className="text-lg font-black text-gray-800 tracking-tight font-display">{m.studentName}</p>
  <div className="flex gap-2">
- {isLead && <Badge variant="outline" className="bg-amber-50 border-amber-200 text-amber-700 text-[9px] font-black px-4 py-1.5 rounded-full shadow-sm">â­ Leader</Badge>}
- {isMe && <Badge variant="outline" className="bg-teal-50 border-teal-200 text-teal-700 text-[9px] font-black px-4 py-1.5 rounded-full shadow-sm">Báº¡n</Badge>}
+ {isLead && <Badge variant="outline" className="bg-amber-50 border-amber-200 text-amber-700 text-[9px] font-black px-4 py-1.5 rounded-full shadow-sm">⭐ Leader</Badge>}
+ {isMe && <Badge variant="outline" className="bg-teal-50 border-teal-200 text-teal-700 text-[9px] font-black px-4 py-1.5 rounded-full shadow-sm">Bạn</Badge>}
  </div>
  </div>
  
@@ -37,7 +37,7 @@ export function StudentTeamList({ project, metrics, userId }) {
  style={{ width: `${m.contributionScore || 0}%` }} 
  />
  </div>
- <span className="text-[11px] font-black text-gray-700 shrink-0 w-32 text-right">{m.contributionScore || 0}% ÄĂ³ng gĂ³p</span>
+ <span className="text-[11px] font-black text-gray-700 shrink-0 w-32 text-right">{m.contributionScore || 0}% Đóng góp</span>
  </div>
  </div>
  
@@ -58,3 +58,9 @@ export function StudentTeamList({ project, metrics, userId }) {
  </Card>
  );
 }
+
+
+
+
+
+

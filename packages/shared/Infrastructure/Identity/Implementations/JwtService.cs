@@ -18,37 +18,37 @@ public class JwtService : IJwtService
         _jwtSettings = jwtSettings.Value;
     }
 
-    public string GenerateToken(User User, List<string> roles)
+    public string GenerateToken(user user, List<string> roles)
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, User.Id.ToString()),
-            new Claim(ClaimTypes.Email, User.Email),
-            new Claim(ClaimTypes.Name, User.FullName ?? User.Email),
-            new Claim("user_id", User.Id.ToString()),
-            new Claim("email", User.Email)
+            new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
+            new Claim(ClaimTypes.Email, user.email),
+            new Claim(ClaimTypes.Name, user.full_name ?? user.email),
+            new Claim("user_id", user.id.ToString()),
+            new Claim("email", user.email)
         };
 
-        // Add primary Role as claim (Æ°u tiĂªn cao nháº¥t: ADMIN > Lecturer > Student)
-        // Chá»‰ dĂ¹ng 1 Role duy nháº¥t Ä‘á»ƒ [Authorize(Roles = "...")] hoáº¡t Ä‘á»™ng chĂ­nh xĂ¡c
+        // Add primary role as claim (ưu tiên cao nhất: ADMIN > LECTURER > STUDENT)
+        // Chỉ dùng 1 role duy nhất để [Authorize(Roles = "...")] hoạt động chính xác
         var upperRoles = roles.Select(r => r.ToUpper()).ToList();
         string primaryRole;
         if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN"))
             primaryRole = "ADMIN";
-        else if (upperRoles.Contains("Lecturer"))
-            primaryRole = "Lecturer";
+        else if (upperRoles.Contains("LECTURER"))
+            primaryRole = "LECTURER";
         else
-            primaryRole = upperRoles.FirstOrDefault() ?? "Student";
+            primaryRole = upperRoles.FirstOrDefault() ?? "STUDENT";
 
         claims.Add(new Claim(ClaimTypes.Role, primaryRole));
-        // CÅ©ng thĂªm claim "Role" Ä‘á»ƒ FE decode JWT láº¥y Ä‘Æ°á»£c
-        claims.Add(new Claim("Role", primaryRole));
+        // Cũng thêm claim "role" để FE decode JWT lấy được
+        claims.Add(new Claim("role", primaryRole));
 
-        // Optional: Keep all roles if multiple Role support is needed in the future
-        foreach (var Role in roles)
+        // Optional: Keep all roles if multiple role support is needed in the future
+        foreach (var role in roles)
         {
-            if (Role.ToUpper() != primaryRole) 
-                claims.Add(new Claim(ClaimTypes.Role, Role));
+            if (role.ToUpper() != primaryRole) 
+                claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
@@ -125,3 +125,10 @@ public class JwtService : IJwtService
         }
     }
 }
+
+
+
+
+
+
+

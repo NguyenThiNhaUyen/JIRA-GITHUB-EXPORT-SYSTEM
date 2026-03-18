@@ -16,13 +16,13 @@ public class UpdateSemesterRequest : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (StartDate == DateTime.MinValue)
-            yield return new ValidationResult("NgĂ y báº¯t Ä‘áº§u khĂ´ng há»£p lá»‡ (bá»‹ bá» trá»‘ng hoáº·c sai Ä‘á»‹nh dáº¡ng).", new[] { nameof(StartDate) });
+            yield return new ValidationResult("Ngày bắt đầu không hợp lệ (bị bỏ trống hoặc sai định dạng).", new[] { nameof(StartDate) });
         
         if (EndDate == DateTime.MinValue)
-            yield return new ValidationResult("NgĂ y káº¿t thĂºc khĂ´ng há»£p lá»‡ (bá»‹ bá» trá»‘ng hoáº·c sai Ä‘á»‹nh dáº¡ng).", new[] { nameof(EndDate) });
+            yield return new ValidationResult("Ngày kết thúc không hợp lệ (bị bỏ trống hoặc sai định dạng).", new[] { nameof(EndDate) });
 
         if (EndDate <= StartDate && StartDate != DateTime.MinValue && EndDate != DateTime.MinValue)
-            yield return new ValidationResult("NgĂ y káº¿t thĂºc pháº£i lá»›n hÆ¡n ngĂ y báº¯t Ä‘áº§u.", new[] { nameof(EndDate) });
+            yield return new ValidationResult("Ngày kết thúc phải lớn hơn ngày bắt đầu.", new[] { nameof(EndDate) });
     }
 }
 

@@ -1,7 +1,7 @@
 namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
 
 /// <summary>
-/// GET /api/projects/{id}/commit-history â€” per-student contribution chart
+/// GET /api/projects/{id}/commit-history — per-student contribution chart
 /// Matches FE contributions.jsx expected contract exactly
 /// </summary>
 public class StudentCommitHistoryResponse

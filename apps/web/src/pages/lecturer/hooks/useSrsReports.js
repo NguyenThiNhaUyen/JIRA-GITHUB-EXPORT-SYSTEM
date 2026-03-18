@@ -7,14 +7,14 @@ import { useGenerateCommitStats } from "@/features/projects/hooks/useReports.js"
 import { useReviewSrs } from "@/features/srs/hooks/useSrs.js";
 
 const STATUS_META = {
-  NOT_SUBMITTED: { label: "ChÆ°a ná»™p", variant: "secondary", color: "text-gray-500 bg-gray-50 border-gray-100" },
-  DRAFT: { label: "Báº£n nhĂ¡p", variant: "outline", color: "text-slate-500 bg-slate-50 border-slate-100" },
-  SUBMITTED: { label: "ÄĂ£ ná»™p", variant: "info", color: "text-sky-600 bg-sky-50 border-sky-100" },
-  REVIEW: { label: "Äang review", variant: "info", color: "text-blue-600 bg-blue-50 border-blue-100" },
-  NEED_REVISION: { label: "Cáº§n sá»­a", variant: "warning", color: "text-amber-600 bg-amber-50 border-amber-100" },
-  APPROVED: { label: "ÄĂ£ duyá»‡t", variant: "success", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-  FINAL: { label: "HoĂ n táº¥t", variant: "success", color: "text-green-600 bg-green-50 border-green-100" },
-  OVERDUE: { label: "QuĂ¡ háº¡n", variant: "danger", color: "text-red-600 bg-red-50 border-red-100" },
+  NOT_SUBMITTED: { label: "Chưa nộp", variant: "secondary", color: "text-gray-500 bg-gray-50 border-gray-100" },
+  DRAFT: { label: "Bản nháp", variant: "outline", color: "text-slate-500 bg-slate-50 border-slate-100" },
+  SUBMITTED: { label: "Đã nộp", variant: "info", color: "text-sky-600 bg-sky-50 border-sky-100" },
+  REVIEW: { label: "Đang review", variant: "info", color: "text-blue-600 bg-blue-50 border-blue-100" },
+  NEED_REVISION: { label: "Cần sửa", variant: "warning", color: "text-amber-600 bg-amber-50 border-amber-100" },
+  APPROVED: { label: "Đã duyệt", variant: "success", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+  FINAL: { label: "Hoàn tất", variant: "success", color: "text-green-600 bg-green-50 border-green-100" },
+  OVERDUE: { label: "Quá hạn", variant: "danger", color: "text-red-600 bg-red-50 border-red-100" },
 };
 
 export function useSrsReports() {
@@ -60,7 +60,7 @@ export function useSrsReports() {
         teamName: p?.name || "Unknown Team",
         projectName: p?.description || "Unknown Project",
         leaderName: p?.team?.find(m => m.role === 'LEADER')?.studentName || "N/A",
-        courseCode: p?.courseCode || "â€”",
+        courseCode: p?.courseCode || "—",
         score: rpt.score || 0
       };
     });
@@ -97,17 +97,17 @@ export function useSrsReports() {
         feedback: feedbackText,
         score: parseFloat(scoreValue)
       });
-      success(`ÄĂ£ cáº­p nháº­t Ä‘Ă¡nh giĂ¡ cho ${selectedSrs.teamName}`);
+      success(`Đã cập nhật đánh giá cho ${selectedSrs.teamName}`);
     } catch (err) {
-      showError(err.message || "ÄĂ¡nh giĂ¡ tháº¥t báº¡i");
+      showError(err.message || "Đánh giá thất bại");
     }
   };
 
   const handleExportCsv = () => {
-    if (filtered.length === 0) return showError("KhĂ´ng cĂ³ dá»¯ liá»‡u Ä‘á»ƒ xuáº¥t");
+    if (filtered.length === 0) return showError("Không có dữ liệu để xuất");
 
     try {
-      const headers = ["NhĂ³m", "Dá»± Ă¡n", "Lá»›p", "PhiĂªn báº£n", "Tráº¡ng thĂ¡i", "Äiá»ƒm", "NgĂ y ná»™p", "Feedback"];
+      const headers = ["Nhóm", "Dự án", "Lớp", "Phiên bản", "Trạng thái", "Điểm", "Ngày nộp", "Feedback"];
       const rows = filtered.map(item => [
         item.teamName,
         item.projectName,
@@ -128,24 +128,24 @@ export function useSrsReports() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      success("ÄĂ£ xuáº¥t báº£ng Ä‘iá»ƒm thĂ nh cĂ´ng!");
+      success("Đã xuất bảng điểm thành công!");
     } catch (err) {
-      showError("Lá»—i khi xuáº¥t file");
+      showError("Lỗi khi xuất file");
     }
   };
 
   const handleSyncAlerts = () => {
     const overdue = filtered.filter(s => s.status === 'OVERDUE' || s.status === 'NEED_REVISION');
-    if (overdue.length === 0) return success("KhĂ´ng cĂ³ nhĂ³m nĂ o cáº§n nháº¯c nhá»Ÿ");
+    if (overdue.length === 0) return success("Không có nhóm nào cần nhắc nhở");
 
     overdue.forEach(v => {
       sendAlert({
         groupId: v.projectId,
-        message: "Nháº¯c nhá»Ÿ: Vui lĂ²ng cáº­p nháº­t tĂ i liá»‡u SRS theo yĂªu cáº§u cá»§a Giáº£ng viĂªn.",
+        message: "Nhắc nhở: Vui lòng cập nhật tài liệu SRS theo yêu cầu của Giảng viên.",
         severity: "MEDIUM"
       });
     });
-    success(`ÄĂ£ gá»­i nháº¯c nhá»Ÿ cho ${overdue.length} nhĂ³m`);
+    success(`Đã gửi nhắc nhở cho ${overdue.length} nhóm`);
   };
 
   return {
@@ -168,3 +168,9 @@ export function useSrsReports() {
     STATUS_META
   };
 }
+
+
+
+
+
+

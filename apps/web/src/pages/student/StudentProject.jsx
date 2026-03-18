@@ -70,9 +70,9 @@ export default function StudentProject() {
                     <div className="w-24 h-24 bg-red-50 rounded-[40px] flex items-center justify-center mx-auto mb-10 shadow-inner border border-red-100/50">
                         <ShieldAlert size={56} className="text-red-500 animate-pulse" />
                     </div>
-                    <p className="text-3xl font-black text-gray-800 mb-4 font-display">Dá»± Ă¡n khĂ´ng tá»“n táº¡i!</p>
-                    <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold px-8">MĂ£ dá»± Ă¡n <b>{projectId}</b> khĂ´ng khá»›p vá»›i báº¥t ká»³ dá»¯ liá»‡u nĂ o trong há»“ sÆ¡ há»c thuáº­t cá»§a báº¡n.</p>
-                    <Button onClick={() => navigate("/student")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black shadow-2xl shadow-slate-200 transition-all font-display hover:scale-105 active:scale-95 border-0">Quay láº¡i Tá»•ng quan</Button>
+                    <p className="text-3xl font-black text-gray-800 mb-4 font-display">Dự án không tồn tại!</p>
+                    <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold px-8">Mã dự án <b>{projectId}</b> không khớp với bất kỳ dữ liệu nào trong hồ sơ học thuật của bạn.</p>
+                    <Button onClick={() => navigate("/student")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black shadow-2xl shadow-slate-200 transition-all font-display hover:scale-105 active:scale-95 border-0">Quay lại Tổng quan</Button>
                 </div>
             </div>
         );
@@ -82,8 +82,8 @@ export default function StudentProject() {
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
             <PageHeader 
                 title={loadingProject ? <Skeleton className="h-10 w-80 rounded-2xl" /> : project.name}
-                subtitle={loadingProject ? <Skeleton className="h-4 w-[500px] mt-4 rounded-xl" /> : (project.description || "Dá»± Ă¡n CNTT tĂ­ch há»£p JIRA & GITHUB phá»¥c vá»¥ Ä‘á»“ Ă¡n chuyĂªn mĂ´n.")}
-                breadcrumb={["Sinh viĂªn", "Project Workspace", loadingProject ? "..." : project.name]}
+                subtitle={loadingProject ? <Skeleton className="h-4 w-[500px] mt-4 rounded-xl" /> : (project.description || "Dự án CNTT tích hợp JIRA & GITHUB phục vụ đồ án chuyên môn.")}
+                breadcrumb={["Sinh viên", "Project Workspace", loadingProject ? "..." : project.name]}
                 actions={loadingProject ? [<Skeleton key="1" className="h-12 w-40 rounded-2xl" />, <Skeleton key="2" className="h-12 w-40 rounded-2xl" />] : [
                     <Button 
                         key="sync" 
@@ -115,32 +115,32 @@ export default function StudentProject() {
                 ) : (
                     <>
                         <StatsCard 
-                            label="Commits cá»§a tĂ´i" 
-                            value={myCommits[0]?.commits ?? myCommits[0]?.totalCommits ?? 0} 
+                            label="Commits của tôi" 
+                            value={myCommits.length} 
                             icon={GitCommit} 
                             variant="success" 
-                            description="Tá»”NG Sá» COMMIT CĂ NHĂ‚N"
+                            description="TỔNG SỐ COMMIT CÁ NHÂN"
                         />
                         <StatsCard 
-                            label="Issues HoĂ n thĂ nh (NhĂ³m)" 
-                            value={metrics?.issuesDone ?? 0} 
+                            label="Issues Hoàn thành" 
+                            value={metrics?.totalIssues ?? 0} 
                             icon={CheckSquare} 
                             variant="info" 
-                            description="Tá»”NG TASKS (DONE) TRĂN JIRA"
+                            description="TỔNG TASKS (DONE) TRÊN JIRA"
                         />
                         <StatsCard 
-                            label="Tá»•ng Commits NhĂ³m" 
+                            label="Tổng Commits Nhóm" 
                             value={metrics?.totalCommits ?? 0} 
                             icon={BarChart2} 
                             variant="indigo" 
-                            description="HOáº T Äá»˜NG Cá»¦A TOĂ€N NHĂ“M"
+                            description="HOẠT ĐỘNG CỦA TOÀN NHÓM"
                         />
                         <StatsCard 
-                            label="ÄĂ³ng gĂ³p cĂ¡ nhĂ¢n" 
+                            label="Đóng góp cá nhân" 
                             value={`${myTeamMember?.contributionScore || 0}%`} 
                             icon={Target} 
                             variant="warning" 
-                            description="CHá»ˆ Sá» ÄĂ“NG GĂ“P (LECTURER)"
+                            description="CHỈ SỐ ĐÓNG GÓP (LECTURER)"
                         />
                     </>
                 )}
@@ -157,11 +157,11 @@ export default function StudentProject() {
                                         value={tab} 
                                         className="px-10 py-3.5 rounded-[22px] text-[10px] font-black data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-2xl transition-all duration-300 font-display"
                                     >
-                                        {tab === 'commits' && "Lá»‹ch sá»­ Source"}
-                                        {tab === 'performance' && "Hiá»‡u suáº¥t Code"}
-                                        {tab === 'team' && "ThĂ nh viĂªn"}
-                                        {tab === 'progress' && "Tiáº¿n Ä‘á»™"}
-                                        {tab === 'srs' && "TĂ i liá»‡u SRS"}
+                                        {tab === 'commits' && "Lịch sử Source"}
+                                        {tab === 'performance' && "Hiệu suất Code"}
+                                        {tab === 'team' && "Thành viên"}
+                                        {tab === 'progress' && "Tiến độ"}
+                                        {tab === 'srs' && "Tài liệu SRS"}
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
@@ -232,3 +232,9 @@ export default function StudentProject() {
         </div>
     );
 }
+
+
+
+
+
+

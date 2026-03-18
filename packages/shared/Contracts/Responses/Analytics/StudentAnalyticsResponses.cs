@@ -34,7 +34,7 @@ public class StudentProjectInfo
     public int MyContribution { get; set; }
     public string Status { get; set; } = "ACTIVE";
     public int SrsVersions { get; set; }
-    public string? LastCommit { get; set; }      // relative string e.g. "2 giá» trÆ°á»›c"
+    public string? LastCommit { get; set; }      // relative string e.g. "2 giờ trước"
     public DateTime? LastActivity { get; set; }
 }
 
@@ -46,7 +46,7 @@ public class StudentDeadlineResponse
     public string Project { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty; // FE alias
     public string? DueDate { get; set; }           // ISO 8601 for absolute date
-    public string? Due { get; set; }               // Human-readable e.g. "NgĂ y mai - 09:00"
+    public string? Due { get; set; }               // Human-readable e.g. "Ngày mai - 09:00"
     public int DaysLeft { get; set; }
     public string Severity { get; set; } = "low"; // high/medium/low
     public string Status { get; set; } = "TO DO";
@@ -59,7 +59,7 @@ public class LecturerActivityLogResponse
 {
     public string Type { get; set; } = string.Empty;     // github/jira/info/warning
     public string Message { get; set; } = string.Empty;
-    public string Time { get; set; } = string.Empty;     // FE expects time: "5 phĂºt trÆ°á»›c"
+    public string Time { get; set; } = string.Empty;     // FE expects time: "5 phút trước"
     public string CourseName { get; set; } = string.Empty;
     public string? ProjectName { get; set; }
     public DateTime Timestamp { get; set; }

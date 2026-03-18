@@ -29,79 +29,79 @@ public class InvitationService : IInvitationService
 
     public async Task<InvitationResponse> SendInvitationAsync(long projectId, long inviterUserId, CreateInvitationRequest request)
     {
-        var Project = await _context.Projects.FindAsync(projectId)
+        var project = await _context.projects.FindAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found");
 
-        var Student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == request.StudentUserId)
-            ?? throw new NotFoundException($"Student User {request.StudentUserId} not found");
+        var student = await _context.students.FirstOrDefaultAsync(s => s.user_id == request.StudentUserId)
+            ?? throw new NotFoundException($"Student user {request.StudentUserId} not found");
 
-        // Check if Student is already in the Project
-        var isMember = await _context.TeamMembers
-            .AnyAsync(tm => tm.ProjectId == projectId && tm.StudentUserId == request.StudentUserId);
+        // Check if student is already in the project
+        var isMember = await _context.team_members
+            .AnyAsync(tm => tm.project_id == projectId && tm.student_user_id == request.StudentUserId);
         
         if (isMember)
         {
-            throw new BusinessException("Student is already a member of this Project");
+            throw new BusinessException("Student is already a member of this project");
         }
 
         // Check for pending invitation
-        var existingInvite = await _context.TeamInvitations
-            .FirstOrDefaultAsync(i => i.ProjectId == projectId && i.InvitedStudentUserId == request.StudentUserId && i.Status == "PENDING");
+        var existingInvite = await _context.team_invitations
+            .FirstOrDefaultAsync(i => i.project_id == projectId && i.invited_student_user_id == request.StudentUserId && i.status == "PENDING");
             
         if (existingInvite != null)
         {
-            throw new BusinessException("A pending invitation already exists for this Student");
+            throw new BusinessException("A pending invitation already exists for this student");
         }
 
-        var invitation = new TeamInvitation
+        var invitation = new team_invitation
         {
-            ProjectId = projectId,
-            InvitedByUserId = inviterUserId,
-            InvitedStudentUserId = request.StudentUserId,
-            Status = "PENDING",
-            Message = request.Message,
-            CreatedAt = DateTime.UtcNow
+            project_id = projectId,
+            invited_by_user_id = inviterUserId,
+            invited_student_user_id = request.StudentUserId,
+            status = "PENDING",
+            message = request.Message,
+            created_at = DateTime.UtcNow
         };
 
-        _context.TeamInvitations.Add(invitation);
+        _context.team_invitations.Add(invitation);
         await _context.SaveChangesAsync();
 
-        // Send real-time Notification
+        // Send real-time notification
         try
         {
             await _hubContext.Clients.User(request.StudentUserId.ToString())
                 .SendAsync("ReceiveNotification", new 
                 { 
-                    Id = $"INV_{invitation.Id}",
-                    Type = "INVITATION", 
-                    Message = $"Bạn đã nhận được lời mời tham gia dự án {Project.Name}",
-                    Timestamp = DateTime.UtcNow,
+                    id = $"INV_{invitation.id}",
+                    type = "INVITATION", 
+                    message = $"Bạn đã nhận được lời mời tham gia dự án {project.name}",
+                    timestamp = DateTime.UtcNow,
                     isRead = false,
                     metadata = new Dictionary<string, object> 
                     { 
                         { "projectId", projectId }, 
-                        { "invitationId", invitation.Id } 
+                        { "invitationId", invitation.id } 
                     }
                 });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send SignalR Notification for invitation {InvitationId}", invitation.Id);
+            _logger.LogError(ex, "Failed to send SignalR notification for invitation {InvitationId}", invitation.id);
         }
 
-        _logger.LogInformation("User {InviterId} sent an invitation to Student {StudentId} for Project {ProjectId}", inviterUserId, request.StudentUserId, projectId);
+        _logger.LogInformation("User {InviterId} sent an invitation to student {StudentId} for project {ProjectId}", inviterUserId, request.StudentUserId, projectId);
 
-        return await GetInvitationResponseAsync(invitation.Id);
+        return await GetInvitationResponseAsync(invitation.id);
     }
 
     public async Task<PagedResponse<InvitationResponse>> GetMyPendingInvitationsAsync(long studentUserId, PagedRequest request)
     {
-        var query = _context.TeamInvitations
-            .Include(i => i.Project).ThenInclude(p => p.Course)
-            .Include(i => i.InvitedByUser)
-            .Include(i => i.InvitedStudentUser.User)
-            .Where(i => i.InvitedStudentUserId == studentUserId && i.Status == "PENDING")
-            .OrderByDescending(i => i.CreatedAt)
+        var query = _context.team_invitations
+            .Include(i => i.project).ThenInclude(p => p.course)
+            .Include(i => i.invited_by_user)
+            .Include(i => i.invited_student_user.user)
+            .Where(i => i.invited_student_user_id == studentUserId && i.status == "PENDING")
+            .OrderByDescending(i => i.created_at)
             .AsQueryable();
 
         var total = await query.CountAsync();
@@ -127,11 +127,11 @@ public class InvitationService : IInvitationService
 
     public async Task<InvitationResponse> AcceptInvitationAsync(long invitationId, long studentUserId)
     {
-        var invitation = await _context.TeamInvitations
-            .FirstOrDefaultAsync(i => i.Id == invitationId && i.InvitedStudentUserId == studentUserId)
-            ?? throw new NotFoundException($"Invitation {invitationId} not found or doesn't belong to tracking User");
+        var invitation = await _context.team_invitations
+            .FirstOrDefaultAsync(i => i.id == invitationId && i.invited_student_user_id == studentUserId)
+            ?? throw new NotFoundException($"Invitation {invitationId} not found or doesn't belong to tracking user");
 
-        if (invitation.Status != "PENDING")
+        if (invitation.status != "PENDING")
         {
             throw new BusinessException("Invitation is not pending");
         }
@@ -139,32 +139,32 @@ public class InvitationService : IInvitationService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            invitation.Status = "ACCEPTED";
-            invitation.RespondedAt = DateTime.UtcNow;
+            invitation.status = "ACCEPTED";
+            invitation.responded_at = DateTime.UtcNow;
 
             // Add to team members (if not already there)
-            var exists = await _context.TeamMembers
-                .AnyAsync(tm => tm.ProjectId == invitation.ProjectId && tm.StudentUserId == studentUserId);
+            var exists = await _context.team_members
+                .AnyAsync(tm => tm.project_id == invitation.project_id && tm.student_user_id == studentUserId);
 
             if (!exists)
             {
-                var newMember = new TeamMember
+                var newMember = new team_member
                 {
-                    ProjectId = invitation.ProjectId,
-                    StudentUserId = studentUserId,
-                    TeamRole = "MEMBER",
-                    ParticipationStatus = "ACTIVE",
-                    ContributionScore = 0m,
-                    JoinedAt = DateTime.UtcNow
+                    project_id = invitation.project_id,
+                    student_user_id = studentUserId,
+                    team_role = "MEMBER",
+                    participation_status = "ACTIVE",
+                    contribution_score = null,
+                    joined_at = DateTime.UtcNow
                 };
-                _context.TeamMembers.Add(newMember);
+                _context.team_members.Add(newMember);
             }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
             _logger.LogInformation("Student {StudentId} accepted invitation {InvitationId}", studentUserId, invitationId);
-            return await GetInvitationResponseAsync(invitation.Id);
+            return await GetInvitationResponseAsync(invitation.id);
         }
         catch (Exception ex)
         {
@@ -176,53 +176,53 @@ public class InvitationService : IInvitationService
 
     public async Task<InvitationResponse> RejectInvitationAsync(long invitationId, long studentUserId)
     {
-        var invitation = await _context.TeamInvitations
-            .FirstOrDefaultAsync(i => i.Id == invitationId && i.InvitedStudentUserId == studentUserId)
-            ?? throw new NotFoundException($"Invitation {invitationId} not found or doesn't belong to tracking User");
+        var invitation = await _context.team_invitations
+            .FirstOrDefaultAsync(i => i.id == invitationId && i.invited_student_user_id == studentUserId)
+            ?? throw new NotFoundException($"Invitation {invitationId} not found or doesn't belong to tracking user");
 
-        if (invitation.Status != "PENDING")
+        if (invitation.status != "PENDING")
         {
             throw new BusinessException("Invitation is not pending");
         }
 
-        invitation.Status = "REJECTED";
-        invitation.RespondedAt = DateTime.UtcNow;
+        invitation.status = "REJECTED";
+        invitation.responded_at = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         _logger.LogInformation("Student {StudentId} rejected invitation {InvitationId}", studentUserId, invitationId);
         
-        return await GetInvitationResponseAsync(invitation.Id);
+        return await GetInvitationResponseAsync(invitation.id);
     }
 
     private async Task<InvitationResponse> GetInvitationResponseAsync(long invitationId)
     {
-        var i = await _context.TeamInvitations
-            .Include(inv => inv.Project).ThenInclude(p => p.Course)
-            .Include(inv => inv.InvitedByUser)
-            .Include(inv => inv.InvitedStudentUser.User)
-            .FirstOrDefaultAsync(inv => inv.Id == invitationId)
+        var i = await _context.team_invitations
+            .Include(inv => inv.project).ThenInclude(p => p.course)
+            .Include(inv => inv.invited_by_user)
+            .Include(inv => inv.invited_student_user.user)
+            .FirstOrDefaultAsync(inv => inv.id == invitationId)
             ?? throw new NotFoundException($"Invitation {invitationId} not found");
 
         return MapToResponse(i);
     }
 
-    private static InvitationResponse MapToResponse(TeamInvitation i)
+    private static InvitationResponse MapToResponse(team_invitation i)
     {
         return new InvitationResponse
         {
-            Id = i.Id,
-            ProjectId = i.ProjectId,
-            ProjectName = i.Project?.Name ?? "",
-            CourseId = i.Project?.CourseId ?? 0,
-            CourseName = i.Project?.Course?.CourseName ?? "N/A",
-            InvitedByUserId = i.InvitedByUserId,
-            InvitedByName = i.InvitedByUser?.FullName ?? "",
-            InvitedStudentUserId = i.InvitedStudentUserId,
-            InvitedStudentName = i.InvitedStudentUser?.User?.FullName ?? "",
-            Status = i.Status,
-            Message = i.Message,
-            CreatedAt = i.CreatedAt,
-            RespondedAt = i.RespondedAt
+            Id = i.id,
+            ProjectId = i.project_id,
+            ProjectName = i.project?.name ?? "",
+            CourseId = i.project?.course_id ?? 0,
+            CourseName = i.project?.course?.course_name ?? "N/A",
+            InvitedByUserId = i.invited_by_user_id,
+            InvitedByName = i.invited_by_user?.full_name ?? "",
+            InvitedStudentUserId = i.invited_student_user_id,
+            InvitedStudentName = i.invited_student_user?.user?.full_name ?? "",
+            Status = i.status,
+            Message = i.message,
+            CreatedAt = i.created_at,
+            RespondedAt = i.responded_at
         };
     }
 }

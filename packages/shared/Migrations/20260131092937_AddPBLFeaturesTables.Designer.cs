@@ -25,7 +25,7 @@ namespace JiraGithubExport.Shared.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.AuditLog", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.audit_log", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -79,10 +79,10 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex(new[] { "performed_by_user_id" }, "idx_audit_logs_user");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("audit_logs");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Course", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.course", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +99,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -113,7 +113,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long>("subject_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -130,10 +130,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "semester_id", "subject_id", "course_code" }, "uq_courses_semester_subject_code")
                         .IsUnique();
 
-                    b.ToTable("Courses");
+                    b.ToTable("courses");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.CourseEnrollment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.course_enrollment", b =>
                 {
                     b.Property<long>("course_id")
                         .HasColumnType("bigint");
@@ -160,10 +160,10 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex(new[] { "student_user_id" }, "idx_course_enrollments_student_user_id");
 
-                    b.ToTable("CourseEnrollments");
+                    b.ToTable("course_enrollments");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ExternalAccount", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.external_account", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -171,7 +171,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -186,7 +186,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -209,10 +209,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "user_id", "provider", "external_user_key" }, "uq_external_accounts_user_provider_key")
                         .IsUnique();
 
-                    b.ToTable("ExternalAccounts");
+                    b.ToTable("external_accounts");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubBranch", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_branch", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -225,7 +225,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -242,7 +242,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long>("repo_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -256,7 +256,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.ToTable("github_branches");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubCommit", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_commit", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -284,7 +284,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long?>("committer_github_user_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -298,7 +298,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long>("repo_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -315,10 +315,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "repo_id", "commit_sha" }, "uq_github_commits_repo_sha")
                         .IsUnique();
 
-                    b.ToTable("GithubCommits");
+                    b.ToTable("github_commits");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_issue", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -338,7 +338,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<DateTime?>("closed_at")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -357,7 +357,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -374,10 +374,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "repo_id", "issue_number" }, "uq_github_issues_repo_number")
                         .IsUnique();
 
-                    b.ToTable("GithubIssues");
+                    b.ToTable("github_issues");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubIssueComment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_issue_comment", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -391,7 +391,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<string>("body")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -399,7 +399,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long>("issue_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -409,12 +409,12 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex("author_github_user_id");
 
-                    b.HasIndex(new[] { "issue_id", "CreatedAt" }, "idx_github_issue_comments_issue_created");
+                    b.HasIndex(new[] { "issue_id", "created_at" }, "idx_github_issue_comments_issue_created");
 
-                    b.ToTable("GithubIssueComments");
+                    b.ToTable("github_issue_comments");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubPullRequest", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_pull_request", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -431,7 +431,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<DateTime?>("closed_at")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -461,7 +461,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -476,10 +476,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "repo_id", "pr_number" }, "uq_github_pull_requests_repo_number")
                         .IsUnique();
 
-                    b.ToTable("GithubPullRequests");
+                    b.ToTable("github_pull_requests");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubRepository", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_repository", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -487,7 +487,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -496,7 +496,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("full_name")
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
@@ -518,7 +518,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -530,7 +530,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasKey("id")
                         .HasName("github_repositories_pkey");
 
-                    b.HasIndex(new[] { "FullName" }, "github_repositories_full_name_key")
+                    b.HasIndex(new[] { "full_name" }, "github_repositories_full_name_key")
                         .IsUnique();
 
                     b.HasIndex(new[] { "github_repo_id" }, "github_repositories_github_repo_id_key")
@@ -539,10 +539,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "owner_login", "name" }, "uq_github_repositories_owner_name")
                         .IsUnique();
 
-                    b.ToTable("GithubRepositories");
+                    b.ToTable("github_repositories");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubUser", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_user", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -554,7 +554,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -563,7 +563,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("email")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -575,7 +575,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -593,10 +593,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "login" }, "github_users_login_key")
                         .IsUnique();
 
-                    b.ToTable("GithubUsers");
+                    b.ToTable("github_users");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.InactiveAlert", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.inactive_alert", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -609,7 +609,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -665,12 +665,12 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "alert_type" }, "idx_inactive_alerts_type");
 
                     b.HasIndex(new[] { "is_resolved" }, "idx_inactive_alerts_unresolved")
-                        .HasFilter("IsResolved = false");
+                        .HasFilter("is_resolved = false");
 
-                    b.ToTable("InactiveAlerts");
+                    b.ToTable("inactive_alerts");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraAttachment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_attachment", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -701,10 +701,10 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex(new[] { "issue_id", "uploaded_at" }, "idx_jira_attachments_issue_uploaded");
 
-                    b.ToTable("JiraAttachments");
+                    b.ToTable("jira_attachments");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -716,7 +716,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -752,7 +752,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -767,10 +767,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "jira_issue_key" }, "jira_issues_jira_issue_key_key")
                         .IsUnique();
 
-                    b.ToTable("JiraIssues");
+                    b.ToTable("jira_issues");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssueComment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue_comment", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -786,7 +786,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<string>("body")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -797,12 +797,12 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasKey("id")
                         .HasName("jira_issue_comments_pkey");
 
-                    b.HasIndex(new[] { "issue_id", "CreatedAt" }, "idx_jira_issue_comments_issue_created");
+                    b.HasIndex(new[] { "issue_id", "created_at" }, "idx_jira_issue_comments_issue_created");
 
-                    b.ToTable("JiraIssueComments");
+                    b.ToTable("jira_issue_comments");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssueLink", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue_link", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -831,10 +831,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "parent_issue_id", "child_issue_id", "link_type" }, "uq_jira_issue_links_parent_child_type")
                         .IsUnique();
 
-                    b.ToTable("JiraIssueLinks");
+                    b.ToTable("jira_issue_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraProject", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_project", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -842,7 +842,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -865,7 +865,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -876,10 +876,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "jira_project_key" }, "jira_projects_jira_project_key_key")
                         .IsUnique();
 
-                    b.ToTable("JiraProjects");
+                    b.ToTable("jira_projects");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraWorklog", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_worklog", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -892,7 +892,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -909,15 +909,15 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex(new[] { "issue_id", "author_jira_account_id" }, "idx_jira_worklogs_issue_author");
 
-                    b.ToTable("JiraWorklogs");
+                    b.ToTable("jira_worklogs");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Lecturer", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.lecturer", b =>
                 {
                     b.Property<long>("user_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -935,7 +935,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -949,10 +949,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "office_email" }, "lecturers_office_email_key")
                         .IsUnique();
 
-                    b.ToTable("Lecturers");
+                    b.ToTable("lecturers");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Project", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -963,7 +963,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long>("course_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -983,7 +983,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasColumnType("character varying(50)")
                         .HasDefaultValueSql("'ACTIVE'::character varying");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -996,10 +996,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "course_id", "name" }, "uq_projects_course_name")
                         .IsUnique();
 
-                    b.ToTable("Projects");
+                    b.ToTable("projects");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ProjectDocument", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project_document", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1048,15 +1048,15 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "project_id", "doc_type", "version_no" }, "uq_project_documents_version")
                         .IsUnique();
 
-                    b.ToTable("ProjectDocuments");
+                    b.ToTable("project_documents");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ProjectIntegration", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project_integration", b =>
                 {
                     b.Property<long>("project_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1067,7 +1067,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long?>("jira_project_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1081,10 +1081,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "jira_project_id" }, "uq_project_integrations_jira_project")
                         .IsUnique();
 
-                    b.ToTable("ProjectIntegrations");
+                    b.ToTable("project_integrations");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ReportExport", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.report_export", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1150,10 +1150,10 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.HasIndex(new[] { "status" }, "idx_report_exports_status");
 
-                    b.ToTable("ReportExports");
+                    b.ToTable("report_exports");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Role", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.role", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1172,10 +1172,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "role_name" }, "roles_role_name_key")
                         .IsUnique();
 
-                    b.ToTable("Roles");
+                    b.ToTable("roles");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Semester", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.semester", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1183,7 +1183,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1205,15 +1205,15 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "name" }, "semesters_name_key")
                         .IsUnique();
 
-                    b.ToTable("Semesters");
+                    b.ToTable("semesters");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Student", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.student", b =>
                 {
                     b.Property<long>("user_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1234,7 +1234,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1245,10 +1245,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "student_code" }, "students_student_code_key")
                         .IsUnique();
 
-                    b.ToTable("Students");
+                    b.ToTable("students");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.StudentActivityDaily", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.student_activity_daily", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1274,7 +1274,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1321,7 +1321,7 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasColumnType("numeric(6,2)")
                         .HasDefaultValue(0m);
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1338,10 +1338,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "student_user_id", "project_id", "activity_date" }, "uq_student_activity_dailies_student_project_date")
                         .IsUnique();
 
-                    b.ToTable("StudentActivityDailies");
+                    b.ToTable("student_activity_dailies");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Subject", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.subject", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1349,7 +1349,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1370,10 +1370,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "subject_code" }, "subjects_subject_code_key")
                         .IsUnique();
 
-                    b.ToTable("Subjects");
+                    b.ToTable("subjects");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.TeamMember", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.team_member", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1421,10 +1421,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "project_id", "student_user_id" }, "uq_team_members_project_student")
                         .IsUnique();
 
-                    b.ToTable("TeamMembers");
+                    b.ToTable("team_members");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.User", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.user", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1432,31 +1432,31 @@ namespace JiraGithubExport.Shared.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("id"));
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("email")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("Enabled")
+                    b.Property<bool>("enabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("full_name")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("password")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1464,13 +1464,13 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasKey("id")
                         .HasName("users_pkey");
 
-                    b.HasIndex(new[] { "Email" }, "users_email_key")
+                    b.HasIndex(new[] { "email" }, "users_email_key")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("users");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.WorkLink", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.work_link", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -1484,7 +1484,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Property<long?>("commit_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -1519,7 +1519,7 @@ namespace JiraGithubExport.Shared.Migrations
                     b.HasIndex(new[] { "jira_issue_id", "link_type", "commit_id", "pr_id", "branch_id" }, "uq_work_links_compound")
                         .IsUnique();
 
-                    b.ToTable("WorkLinks");
+                    b.ToTable("work_links");
                 });
 
             modelBuilder.Entity("course_lecturer", b =>
@@ -1570,9 +1570,9 @@ namespace JiraGithubExport.Shared.Migrations
                     b.ToTable("user_roles", (string)null);
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.AuditLog", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.audit_log", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "performed_by_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "performed_by_user")
                         .WithMany()
                         .HasForeignKey("performed_by_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
@@ -1581,24 +1581,24 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("performed_by_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Course", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.course", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "created_by_user")
-                        .WithMany("Courses")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "created_by_user")
+                        .WithMany("courses")
                         .HasForeignKey("created_by_user_id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_courses_created_by");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Semester", "Semester")
-                        .WithMany("Courses")
+                    b.HasOne("JiraGithubExport.Shared.Models.semester", "semester")
+                        .WithMany("courses")
                         .HasForeignKey("semester_id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_courses_semester");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Subject", "Subject")
-                        .WithMany("Courses")
+                    b.HasOne("JiraGithubExport.Shared.Models.subject", "subject")
+                        .WithMany("courses")
                         .HasForeignKey("subject_id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
@@ -1606,47 +1606,47 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.Navigation("created_by_user");
 
-                    b.Navigation("Semester");
+                    b.Navigation("semester");
 
-                    b.Navigation("Subject");
+                    b.Navigation("subject");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.CourseEnrollment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.course_enrollment", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Course", "Course")
-                        .WithMany("CourseEnrollments")
+                    b.HasOne("JiraGithubExport.Shared.Models.course", "course")
+                        .WithMany("course_enrollments")
                         .HasForeignKey("course_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_course_enrollments_course");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Student", "student_user")
-                        .WithMany("CourseEnrollments")
+                    b.HasOne("JiraGithubExport.Shared.Models.student", "student_user")
+                        .WithMany("course_enrollments")
                         .HasForeignKey("student_user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_course_enrollments_student");
 
-                    b.Navigation("Course");
+                    b.Navigation("course");
 
                     b.Navigation("student_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ExternalAccount", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.external_account", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "User")
-                        .WithMany("ExternalAccounts")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "user")
+                        .WithMany("external_accounts")
                         .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_external_accounts_user");
 
-                    b.Navigation("User");
+                    b.Navigation("user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubBranch", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_branch", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "repo")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "repo")
                         .WithMany("github_branches")
                         .HasForeignKey("repo_id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1656,22 +1656,22 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("repo");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubCommit", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_commit", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "author_github_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "author_github_user")
                         .WithMany("github_commitauthor_github_users")
                         .HasForeignKey("author_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_commits_author");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "committer_github_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "committer_github_user")
                         .WithMany("github_commitcommitter_github_users")
                         .HasForeignKey("committer_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_commits_committer");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "repo")
-                        .WithMany("GithubCommits")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "repo")
+                        .WithMany("github_commits")
                         .HasForeignKey("repo_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1684,22 +1684,22 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("repo");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_issue", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "assignee_github_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "assignee_github_user")
                         .WithMany("github_issueassignee_github_users")
                         .HasForeignKey("assignee_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_issues_assignee");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "author_github_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "author_github_user")
                         .WithMany("github_issueauthor_github_users")
                         .HasForeignKey("author_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_issues_author");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "repo")
-                        .WithMany("GithubIssues")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "repo")
+                        .WithMany("github_issues")
                         .HasForeignKey("repo_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1712,16 +1712,16 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("repo");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubIssueComment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_issue_comment", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "author_github_user")
-                        .WithMany("GithubIssueComments")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "author_github_user")
+                        .WithMany("github_issue_comments")
                         .HasForeignKey("author_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_issue_comments_author");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubIssue", "issue")
-                        .WithMany("GithubIssueComments")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_issue", "issue")
+                        .WithMany("github_issue_comments")
                         .HasForeignKey("issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1732,16 +1732,16 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("issue");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubPullRequest", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_pull_request", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubUser", "author_github_user")
-                        .WithMany("GithubPullRequests")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_user", "author_github_user")
+                        .WithMany("github_pull_requests")
                         .HasForeignKey("author_github_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_github_pull_requests_author");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "repo")
-                        .WithMany("GithubPullRequests")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "repo")
+                        .WithMany("github_pull_requests")
                         .HasForeignKey("repo_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1752,29 +1752,29 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("repo");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.InactiveAlert", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.inactive_alert", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Project", "Project")
+                    b.HasOne("JiraGithubExport.Shared.Models.project", "project")
                         .WithMany()
                         .HasForeignKey("project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_inactive_alerts_project");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "resolved_by_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "resolved_by_user")
                         .WithMany()
                         .HasForeignKey("resolved_by_user_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_inactive_alerts_resolved_by");
 
-                    b.Navigation("Project");
+                    b.Navigation("project");
 
                     b.Navigation("resolved_by_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraAttachment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_attachment", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "issue")
-                        .WithMany("JiraAttachments")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "issue")
+                        .WithMany("jira_attachments")
                         .HasForeignKey("issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1783,22 +1783,22 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("issue");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraProject", "JiraProject")
-                        .WithMany("JiraIssues")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_project", "jira_project")
+                        .WithMany("jira_issues")
                         .HasForeignKey("jira_project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_jira_issues_project");
 
-                    b.Navigation("JiraProject");
+                    b.Navigation("jira_project");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssueComment", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue_comment", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "issue")
-                        .WithMany("JiraIssueComments")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "issue")
+                        .WithMany("jira_issue_comments")
                         .HasForeignKey("issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1807,16 +1807,16 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("issue");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssueLink", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue_link", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "child_issue")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "child_issue")
                         .WithMany("jira_issue_linkchild_issues")
                         .HasForeignKey("child_issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_jira_issue_links_child");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "parent_issue")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "parent_issue")
                         .WithMany("jira_issue_linkparent_issues")
                         .HasForeignKey("parent_issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1828,10 +1828,10 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("parent_issue");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraWorklog", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_worklog", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "issue")
-                        .WithMany("JiraWorklogs")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "issue")
+                        .WithMany("jira_worklogs")
                         .HasForeignKey("issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1840,82 +1840,82 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("issue");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Lecturer", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.lecturer", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "User")
-                        .WithOne("Lecturer")
-                        .HasForeignKey("JiraGithubExport.Shared.Models.Lecturer", "user_id")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "user")
+                        .WithOne("lecturer")
+                        .HasForeignKey("JiraGithubExport.Shared.Models.lecturer", "user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_lecturers_user");
 
-                    b.Navigation("User");
+                    b.Navigation("user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Project", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Course", "Course")
-                        .WithMany("Projects")
+                    b.HasOne("JiraGithubExport.Shared.Models.course", "course")
+                        .WithMany("projects")
                         .HasForeignKey("course_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_projects_course");
 
-                    b.Navigation("Course");
+                    b.Navigation("course");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ProjectDocument", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project_document", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Project", "Project")
-                        .WithMany("ProjectDocuments")
+                    b.HasOne("JiraGithubExport.Shared.Models.project", "project")
+                        .WithMany("project_documents")
                         .HasForeignKey("project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_project_documents_project");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "submitted_by_user")
-                        .WithMany("ProjectDocuments")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "submitted_by_user")
+                        .WithMany("project_documents")
                         .HasForeignKey("submitted_by_user_id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_project_documents_submitted_by");
 
-                    b.Navigation("Project");
+                    b.Navigation("project");
 
                     b.Navigation("submitted_by_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ProjectIntegration", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project_integration", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "github_repo")
-                        .WithOne("ProjectIntegration")
-                        .HasForeignKey("JiraGithubExport.Shared.Models.ProjectIntegration", "github_repo_id")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "github_repo")
+                        .WithOne("project_integration")
+                        .HasForeignKey("JiraGithubExport.Shared.Models.project_integration", "github_repo_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_project_integrations_github_repo");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraProject", "JiraProject")
-                        .WithOne("ProjectIntegration")
-                        .HasForeignKey("JiraGithubExport.Shared.Models.ProjectIntegration", "jira_project_id")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_project", "jira_project")
+                        .WithOne("project_integration")
+                        .HasForeignKey("JiraGithubExport.Shared.Models.project_integration", "jira_project_id")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_project_integrations_jira_project");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Project", "Project")
-                        .WithOne("ProjectIntegration")
-                        .HasForeignKey("JiraGithubExport.Shared.Models.ProjectIntegration", "project_id")
+                    b.HasOne("JiraGithubExport.Shared.Models.project", "project")
+                        .WithOne("project_integration")
+                        .HasForeignKey("JiraGithubExport.Shared.Models.project_integration", "project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_project_integrations_project");
 
                     b.Navigation("github_repo");
 
-                    b.Navigation("JiraProject");
+                    b.Navigation("jira_project");
 
-                    b.Navigation("Project");
+                    b.Navigation("project");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.ReportExport", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.report_export", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "requested_by_user")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "requested_by_user")
                         .WithMany()
                         .HasForeignKey("requested_by_user_id")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1925,89 +1925,89 @@ namespace JiraGithubExport.Shared.Migrations
                     b.Navigation("requested_by_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Student", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.student", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.User", "User")
-                        .WithOne("Student")
-                        .HasForeignKey("JiraGithubExport.Shared.Models.Student", "user_id")
+                    b.HasOne("JiraGithubExport.Shared.Models.user", "user")
+                        .WithOne("student")
+                        .HasForeignKey("JiraGithubExport.Shared.Models.student", "user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_students_user");
 
-                    b.Navigation("User");
+                    b.Navigation("user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.StudentActivityDaily", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.student_activity_daily", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Project", "Project")
+                    b.HasOne("JiraGithubExport.Shared.Models.project", "project")
                         .WithMany()
                         .HasForeignKey("project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_student_activity_dailies_project");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Student", "Student")
+                    b.HasOne("JiraGithubExport.Shared.Models.student", "student")
                         .WithMany()
                         .HasForeignKey("student_user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_student_activity_dailies_student");
 
-                    b.Navigation("Project");
+                    b.Navigation("project");
 
-                    b.Navigation("Student");
+                    b.Navigation("student");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.TeamMember", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.team_member", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Project", "Project")
-                        .WithMany("TeamMembers")
+                    b.HasOne("JiraGithubExport.Shared.Models.project", "project")
+                        .WithMany("team_members")
                         .HasForeignKey("project_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_team_members_project");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Student", "student_user")
-                        .WithMany("TeamMembers")
+                    b.HasOne("JiraGithubExport.Shared.Models.student", "student_user")
+                        .WithMany("team_members")
                         .HasForeignKey("student_user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_team_members_student");
 
-                    b.Navigation("Project");
+                    b.Navigation("project");
 
                     b.Navigation("student_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.WorkLink", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.work_link", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubBranch", "branch")
-                        .WithMany("WorkLinks")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_branch", "branch")
+                        .WithMany("work_links")
                         .HasForeignKey("branch_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_work_links_branch");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubCommit", "commit")
-                        .WithMany("WorkLinks")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_commit", "commit")
+                        .WithMany("work_links")
                         .HasForeignKey("commit_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_work_links_commit");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.JiraIssue", "JiraIssue")
-                        .WithMany("WorkLinks")
+                    b.HasOne("JiraGithubExport.Shared.Models.jira_issue", "jira_issue")
+                        .WithMany("work_links")
                         .HasForeignKey("jira_issue_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_work_links_issue");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubPullRequest", "pr")
-                        .WithMany("WorkLinks")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_pull_request", "pr")
+                        .WithMany("work_links")
                         .HasForeignKey("pr_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_work_links_pr");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubRepository", "repo")
-                        .WithMany("WorkLinks")
+                    b.HasOne("JiraGithubExport.Shared.Models.github_repository", "repo")
+                        .WithMany("work_links")
                         .HasForeignKey("repo_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -2017,7 +2017,7 @@ namespace JiraGithubExport.Shared.Migrations
 
                     b.Navigation("commit");
 
-                    b.Navigation("JiraIssue");
+                    b.Navigation("jira_issue");
 
                     b.Navigation("pr");
 
@@ -2026,14 +2026,14 @@ namespace JiraGithubExport.Shared.Migrations
 
             modelBuilder.Entity("course_lecturer", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Course", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.course", null)
                         .WithMany()
                         .HasForeignKey("course_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_course_lecturers_course");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.Lecturer", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.lecturer", null)
                         .WithMany()
                         .HasForeignKey("lecturer_user_id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2043,14 +2043,14 @@ namespace JiraGithubExport.Shared.Migrations
 
             modelBuilder.Entity("github_commit_branch", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubBranch", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.github_branch", null)
                         .WithMany()
                         .HasForeignKey("branch_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_github_commit_branches_branch");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.GithubCommit", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.github_commit", null)
                         .WithMany()
                         .HasForeignKey("commit_id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2060,14 +2060,14 @@ namespace JiraGithubExport.Shared.Migrations
 
             modelBuilder.Entity("user_role", b =>
                 {
-                    b.HasOne("JiraGithubExport.Shared.Models.Role", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.role", null)
                         .WithMany()
                         .HasForeignKey("role_id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_role");
 
-                    b.HasOne("JiraGithubExport.Shared.Models.User", null)
+                    b.HasOne("JiraGithubExport.Shared.Models.user", null)
                         .WithMany()
                         .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2075,124 +2075,131 @@ namespace JiraGithubExport.Shared.Migrations
                         .HasConstraintName("fk_user_roles_user");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Course", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.course", b =>
                 {
-                    b.Navigation("CourseEnrollments");
+                    b.Navigation("course_enrollments");
 
-                    b.Navigation("Projects");
+                    b.Navigation("projects");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubBranch", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_branch", b =>
                 {
-                    b.Navigation("WorkLinks");
+                    b.Navigation("work_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubCommit", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_commit", b =>
                 {
-                    b.Navigation("WorkLinks");
+                    b.Navigation("work_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_issue", b =>
                 {
-                    b.Navigation("GithubIssueComments");
+                    b.Navigation("github_issue_comments");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubPullRequest", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_pull_request", b =>
                 {
-                    b.Navigation("WorkLinks");
+                    b.Navigation("work_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubRepository", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_repository", b =>
                 {
                     b.Navigation("github_branches");
 
-                    b.Navigation("GithubCommits");
+                    b.Navigation("github_commits");
 
-                    b.Navigation("GithubIssues");
+                    b.Navigation("github_issues");
 
-                    b.Navigation("GithubPullRequests");
+                    b.Navigation("github_pull_requests");
 
-                    b.Navigation("ProjectIntegration");
+                    b.Navigation("project_integration");
 
-                    b.Navigation("WorkLinks");
+                    b.Navigation("work_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.GithubUser", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.github_user", b =>
                 {
                     b.Navigation("github_commitauthor_github_users");
 
                     b.Navigation("github_commitcommitter_github_users");
 
-                    b.Navigation("GithubIssueComments");
+                    b.Navigation("github_issue_comments");
 
                     b.Navigation("github_issueassignee_github_users");
 
                     b.Navigation("github_issueauthor_github_users");
 
-                    b.Navigation("GithubPullRequests");
+                    b.Navigation("github_pull_requests");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraIssue", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_issue", b =>
                 {
-                    b.Navigation("JiraAttachments");
+                    b.Navigation("jira_attachments");
 
-                    b.Navigation("JiraIssueComments");
+                    b.Navigation("jira_issue_comments");
 
                     b.Navigation("jira_issue_linkchild_issues");
 
                     b.Navigation("jira_issue_linkparent_issues");
 
-                    b.Navigation("JiraWorklogs");
+                    b.Navigation("jira_worklogs");
 
-                    b.Navigation("WorkLinks");
+                    b.Navigation("work_links");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.JiraProject", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.jira_project", b =>
                 {
-                    b.Navigation("JiraIssues");
+                    b.Navigation("jira_issues");
 
-                    b.Navigation("ProjectIntegration");
+                    b.Navigation("project_integration");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Project", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.project", b =>
                 {
-                    b.Navigation("ProjectDocuments");
+                    b.Navigation("project_documents");
 
-                    b.Navigation("ProjectIntegration");
+                    b.Navigation("project_integration");
 
-                    b.Navigation("TeamMembers");
+                    b.Navigation("team_members");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Semester", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.semester", b =>
                 {
-                    b.Navigation("Courses");
+                    b.Navigation("courses");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Student", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.student", b =>
                 {
-                    b.Navigation("CourseEnrollments");
+                    b.Navigation("course_enrollments");
 
-                    b.Navigation("TeamMembers");
+                    b.Navigation("team_members");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.Subject", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.subject", b =>
                 {
-                    b.Navigation("Courses");
+                    b.Navigation("courses");
                 });
 
-            modelBuilder.Entity("JiraGithubExport.Shared.Models.User", b =>
+            modelBuilder.Entity("JiraGithubExport.Shared.Models.user", b =>
                 {
-                    b.Navigation("Courses");
+                    b.Navigation("courses");
 
-                    b.Navigation("ExternalAccounts");
+                    b.Navigation("external_accounts");
 
-                    b.Navigation("Lecturer");
+                    b.Navigation("lecturer");
 
-                    b.Navigation("ProjectDocuments");
+                    b.Navigation("project_documents");
 
-                    b.Navigation("Student");
+                    b.Navigation("student");
                 });
 #pragma warning restore 612, 618
         }
     }
 }
+
+
+
+
+
+
+

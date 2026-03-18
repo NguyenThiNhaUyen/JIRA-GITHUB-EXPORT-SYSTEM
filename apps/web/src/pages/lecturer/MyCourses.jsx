@@ -25,21 +25,21 @@ export default function MyCourses() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Lá»›p cá»§a tĂ´i"
- subtitle="Quáº£n lĂ½ danh sĂ¡ch cĂ¡c lá»›p há»c pháº§n báº¡n Ä‘ang trá»±c tiáº¿p giáº£ng dáº¡y."
- breadcrumb={["Giáº£ng viĂªn","Lá»›p há»c"]}
+ title="Lớp của tôi"
+ subtitle="Quản lý danh sách các lớp học phần bạn đang trực tiếp giảng dạy."
+ breadcrumb={["Giảng viên","Lớp học"]}
  />
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <StatsCard label="Tá»•ng lá»›p" value={courses.length} icon={GraduationCap} variant="info" />
- <StatsCard label="Tá»•ng nhĂ³m" value={totalGroups} icon={BookOpen} variant="indigo" />
- <StatsCard label="Tá»•ng sinh viĂªn" value={totalStudents} icon={Users} variant="success" />
+ <StatsCard label="Tổng lớp" value={courses.length} icon={GraduationCap} variant="info" />
+ <StatsCard label="Tổng nhóm" value={totalGroups} icon={BookOpen} variant="indigo" />
+ <StatsCard label="Tổng sinh viên" value={totalStudents} icon={Users} variant="success" />
  </div>
 
  <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
  <div className="p-6 border-b border-gray-100 bg-gray-50/30">
  <InputField
- placeholder="TĂ¬m kiáº¿m lá»›p há»c, mĂ£ mĂ´n..."
+ placeholder="Tìm kiếm lớp học, mã môn..."
  value={search}
  onChange={e => setSearch(e.target.value)}
  icon={Search}
@@ -57,7 +57,7 @@ export default function MyCourses() {
  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-gray-200">
  <GraduationCap size={24} className="text-gray-300" />
  </div>
- <p className="text-[10px] font-black text-gray-400">{search ?"KhĂ´ng tĂ¬m tháº¥y lá»›p há»c há»£p lá»‡" :"Báº¡n chÆ°a Ä‘Æ°á»£c phĂ¢n cĂ´ng lá»›p nĂ o"}</p>
+ <p className="text-[10px] font-black text-gray-400">{search ?"Không tìm thấy lớp học hợp lệ" :"Bạn chưa được phân công lớp nào"}</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -71,3 +71,9 @@ export default function MyCourses() {
  </div>
  );
 }
+
+
+
+
+
+

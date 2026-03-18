@@ -69,11 +69,11 @@ export function useManageGroups() {
   }, [students, assignedStudentIds]);
 
   const handleCreateGroup = async () => {
-    if (!newGroupTopic.trim() || selectedStudents.length === 0) return showError("Vui lĂ²ng nháº­p Ä‘á» tĂ i vĂ  chá»n sinh viĂªn");
+    if (!newGroupTopic.trim() || selectedStudents.length === 0) return showError("Vui lòng nhập đề tài và chọn sinh viên");
     try {
       const project = await createProjectMutation.mutateAsync({
         courseId: parsedCourseId,
-        name: `NhĂ³m ${groups.length + 1}`,
+        name: `Nhóm ${groups.length + 1}`,
         description: newGroupTopic.trim(),
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
@@ -88,32 +88,32 @@ export function useManageGroups() {
         });
       }
 
-      success(`Táº¡o nhĂ³m "${project.name}" thĂ nh cĂ´ng`);
+      success(`Tạo nhóm "${project.name}" thành công`);
       setSelectedStudents([]);
       setNewGroupTopic("");
       setStudentSearch("");
     } catch (err) {
-      showError("KhĂ´ng thá»ƒ táº¡o nhĂ³m: " + (err?.message || "Lá»—i há»‡ thá»‘ng"));
+      showError("Không thể tạo nhóm: " + (err?.message || "Lỗi hệ thống"));
     }
   };
 
   const handleAutoCreateGroups = async () => {
     if (!parsedCourseId || Number.isNaN(parsedCourseId)) {
-      showError("KhĂ´ng tĂ¬m tháº¥y mĂ£ lá»›p há»£p lá»‡");
+      showError("Không tìm thấy mã lớp hợp lệ");
       return;
     }
 
     if (availableStudents.length === 0) {
-      showError("KhĂ´ng cĂ²n sinh viĂªn chÆ°a phĂ¢n nhĂ³m");
+      showError("Không còn sinh viên chưa phân nhóm");
       return;
     }
 
     if (autoGroupSize < MIN_MEMBERS || autoGroupSize > MAX_MEMBERS) {
-      showError(`Sá»‘ thĂ nh viĂªn má»—i nhĂ³m pháº£i tá»« ${MIN_MEMBERS} Ä‘áº¿n ${MAX_MEMBERS}`);
+      showError(`Số thành viên mỗi nhóm phải từ ${MIN_MEMBERS} đến ${MAX_MEMBERS}`);
       return;
     }
 
-    if (!confirm(`Tá»± Ä‘á»™ng chia ${availableStudents.length} sinh viĂªn chÆ°a cĂ³ nhĂ³m thĂ nh cĂ¡c nhĂ³m khoáº£ng ${autoGroupSize} ngÆ°á»i?`)) return;
+    if (!confirm(`Tự động chia ${availableStudents.length} sinh viên chưa có nhóm thành các nhóm khoảng ${autoGroupSize} người?`)) return;
 
     try {
       const shuffled = [...availableStudents].sort(() => Math.random() - 0.5);
@@ -126,8 +126,8 @@ export function useManageGroups() {
         const members = chunks[i];
         const project = await createProjectMutation.mutateAsync({
           courseId: parsedCourseId,
-          name: `NhĂ³m ${groups.length + i + 1}`,
-          description: `Äá» tĂ i nhĂ³m ${groups.length + i + 1}`,
+          name: `Nhóm ${groups.length + i + 1}`,
+          description: `Đề tài nhóm ${groups.length + i + 1}`,
         });
 
         for (let j = 0; j < members.length; j += 1) {
@@ -140,19 +140,19 @@ export function useManageGroups() {
         }
       }
 
-      success(`ÄĂ£ tá»± Ä‘á»™ng táº¡o ${chunks.length} nhĂ³m má»›i`);
+      success(`Đã tự động tạo ${chunks.length} nhóm mới`);
     } catch (err) {
-      showError(err?.message || "KhĂ´ng thá»ƒ tá»± Ä‘á»™ng chia nhĂ³m");
+      showError(err?.message || "Không thể tự động chia nhóm");
     }
   };
 
   const handleDeleteGroup = async (groupId) => {
-    if (!confirm("Báº¡n cĂ³ cháº¯c muá»‘n xĂ³a nhĂ³m nĂ y? HĂ nh Ä‘á»™ng nĂ y khĂ´ng thá»ƒ hoĂ n tĂ¡c.")) return;
+    if (!confirm("Bạn có chắc muốn xóa nhóm này? Hành động này không thể hoàn tác.")) return;
     try {
       await deleteProjectMutation.mutateAsync(groupId);
-      success("ÄĂ£ xĂ³a nhĂ³m");
+      success("Đã xóa nhóm");
     } catch (err) {
-      showError(err?.message || "KhĂ´ng thá»ƒ xĂ³a nhĂ³m");
+      showError(err?.message || "Không thể xóa nhóm");
     }
   };
 
@@ -166,9 +166,9 @@ export function useManageGroups() {
         id: groupId,
         body: { description: normalizedNewTopic },
       });
-      success("ÄĂ£ cáº­p nháº­t Ä‘á» tĂ i");
+      success("Đã cập nhật đề tài");
     } catch (err) {
-      showError(err?.message || "KhĂ´ng thá»ƒ cáº­p nháº­t Ä‘á» tĂ i");
+      showError(err?.message || "Không thể cập nhật đề tài");
     }
   };
 
@@ -178,9 +178,9 @@ export function useManageGroups() {
         projectId: groupId,
         studentId: studentId
       });
-      success("ÄĂ£ xĂ³a sinh viĂªn khá»i nhĂ³m");
+      success("Đã xóa sinh viên khỏi nhóm");
     } catch (err) {
-      showError(err?.message || "KhĂ´ng thá»ƒ xĂ³a sinh viĂªn");
+      showError(err?.message || "Không thể xóa sinh viên");
     }
   };
 
@@ -201,10 +201,10 @@ export function useManageGroups() {
           role: "MEMBER",
         });
       }
-      success(`ÄĂ£ thĂªm ${forceAddSelectedIds.length} sinh viĂªn vĂ o nhĂ³m`);
+      success(`Đã thêm ${forceAddSelectedIds.length} sinh viên vào nhóm`);
       setShowForceAddModal(false);
       setForceAddSelectedIds([]);
-    } catch (err) { showError("KhĂ´ng thá»ƒ thĂªm sinh viĂªn"); }
+    } catch (err) { showError("Không thể thêm sinh viên"); }
   };
 
   const groupsWithMetrics = useMemo(() => {
@@ -216,7 +216,7 @@ export function useManageGroups() {
 
       const commitCount = group.commitCount ?? (memberCount * 6 + (index + 1) * 3);
       const issueCount = group.issueCount ?? (memberCount * 2 + index);
-      const lastActivity = group.lastActivity ?? (index === 0 ? "2 giá» trÆ°á»›c" : index === 1 ? "1 ngĂ y trÆ°á»›c" : "3 ngĂ y trÆ°á»›c");
+      const lastActivity = group.lastActivity ?? (index === 0 ? "2 giờ trước" : index === 1 ? "1 ngày trước" : "3 ngày trước");
 
       let progress = group.progressPercent;
       if (progress == null) {
@@ -322,3 +322,9 @@ export function useManageGroups() {
     navigate
   };
 }
+
+
+
+
+
+

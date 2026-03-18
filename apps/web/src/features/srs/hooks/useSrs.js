@@ -14,7 +14,7 @@ export const SRS_KEYS = {
     reports: (params) => [...SRS_KEYS.all, "reports", params],
 };
 
-/** Láº¥y danh sĂ¡ch SRS cho giáº£ng viĂªn (load táº¥t cáº£ hoáº·c theo params) */
+/** Lấy danh sách SRS cho giảng viên (load tất cả hoặc theo params) */
 export const useSrsReports = (params = {}) => {
     return useQuery({
         queryKey: SRS_KEYS.reports(params),
@@ -22,7 +22,7 @@ export const useSrsReports = (params = {}) => {
     });
 };
 
-/** Láº¥y danh sĂ¡ch SRS cá»§a má»™t project */
+/** Lấy danh sách SRS của một project */
 export const useGetProjectSrs = (projectId) => {
     return useQuery({
         queryKey: SRS_KEYS.list(projectId),
@@ -32,7 +32,7 @@ export const useGetProjectSrs = (projectId) => {
 };
 
 /**
- * Ná»™p SRS má»›i â€” gá»­i file tháº­t qua FormData (multipart/form-data)
+ * Nộp SRS mới — gửi file thật qua FormData (multipart/form-data)
  */
 export const useSubmitSrs = () => {
     const queryClient = useQueryClient();
@@ -47,7 +47,7 @@ export const useSubmitSrs = () => {
 };
 
 /**
- * Cáº­p nháº­t status SRS (Giáº£ng viĂªn approve/reject)
+ * Cập nhật status SRS (Giảng viên approve/reject)
  */
 export const useUpdateSrsStatus = () => {
     const queryClient = useQueryClient();
@@ -61,7 +61,7 @@ export const useUpdateSrsStatus = () => {
 };
 
 /**
- * ÄĂ¡nh giĂ¡ SRS (Giáº£ng viĂªn)
+ * Đánh giá SRS (Giảng viên)
  */
 export const useReviewSrs = () => {
     const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export const useReviewSrs = () => {
 };
 
 /**
- * Gá»­i feedback cho SRS (Giáº£ng viĂªn)
+ * Gửi feedback cho SRS (Giảng viên)
  */
 export const useProvideSrsFeedback = () => {
     const queryClient = useQueryClient();
@@ -88,7 +88,7 @@ export const useProvideSrsFeedback = () => {
 };
 
 /**
- * XĂ³a SRS Report
+ * Xóa SRS Report
  */
 export const useDeleteSrs = () => {
     const queryClient = useQueryClient();
@@ -99,3 +99,9 @@ export const useDeleteSrs = () => {
         },
     });
 };
+
+
+
+
+
+

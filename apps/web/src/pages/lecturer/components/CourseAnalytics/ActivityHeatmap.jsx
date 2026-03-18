@@ -13,8 +13,8 @@ export function ActivityHeatmap({ heatmapData }) {
  <Calendar size={18} className="text-teal-600" />
  </div>
  <div>
- <CardTitle className="text-base font-black text-gray-800 leading-none">CÆ°á»ng Ä‘á»™ hoáº¡t Ä‘á»™ng (90 ngĂ y qua)</CardTitle>
- <p className="text-[10px] font-bold text-gray-400 mt-1.5 opacity-70">Tá»•ng sá»‘ commit ghi nháº­n trĂªn GitHub</p>
+ <CardTitle className="text-base font-black text-gray-800 leading-none">Cường độ hoạt động (90 ngày qua)</CardTitle>
+ <p className="text-[10px] font-bold text-gray-400 mt-1.5 opacity-70">Tổng số commit ghi nhận trên GitHub</p>
  </div>
  </div>
  <div className="flex gap-1">
@@ -40,3 +40,9 @@ export function ActivityHeatmap({ heatmapData }) {
  </Card>
  );
 }
+
+
+
+
+
+

@@ -10,7 +10,7 @@ export function WeeklyActivityCharts({ isLoading, commitActivity, heatmap }) {
  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shadow-inner">
  <Flame size={20} className="text-teal-600 animate-pulse" />
  </div>
- Táº§n suáº¥t hoáº¡t Ä‘á»™ng tuáº§n nĂ y
+ Tần suất hoạt động tuần này
  </CardTitle>
  </CardHeader>
  <CardContent className="p-12">
@@ -80,3 +80,9 @@ export function WeeklyActivityCharts({ isLoading, commitActivity, heatmap }) {
  </Card>
  );
 }
+
+
+
+
+
+

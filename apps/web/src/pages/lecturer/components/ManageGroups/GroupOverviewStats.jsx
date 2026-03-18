@@ -10,12 +10,18 @@ export function GroupOverviewStats({ studentsLength, availableStudentsLength, gr
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      <StatsCard label="Sinh viĂªn" value={studentsLength} icon={Users} variant="default" />
-      <StatsCard label="ChÆ°a cĂ³ nhĂ³m" value={availableStudentsLength} icon={UserPlus} variant="warning" />
-      <StatsCard label="Sá»‘ nhĂ³m" value={groupsLength} icon={Layers3} variant="info" />
-      <StatsCard label="Tiáº¿n Ä‘á»™ TB" value={`${avgProgress}%`} icon={Activity} variant="success" />
-      <StatsCard label="NhĂ³m rá»§i ro" value={riskCount} icon={ShieldAlert} variant="danger" />
-      <StatsCard label="Thiáº¿u Ä‘á» tĂ i" value={missingTopicCount} icon={PenLine} variant="indigo" />
+      <StatsCard label="Sinh viên" value={studentsLength} icon={Users} variant="default" />
+      <StatsCard label="Chưa có nhóm" value={availableStudentsLength} icon={UserPlus} variant="warning" />
+      <StatsCard label="Số nhóm" value={groupsLength} icon={Layers3} variant="info" />
+      <StatsCard label="Tiến độ TB" value={`${avgProgress}%`} icon={Activity} variant="success" />
+      <StatsCard label="Nhóm rủi ro" value={riskCount} icon={ShieldAlert} variant="danger" />
+      <StatsCard label="Thiếu đề tài" value={missingTopicCount} icon={PenLine} variant="indigo" />
     </div>
   );
 }
+
+
+
+
+
+

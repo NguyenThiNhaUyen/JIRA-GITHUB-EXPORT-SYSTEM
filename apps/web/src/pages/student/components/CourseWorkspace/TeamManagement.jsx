@@ -11,7 +11,7 @@ export function TeamManagement({ groupStudents = [], isLeader, onInviteOpen, onR
  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center shadow-inner">
  <Users size={24} className="text-emerald-600" />
  </div>
- ThĂ nh viĂªn nhĂ³m ({groupStudents.length})
+ Thành viên nhóm ({groupStudents.length})
  </CardTitle>
  {isLeader && (
  <Button 
@@ -19,7 +19,7 @@ export function TeamManagement({ groupStudents = [], isLeader, onInviteOpen, onR
  variant="ghost" 
  className="h-14 px-10 rounded-[28px] text-[11px] font-black tracking-[0.2em] text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all font-display hover:scale-105 active:scale-95 border-2 border-emerald-50"
  >
- <UserPlus size={20} className="mr-3 shrink-0" /> ThĂªm thĂ nh viĂªn
+ <UserPlus size={20} className="mr-3 shrink-0" /> Thêm thành viên
  </Button>
  )}
  </CardHeader>
@@ -35,13 +35,13 @@ export function TeamManagement({ groupStudents = [], isLeader, onInviteOpen, onR
  <p className="font-black text-gray-800 text-lg tracking-tight leading-none mb-3 font-display">{m.name}</p>
  <p className="text-[11px] text-gray-400 font-black tracking-[0.3em] flex items-center gap-4 opacity-70">
  <div className="w-1.5 h-1.5 rounded-full bg-gray-200" />
- {m.responsibility || (m.role === 'LEADER' ?"QUáº¢N TRá» Dá»° ĂN" :"PHĂT TRIá»‚N PHáº¦N Má»€M")}
+ {m.responsibility || (m.role === 'LEADER' ?"QUẢN TRỊ DỰ ÁN" :"PHÁT TRIỂN PHẦN MỀM")}
  </p>
  </div>
  </div>
  <div className="flex items-center gap-10">
  <Badge variant={m.role === 'LEADER' ? 'warning' : 'outline'} className={`text-[10px] font-black px-5 py-2 rounded-full border shadow-sm tracking-[0.2em] ${m.role === 'LEADER' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-white text-gray-400 border-gray-100'}`}>
- {m.role === 'LEADER' ? 'TRÆ¯á»NG NHĂ“M' : 'THĂ€NH VIĂN'}
+ {m.role === 'LEADER' ? 'TRƯỞNG NHÓM' : 'THÀNH VIÊN'}
  </Badge>
  
  {isLeader && m.role !== 'LEADER' && (
@@ -62,3 +62,9 @@ export function TeamManagement({ groupStudents = [], isLeader, onInviteOpen, onR
  </Card>
  );
 }
+
+
+
+
+
+

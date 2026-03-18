@@ -8,9 +8,9 @@ namespace JiraGithubExport.IntegrationService.Application.Implementations.Report
 
 public class PdfReportGenerator : IPdfReportGenerator
 {
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // DESIGN TOKENS
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     private static readonly string PrimaryColor   = "#1B3A6B";   // dark navy
     private static readonly string AccentColor    = "#2E6DBF";   // medium blue
     private static readonly string TableHeader    = "#2E6DBF";
@@ -18,10 +18,10 @@ public class PdfReportGenerator : IPdfReportGenerator
     private static readonly string TextGray       = "#555555";
     private static readonly string BorderGray     = "#CCCCCC";
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // COMMIT STATISTICS
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    public byte[] GenerateCommitStatisticsPdf(string courseName, List<Project> projects)
+    // ─────────────────────────────────────────────────────────
+    public byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects)
     {
         return Document.Create(container =>
         {
@@ -29,7 +29,7 @@ public class PdfReportGenerator : IPdfReportGenerator
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
-                page.Header().Text($"Commit Statistics â€“ {courseName}").SemiBold().FontSize(20).FontColor(PrimaryColor);
+                page.Header().Text($"Commit Statistics – {courseName}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -48,14 +48,14 @@ public class PdfReportGenerator : IPdfReportGenerator
                     bool alt = false;
                     foreach (var p in projects)
                     {
-                        if (p.TeamMembers == null) continue;
-                        foreach (var tm in p.TeamMembers)
+                        if (p.team_members == null) continue;
+                        foreach (var tm in p.team_members)
                         {
                             string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(p.Name);
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.User?.FullName ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.StudentCode ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.TeamRole ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(p.name);
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.team_role ?? "");
                             alt = !alt;
                         }
                     }
@@ -64,10 +64,10 @@ public class PdfReportGenerator : IPdfReportGenerator
         }).GeneratePdf();
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // TEAM ROSTER
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    public byte[] GenerateTeamRosterPdf(Project Project)
+    // ─────────────────────────────────────────────────────────
+    public byte[] GenerateTeamRosterPdf(project project)
     {
         return Document.Create(container =>
         {
@@ -75,7 +75,7 @@ public class PdfReportGenerator : IPdfReportGenerator
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
-                page.Header().Text($"Team Roster â€“ {Project.Name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
+                page.Header().Text($"Team Roster – {project.name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
                     table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
@@ -85,14 +85,14 @@ public class PdfReportGenerator : IPdfReportGenerator
                             h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
                     });
                     bool alt = false;
-                    if (Project.TeamMembers != null)
+                    if (project.team_members != null)
                     {
-                        foreach (var tm in Project.TeamMembers)
+                        foreach (var tm in project.team_members)
                         {
                             string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.User?.FullName ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.StudentCode ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.TeamRole ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.team_role ?? "");
                             alt = !alt;
                         }
                     }
@@ -101,10 +101,10 @@ public class PdfReportGenerator : IPdfReportGenerator
         }).GeneratePdf();
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // ACTIVITY SUMMARY
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    public byte[] GenerateActivitySummaryPdf(Project Project, List<dynamic> activityList)
+    // ─────────────────────────────────────────────────────────
+    public byte[] GenerateActivitySummaryPdf(project project, List<dynamic> activityList)
     {
         return Document.Create(container =>
         {
@@ -112,7 +112,7 @@ public class PdfReportGenerator : IPdfReportGenerator
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
-                page.Header().Text($"Activity Summary â€“ {Project.Name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
+                page.Header().Text($"Activity Summary – {project.name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -126,14 +126,14 @@ public class PdfReportGenerator : IPdfReportGenerator
                             h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
                     });
                     bool alt = false;
-                    if (Project.TeamMembers != null)
+                    if (project.team_members != null)
                     {
-                        foreach (var tm in Project.TeamMembers)
+                        foreach (var tm in project.team_members)
                         {
-                            var stat = activityList.FirstOrDefault(a => a.StudentId == tm.StudentUserId);
+                            var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
                             string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.User?.FullName ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.StudentUser?.StudentCode ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
                             table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Commits ?? 0)).ToString());
                             table.Cell().Background(bg).Padding(4).Text(((int)(stat?.PRs ?? 0)).ToString());
                             table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Issues ?? 0)).ToString());
@@ -145,9 +145,9 @@ public class PdfReportGenerator : IPdfReportGenerator
         }).GeneratePdf();
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // ISO/IEEE 29148 SRS REPORT
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     public byte[] GenerateSrsReportPdf(SrsReportData data)
     {
         return Document.Create(container =>
@@ -157,7 +157,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                 page.Size(PageSizes.A4);
                 page.Margin(2.5f, Unit.Centimetre);
 
-                // â”€â”€ HEADER â”€â”€
+                // ── HEADER ──
                 page.Header().Column(col =>
                 {
                     col.Item().BorderBottom(2).BorderColor(PrimaryColor).PaddingBottom(6).Row(row =>
@@ -171,14 +171,14 @@ public class PdfReportGenerator : IPdfReportGenerator
                         });
                         row.ConstantItem(140).AlignRight().Column(inner =>
                         {
-                            inner.Item().Text($"Project: {data.Project.Name}").Bold().FontSize(10);
+                            inner.Item().Text($"Project: {data.Project.name}").Bold().FontSize(10);
                             inner.Item().Text($"Generated: {data.GeneratedAt:dd MMM yyyy}").FontSize(9).FontColor(TextGray);
                             inner.Item().Text($"Version: 1.0").FontSize(9).FontColor(TextGray);
                         });
                     });
                 });
 
-                // â”€â”€ FOOTER â”€â”€
+                // ── FOOTER ──
                 page.Footer().AlignCenter().Text(txt =>
                 {
                     txt.Span("JIRA-GITHUB Export System  |  ").FontSize(8).FontColor(TextGray);
@@ -188,10 +188,10 @@ public class PdfReportGenerator : IPdfReportGenerator
                     txt.TotalPages().FontSize(8).FontColor(TextGray);
                 });
 
-                // â”€â”€ CONTENT â”€â”€
+                // ── CONTENT ──
                 page.Content().Column(doc =>
                 {
-                    // â”€â”€ COVER INFO â”€â”€
+                    // ── COVER INFO ──
                     doc.Item().PaddingTop(20).Table(t =>
                     {
                         t.ColumnsDefinition(c => { c.ConstantColumn(160); c.RelativeColumn(); });
@@ -201,7 +201,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                             t.Cell().Padding(5).Text(value).FontSize(9);
                         }
                         InfoRow("Document Title", "Software Requirements Specification (SRS)");
-                        InfoRow("Project", data.Project.Name);
+                        InfoRow("Project", data.Project.name);
                         InfoRow("Jira Project Key", data.JiraProjectKey);
                         InfoRow("GitHub Repository", data.GithubRepoUrl);
                         InfoRow("Date", data.GeneratedAt.ToString("dd MMMM yyyy"));
@@ -209,24 +209,24 @@ public class PdfReportGenerator : IPdfReportGenerator
                         InfoRow("Status", "Draft");
                     });
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 1. INTRODUCTION
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "1. Introduction");
 
                     SubSection(doc, "1.1 Purpose");
                     doc.Item().PaddingLeft(10).Text(
                         "This Software Requirements Specification (SRS) document describes the functional and " +
                         "non-functional requirements for the system. It is intended for the development team, " +
-                        "Project stakeholders, lecturers, and evaluators. The document conforms to " +
+                        "project stakeholders, lecturers, and evaluators. The document conforms to " +
                         "ISO/IEC/IEEE 29148:2018.").FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "1.2 Scope");
                     doc.Item().PaddingLeft(10).Text(
-                        $"The system is the '{data.Project.Name}' software Project. It integrates with " +
+                        $"The system is the '{data.Project.name}' software project. It integrates with " +
                         $"Jira ({data.JiraSiteUrl}) for issue tracking and GitHub ({data.GithubRepoUrl}) " +
                         "for source code management. The system aims to automate reporting and monitoring " +
-                        "of Student Project activities.").FontSize(10).FontColor(TextGray);
+                        "of student project activities.").FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "1.3 Definitions, Acronyms, and Abbreviations");
                     AcronymTable(doc, new[]
@@ -244,20 +244,20 @@ public class PdfReportGenerator : IPdfReportGenerator
                     SubSection(doc, "1.4 References");
                     doc.Item().PaddingLeft(10).Column(refs =>
                     {
-                        refs.Item().Text("â€¢ ISO/IEC/IEEE 29148:2018 â€“ Systems and software engineering â€“ Life cycle processes â€“ Requirements engineering").FontSize(9).FontColor(TextGray);
-                        refs.Item().Text($"â€¢ Jira Project Board: {data.JiraSiteUrl}").FontSize(9).FontColor(TextGray);
-                        refs.Item().Text($"â€¢ GitHub Repository: {data.GithubRepoUrl}").FontSize(9).FontColor(TextGray);
+                        refs.Item().Text("• ISO/IEC/IEEE 29148:2018 – Systems and software engineering – Life cycle processes – Requirements engineering").FontSize(9).FontColor(TextGray);
+                        refs.Item().Text($"• Jira Project Board: {data.JiraSiteUrl}").FontSize(9).FontColor(TextGray);
+                        refs.Item().Text($"• GitHub Repository: {data.GithubRepoUrl}").FontSize(9).FontColor(TextGray);
                     });
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 2. OVERALL DESCRIPTION
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "2. Overall Description");
 
                     SubSection(doc, "2.1 Product Perspective");
                     doc.Item().PaddingLeft(10).Text(
                         $"This system is a standalone web application that integrates with Jira and GitHub " +
-                        $"to track, monitor, and export Student Project data. It operates as an API " +
+                        $"to track, monitor, and export student project data. It operates as an API " +
                         $"backend deployed on cloud infrastructure (Render.com + Supabase PostgreSQL).").FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "2.2 Product Functions (Summary)");
@@ -269,10 +269,10 @@ public class PdfReportGenerator : IPdfReportGenerator
                             "Allow lecturers to approve or reject group Jira/GitHub link submissions",
                             "Generate SRS, Activity Summary, and Commit Statistics reports",
                             "Monitor inactive team members and raise alerts",
-                            "Provide secure JWT authentication with Role-based access control",
+                            "Provide secure JWT authentication with role-based access control",
                         })
                         {
-                            funcs.Item().Text($"â€¢ {f}").FontSize(10).FontColor(TextGray);
+                            funcs.Item().Text($"• {f}").FontSize(10).FontColor(TextGray);
                         }
                     });
 
@@ -288,14 +288,14 @@ public class PdfReportGenerator : IPdfReportGenerator
                         var roles = new (string, string)[]
                         {
                             ("Admin",   "Full system access. Can manage users, courses, and view all reports."),
-                            ("Lecturer","Can approve/reject integrations, view reports, and monitor Project activity."),
-                            ("Student", "Can submit Jira/GitHub links, view their own Project dashboard."),
+                            ("Lecturer","Can approve/reject integrations, view reports, and monitor project activity."),
+                            ("Student", "Can submit Jira/GitHub links, view their own project dashboard."),
                         };
                         bool alt = false;
-                        foreach (var (Role, desc) in roles)
+                        foreach (var (role, desc) in roles)
                         {
                             string bg = alt ? TableRowAlt : Colors.White;
-                            t.Cell().Background(bg).Padding(4).Text(Role).Bold().FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text(role).Bold().FontSize(9);
                             t.Cell().Background(bg).Padding(4).Text(desc).FontSize(9);
                             alt = !alt;
                         }
@@ -304,12 +304,12 @@ public class PdfReportGenerator : IPdfReportGenerator
                     SubSection(doc, "2.4 Operating Environment");
                     doc.Item().PaddingLeft(10).Column(env =>
                     {
-                        env.Item().Text("â€¢ Backend: ASP.NET Core Web API (.NET 8), deployed on Render.com").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("â€¢ Database: PostgreSQL on Supabase").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("â€¢ Cache: Redis on Upstash").FontSize(10).FontColor(TextGray);
-                        env.Item().Text($"â€¢ Source Control: GitHub ({data.GithubRepoUrl})").FontSize(10).FontColor(TextGray);
+                        env.Item().Text("• Backend: ASP.NET Core Web API (.NET 8), deployed on Render.com").FontSize(10).FontColor(TextGray);
+                        env.Item().Text("• Database: PostgreSQL on Supabase").FontSize(10).FontColor(TextGray);
+                        env.Item().Text("• Cache: Redis on Upstash").FontSize(10).FontColor(TextGray);
+                        env.Item().Text($"• Source Control: GitHub ({data.GithubRepoUrl})").FontSize(10).FontColor(TextGray);
                         if (!string.IsNullOrEmpty(data.GithubDefaultBranch))
-                            env.Item().Text($"â€¢ Default Branch: {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
+                            env.Item().Text($"• Default Branch: {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
                     });
 
                     SubSection(doc, "2.5 Team Composition");
@@ -318,7 +318,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                         doc.Item().PaddingLeft(10).Column(tm =>
                         {
                             foreach (var member in data.TeamMembers)
-                                tm.Item().Text($"â€¢ {member}").FontSize(10).FontColor(TextGray);
+                                tm.Item().Text($"• {member}").FontSize(10).FontColor(TextGray);
                         });
                     }
                     else
@@ -326,9 +326,9 @@ public class PdfReportGenerator : IPdfReportGenerator
                         doc.Item().PaddingLeft(10).Text("No team members found.").FontSize(10).FontColor(TextGray).Italic();
                     }
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 3. SYSTEM FEATURES (Functional Requirements)
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "3. System Features (Functional Requirements)");
                     doc.Item().Text(
                         "The following features are derived from Jira issues of type Epic and Story, " +
@@ -337,7 +337,7 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     if (data.SystemFeatures.Count == 0)
                     {
-                        doc.Item().PaddingTop(6).Text("No Epics or Stories found in the linked Jira Project.")
+                        doc.Item().PaddingTop(6).Text("No Epics or Stories found in the linked Jira project.")
                             .FontSize(10).FontColor(TextGray).Italic();
                     }
 
@@ -399,9 +399,9 @@ public class PdfReportGenerator : IPdfReportGenerator
                         featureIndex++;
                     }
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 4. EXTERNAL INTERFACE REQUIREMENTS
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "4. External Interface Requirements");
 
                     SubSection(doc, "4.1 User Interfaces");
@@ -421,7 +421,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                         });
                         var ifaces = new (string, string)[]
                         {
-                            ("Jira REST API v3", "Retrieve issues, worklogs, sprints, and Project metadata"),
+                            ("Jira REST API v3", "Retrieve issues, worklogs, sprints, and project metadata"),
                             ("GitHub REST API v3","Retrieve commits, pull requests, branches, and repository info"),
                             ("PostgreSQL (Supabase)", "Persistent data storage"),
                             ("Redis (Upstash)", "Distributed locking and caching for background sync worker"),
@@ -445,10 +445,10 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "4.4 Communication Interfaces");
                     doc.Item().PaddingLeft(10).Text(
-                        "â€¢ All API communication uses HTTPS (TLS 1.2+).\n" +
-                        "â€¢ Jira and GitHub APIs are accessed over HTTPS REST.\n" +
-                        "â€¢ Redis connection uses SSL on port 6379.\n" +
-                        "â€¢ PostgreSQL connection uses SSL on port 5432.").FontSize(10).FontColor(TextGray);
+                        "• All API communication uses HTTPS (TLS 1.2+).\n" +
+                        "• Jira and GitHub APIs are accessed over HTTPS REST.\n" +
+                        "• Redis connection uses SSL on port 6379.\n" +
+                        "• PostgreSQL connection uses SSL on port 5432.").FontSize(10).FontColor(TextGray);
 
                     // GitHub stats box
                     if (data.GithubTotalCommits > 0 || data.GithubTotalPRs > 0)
@@ -470,9 +470,9 @@ public class PdfReportGenerator : IPdfReportGenerator
                         });
                     }
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 5. NON-FUNCTIONAL REQUIREMENTS
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "5. Non-Functional Requirements");
 
                     // Standard NFRs table (always included)
@@ -487,10 +487,10 @@ public class PdfReportGenerator : IPdfReportGenerator
                         });
                         var nfrRows = new[]
                         {
-                            ("NFR-01", "Performance",   "API response time for non-report endpoints must be â‰¤ 500ms under normal load.", "â‰¤ 500 ms"),
-                            ("NFR-02", "Availability",  "The system must be available at least 99% of the time (excluding scheduled maintenance).", "â‰¥ 99% uptime"),
+                            ("NFR-01", "Performance",   "API response time for non-report endpoints must be ≤ 500ms under normal load.", "≤ 500 ms"),
+                            ("NFR-02", "Availability",  "The system must be available at least 99% of the time (excluding scheduled maintenance).", "≥ 99% uptime"),
                             ("NFR-03", "Security",      "All passwords must be stored using BCrypt hashing. JWT tokens expire after a configurable period.", "BCrypt + JWT"),
-                            ("NFR-04", "Scalability",   "The sync worker must handle at least 50 concurrent Project integrations without bottlenecks.", "50+ projects"),
+                            ("NFR-04", "Scalability",   "The sync worker must handle at least 50 concurrent project integrations without bottlenecks.", "50+ projects"),
                             ("NFR-05", "Reliability",   "Failed sync jobs must be logged and retried without data loss.", "Auto-retry"),
                             ("NFR-06", "Maintainability","Code must follow C# naming conventions and include XML documentation for public APIs.", "Code review"),
                             ("NFR-07", "Portability",   "The system is containerised with Docker and deployable on any OCI-compliant platform.", "Docker image"),
@@ -514,26 +514,26 @@ public class PdfReportGenerator : IPdfReportGenerator
                         IssueTable(doc, data.NonFunctionalRequirements);
                     }
 
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     // 6. OTHER REQUIREMENTS
-                    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // ───────────────────────────────────────────────
                     SectionHeader(doc, "6. Other Requirements");
 
                     SubSection(doc, "6.1 Legal and Compliance");
                     doc.Item().PaddingLeft(10).Text(
-                        "â€¢ The system must comply with applicable data protection regulations " +
-                        "(e.g. privacy of Student data).\n" +
-                        "â€¢ API tokens for Jira and GitHub must be stored as encrypted environment " +
+                        "• The system must comply with applicable data protection regulations " +
+                        "(e.g. privacy of student data).\n" +
+                        "• API tokens for Jira and GitHub must be stored as encrypted environment " +
                         "variables and never committed to version control.")
                         .FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "6.2 Localisation");
                     doc.Item().PaddingLeft(10).Text(
-                        "The primary language of the User interface is English. " +
+                        "The primary language of the user interface is English. " +
                         "Date/time values must be stored as UTC and converted to the local timezone on the frontend.")
                         .FontSize(10).FontColor(TextGray);
 
-                    // â”€â”€ SIGN-OFF TABLE â”€â”€
+                    // ── SIGN-OFF TABLE ──
                     doc.Item().PaddingTop(30).Table(t =>
                     {
                         t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
@@ -542,9 +542,9 @@ public class PdfReportGenerator : IPdfReportGenerator
                             foreach (var col in new[] { "Role", "Name", "Signature / Date" })
                                 h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).Bold().FontSize(9);
                         });
-                        foreach (var (Role, _) in new[] { ("Lecturer", ""), ("Leader", ""), ("Team Member", "") })
+                        foreach (var (role, _) in new[] { ("Lecturer", ""), ("Leader", ""), ("Team Member", "") })
                         {
-                            t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text(Role).FontSize(9);
+                            t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text(role).FontSize(9);
                             t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text("").FontSize(9);
                             t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text("").FontSize(9);
                         }
@@ -554,9 +554,9 @@ public class PdfReportGenerator : IPdfReportGenerator
         }).GeneratePdf();
     }
 
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     // PRIVATE HELPERS
-    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─────────────────────────────────────────────────────────
     private static void SectionHeader(ColumnDescriptor doc, string title)
     {
         doc.Item().PaddingTop(20).BorderBottom(2).BorderColor(PrimaryColor)

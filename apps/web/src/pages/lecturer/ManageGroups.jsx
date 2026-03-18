@@ -55,7 +55,7 @@ export default function ManageGroups() {
  return (
  <div className="flex flex-col h-64 items-center justify-center gap-4">
  <Activity className="animate-spin text-teal-600 h-10 w-10" />
- <span className="text-gray-500 font-bold text-[10px]">Äang Ä‘á»“ng bá»™ dá»¯ liá»‡u lá»›p há»c...</span>
+ <span className="text-gray-500 font-bold text-[10px]">Đang đồng bộ dữ liệu lớp học...</span>
  </div>
  );
  }
@@ -63,12 +63,12 @@ export default function ManageGroups() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title={`Quáº£n lĂ½ NhĂ³m: ${course?.code ||""}`}
- subtitle={`Äiá»u phá»‘i vĂ  giĂ¡m sĂ¡t ${groups.length} nhĂ³m dá»± Ă¡n trong lá»›p ${course?.name ||""}.`}
- breadcrumb={["Giáº£ng viĂªn","Lá»›p há»c","Quáº£n lĂ½ nhĂ³m"]}
+ title={`Quản lý Nhóm: ${course?.code ||""}`}
+ subtitle={`Điều phối và giám sát ${groups.length} nhóm dự án trong lớp ${course?.name ||""}.`}
+ breadcrumb={["Giảng viên","Lớp học","Quản lý nhóm"]}
  actions={[
- <Button key="back" variant="outline" onClick={() => navigate("/lecturer/my-courses")} className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-100 hover:bg-gray-50"><ArrowLeft size={14} className="mr-2" /> Quay láº¡i</Button>,
- <Button key="export" variant="outline" onClick={() => success("Export success")} className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-100 hover:bg-gray-50"><Download size={14} className="mr-2" /> Xuáº¥t CSV</Button>
+ <Button key="back" variant="outline" onClick={() => navigate("/lecturer/my-courses")} className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-100 hover:bg-gray-50"><ArrowLeft size={14} className="mr-2" /> Quay lại</Button>,
+ <Button key="export" variant="outline" onClick={() => success("Export success")} className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-100 hover:bg-gray-50"><Download size={14} className="mr-2" /> Xuất CSV</Button>
  ]}
  />
 
@@ -118,3 +118,9 @@ export default function ManageGroups() {
  </div>
  );
 }
+
+
+
+
+
+

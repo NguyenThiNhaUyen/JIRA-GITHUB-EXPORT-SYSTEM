@@ -8,7 +8,7 @@ export function CommitFrequencyChart({ data = [], isLoading, isError }) {
   return (
     <ChartContainer
       title="Commit Frequency"
-      subtitle="Sá»‘ lÆ°á»£ng commits theo ngĂ y"
+      subtitle="Số lượng commits theo ngày"
       isLoading={isLoading}
       isError={isError}
       isEmpty={isEmpty}
@@ -31,3 +31,11 @@ export function CommitFrequencyChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
+
+
+
+
+
+
+
+

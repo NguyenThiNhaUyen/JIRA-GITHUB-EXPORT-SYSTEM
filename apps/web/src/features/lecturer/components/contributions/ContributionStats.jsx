@@ -13,19 +13,19 @@ export function ContributionStats({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
       <StatsCard
-        label="Tá»•ng commits"
+        label="Tổng commits"
         value={totalCommits}
         icon={GitBranch}
         variant="indigo"
       />
       <StatsCard
-        label="Sinh viĂªn tĂ­ch cá»±c"
+        label="Sinh viên tích cực"
         value={activeStudents}
         icon={Users}
         variant="success"
       />
       <StatsCard
-        label="Äiá»ƒm trung bĂ¬nh"
+        label="Điểm trung bình"
         value={`${avgScore}/100`}
         icon={Target}
         variant="info"
@@ -38,7 +38,7 @@ export function ContributionStats({
         trend={Math.round((totalReviews / (totalPRs || 1)) * 100)}
       />
       <StatsCard
-        label="NhĂ³m rá»§i ro"
+        label="Nhóm rủi ro"
         value={riskGroupsCount}
         icon={ShieldAlert}
         variant="warning"
@@ -46,3 +46,9 @@ export function ContributionStats({
     </div>
   );
 }
+
+
+
+
+
+

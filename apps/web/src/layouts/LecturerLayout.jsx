@@ -6,31 +6,31 @@ import {
 
 const NAV = [
     {
-        label: "Tá»•ng quan",
+        label: "Tổng quan",
         items: [
             { to: "/lecturer", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
     {
-        label: "Quáº£n lĂ½",
+        label: "Quản lý",
         items: [
-            { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lá»›p cá»§a tĂ´i" },
-            { to: "/lecturer/groups", icon: Users, label: "Theo dĂµi nhĂ³m" },
-            { to: "/lecturer/projects", icon: GraduationCap, label: "Tá»•ng quan dá»± Ă¡n" },
+            { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lớp của tôi" },
+            { to: "/lecturer/groups", icon: Users, label: "Theo dõi nhóm" },
+            { to: "/lecturer/projects", icon: GraduationCap, label: "Tổng quan dự án" },
         ],
     },
     {
-        label: "Theo dĂµi",
+        label: "Theo dõi",
         items: [
-            { to: "/lecturer/contributions", icon: BarChart3, label: "ÄĂ³ng gĂ³p" },
-            { to: "/lecturer/alerts", icon: AlertTriangle, label: "Cáº£nh bĂ¡o" },
+            { to: "/lecturer/contributions", icon: BarChart3, label: "Đóng góp" },
+            { to: "/lecturer/alerts", icon: AlertTriangle, label: "Cảnh báo" },
         ],
     },
     {
-        label: "TĂ i liá»‡u",
+        label: "Tài liệu",
         items: [
             { to: "/lecturer/srs", icon: FileText, label: "SRS Reports" },
-            { to: "/lecturer/reports", icon: Download, label: "BĂ¡o cĂ¡o & Export" },
+            { to: "/lecturer/reports", icon: Download, label: "Báo cáo & Export" },
         ],
     },
 ];

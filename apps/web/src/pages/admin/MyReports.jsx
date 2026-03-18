@@ -13,8 +13,8 @@ export default function MyReports() {
 
  const handleDownload = async (reportId) => {
  try {
- info("Äang láº¥y link táº£i...");
- // ChĂºng ta call API láº¥y link thá»±c táº¿
+ info("Đang lấy link tải...");
+ // Chúng ta call API lấy link thực tế
  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/reports/${reportId}/download-link`, {
  headers: {
  'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -25,10 +25,10 @@ export default function MyReports() {
  if (data.data?.downloadUrl) {
  window.open(data.data.downloadUrl, '_blank');
  } else {
- error("BĂ¡o cĂ¡o chÆ°a sáºµn sĂ ng hoáº·c Ä‘Ă£ háº¿t háº¡n.");
+ error("Báo cáo chưa sẵn sàng hoặc đã hết hạn.");
  }
  } catch (err) {
- error("Lá»—i khi láº¥y link táº£i:" + err.message);
+ error("Lỗi khi lấy link tải:" + err.message);
  }
  };
 
@@ -49,8 +49,8 @@ export default function MyReports() {
  <ChevronLeft size={24} />
  </Button>
  <div>
- <h2 className="text-2xl font-bold text-gray-800">Lá»‹ch sá»­ BĂ¡o cĂ¡o cá»§a tĂ´i</h2>
- <p className="text-sm text-gray-500">Danh sĂ¡ch cĂ¡c bĂ¡o cĂ¡o Ä‘Ă£ Ä‘Æ°á»£c yĂªu cáº§u khá»Ÿi táº¡o</p>
+ <h2 className="text-2xl font-bold text-gray-800">Lịch sử Báo cáo của tôi</h2>
+ <p className="text-sm text-gray-500">Danh sách các báo cáo đã được yêu cầu khởi tạo</p>
  </div>
  </div>
  <Button
@@ -60,7 +60,7 @@ export default function MyReports() {
  className="rounded-xl border-gray-200"
  >
  <RefreshCw size={16} className={`mr-2 ${isFetching ? 'animate-spin' : ''}`} />
- LĂ m má»›i
+ Làm mới
  </Button>
  </div>
 
@@ -71,11 +71,11 @@ export default function MyReports() {
  <table className="w-full text-sm text-left">
  <thead className="bg-gray-50/50">
  <tr>
- <th className="px-6 py-4 text-xs font-semibold text-gray-500">TĂªn bĂ¡o cĂ¡o / ID</th>
- <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">Äá»‹nh dáº¡ng</th>
- <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">NgĂ y táº¡o</th>
- <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">Tráº¡ng thĂ¡i</th>
- <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-right">Thao tĂ¡c</th>
+ <th className="px-6 py-4 text-xs font-semibold text-gray-500">Tên báo cáo / ID</th>
+ <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">Định dạng</th>
+ <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">Ngày tạo</th>
+ <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-center">Trạng thái</th>
+ <th className="px-6 py-4 text-xs font-semibold text-gray-500 text-right">Thao tác</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -88,7 +88,7 @@ export default function MyReports() {
  </div>
  <div>
  <div className="font-semibold text-gray-800">
- {report.reportName || `BĂ¡o cĂ¡o #${report.id}`}
+ {report.reportName || `Báo cáo #${report.id}`}
  </div>
  <div className="text-[10px] text-gray-400 font-mono">
  {report.reportType}
@@ -117,17 +117,17 @@ export default function MyReports() {
  {report.status === 'COMPLETED' ? (
  <span className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-full text-xs font-medium">
  <CheckCircle size={14} />
- HoĂ n thĂ nh
+ Hoàn thành
  </span>
  ) : report.status === 'FAILED' ? (
  <span className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1 rounded-full text-xs font-medium">
  <AlertCircle size={14} />
- Tháº¥t báº¡i
+ Thất bại
  </span>
  ) : (
  <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full text-xs font-medium animate-pulse">
  <RefreshCw size={14} className="animate-spin" />
- Äang xá»­ lĂ½
+ Đang xử lý
  </span>
  )}
  </div>
@@ -141,7 +141,7 @@ export default function MyReports() {
  className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-xl font-bold"
  >
  <Download size={16} className="mr-2" />
- Táº£i vá»
+ Tải về
  </Button>
  </td>
  </tr>
@@ -151,7 +151,7 @@ export default function MyReports() {
  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
  <div className="flex flex-col items-center gap-2">
  <FileText size={40} className="text-gray-200" />
- <p>Báº¡n chÆ°a cĂ³ bĂ¡o cĂ¡o nĂ o Ä‘Æ°á»£c khá»Ÿi táº¡o.</p>
+ <p>Bạn chưa có báo cáo nào được khởi tạo.</p>
  </div>
  </td>
  </tr>
@@ -165,10 +165,16 @@ export default function MyReports() {
  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3 text-blue-700">
  <AlertCircle className="shrink-0" size={20} />
  <p className="text-xs leading-relaxed">
- <strong>LÆ°u Ă½:</strong> BĂ¡o cĂ¡o cĂ³ thá»ƒ máº¥t vĂ i phĂºt Ä‘á»ƒ há»‡ thá»‘ng xá»­ lĂ½ (táº£i dá»¯ liá»‡u tá»« GitHub/Jira).
- Sau khi tráº¡ng thĂ¡i chuyá»ƒn sang <span className="font-bold underline">HoĂ n thĂ nh</span>, báº¡n cĂ³ thá»ƒ táº£i vá» mĂ¡y.
+ <strong>Lưu ý:</strong> Báo cáo có thể mất vài phút để hệ thống xử lý (tải dữ liệu từ GitHub/Jira).
+ Sau khi trạng thái chuyển sang <span className="font-bold underline">Hoàn thành</span>, bạn có thể tải về máy.
  </p>
  </div>
  </div>
  );
 }
+
+
+
+
+
+

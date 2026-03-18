@@ -21,14 +21,14 @@ export function LecturerFilters({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Filter size={15} className="text-teal-600" />
-            <CardTitle className="text-base font-black text-gray-800">Bá»™ lá»c lá»›p há»c</CardTitle>
+            <CardTitle className="text-base font-black text-gray-800">Bộ lọc lớp học</CardTitle>
           </div>
           {selectedCourse && (
             <Button
               onClick={onManageGroups}
               className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-[11px] font-black h-9 px-5 shadow-lg shadow-teal-100 border-0 transition-all"
             >
-              <Settings2 size={14} />Quáº£n lĂ½ nhĂ³m
+              <Settings2 size={14} />Quản lý nhóm
             </Button>
           )}
         </div>
@@ -36,36 +36,42 @@ export function LecturerFilters({
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SelectField
-            label="MĂ´n há»c"
+            label="Môn học"
             value={selectedSubject}
             onChange={e => setSelectedSubject(e.target.value)}
           >
-            <option value="">â€” Chá»n mĂ´n há»c â€”</option>
-            {subjects.map(s => <option key={s.id} value={s.id}>{s.code} â€“ {s.name}</option>)}
+            <option value="">— Chọn môn học —</option>
+            {subjects.map(s => <option key={s.id} value={s.id}>{s.code} – {s.name}</option>)}
           </SelectField>
 
           <SelectField
-            label="Lá»›p há»c"
+            label="Lớp học"
             value={selectedCourse}
             onChange={e => setSelectedCourse(e.target.value)}
             disabled={!selectedSubject || courses.length === 0}
           >
-            <option value="">â€” Chá»n lá»›p há»c â€”</option>
+            <option value="">— Chọn lớp học —</option>
             {courses.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
           </SelectField>
 
           <SelectField
-            label="Bá»™ lá»c nhanh"
+            label="Bộ lọc nhanh"
             value={filter}
             onChange={e => setFilter(e.target.value)}
             disabled={!selectedCourse}
           >
-            <option value="all">Táº¥t cáº£ nhĂ³m</option>
-            <option value="inactive-students">Ăt commit</option>
-            <option value="inactive-groups">ChÆ°a hoĂ n thĂ nh</option>
+            <option value="all">Tất cả nhóm</option>
+            <option value="inactive-students">Ít commit</option>
+            <option value="inactive-groups">Chưa hoàn thành</option>
           </SelectField>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+
+
+
+
+

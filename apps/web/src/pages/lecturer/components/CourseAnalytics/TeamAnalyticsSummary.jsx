@@ -13,9 +13,9 @@ export function TeamAnalyticsSummary({
  <Card className="border border-gray-100 shadow-sm rounded-[40px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-6 px-10 flex flex-row items-center justify-between">
  <CardTitle className="text-sm font-black text-gray-800 flex items-center gap-2">
- <Sparkles size={16} className="text-amber-500" /> Xáº¿p háº¡ng hiá»‡u quáº£ nhĂ³m
+ <Sparkles size={16} className="text-amber-500" /> Xếp hạng hiệu quả nhóm
  </CardTitle>
- <Badge className="bg-teal-50 text-teal-700 border-teal-100 rounded-lg text-[9px] font-black">đŸ”¥ Top 5</Badge>
+ <Badge className="bg-teal-50 text-teal-700 border-teal-100 rounded-lg text-[9px] font-black">🔥 Top 5</Badge>
  </CardHeader>
  <CardContent className="p-0">
  <div className="divide-y divide-gray-50">
@@ -42,7 +42,7 @@ export function TeamAnalyticsSummary({
  </div>
  </div>
  ))}
- {courseRankings.length === 0 && <div className="py-24 text-center text-gray-300 font-black text-xs opacity-40">ChÆ°a cĂ³ dá»¯ liá»‡u xáº¿p háº¡ng</div>}
+ {courseRankings.length === 0 && <div className="py-24 text-center text-gray-300 font-black text-xs opacity-40">Chưa có dữ liệu xếp hạng</div>}
  </div>
  </CardContent>
  </Card>
@@ -50,7 +50,7 @@ export function TeamAnalyticsSummary({
  <Card className="border border-gray-100 shadow-sm rounded-[40px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-6 px-10 flex flex-row items-center justify-between">
  <CardTitle className="text-sm font-black text-gray-800 flex items-center gap-2">
- <AlertTriangle size={16} className="text-red-500" /> NhĂ³m cáº§n há»— trá»£ ngay
+ <AlertTriangle size={16} className="text-red-500" /> Nhóm cần hỗ trợ ngay
  </CardTitle>
  <Badge className="bg-red-50 text-red-700 border-red-100 rounded-lg text-[9px] font-black">Alerts</Badge>
  </CardHeader>
@@ -64,16 +64,16 @@ export function TeamAnalyticsSummary({
  </div>
  <div>
  <p className="font-black text-gray-800 tracking-tight text-sm">{t.name || t.teamName}</p>
- <p className="text-[10px] font-black text-red-400 mt-1.5 flex items-center gap-1"><Clock size={12} /> {t.reason || 'KhĂ´ng cĂ³ hoáº¡t Ä‘á»™ng commit > 7 ngĂ y'}</p>
+ <p className="text-[10px] font-black text-red-400 mt-1.5 flex items-center gap-1"><Clock size={12} /> {t.reason || 'Không có hoạt động commit > 7 ngày'}</p>
  </div>
  </div>
- <Button variant="outline" className="h-11 px-6 text-[10px] font-black text-red-600 hover:bg-red-50 border-red-100 rounded-2xl shadow-sm">Nháº¯c nhá»Ÿ</Button>
+ <Button variant="outline" className="h-11 px-6 text-[10px] font-black text-red-600 hover:bg-red-50 border-red-100 rounded-2xl shadow-sm">Nhắc nhở</Button>
  </div>
  ))}
  {courseInactiveTeams.length === 0 && (
  <div className="py-24 text-center">
  <CheckCircle size={40} className="mx-auto text-emerald-100 mb-4" />
- <p className="text-xs font-black text-gray-300">Táº¥t cáº£ cĂ¡c nhĂ³m Ä‘á»u hoáº¡t Ä‘á»™ng tá»‘t</p>
+ <p className="text-xs font-black text-gray-300">Tất cả các nhóm đều hoạt động tốt</p>
  </div>
  )}
  </div>
@@ -82,3 +82,9 @@ export function TeamAnalyticsSummary({
  </div>
  );
 }
+
+
+
+
+
+

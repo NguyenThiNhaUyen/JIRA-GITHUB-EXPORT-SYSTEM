@@ -12,7 +12,7 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 [ApiController]
 [Route("api/projects")]
 [Authorize]
-public class ProjectsController : ApiControllerBase
+public class ProjectsController : ControllerBase
 {
     private readonly IProjectCoreService _coreService;
     private readonly IProjectTeamService _teamService;
@@ -34,12 +34,17 @@ public class ProjectsController : ApiControllerBase
         _logger = logger;
     }
 
-
+    private long GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return long.Parse(userIdClaim!);
+    }
 
     /// <summary>
     /// Create a new project
     /// </summary>
     [HttpPost]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER,STUDENT")] // Allow student leaders or lecturers/admins
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
     {
@@ -85,6 +90,7 @@ public class ProjectsController : ApiControllerBase
     /// Update a project (Leader/Admin only)
     /// </summary>
     [HttpPut("{projectId}")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER,STUDENT")] // Leader/Lecturer/Admin
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateProject(long projectId, [FromBody] UpdateProjectRequest request)
     {
@@ -108,6 +114,7 @@ public class ProjectsController : ApiControllerBase
     /// Add team member to project
     /// </summary>
     [HttpPost("{projectId}/members")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER,STUDENT")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddTeamMember(long projectId, [FromBody] AddTeamMemberRequest request)
     {
@@ -126,7 +133,11 @@ public class ProjectsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Team member removed successfully"));
     }
 
+    /// <summary>
+    /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
+    /// </summary>
     [HttpPost("{projectId}/integrations")]
+    [HttpPut("{projectId}/integration")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
@@ -135,7 +146,11 @@ public class ProjectsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Integration submitted. Awaiting lecturer approval."));
     }
 
+    /// <summary>
+    /// Approve integration (Lecturer only)
+    /// </summary>
     [HttpPost("{projectId}/integrations/approve")]
+    [HttpPut("{projectId}/approve-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveIntegration(long projectId)
@@ -145,7 +160,11 @@ public class ProjectsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Integration approved. Sync will begin shortly."));
     }
 
+    /// <summary>
+    /// Reject integration (Lecturer only)
+    /// </summary>
     [HttpPost("{projectId}/integrations/reject")]
+    [HttpPut("{projectId}/reject-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectIntegration(long projectId, [FromBody] RejectIntegrationRequest request)
@@ -254,5 +273,16 @@ public class ProjectsController : ApiControllerBase
     {
         var result = await _dashboardService.GetProjectAgingWipAsync(projectId, limit);
         return Ok(ApiResponse<AgingWipResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get project cycle time metrics
+    /// </summary>
+    [HttpGet("{projectId}/cycle-time")]
+    [ProducesResponseType(typeof(ApiResponse<CycleTimeResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCycleTime(long projectId)
+    {
+        var result = await _dashboardService.GetProjectCycleTimeAsync(projectId);
+        return Ok(ApiResponse<CycleTimeResponse>.SuccessResponse(result));
     }
 }

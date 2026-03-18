@@ -77,7 +77,7 @@ export function useLecturerDashboard() {
 
   const alertsList = useMemo(() => (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
     id: a.id,
-    name: a.groupName || "Há»‡ thá»‘ng",
+    name: a.groupName || "Hệ thống",
     msg: a.message,
     severity: a.severity?.toLowerCase() === "high" ? "error" : "warning"
   })), [alertsData]);
@@ -101,7 +101,7 @@ export function useLecturerDashboard() {
       id: act.id,
       icon,
       color,
-      msg: act.message || act.description || 'Hoáº¡t Ä‘á»™ng áº©n danh',
+      msg: act.message || act.description || 'Hoạt động ẩn danh',
       time: act.time || new Date(act.timestamp || act.createdAt).toLocaleDateString("vi-VN")
     };
   }), [activityLogsData]);
@@ -109,29 +109,29 @@ export function useLecturerDashboard() {
   const handleApprovePending = async (groupId) => {
     try {
       await approveIntMutation.mutateAsync(groupId);
-      success(`ÄĂ£ phĂª duyá»‡t tĂ­ch há»£p cá»§a nhĂ³m`);
+      success(`Đã phê duyệt tích hợp của nhóm`);
     } catch (err) {
-      showError(err.message || `Lá»—i phĂª duyá»‡t`);
+      showError(err.message || `Lỗi phê duyệt`);
     }
   };
 
   const handleRejectPending = async (projectId) => {
-    const reason = prompt("Nháº­p lĂ½ do tá»« chá»‘i tĂ­ch há»£p:");
+    const reason = prompt("Nhập lý do từ chối tích hợp:");
     if (!reason) return;
     try {
       await rejectIntMutation.mutateAsync({ projectId, reason });
-      success(`ÄĂ£ tá»« chá»‘i tĂ­ch há»£p`);
+      success(`Đã từ chối tích hợp`);
     } catch (err) {
-      showError(err.message || `Lá»—i khi tá»« chá»‘i`);
+      showError(err.message || `Lỗi khi từ chối`);
     }
   };
 
   const handleResolveAlert = async (alertId) => {
     try {
       await resolveAlertMutation.mutateAsync(alertId);
-      success("ÄĂ£ Ä‘Ă¡nh dáº¥u cáº£nh bĂ¡o Ä‘Ă£ hoĂ n táº¥t");
+      success("Đã đánh dấu cảnh báo đã hoàn tất");
     } catch (err) {
-      showError(err.message || "Xá»­ lĂ½ cáº£nh bĂ¡o tháº¥t báº¡i");
+      showError(err.message || "Xử lý cảnh báo thất bại");
     }
   };
 
@@ -159,3 +159,9 @@ export function useLecturerDashboard() {
     handleResolveAlert
   };
 }
+
+
+
+
+
+

@@ -90,15 +90,15 @@ export default function AdminReports() {
  }
 
  await mutation.mutateAsync(params);
- success("ÄĂ£ báº¯t Ä‘áº§u táº¡o bĂ¡o cĂ¡o! Vui lĂ²ng kiá»ƒm tra danh sĂ¡ch bĂ¡o cĂ¡o sau vĂ i phĂºt.");
+ success("Đã bắt đầu tạo báo cáo! Vui lòng kiểm tra danh sách báo cáo sau vài phút.");
  } catch (err) {
- showError("KhĂ´ng thá»ƒ táº¡o bĂ¡o cĂ¡o. Vui lĂ²ng thá»­ láº¡i sau.");
+ showError("Không thể tạo báo cáo. Vui lòng thử lại sau.");
  }
  };
 
  const handleExport = () => {
  try {
- const headers = ["MĂ£ lá»›p","TĂªn lá»›p","Há»c ká»³","Sinh viĂªn","Dá»± Ă¡n","Tráº¡ng thĂ¡i"];
+ const headers = ["Mã lớp","Tên lớp","Học kỳ","Sinh viên","Dự án","Trạng thái"];
  const rows = allCourses.map(c => [
  c.code,
  c.name,
@@ -117,9 +117,9 @@ export default function AdminReports() {
  document.body.appendChild(link);
  link.click();
  document.body.removeChild(link);
- success("ÄĂ£ xuáº¥t bĂ¡o cĂ¡o tá»•ng há»£p thĂ nh cĂ´ng!");
+ success("Đã xuất báo cáo tổng hợp thành công!");
  } catch (err) {
- showError("KhĂ´ng thá»ƒ xuáº¥t bĂ¡o cĂ¡o.");
+ showError("Không thể xuất báo cáo.");
  }
  };
 
@@ -128,7 +128,7 @@ export default function AdminReports() {
  <div className="flex-1 flex items-center justify-center p-8">
  <div className="text-center">
  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
- <p className="text-gray-500 font-black text-xs">PhĂ¢n tĂ­ch dá»¯ liá»‡u...</p>
+ <p className="text-gray-500 font-black text-xs">Phân tích dữ liệu...</p>
  </div>
  </div>
  );
@@ -137,41 +137,41 @@ export default function AdminReports() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Trung tĂ¢m BĂ¡o cĂ¡o"
- subtitle="Tá»•ng há»£p dá»¯ liá»‡u, thá»‘ng kĂª hiá»‡u suáº¥t vĂ  xuáº¥t cĂ¡c bĂ¡o cĂ¡o chuyĂªn sĂ¢u."
- breadcrumb={["Admin","BĂ¡o cĂ¡o"]}
+ title="Trung tâm Báo cáo"
+ subtitle="Tổng hợp dữ liệu, thống kê hiệu suất và xuất các báo cáo chuyên sâu."
+ breadcrumb={["Admin","Báo cáo"]}
  actions={[
  <Button key="print" variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-xs font-bold hover:bg-gray-50 transition-all">
- <Printer size={16} className="mr-2" /> In bĂ¡o cĂ¡o
+ <Printer size={16} className="mr-2" /> In báo cáo
  </Button>,
  <Button key="export" onClick={handleExport} className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white h-11 px-6 text-xs font-bold shadow-lg shadow-teal-100 border-0">
- <Download size={16} className="mr-2" /> Export Tá»•ng há»£p
+ <Download size={16} className="mr-2" /> Export Tổng hợp
  </Button>
  ]}
  />
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
- <StatsCard label="Tá»•ng sá»‘ lá»›p" value={stats.totalCourses} icon={BookOpen} variant="indigo" />
- <StatsCard label="Lá»›p Ä‘ang má»Ÿ" value={stats.activeCourses} icon={CheckCircle} variant="success" />
- <StatsCard label="Tá»•ng sinh viĂªn" value={stats.totalStudents} icon={Users} variant="info" />
- <StatsCard label="Dá»± Ă¡n/NhĂ³m" value={stats.totalProjects} icon={FolderKanban} variant="warning" />
+ <StatsCard label="Tổng số lớp" value={stats.totalCourses} icon={BookOpen} variant="indigo" />
+ <StatsCard label="Lớp đang mở" value={stats.activeCourses} icon={CheckCircle} variant="success" />
+ <StatsCard label="Tổng sinh viên" value={stats.totalStudents} icon={Users} variant="info" />
+ <StatsCard label="Dự án/Nhóm" value={stats.totalProjects} icon={FolderKanban} variant="warning" />
  </div>
 
  {/* Filters */}
  <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
  <CardContent className="p-6">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <SelectField label="Há»c ká»³" value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
- <option value="">Táº¥t cáº£ há»c ká»³</option>
+ <SelectField label="Học kỳ" value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
+ <option value="">Tất cả học kỳ</option>
  {semesters.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
  </SelectField>
- <SelectField label="Lá»›p há»c" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
- <option value="">Táº¥t cáº£ lá»›p há»c</option>
+ <SelectField label="Lớp học" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)}>
+ <option value="">Tất cả lớp học</option>
  {allCourses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
  </SelectField>
  <div className="flex items-end">
- <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-black shadow-lg shadow-teal-100 border-0" onClick={() => success("ÄĂ£ cáº­p nháº­t bá»™ lá»c")}>
- <Filter size={16} className="mr-2" /> Ăp dá»¥ng lá»c
+ <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-black shadow-lg shadow-teal-100 border-0" onClick={() => success("Đã cập nhật bộ lọc")}>
+ <Filter size={16} className="mr-2" /> Áp dụng lọc
  </Button>
  </div>
  </div>
@@ -186,7 +186,7 @@ export default function AdminReports() {
  <CardTitle className="text-base font-black text-gray-800 flex items-center gap-2">
  <Activity size={18} className="text-blue-500" /> Commit Trends
  </CardTitle>
- <Badge variant="outline" className="text-[10px] font-black px-3 py-1 bg-gray-50">30 NgĂ y qua</Badge>
+ <Badge variant="outline" className="text-[10px] font-black px-3 py-1 bg-gray-50">30 Ngày qua</Badge>
  </CardHeader>
  <CardContent className="p-8">
  <div className="h-64">
@@ -199,7 +199,7 @@ export default function AdminReports() {
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-6 flex flex-row items-center justify-between">
  <CardTitle className="text-base font-black text-gray-800 flex items-center gap-2">
- <FolderKanban size={18} className="text-indigo-500" /> PhĂ¢n bá»• dá»± Ă¡n
+ <FolderKanban size={18} className="text-indigo-500" /> Phân bổ dự án
  </CardTitle>
  </CardHeader>
  <CardContent className="p-8">
@@ -213,20 +213,20 @@ export default function AdminReports() {
  {/* Detailed Tables */}
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-6 px-8 flex flex-row items-center justify-between">
- <CardTitle className="text-base font-black text-gray-800">ThĂ´ng tin Lá»›p há»c & BĂ¡o cĂ¡o</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">Thông tin Lớp học & Báo cáo</CardTitle>
  <Button variant="outline" className="rounded-xl border-gray-200 text-[10px] font-black h-9" onClick={() => navigate('/admin/my-reports')}>
- LS BĂ¡o cĂ¡o
+ LS Báo cáo
  </Button>
  </CardHeader>
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
  <tr className="bg-gray-50/50">
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100">Lá»›p há»c</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Sinh viĂªn</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Dá»± Ă¡n</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Tráº¡ng thĂ¡i</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Xuáº¥t bĂ¡o cĂ¡o</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100">Lớp học</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Sinh viên</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Dự án</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Trạng thái</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Xuất báo cáo</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -255,7 +255,7 @@ export default function AdminReports() {
  variant="ghost"
  className="h-9 w-9 p-0 rounded-xl hover:bg-orange-50 text-orange-600 shadow-sm border border-transparent hover:border-orange-100"
  onClick={() => handleGenerateReport('COMMIT', course.id)}
- title="BĂ¡o cĂ¡o Commit"
+ title="Báo cáo Commit"
  >
  <Activity size={16} />
  </Button>
@@ -264,7 +264,7 @@ export default function AdminReports() {
  variant="ghost"
  className="h-9 w-9 p-0 rounded-xl hover:bg-indigo-50 text-indigo-600 shadow-sm border border-transparent hover:border-indigo-100"
  onClick={() => handleGenerateReport('ROSTER', course.id)}
- title="BĂ¡o cĂ¡o Team Roster"
+ title="Báo cáo Team Roster"
  >
  <Users size={16} />
  </Button>
@@ -273,7 +273,7 @@ export default function AdminReports() {
  variant="ghost"
  className="h-9 w-9 p-0 rounded-xl hover:bg-emerald-50 text-emerald-600 shadow-sm border border-transparent hover:border-emerald-100"
  onClick={() => handleGenerateReport('SRS', course.id)}
- title="Xuáº¥t SRS ISO"
+ title="Xuất SRS ISO"
  >
  <FileText size={16} />
  </Button>
@@ -282,7 +282,7 @@ export default function AdminReports() {
  ))}
  {filteredCourses.length === 0 && (
  <tr>
- <td colSpan={5} className="py-20 text-center text-gray-400 font-black text-xs">KhĂ´ng cĂ³ dá»¯ liá»‡u lá»›p há»c phĂ¹ há»£p</td>
+ <td colSpan={5} className="py-20 text-center text-gray-400 font-black text-xs">Không có dữ liệu lớp học phù hợp</td>
  </tr>
  )}
  </tbody>
@@ -292,3 +292,9 @@ export default function AdminReports() {
  </div>
  );
 }
+
+
+
+
+
+

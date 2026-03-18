@@ -11,7 +11,7 @@ import {
 } from "../api/reportApi.js";
 
 /**
- * Hook Mutation cho: Táº O Commit Statistics
+ * Hook Mutation cho: TẠO Commit Statistics
  */
 export function useGenerateCommitStats() {
     return useMutation({
@@ -20,7 +20,7 @@ export function useGenerateCommitStats() {
 }
 
 /**
- * Hook Mutation cho: Táº O Team Roster
+ * Hook Mutation cho: TẠO Team Roster
  */
 export function useGenerateTeamRoster() {
     return useMutation({
@@ -29,7 +29,7 @@ export function useGenerateTeamRoster() {
 }
 
 /**
- * Hook Mutation cho: Táº O Activity Summary
+ * Hook Mutation cho: TẠO Activity Summary
  */
 export function useGenerateActivitySummary() {
     return useMutation({
@@ -38,7 +38,7 @@ export function useGenerateActivitySummary() {
 }
 
 /**
- * Hook Mutation cho: Táº O SRS Report (Iso29148 Jira)
+ * Hook Mutation cho: TẠO SRS Report (Iso29148 Jira)
  */
 export function useGenerateSrs() {
     return useMutation({
@@ -47,7 +47,7 @@ export function useGenerateSrs() {
 }
 
 /**
- * Hook Query cho: Láº¥y link download
+ * Hook Query cho: Lấy link download
  */
 export function useGetReportDownloadLink(reportId, options = {}) {
     return useQuery({
@@ -70,7 +70,7 @@ export function useGetMyReports(options = {}) {
 }
 
 /**
- * Hook Query cho: Láº¥y danh sĂ¡ch bĂ¡o cĂ¡o há»— trá»£ filter
+ * Hook Query cho: Lấy danh sách báo cáo hỗ trợ filter
  */
 export function useGetReports(filters = {}, options = {}) {
     return useQuery({
@@ -97,7 +97,7 @@ export function useUpdateReportStatus() {
 }
 
 /**
- * Hook Queries cho: Get Reports cá»§a nhiá»u Project cĂ¹ng lĂºc (Legacy - nĂªn dĂ¹ng useGetReports)
+ * Hook Queries cho: Get Reports của nhiều Project cùng lúc (Legacy - nên dùng useGetReports)
  */
 export function useCourseProjectReports(projectIds, type) {
     return useQueries({
@@ -108,3 +108,9 @@ export function useCourseProjectReports(projectIds, type) {
         }))
     });
 }
+
+
+
+
+
+

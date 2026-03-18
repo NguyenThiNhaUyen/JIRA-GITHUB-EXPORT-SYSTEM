@@ -6,13 +6,13 @@ export function LecturerStats({ stats }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatsCard
-        label="Lá»›p há»c"
+        label="Lớp học"
         value={stats.courses}
         icon={BookOpen}
         variant="indigo"
       />
       <StatsCard
-        label="Sinh viĂªn"
+        label="Sinh viên"
         value={stats.students}
         icon={Users}
         variant="info"
@@ -24,7 +24,7 @@ export function LecturerStats({ stats }) {
         variant="success"
       />
       <StatsCard
-        label="Cáº§n chĂº Ă½"
+        label="Cần chú ý"
         value={stats.alerts}
         icon={AlertTriangle}
         variant="warning"
@@ -32,3 +32,9 @@ export function LecturerStats({ stats }) {
     </div>
   );
 }
+
+
+
+
+
+

@@ -75,10 +75,10 @@ public class GitHubClient : IGitHubClient
             foreach (var gitHubCommit in commits)
             {
                 // Check if commit already exists
-                var existing = await unitOfWork.GitHubCommits.FirstOrDefaultAsync(c => c.CommitSha == gitHubCommit.Sha);
+                var existing = await unitOfWork.GitHubCommits.FirstOrDefaultAsync(c => c.commit_sha == gitHubCommit.Sha);
                 if (existing != null) continue;
 
-                // Sync User if present
+                // Sync user if present
                 long? authorId = null;
                 if (gitHubCommit.Author != null)
                 {
@@ -91,16 +91,16 @@ public class GitHubClient : IGitHubClient
                     committerId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Committer);
                 }
 
-                var commit = new GithubCommit
+                var commit = new github_commit
                 {
-                    RepoId = repositoryId,
-                    CommitSha = gitHubCommit.Sha,
-                    Message = gitHubCommit.Commit.Message,
-                    AuthorGithubUserId = authorId,
-                    CommitterGithubUserId = committerId,
-                    CommittedAt = gitHubCommit.Commit.Committer.Date,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    repo_id = repositoryId,
+                    commit_sha = gitHubCommit.Sha,
+                    message = gitHubCommit.Commit.Message,
+                    author_github_user_id = authorId,
+                    committer_github_user_id = committerId,
+                    committed_at = gitHubCommit.Commit.Committer.Date,
+                    created_at = DateTime.UtcNow,
+                    updated_at = DateTime.UtcNow
                 };
 
                 unitOfWork.GitHubCommits.Add(commit);
@@ -144,7 +144,7 @@ public class GitHubClient : IGitHubClient
 
             foreach (var gitHubPr in prs)
             {
-                var existing = await unitOfWork.GitHubPullRequests.FirstOrDefaultAsync(p => p.RepoId == repositoryId && p.PrNumber == gitHubPr.Number);
+                var existing = await unitOfWork.GitHubPullRequests.FirstOrDefaultAsync(p => p.repo_id == repositoryId && p.pr_number == gitHubPr.Number);
                 
                 long? authorId = null;
                 if (gitHubPr.User != null)
@@ -155,27 +155,27 @@ public class GitHubClient : IGitHubClient
                 if (existing != null)
                 {
                     // Update existing PR
-                    existing.Title = gitHubPr.Title;
-                    existing.State = gitHubPr.State;
-                    existing.UpdatedAt = gitHubPr.UpdatedAt;
-                    existing.ClosedAt = gitHubPr.ClosedAt;
-                    existing.MergedAt = gitHubPr.MergedAt;
+                    existing.title = gitHubPr.Title;
+                    existing.state = gitHubPr.State;
+                    existing.updated_at = gitHubPr.UpdatedAt;
+                    existing.closed_at = gitHubPr.ClosedAt;
+                    existing.merged_at = gitHubPr.MergedAt;
                     unitOfWork.GitHubPullRequests.Update(existing);
                 }
                 else
                 {
                     // Create new PR
-                    var pr = new GithubPullRequest
+                    var pr = new github_pull_request
                     {
-                        RepoId = repositoryId,
-                        PrNumber = (int)gitHubPr.Number,
-                        Title = gitHubPr.Title,
-                        State = gitHubPr.State,
-                        AuthorGithubUserId = authorId,
-                        CreatedAt = gitHubPr.CreatedAt,
-                        UpdatedAt = gitHubPr.UpdatedAt,
-                        ClosedAt = gitHubPr.ClosedAt,
-                        MergedAt = gitHubPr.MergedAt
+                        repo_id = repositoryId,
+                        pr_number = (int)gitHubPr.Number,
+                        title = gitHubPr.Title,
+                        state = gitHubPr.State,
+                        author_github_user_id = authorId,
+                        created_at = gitHubPr.CreatedAt,
+                        updated_at = gitHubPr.UpdatedAt,
+                        closed_at = gitHubPr.ClosedAt,
+                        merged_at = gitHubPr.MergedAt
                     };
                     unitOfWork.GitHubPullRequests.Add(pr);
                 }
@@ -247,20 +247,22 @@ public class GitHubClient : IGitHubClient
 
     private async Task<long> EnsureGitHubUserAsync(IUnitOfWork unitOfWork, GitHubUser gitHubUser)
     {
-        var dbUser = await unitOfWork.GitHubUsers.FirstOrDefaultAsync(u => u.GithubUserId == gitHubUser.Id);
-        if (dbUser != null) return dbUser.Id;
+        var dbUser = await unitOfWork.GitHubUsers.FirstOrDefaultAsync(u => u.github_user_id == gitHubUser.Id);
+        if (dbUser != null) return dbUser.id;
 
-        dbUser = new GithubUser
+        dbUser = new github_user
         {
-            GithubUserId = gitHubUser.Id,
-            Login = gitHubUser.Login,
-            UserType = gitHubUser.Type,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            github_user_id = gitHubUser.Id,
+            login = gitHubUser.Login,
+            user_type = gitHubUser.Type,
+            created_at = DateTime.UtcNow,
+            updated_at = DateTime.UtcNow
         };
 
         unitOfWork.GitHubUsers.Add(dbUser);
         await unitOfWork.SaveChangesAsync();
-        return dbUser.Id;
+        return dbUser.id;
     }
 }
+
+

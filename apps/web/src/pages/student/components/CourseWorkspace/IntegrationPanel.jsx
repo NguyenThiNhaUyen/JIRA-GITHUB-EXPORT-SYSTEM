@@ -11,11 +11,11 @@ export function IntegrationPanel({ group, isLeader, githubInput, setGithubInput,
  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center shadow-inner">
  <Link2 size={24} className="text-indigo-600" />
  </div>
- TĂ­ch há»£p Jira & GitHub
+ Tích hợp Jira & GitHub
  </CardTitle>
  <div className="flex items-center gap-3">
  <Badge variant="outline" className={`text-[9px] font-black px-5 py-2 rounded-full border shadow-sm tracking-[0.2em] ${group.integration?.syncStatus === 'SYNCED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-white text-gray-400 border-gray-100'}`}>
- {group.integration?.syncStatus ||"CHÆ¯A Äá»’NG Bá»˜"}
+ {group.integration?.syncStatus ||"CHƯA ĐỒNG BỘ"}
  </Badge>
  </div>
  </CardHeader>
@@ -62,7 +62,7 @@ export function IntegrationPanel({ group, isLeader, githubInput, setGithubInput,
  disabled={isLinking}
  className="bg-slate-900 hover:bg-black text-white rounded-[32px] h-20 px-16 text-[12px] font-black tracking-[0.3em] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.1)] transition-all active:scale-95 disabled:opacity-50 border-0 group/save hover:scale-[1.02] font-display"
  >
- {isLinking ? <RefreshCw className="animate-spin mr-3" size={24}/> : <CheckCircle size={24} className="mr-3 group-hover/save:scale-110 transition-transform" />} Cáº­p nháº­t liĂªn káº¿t tĂ­ch há»£p
+ {isLinking ? <RefreshCw className="animate-spin mr-3" size={24}/> : <CheckCircle size={24} className="mr-3 group-hover/save:scale-110 transition-transform" />} Cập nhật liên kết tích hợp
  </Button>
  </div>
  )}
@@ -70,3 +70,9 @@ export function IntegrationPanel({ group, isLeader, githubInput, setGithubInput,
  </Card>
  );
 }
+
+
+
+
+
+

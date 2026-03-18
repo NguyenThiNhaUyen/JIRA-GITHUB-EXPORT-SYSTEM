@@ -29,3 +29,10 @@ public class RegisterRequest
     public string? OfficeEmail { get; set; }
     public string? LecturerDepartment { get; set; }
 }
+
+
+
+
+
+
+

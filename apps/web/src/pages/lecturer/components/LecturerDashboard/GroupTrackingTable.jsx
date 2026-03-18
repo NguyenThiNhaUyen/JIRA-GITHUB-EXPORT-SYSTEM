@@ -11,19 +11,19 @@ export function GroupTrackingTable({ groups, navigate, success }) {
  <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg">
  <LayoutList size={18} className="text-white" />
  </div>
- <CardTitle className="text-sm font-black text-gray-800 leading-none">Báº£ng theo dĂµi nhĂ³m</CardTitle>
+ <CardTitle className="text-sm font-black text-gray-800 leading-none">Bảng theo dõi nhóm</CardTitle>
  </div>
- <Badge className="bg-teal-50 border-teal-100 text-teal-700 rounded-full py-1.5 px-4 font-black text-[10px]">{groups.length} NHĂ“M</Badge>
+ <Badge className="bg-teal-50 border-teal-100 text-teal-700 rounded-full py-1.5 px-4 font-black text-[10px]">{groups.length} NHÓM</Badge>
  </CardHeader>
  <CardContent className="p-0">
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead className="bg-gray-50/50">
  <tr>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100">NhĂ³m & Äá» tĂ i</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100">Cáº¥u hĂ¬nh Link</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100">ThĂ nh viĂªn</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-right border-b border-gray-100">HĂ nh Ä‘á»™ng</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100">Nhóm & Đề tài</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100">Cấu hình Link</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100">Thành viên</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-right border-b border-gray-100">Hành động</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -31,7 +31,7 @@ export function GroupTrackingTable({ groups, navigate, success }) {
  <tr key={g.id} className="hover:bg-teal-50/10 transition-all border-none group">
  <td className="py-6 px-8">
  <p className="font-black text-gray-800 text-sm tracking-tight">{g.name}</p>
- <p className="text-[10px] text-gray-400 font-bold mt-1 truncate max-w-[200px]">{g.topic || g.description ||"ChÆ°a Ä‘Äƒng kĂ½ Ä‘á» tĂ i"}</p>
+ <p className="text-[10px] text-gray-400 font-bold mt-1 truncate max-w-[200px]">{g.topic || g.description ||"Chưa đăng ký đề tài"}</p>
  </td>
  <td className="py-6 px-8 text-center">
  <div className="flex justify-center gap-2">
@@ -52,7 +52,7 @@ export function GroupTrackingTable({ groups, navigate, success }) {
  <td className="py-6 px-8 text-right">
  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
  <Button onClick={() => navigate(`/lecturer/group/${g.id}`)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-teal-100 hover:text-teal-600 shadow-sm"><Eye size={16}/></Button>
- <Button onClick={() => success(`ÄĂ£ nháº¯c nhá»Ÿ nhĂ³m ${g.name}`)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-amber-100 hover:text-amber-600 shadow-sm"><Bell size={16}/></Button>
+ <Button onClick={() => success(`Đã nhắc nhở nhóm ${g.name}`)} variant="ghost" size="icon" className="w-10 h-10 rounded-2xl bg-white border border-transparent hover:border-amber-100 hover:text-amber-600 shadow-sm"><Bell size={16}/></Button>
  </div>
  </td>
  </tr>
@@ -70,7 +70,13 @@ function StatusBadge({ label, active }) {
  <span className={`px-2 py-0.5 rounded-lg font-black text-[9px] border transition-all ${
  active ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-gray-50 border-gray-100 text-gray-300'
  }`}>
- {label} {active ? 'âœ“' : 'âœ—'}
+ {label} {active ? '✓' : '✗'}
  </span>
  );
 }
+
+
+
+
+
+

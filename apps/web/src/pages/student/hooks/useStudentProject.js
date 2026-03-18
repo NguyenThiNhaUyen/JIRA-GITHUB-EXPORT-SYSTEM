@@ -46,20 +46,20 @@ export function useStudentProject(projectId) {
 
     const handleSync = () => {
         syncCommits(projectId, {
-            onSuccess: () => success("Äá»“ng bá»™ dá»¯ liá»‡u mĂ£ nguá»“n thĂ nh cĂ´ng!"),
-            onError: () => showError("Lá»—i Ä‘á»“ng bá»™. Vui lĂ²ng kiá»ƒm tra láº¡i URL Repo.")
+            onSuccess: () => success("Đồng bộ dữ liệu mã nguồn thành công!"),
+            onError: () => showError("Lỗi đồng bộ. Vui lòng kiểm tra lại URL Repo.")
         });
     };
 
     const handleSrsSubmit = () => {
-        if (!uploadFile) return showError("Vui lĂ²ng chá»n file tĂ i liá»‡u");
+        if (!uploadFile) return showError("Vui lòng chọn file tài liệu");
         submitSrs({ projectId, file: uploadFile }, {
             onSuccess: () => {
-                success("ÄĂ£ ná»™p SRS thĂ nh cĂ´ng!");
+                success("Đã nộp SRS thành công!");
                 setIsUploadModalOpen(false);
                 setUploadFile(null);
             },
-            onError: () => showError("Ná»™p tháº¥t báº¡i. Vui lĂ²ng thá»­ láº¡i.")
+            onError: () => showError("Nộp thất bại. Vui lòng thử lại.")
         });
     };
 
@@ -91,3 +91,9 @@ export function useStudentProject(projectId) {
         handleSrsSubmit
     };
 }
+
+
+
+
+
+

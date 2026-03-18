@@ -15,7 +15,7 @@ export function SrsReviewPanel({
  <div className="xl:col-span-4 space-y-8">
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white sticky top-8">
  <CardHeader className="border-b border-gray-50 py-6 px-8 flex justify-between items-center">
- <CardTitle className="text-xs font-black text-gray-400">Chi tiáº¿t tháº©m Ä‘á»‹nh</CardTitle>
+ <CardTitle className="text-xs font-black text-gray-400">Chi tiết thẩm định</CardTitle>
  {selectedSrs?.fileUrl && (
  <Button variant="outline" onClick={() => window.open(selectedSrs.fileUrl, '_blank')} className="rounded-xl h-9 px-4 text-[9px] font-black border-teal-100 text-teal-600 hover:bg-teal-50">
  <ExternalLink size={12} className="mr-1.5" /> Xem File
@@ -26,7 +26,7 @@ export function SrsReviewPanel({
  {!selectedSrs ? (
  <div className="py-20 text-center opacity-30">
  <Eye size={48} className="mx-auto mb-4" />
- <p className="text-[10px] font-black tracking-[0.2em]">Chá»n má»™t báº£n ná»™p Ä‘á»ƒ review</p>
+ <p className="text-[10px] font-black tracking-[0.2em]">Chọn một bản nộp để review</p>
  </div>
  ) : (
  <>
@@ -41,14 +41,14 @@ export function SrsReviewPanel({
 
  <div className="p-5 rounded-[24px] bg-gray-50 border border-gray-100 space-y-4">
  <div className="flex justify-between items-center">
- <span className="text-[10px] font-black text-gray-400">Báº£n Ä‘áº·c táº£:</span>
+ <span className="text-[10px] font-black text-gray-400">Bản đặc tả:</span>
  <span className="text-[10px] font-black text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-100">ISO 29148 Standard</span>
  </div>
  <p className="text-xs font-bold text-gray-600 leading-relaxed italic">"{selectedSrs.projectName}"</p>
  </div>
 
  <div className="space-y-4">
- <label className="text-[10px] font-black text-gray-400 ml-1">Äiá»ƒm Review (0-10)</label>
+ <label className="text-[10px] font-black text-gray-400 ml-1">Điểm Review (0-10)</label>
  <div className="relative">
  <input
  type="number"
@@ -64,12 +64,12 @@ export function SrsReviewPanel({
  </div>
 
  <div className="space-y-4">
- <label className="text-[10px] font-black text-gray-400 ml-1">Pháº£n há»“i cá»§a Giáº£ng viĂªn</label>
+ <label className="text-[10px] font-black text-gray-400 ml-1">Phản hồi của Giảng viên</label>
  <textarea
  rows={6}
  value={feedbackText}
  onChange={e => setFeedbackText(e.target.value)}
- placeholder="Nháº­p ná»™i dung gĂ³p Ă½ hoáº·c lĂ½ do yĂªu cáº§u sá»­a Ä‘á»•i..."
+ placeholder="Nhập nội dung góp ý hoặc lý do yêu cầu sửa đổi..."
  className="w-full rounded-[24px] bg-gray-50 border border-gray-100 p-6 text-sm font-bold text-gray-700 focus:ring-4 focus:ring-teal-50 focus:border-teal-500 outline-none transition-all resize-none placeholder:text-gray-300"
  />
  </div>
@@ -80,14 +80,14 @@ export function SrsReviewPanel({
  disabled={reviewMutation.isPending}
  className="h-16 rounded-[24px] bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] shadow-xl shadow-amber-100 border-0 transition-all hover:scale-[1.02] active:scale-95"
  >
- YĂªu cáº§u sá»­a
+ Yêu cầu sửa
  </Button>
  <Button
  onClick={() => handleReview("FINAL")}
  disabled={reviewMutation.isPending}
  className="h-16 rounded-[24px] bg-teal-600 hover:bg-teal-700 text-white font-black text-[10px] shadow-xl shadow-teal-100 border-0 transition-all hover:scale-[1.02] active:scale-95"
  >
- {reviewMutation.isPending ? <RefreshCcw className="animate-spin mr-2" size={14} /> : <CheckCircle size={16} className="mr-2" />} Duyá»‡t Final
+ {reviewMutation.isPending ? <RefreshCcw className="animate-spin mr-2" size={14} /> : <CheckCircle size={16} className="mr-2" />} Duyệt Final
  </Button>
  </div>
  </div>
@@ -98,3 +98,9 @@ export function SrsReviewPanel({
  </div>
  );
 }
+
+
+
+
+
+

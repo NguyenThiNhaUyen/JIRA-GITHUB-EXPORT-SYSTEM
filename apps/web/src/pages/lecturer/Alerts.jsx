@@ -33,15 +33,15 @@ export default function Alerts() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Trung tĂ¢m Cáº£nh bĂ¡o"
- subtitle="PhĂ¡t hiá»‡n vĂ  xá»­ lĂ½ sá»›m cĂ¡c rá»§i ro vá» tiáº¿n Ä‘á»™, Ä‘Ă³ng gĂ³p cá»§a sinh viĂªn vĂ  nhĂ³m dá»± Ă¡n."
- breadcrumb={["Giáº£ng viĂªn","Cáº£nh bĂ¡o"]}
+ title="Trung tâm Cảnh báo"
+ subtitle="Phát hiện và xử lý sớm các rủi ro về tiến độ, đóng góp của sinh viên và nhóm dự án."
+ breadcrumb={["Giảng viên","Cảnh báo"]}
  actions={[
  <Button key="refresh" variant="outline" onClick={() => refetch()} className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-200">
- <RefreshCw size={14} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} /> LĂ m má»›i dá»¯ liá»‡u
+ <RefreshCw size={14} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Làm mới dữ liệu
  </Button>,
  <Button key="send" onClick={() => setIsAlertModalOpen(true)} className="bg-red-600 hover:bg-red-700 text-white rounded-2xl h-11 px-8 text-[10px] font-black shadow-lg shadow-red-100 border-0 transition-all">
- <Plus size={16} className="mr-2" /> PhĂ¡t cáº£nh bĂ¡o má»›i
+ <Plus size={16} className="mr-2" /> Phát cảnh báo mới
  </Button>
  ]}
  />
@@ -88,3 +88,9 @@ export default function Alerts() {
  </div>
  );
 }
+
+
+
+
+
+

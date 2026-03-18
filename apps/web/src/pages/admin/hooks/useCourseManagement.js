@@ -95,12 +95,12 @@ export function useCourseManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Báº¡n cĂ³ cháº¯c cháº¯n muá»‘n xĂ³a lá»›p há»c nĂ y? HĂ nh Ä‘á»™ng nĂ y khĂ´ng thá»ƒ hoĂ n tĂ¡c.")) {
+        if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này? Hành động này không thể hoàn tác.")) {
             try {
                 await deleteMutation.mutateAsync(id);
-                success("ÄĂ£ xĂ³a lá»›p há»c thĂ nh cĂ´ng");
+                success("Đã xóa lớp học thành công");
             } catch (err) {
-                showError("KhĂ´ng thá»ƒ xĂ³a lá»›p há»c: " + err.message);
+                showError("Không thể xóa lớp học: " + err.message);
             }
         }
     };
@@ -108,27 +108,27 @@ export function useCourseManagement() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Map FE form fields â†’ BE expected field names
+            // Map FE form fields → BE expected field names
             const payload = {
                 courseCode: formData.code,
                 courseName: formData.name,
-                subjectId: formData.subjectId ? Number(formData.subjectId) : undefined,
-                semesterId: formData.semesterId ? Number(formData.semesterId) : undefined,
-                maxStudents: formData.maxStudents ? Number(formData.maxStudents) : undefined,
+                subjectId: Number(formData.subjectId),
+                semesterId: Number(formData.semesterId),
+                maxStudents: Number(formData.maxStudents || 40),
                 status: formData.status || "ACTIVE",
             };
             if (editingCourse) {
                 await updateMutation.mutateAsync({ id: editingCourse.id, body: payload });
-                success("Cáº­p nháº­t lá»›p há»c thĂ nh cĂ´ng");
+                success("Cập nhật lớp học thành công");
             } else {
                 await createMutation.mutateAsync(payload);
-                success("Táº¡o lá»›p há»c má»›i thĂ nh cĂ´ng");
+                success("Tạo lớp học mới thành công");
             }
             setShowModal(false);
             setEditingCourse(null);
             setFormData(DEFAULT_COURSE_FORM);
         } catch (err) {
-            showError("Thao tĂ¡c tháº¥t báº¡i: " + err.message);
+            showError("Thao tác thất bại: " + err.message);
         }
     };
 
@@ -146,22 +146,22 @@ export function useCourseManagement() {
                 courseId: selectedCourse.id,
                 lecturerUserId: Number(assignForm.lecturerId)  // hook expects lecturerUserId
             });
-            success("PhĂ¢n cĂ´ng giáº£ng viĂªn thĂ nh cĂ´ng");
+            success("Phân công giảng viên thành công");
             setShowAssignModal(false);
         } catch (err) {
-            showError("PhĂ¢n cĂ´ng tháº¥t báº¡i: " + err.message);
+            showError("Phân công thất bại: " + err.message);
         }
     };
 
     const handleRemoveLecturer = async (course) => {
-        if (!window.confirm("XĂ³a giáº£ng viĂªn khá»i lá»›p há»c nĂ y?")) return;
+        if (!window.confirm("Xóa giảng viên khỏi lớp học này?")) return;
         const lecturerId = course.lecturers?.[0]?.id;
-        if (!lecturerId) return showError("KhĂ´ng tĂ¬m tháº¥y giáº£ng viĂªn Ä‘á»ƒ gá»¡");
+        if (!lecturerId) return showError("Không tìm thấy giảng viên để gỡ");
         try {
             await removeLecturerMutation.mutateAsync({ courseId: course.id, lecturerUserId: Number(lecturerId) });
-            success("ÄĂ£ gá»¡ bá» giáº£ng viĂªn");
+            success("Đã gỡ bỏ giảng viên");
         } catch (err) {
-            showError("Tháº¥t báº¡i: " + err.message);
+            showError("Thất bại: " + err.message);
         }
     };
 
@@ -185,10 +185,10 @@ export function useCourseManagement() {
                 courseId: selectedCourse.id,
                 studentUserIds: importSelectedIds  // hook expects studentUserIds
             });
-            success(`ÄĂ£ thĂªm ${importSelectedIds.length} sinh viĂªn vĂ o lá»›p`);
+            success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp`);
             setShowImportModal(false);
         } catch (err) {
-            showError("Import tháº¥t báº¡i: " + err.message);
+            showError("Import thất bại: " + err.message);
         }
     };
 
@@ -205,10 +205,10 @@ export function useCourseManagement() {
                 courseId: selectedCourse.id,
                 formData: excelFile  // hook destructures { courseId, formData }
             });
-            success("ÄĂ£ hoĂ n táº¥t import tá»« file Excel");
+            success("Đã hoàn tất import từ file Excel");
             setShowImportModal(false);
         } catch (err) {
-            showError("Import Excel tháº¥t báº¡i: " + err.message);
+            showError("Import Excel thất bại: " + err.message);
         } finally {
             setIsUploading(false);
         }
@@ -220,15 +220,15 @@ export function useCourseManagement() {
     };
 
     const handleKickStudent = async (studentId, studentName) => {
-        if (!window.confirm(`Gá»¡ sinh viĂªn ${studentName} khá»i lá»›p nĂ y?`)) return;
+        if (!window.confirm(`Gỡ sinh viên ${studentName} khỏi lớp này?`)) return;
         try {
             await unenrollMutation.mutateAsync({
                 courseId: selectedCourse.id,
-                studentId
+                studentUserId: studentId
             });
-            success("ÄĂ£ gá»¡ sinh viĂªn");
+            success("Đã gỡ sinh viên");
         } catch (err) {
-            showError("Tháº¥t báº¡i: " + err.message);
+            showError("Thất bại: " + err.message);
         }
     };
 

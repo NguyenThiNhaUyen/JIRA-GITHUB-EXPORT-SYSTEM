@@ -1,39 +1,55 @@
-using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class User : JiraGithubExport.Shared.Interfaces.ISoftDelete
+public partial class user
 {
-    public long Id { get; set; }
+    public long id { get; set; }
 
-    public string Email { get; set; } = null!;
+    public string email { get; set; } = null!;
 
-    public string Password { get; set; } = null!;
+    public string password { get; set; } = null!;
 
-    public string FullName { get; set; }
+    public string? full_name { get; set; }
 
-    public bool Enabled { get; set; }
+    public bool enabled { get; set; }
 
-    public string PasswordResetToken { get; set; }
+    public string? password_reset_token { get; set; }
 
-    public DateTime? PasswordResetTokenExpiresAt { get; set; }
+    public DateTime? password_reset_token_expires_at { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime created_at { get; set; }
 
-    public DateTime UpdatedAt { get; set; }
+    public DateTime updated_at { get; set; }
 
-    public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
+    public virtual ICollection<course> courses { get; set; } = new List<course>();
 
-    public virtual ICollection<ExternalAccount> ExternalAccounts { get; set; } = new List<ExternalAccount>();
+    public virtual ICollection<external_account> external_accounts { get; set; } = new List<external_account>();
 
-    public virtual Lecturer? Lecturer { get; set; }
+    public virtual lecturer? lecturer { get; set; }
 
-    public virtual ICollection<ProjectDocument> ProjectDocuments { get; set; } = new List<ProjectDocument>();
+    public virtual ICollection<project_document> project_documents { get; set; } = new List<project_document>();
 
-    public virtual Student? Student { get; set; }
+    public virtual student? student { get; set; }
 
-    public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+    public virtual ICollection<role> roles { get; set; } = new List<role>();
 
-    public bool IsDeleted { get; set; }
+    // Aliases for business logic
+    [NotMapped]
+    public long Id { get => id; set => id = value; }
+    [NotMapped]
+    public string FullName { get => full_name; set => full_name = value; }
+    [NotMapped]
+    public string Email { get => email; set => email = value; }
+    [NotMapped]
+    public virtual ICollection<role> Roles { get => roles; set => roles = value; }
 }
+
+
+
+
+
+
+
+

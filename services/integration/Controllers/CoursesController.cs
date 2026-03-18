@@ -23,14 +23,15 @@ public class CoursesController : ApiControllerBase
         _logger = logger;
     }
 
-
-
+    /// <summary>
+    /// Get all courses (Filtered by role: Admin gets all, others get theirs)
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<CourseDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
         var userId = GetCurrentUserId();
-        var userRole = GetCurrentUserRole();
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
         PagedResponse<CourseDetailResponse> result;
 
@@ -146,9 +147,8 @@ public class CoursesController : ApiControllerBase
         }
         catch (Exception ex)
         {
-            var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message} | Inner: {InnerMessage}", id, ex.Message, errorMessage);
-            return StatusCode(500, ApiResponse.ErrorResponse(errorMessage));
+            _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message}", id, ex.Message);
+            return StatusCode(500, ApiResponse.ErrorResponse("An internal error occurred during excel import. Please check file format."));
         }
     }
 

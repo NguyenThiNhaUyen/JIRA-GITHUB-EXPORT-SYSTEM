@@ -53,9 +53,9 @@ export default function StudentContribution() {
     return (
         <div className="space-y-10 animate-in fade-in duration-1000 pb-20">
             <PageHeader 
-                title="PhĂ¢n tĂ­ch hiá»‡u suáº¥t Code"
-                subtitle="Há»‡ thá»‘ng Antigravity AI phĂ¢n tĂ­ch dá»¯ liá»‡u chuyĂªn sĂ¢u vá» Ä‘Ă³ng gĂ³p ká»¹ thuáº­t tá»« JIRA vĂ  GITHUB."
-                breadcrumb={["Sinh viĂªn", "Deep Metrics"]}
+                title="Phân tích hiệu suất Code"
+                subtitle="Hệ thống Antigravity AI phân tích dữ liệu chuyên sâu về đóng góp kỹ thuật từ JIRA và GITHUB."
+                breadcrumb={["Sinh viên", "Deep Metrics"]}
                 actions={[
                     <Button 
                         key="refresh" 
@@ -89,3 +89,9 @@ export default function StudentContribution() {
         </div>
     );
 }
+
+
+
+
+
+

@@ -23,7 +23,13 @@ export function StatusPill({ ok, icon: Icon, label }) {
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-medium ${ok ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
       {Icon && <Icon size={10} />}
       {label}
-      {ok && <span className="text-[8px] ml-0.5">âœ“</span>}
+      {ok && <span className="text-[8px] ml-0.5">✓</span>}
     </span>
   );
 }
+
+
+
+
+
+

@@ -4,7 +4,7 @@ import * as lecturerApi from "../api/lecturerApi.js";
 import * as adminApi from "../api/adminApi.js";
 import * as analyticsApi from "../api/analyticsApi.js";
 
-/* â”€â”€ STUDENT DASHBOARD HOOKS â”€â”€ */
+/* ── STUDENT DASHBOARD HOOKS ── */
 
 export function useStudentStats() {
     return useQuery({
@@ -76,7 +76,7 @@ export function useStudentMeCourses(params) {
     });
 }
 
-/* â”€â”€ LECTURER DASHBOARD HOOKS â”€â”€ */
+/* ── LECTURER DASHBOARD HOOKS ── */
 
 export function useMyWorkload() {
     return useQuery({
@@ -109,7 +109,7 @@ export function useLecturerActivityLogs(limit = 5) {
     });
 }
 
-/* â”€â”€ ADMIN & SHARED ANALYTICS HOOKS â”€â”€ */
+/* ── ADMIN & SHARED ANALYTICS HOOKS ── */
 
 export function useAdminStats() {
     return useQuery({
@@ -182,7 +182,7 @@ export function useLecturerAnalyticsCourses() {
     });
 }
 
-/* â”€â”€ MUTATIONS â”€â”€ */
+/* ── MUTATIONS ── */
 
 export function useBulkAssignLecturers() {
     const queryClient = useQueryClient();
@@ -193,3 +193,9 @@ export function useBulkAssignLecturers() {
         }
     });
 }
+
+
+
+
+
+

@@ -1,31 +1,40 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class Project : JiraGithubExport.Shared.Interfaces.ISoftDelete
+public partial class project
 {
-    public long Id { get; set; }
+    public long id { get; set; }
 
-    public long CourseId { get; set; }
+    public long course_id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public string name { get; set; } = null!;
 
-    public string Description { get; set; }
+    public string? description { get; set; }
 
-    public string Status { get; set; } = null!;
+    public string status { get; set; } = "ACTIVE";
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime created_at { get; set; }
 
-    public DateTime UpdatedAt { get; set; }
+    public DateTime updated_at { get; set; }
 
-    public virtual Course Course { get; set; } = null!;
+    public virtual course course { get; set; } = null!;
 
-    public virtual ICollection<ProjectDocument> ProjectDocuments { get; set; } = new List<ProjectDocument>();
+    public virtual ICollection<project_document> project_documents { get; set; } = new List<project_document>();
 
-    public virtual ProjectIntegration? ProjectIntegration { get; set; }
+    public virtual project_integration? project_integration { get; set; }
 
-    public virtual ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
+    public virtual ICollection<team_member> team_members { get; set; } = new List<team_member>();
 
-    public bool IsDeleted { get; set; }
+    // Aliases
+    [NotMapped]
+    public long Id { get => id; set => id = value; }
+    [NotMapped]
+    public string Name { get => name; set => name = value; }
+    [NotMapped]
+    public string Status { get => status; set => status = value; }
+    [NotMapped]
+    public virtual project_integration? ProjectIntegration { get => project_integration; set => project_integration = value; }
 }

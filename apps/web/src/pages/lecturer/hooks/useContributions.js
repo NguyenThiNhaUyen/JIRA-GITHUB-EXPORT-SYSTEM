@@ -40,7 +40,7 @@ export function useContributions() {
         jiraDone: s.jiraDone,
         activeDays: s.activeDays,
         score: s.score,
-        status: (s.status === 'Cáº§n chĂº Ă½' || s.status === 'ChÆ°a commit') ? 'warning' : 'stable',
+        status: (s.status === 'Cần chú ý' || s.status === 'Chưa commit') ? 'warning' : 'stable',
         statusText: s.status,
         dailyActivity: s.dailyActivity
       };
@@ -93,3 +93,9 @@ export function useContributions() {
     refetch
   };
 }
+
+
+
+
+
+

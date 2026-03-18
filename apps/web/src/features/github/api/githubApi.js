@@ -2,7 +2,7 @@ import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
- * Láº¥y lá»‹ch sá»­ commit cá»§a repository mĂ  project hiá»‡n táº¡i Ä‘ang sá»­ dá»¥ng
+ * Lấy lịch sử commit của repository mà project hiện tại đang sử dụng
  * GET /api/projects/:projectId/commits
  */
 export async function getProjectCommits(projectId, page = 1, pageSize = 50) {
@@ -11,7 +11,7 @@ export async function getProjectCommits(projectId, page = 1, pageSize = 50) {
 }
 
 /**
- * Gá»i backend Ä‘á»“ng bá»™ commit hiá»‡n táº¡i
+ * Gọi backend đồng bộ commit hiện tại
  * POST /api/projects/:projectId/sync-commits
  */
 export async function syncGithubCommits(projectId) {
@@ -20,7 +20,7 @@ export async function syncGithubCommits(projectId) {
 }
 
 /**
- * Lá»‹ch sá»­ commit theo tá»«ng sinh viĂªn cá»§a 1 project
+ * Lịch sử commit theo từng sinh viên của 1 project
  * GET /api/projects/:projectId/commit-history
  */
 export async function getProjectCommitHistory(projectId) {
@@ -32,3 +32,9 @@ export async function getCommitsStats(courseId, startDate, endDate) {
     const res = await client.get(`/analytics/commits-stats`, { params: { courseId, startDate, endDate } });
     return unwrap(res);
 }
+
+
+
+
+
+

@@ -35,3 +35,10 @@ public class ValidationException : Exception
         Errors = new List<string> { error };
     }
 }
+
+
+
+
+
+
+

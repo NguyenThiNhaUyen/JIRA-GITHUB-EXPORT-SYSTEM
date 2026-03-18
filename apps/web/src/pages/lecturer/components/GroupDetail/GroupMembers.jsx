@@ -7,16 +7,16 @@ export function GroupMembers({ group, students, handleUpdateScore }) {
  <div className="lg:col-span-2 space-y-8">
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-8">
- <CardTitle className="text-base font-black text-gray-800">ThĂ´ng tin NhĂ³m</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">Thông tin Nhóm</CardTitle>
  </CardHeader>
  <CardContent className="p-8 space-y-6">
- <InfoRow label="TĂªn Ä‘á»‹nh danh" value={<span className="font-black text-gray-800 tracking-tight text-base">{group.name}</span>} />
+ <InfoRow label="Tên định danh" value={<span className="font-black text-gray-800 tracking-tight text-base">{group.name}</span>} />
  <InfoRow
- label="Äá» tĂ i Ä‘Äƒng kĂ½"
+ label="Đề tài đăng ký"
  value={
  group.description
  ? <span className="text-sm font-bold text-gray-600 leading-relaxed block">{group.description}</span>
- : <span className="text-[10px] font-black text-gray-300 italic">ChÆ°a xĂ¡c Ä‘á»‹nh Ä‘á» tĂ i</span>
+ : <span className="text-[10px] font-black text-gray-300 italic">Chưa xác định đề tài</span>
  }
  />
  </CardContent>
@@ -24,7 +24,7 @@ export function GroupMembers({ group, students, handleUpdateScore }) {
 
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-8 flex flex-row items-center justify-between">
- <CardTitle className="text-base font-black text-gray-800">ThĂ nh viĂªn</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">Thành viên</CardTitle>
  <span className="text-[10px] font-black text-teal-600 bg-teal-50 rounded-full px-3 py-1 border border-teal-100">
  {students.length} Student
  </span>
@@ -61,3 +61,9 @@ export function GroupMembers({ group, students, handleUpdateScore }) {
  </div>
  );
 }
+
+
+
+
+
+

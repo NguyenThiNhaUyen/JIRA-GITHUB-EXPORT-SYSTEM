@@ -52,7 +52,7 @@ export default function GroupDetail() {
  return (
  <div className="flex flex-col h-64 items-center justify-center gap-4">
  <Activity className="animate-spin text-teal-600 h-10 w-10" />
- <span className="text-gray-500 font-bold text-[10px]">Äang táº£i dá»¯ liá»‡u tá»« API...</span>
+ <span className="text-gray-500 font-bold text-[10px]">Đang tải dữ liệu từ API...</span>
  </div>
  );
  }
@@ -60,8 +60,8 @@ export default function GroupDetail() {
  if (isError || !group) {
  return (
  <div className="flex flex-col h-64 items-center justify-center gap-4">
- <p className="text-red-500 font-black text-xs">Cáº£nh bĂ¡o: KhĂ´ng thá»ƒ táº£i dá»¯ liá»‡u nhĂ³m</p>
- <Button onClick={() => navigate("/lecturer/my-courses")} variant="outline" className="rounded-2xl border-gray-100 text-[10px] font-black h-11 px-6">Trá»Ÿ vá» báº£ng tin</Button>
+ <p className="text-red-500 font-black text-xs">Cảnh báo: Không thể tải dữ liệu nhóm</p>
+ <Button onClick={() => navigate("/lecturer/my-courses")} variant="outline" className="rounded-2xl border-gray-100 text-[10px] font-black h-11 px-6">Trở về bảng tin</Button>
  </div>
  );
  }
@@ -74,8 +74,8 @@ export default function GroupDetail() {
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
  title={group.name}
- subtitle={`${course?.code || ''} â€” ${course?.name || ''}. Quáº£n lĂ½ tráº¡ng thĂ¡i vĂ  thĂ nh viĂªn cá»§a nhĂ³m dá»± Ă¡n.`}
- breadcrumb={["Giáº£ng viĂªn","NhĂ³m", group.name]}
+ subtitle={`${course?.code || ''} — ${course?.name || ''}. Quản lý trạng thái và thành viên của nhóm dự án.`}
+ breadcrumb={["Giảng viên","Nhóm", group.name]}
  actions={[
  <Button
  key="back"
@@ -83,25 +83,25 @@ export default function GroupDetail() {
  onClick={() => navigate(-1)}
  className="rounded-2xl h-11 px-6 text-[10px] font-black border-gray-100 hover:bg-gray-50 shadow-sm"
  >
- <ArrowLeft size={14} className="mr-2" /> Quay láº¡i
+ <ArrowLeft size={14} className="mr-2" /> Quay lại
  </Button>
  ]}
  />
 
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
- <StatsCard label="ThĂ nh viĂªn" value={students.length} icon={Users} variant="info" />
- <StatsCard label="GitHub" value={githubApproved ?"á»”n Ä‘á»‹nh" :"Chá» duyá»‡t"} icon={GitBranch} variant={githubApproved ?"success" :"warning"} />
- <StatsCard label="Jira" value={jiraApproved ?"á»”n Ä‘á»‹nh" :"Chá» duyá»‡t"} icon={BookOpen} variant={jiraApproved ?"success" :"warning"} />
- <StatsCard label="NgĂ y táº¡o" value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") :"N/A"} icon={Calendar} variant="indigo" />
+ <StatsCard label="Thành viên" value={students.length} icon={Users} variant="info" />
+ <StatsCard label="GitHub" value={githubApproved ?"Ổn định" :"Chờ duyệt"} icon={GitBranch} variant={githubApproved ?"success" :"warning"} />
+ <StatsCard label="Jira" value={jiraApproved ?"Ổn định" :"Chờ duyệt"} icon={BookOpen} variant={jiraApproved ?"success" :"warning"} />
+ <StatsCard label="Ngày tạo" value={group.createdAt ? new Date(group.createdAt).toLocaleDateString("vi-VN") :"N/A"} icon={Calendar} variant="indigo" />
  </div>
 
  <Tabs defaultValue="overview" className="space-y-8">
  <TabsList className="bg-transparent border-0 p-0 flex gap-4 h-auto">
  <TabsTrigger value="overview" className="h-12 px-8 rounded-2xl text-[10px] font-black border-0 data-[state=active]:bg-teal-600 data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-400 transition-all shadow-sm">
- Tá»•ng quan & ThĂ nh viĂªn
+ Tổng quan & Thành viên
  </TabsTrigger>
  <TabsTrigger value="analytics" className="h-12 px-8 rounded-2xl text-[10px] font-black border-0 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-400 transition-all shadow-sm">
- PhĂ¢n tĂ­ch Jira chuyĂªn sĂ¢u
+ Phân tích Jira chuyên sâu
  </TabsTrigger>
  </TabsList>
 
@@ -149,3 +149,9 @@ export default function GroupDetail() {
  </div>
  );
 }
+
+
+
+
+
+

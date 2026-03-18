@@ -8,7 +8,7 @@ export function BurndownChart({ data = [], isLoading, isError }) {
   return (
     <ChartContainer
       title="Sprint Burndown"
-      subtitle="Remaining work theo ngĂ y"
+      subtitle="Remaining work theo ngày"
       isLoading={isLoading}
       isError={isError}
       isEmpty={isEmpty}
@@ -33,3 +33,11 @@ export function BurndownChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
+
+
+
+
+
+
+
+

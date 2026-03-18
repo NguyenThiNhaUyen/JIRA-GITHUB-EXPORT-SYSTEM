@@ -6,26 +6,26 @@ import {
 
 const NAV = [
     {
-        label: "Tá»•ng quan",
+        label: "Tổng quan",
         items: [
             { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-            { to: "/admin/reports", icon: BarChart3, label: "PhĂ¢n tĂ­ch há»‡ thá»‘ng" },
+            { to: "/admin/reports", icon: BarChart3, label: "Phân tích hệ thống" },
         ],
     },
     {
-        label: "Há»c vá»¥",
+        label: "Học vụ",
         items: [
-            { to: "/admin/semesters", icon: CalendarDays, label: "Há»c ká»³" },
-            { to: "/admin/subjects", icon: Library, label: "MĂ´n há»c" },
-            { to: "/admin/courses", icon: BookOpen, label: "Lá»›p há»c pháº§n" },
-            { to: "/admin/lecturer-assignment", icon: BookOpen, label: "PhĂ¢n cĂ´ng giáº£ng viĂªn" },
-            { to: "/admin/workload", icon: BarChart3, label: "Khá»‘i lÆ°á»£ng giáº£ng dáº¡y" },
+            { to: "/admin/semesters", icon: CalendarDays, label: "Học kỳ" },
+            { to: "/admin/subjects", icon: Library, label: "Môn học" },
+            { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
+            { to: "/admin/lecturer-assignment", icon: BookOpen, label: "Phân công giảng viên" },
+            { to: "/admin/workload", icon: BarChart3, label: "Khối lượng giảng dạy" },
         ],
     },
     {
-        label: "NgÆ°á»i dĂ¹ng",
+        label: "Người dùng",
         items: [
-            { to: "/admin/users", icon: Users, label: "TĂ i khoáº£n" },
+            { to: "/admin/users", icon: Users, label: "Tài khoản" },
         ],
     },
 ];

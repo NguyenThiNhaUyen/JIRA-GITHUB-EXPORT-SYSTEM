@@ -6,7 +6,7 @@ export function RadarPerformanceMap({ radarData, alertsCount }) {
  return (
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
  <CardTitle className="text-sm font-black text-gray-800 mb-8 flex items-center gap-2">
- <TrendingUp size={18} className="text-teal-600" /> Báº£n Ä‘á»“ Hiá»‡u suáº¥t
+ <TrendingUp size={18} className="text-teal-600" /> Bản đồ Hiệu suất
  </CardTitle>
  <div className="aspect-square w-full">
  <GroupRadarChart data={radarData} />
@@ -24,3 +24,9 @@ export function RadarPerformanceMap({ radarData, alertsCount }) {
  </Card>
  );
 }
+
+
+
+
+
+

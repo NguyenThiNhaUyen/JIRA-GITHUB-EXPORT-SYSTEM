@@ -10,7 +10,7 @@ export function ActivityFeed({ activities, loadingLogs }) {
  <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-100">
  <Activity size={18} className="text-white" />
  </div>
- <CardTitle className="font-display">DĂ²ng hoáº¡t Ä‘á»™ng thá»i gian thá»±c</CardTitle>
+ <CardTitle className="font-display">Dòng hoạt động thời gian thực</CardTitle>
  </div>
  <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-pulse">
  <Zap size={10} fill="currentColor" />
@@ -25,7 +25,7 @@ export function ActivityFeed({ activities, loadingLogs }) {
  ) : activities.length === 0 ? (
  <div className="text-center py-20 opacity-40">
  <Activity size={40} strokeWidth={1} className="mx-auto mb-4 text-gray-400" />
- <p className="text-[10px] font-black tracking-[0.2em] text-gray-400">ChÆ°a cĂ³ hoáº¡t Ä‘á»™ng ghi nháº­n</p>
+ <p className="text-[10px] font-black tracking-[0.2em] text-gray-400">Chưa có hoạt động ghi nhận</p>
  </div>
  ) : activities.map((act, idx) => (
  <div key={act.id || idx} className="flex items-start gap-5 px-8 py-6 border-b border-gray-50 hover:bg-teal-50/10 transition-all duration-300 last:border-0 group">
@@ -41,10 +41,16 @@ export function ActivityFeed({ activities, loadingLogs }) {
  <span className="text-[8px] font-black text-gray-300 tracking-[0.2em]">Verified Event</span>
  </div>
  </div>
- <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 text-[9px] border-gray-100 hover:bg-white hover:border-teal-100 hover:text-teal-600 shadow-sm group-hover:shadow-md transition-all">Chi tiáº¿t</Button>
+ <Button variant="outline" size="sm" className="rounded-xl h-9 px-4 text-[9px] border-gray-100 hover:bg-white hover:border-teal-100 hover:text-teal-600 shadow-sm group-hover:shadow-md transition-all">Chi tiết</Button>
  </div>
  ))}
  </CardContent>
  </Card>
  );
 }
+
+
+
+
+
+

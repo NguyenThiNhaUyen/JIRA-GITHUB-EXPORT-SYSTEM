@@ -1,12 +1,12 @@
 /**
- * courseMapper.js â€” Adapter: BE CourseDetailResponse â†’ FE shape
+ * courseMapper.js — Adapter: BE CourseDetailResponse → FE shape
  */
 
 import { mapProject } from "../../../projects/api/mappers/projectMapper.js";
 
 /**
- * Map má»™t CourseDetailResponse tá»« BE sang FE course shape
- * @param {object} beCourse - CourseDetailResponse tá»« BE
+ * Map một CourseDetailResponse từ BE sang FE course shape
+ * @param {object} beCourse - CourseDetailResponse từ BE
  * @returns {object} - FE course shape
  */
 export function mapCourse(beCourse) {
@@ -19,12 +19,12 @@ export function mapCourse(beCourse) {
     const projs = beCourse.projects || beCourse.groups || [];
 
     return {
-        // â”€â”€ Core identity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Core identity ──────────────────────────────────────────
         id: String(beCourse.id || beCourse.Id || ""),
         code: beCourse.courseCode || beCourse.course_code || beCourse.CourseCode || "",
         name: beCourse.courseName || beCourse.course_name || beCourse.CourseName || "",
 
-        // â”€â”€ Subject â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Subject ───────────────────────────────────────────────
         subjectId: String(subj.id || beCourse.subjectId || beCourse.subject_id || beCourse.SubjectId || ""),
         subject: {
             id: String(subj.id || ""),
@@ -32,7 +32,7 @@ export function mapCourse(beCourse) {
             name: subj.subjectName || subj.subject_name || subj.SubjectName || beCourse.subject_name || "",
         },
 
-        // â”€â”€ Semester â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Semester ───────────────────────────────────────────────
         semesterId: String(sem.id || beCourse.semesterId || beCourse.semester_id || beCourse.SemesterId || ""),
         semester: {
             id: String(sem.id || ""),
@@ -42,14 +42,14 @@ export function mapCourse(beCourse) {
             endDate: sem.endDate || sem.EndDate || sem.end_date || null,
         },
 
-        // â”€â”€ Students & capacity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Students & capacity ────────────────────────────────────
         currentStudents: beCourse.currentStudents ?? beCourse.enrolledStudentsCount ?? 0,
         maxStudents: beCourse.maxStudents ?? 0,
 
-        // â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Status ────────────────────────────────────────────────
         status: beCourse.status ?? "UNKNOWN",
 
-        // â”€â”€ Lecturers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Lecturers ──────────────────────────────────────────────
         lecturers: lecs.map(l => ({
             id: String(l.userId || l.user_id || l.id || ""),
             name: l.fullName || l.full_name || l.name || l.FullName || "",
@@ -57,23 +57,26 @@ export function mapCourse(beCourse) {
             email: l.officeEmail || l.email || l.Email || "",
         })),
 
-        // â”€â”€ Groups/Projects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Groups/Projects ────────────────────────────────────────
         groups: projs.map(mapProject),
         projectsCount: beCourse.projectsCount || beCourse.projects_count || projs.length || 0,
         
-        // â”€â”€ Enrollments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Enrollments ───────────────────────────────────────────
         enrollments: enrs.map(e => ({
             userId: String(e.userId || e.user_id || e.id || ""),
-            fullName: e.fullName || e.full_name || e.name || "",
-            studentCode: e.studentCode || e.student_code || "",
-            email: e.email || "",
+            user: {
+                name: e.fullName || e.FullName || e.full_name || e.name || "N/A",
+                email: e.email || e.Email || "N/A"
+            },
+            studentCode: e.studentCode || e.StudentCode || e.student_code || "",
+            studentIdString: e.studentId || e.StudentId || "", // SE123456 logic
         })),
     };
 }
 
 /**
- * Map danh sĂ¡ch courses (tá»« PagedResponse.results hoáº·c array)
- * @param {object[]|object} beData - CĂ³ thá»ƒ lĂ  array hoáº·c PagedResponse { results, totalCount, ... }
+ * Map danh sách courses (từ PagedResponse.results hoặc array)
+ * @param {object[]|object} beData - Có thể là array hoặc PagedResponse { results, totalCount, ... }
  * @returns {{ items: object[], totalCount: number, page: number, pageSize: number }}
  */
 export function mapCourseList(beData) {
@@ -100,3 +103,9 @@ export function mapCourseList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
+
+
+
+
+
+

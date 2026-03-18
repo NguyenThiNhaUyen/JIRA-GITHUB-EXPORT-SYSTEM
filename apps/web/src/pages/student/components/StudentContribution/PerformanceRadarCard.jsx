@@ -9,7 +9,7 @@ export function PerformanceRadarCard({ performanceRadar, stats }) {
  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shadow-inner">
  <Target size={20} className="text-indigo-600" />
  </div>
- Báº£n Ä‘á»“ nÄƒng lá»±c ká»¹ thuáº­t
+ Bản đồ năng lực kỹ thuật
  </CardTitle>
  <div className="h-72 w-full flex items-center justify-center mb-10 group-hover:scale-105 transition-transform duration-700">
  <ResponsiveContainer width="100%" height="100%">
@@ -30,7 +30,7 @@ export function PerformanceRadarCard({ performanceRadar, stats }) {
  <div className="space-y-8">
  <p className="text-[10px] font-black text-gray-300 mb-6 flex items-center gap-3">
  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
- PhĂ¢n tĂ­ch chi tiáº¿t chá»‰ sá»‘
+ Phân tích chi tiết chỉ số
  </p>
  <div className="space-y-8">
  {[
@@ -53,3 +53,9 @@ export function PerformanceRadarCard({ performanceRadar, stats }) {
  </Card>
  );
 }
+
+
+
+
+
+

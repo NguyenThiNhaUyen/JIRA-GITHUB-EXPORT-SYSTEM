@@ -72,9 +72,9 @@ export default function CourseWorkspace() {
  <div className="w-24 h-24 bg-amber-50 rounded-[40px] flex items-center justify-center mx-auto mb-10 shadow-inner border border-amber-100/50">
  <AlertTriangle size={56} className="text-amber-500 animate-bounce" />
  </div>
- <h3 className="text-3xl font-black text-gray-800 tracking-tighter mb-4 font-display">KhĂ´ng tĂ¬m tháº¥y khĂ³a há»c</h3>
- <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold px-8">MĂ£ khĂ³a há»c <b>{courseId}</b> khĂ´ng tá»“n táº¡i trong há»‡ thá»‘ng Ä‘Ă o táº¡o.</p>
- <Button onClick={() => navigate("/student/courses")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black tracking-[0.3em] shadow-2xl font-display hover:scale-105 active:scale-95 border-0">Quay láº¡i danh sĂ¡ch</Button>
+ <h3 className="text-3xl font-black text-gray-800 tracking-tighter mb-4 font-display">Không tìm thấy khóa học</h3>
+ <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold px-8">Mã khóa học <b>{courseId}</b> không tồn tại trong hệ thống đào tạo.</p>
+ <Button onClick={() => navigate("/student/courses")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black tracking-[0.3em] shadow-2xl font-display hover:scale-105 active:scale-95 border-0">Quay lại danh sách</Button>
  </div>
  </div>
  );
@@ -97,8 +97,8 @@ export default function CourseWorkspace() {
  <div className="w-32 h-32 bg-gray-50 rounded-[48px] flex items-center justify-center mx-auto mb-12 shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-700">
  <Users size={64} className="text-gray-200 group-hover:text-teal-300 transition-colors" />
  </div>
- <h4 className="text-3xl font-black text-gray-300 tracking-[0.3em] mb-4 font-display group-hover:text-gray-400 transition-colors">Báº¡n chÆ°a cĂ³ nhĂ³m dá»± Ă¡n</h4>
- <p className="text-sm text-gray-300 font-black tracking-[0.4em] opacity-60">Vui lĂ²ng liĂªn há»‡ Giáº£ng viĂªn phá»¥ trĂ¡ch Ä‘á»ƒ Ä‘Æ°á»£c phĂ¢n nhĂ³m.</p>
+ <h4 className="text-3xl font-black text-gray-300 tracking-[0.3em] mb-4 font-display group-hover:text-gray-400 transition-colors">Bạn chưa có nhóm dự án</h4>
+ <p className="text-sm text-gray-300 font-black tracking-[0.4em] opacity-60">Vui lòng liên hệ Giảng viên phụ trách để được phân nhóm.</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start">
@@ -150,3 +150,9 @@ export default function CourseWorkspace() {
  </div>
  );
 }
+
+
+
+
+
+
