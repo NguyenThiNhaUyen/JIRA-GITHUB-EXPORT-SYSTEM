@@ -8,7 +8,7 @@
   :root {
     --primary: 161 75% 35%;
     --primary-foreground: 0 0% 100%;
-    
+
     --secondary: 226 100% 64%;
     --secondary-foreground: 0 0% 100%;
 
@@ -33,7 +33,11 @@
     letter-spacing: -0.01em;
   }
 
-  h1, h2, h3, h4, .font-display {
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
     font-family: 'Outfit', sans-serif;
   }
 }
@@ -93,6 +97,7 @@
   opacity: 0;
   transform: translateY(8px);
 }
+
 .page-enter-active {
   opacity: 1;
   transform: translateY(0);
