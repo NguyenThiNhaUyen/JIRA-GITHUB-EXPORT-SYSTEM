@@ -1,36 +1,87 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
+import 'admin_service.dart';
 
 class AdminDashboardService {
   final AuthService _auth = AuthService();
+  final AdminService _adminService = AdminService();
 
   Future<Map<String, dynamic>> getDashboardData() async {
     try {
       final results = await Future.wait([
-        _get('/analytics/stats'),
-        _get('/analytics/integration-stats'),
-        _get('/analytics/commit-trends?days=7'),
-        _get('/analytics/heatmap?days=90'),
-        _get('/analytics/team-rankings?limit=4'),
-        _get('/analytics/inactive-teams'),
-        _get('/analytics/team-activities'),
-        _get('/analytics/activity-log?limit=5'),
-        _get('/courses?pageSize=5'),
-        _get('/projects?pageSize=5'),
+        _adminService.getSemesters(),
+        _adminService.getSubjects(),
+        _adminService.getCourses(),
+        _adminService.getUsers(),
+        _adminService.getGroups(),
       ]);
 
+      final semesters = results[0];
+      final subjects = results[1];
+      final courses = results[2];
+      final users = results[3];
+      final groups = results[4];
+
+      // Calculate roles safely based on 'roles' array or 'role' map
+      int lecturersCount = 0;
+      int studentsCount = 0;
+      for (var u in users) {
+        bool isLecturer = false;
+        bool isStudent = false;
+
+        if (u['roles'] is List) {
+           isLecturer = (u['roles'] as List).any((r) => r.toString().toUpperCase() == 'LECTURER');
+           isStudent = (u['roles'] as List).any((r) => r.toString().toUpperCase() == 'STUDENT');
+        } else if (u['role'] != null) {
+           if (u['role'] is Map && u['role']['name'] != null) {
+              isLecturer = u['role']['name'].toString().toUpperCase() == 'LECTURER';
+              isStudent = u['role']['name'].toString().toUpperCase() == 'STUDENT';
+           } else {
+              isLecturer = u['role'].toString().toUpperCase() == 'LECTURER';
+              isStudent = u['role'].toString().toUpperCase() == 'STUDENT';
+           }
+        }
+        
+        if (isLecturer) lecturersCount++;
+        if (isStudent) studentsCount++;
+      }
+
+      final activeSemesters = semesters.where((s) => s['status'] == 'ACTIVE' || s['status'] == 'Active').length;
+
+      final stats = {
+        'semesters': semesters.length,
+        'subjects': subjects.length,
+        'courses': courses.length,
+        'projects': groups.length,
+        'lecturers': lecturersCount,
+        'students': studentsCount,
+        'activeSemesters': activeSemesters,
+      };
+
+      final integrationStats = {
+        'repoConnected': groups.where((g) => g['githubRepo'] != null && g['githubRepo'].toString().isNotEmpty).length,
+        'repoMissing': groups.where((g) => g['githubRepo'] == null || g['githubRepo'].toString().isEmpty).length,
+        'jiraConnected': groups.where((g) => g['jiraInstance'] != null && g['jiraInstance'].toString().isNotEmpty).length,
+        'syncErrors': 0,
+        'reportsExported': 0,
+      };
+
+      // Fallback arrays for UI components that don't have backend logic yet
       return {
-        'stats': results[0],
-        'integrationStats': results[1],
-        'commitData': results[2],
-        'heatmapData': results[3],
-        'teamRanking': results[4],
-        'inactiveTeams': results[5],
-        'teamActivity': results[6],
-        'systemActivity': results[7],
-        'recentCourses': (results[8] is Map) ? (results[8]['items'] ?? []) : (results[8] is List ? results[8] : []),
-        'recentGroups': (results[9] is Map) ? (results[9]['items'] ?? []) : (results[9] is List ? results[9] : []),
+        'stats': stats,
+        'integrationStats': integrationStats,
+        'commitData': [],
+        'heatmapData': [],
+        'teamRanking': [],
+        'inactiveTeams': [],
+        'teamActivity': [],
+        'systemActivity': [],
+        'recentCourses': courses.take(5).toList(),
+        'recentGroups': groups.take(5).toList(),
+        'semestersData': semesters,
+        'subjectsData': subjects,
+        'coursesData': courses,
       };
     } catch (e) {
       print('AdminDashboardService Error: $e');

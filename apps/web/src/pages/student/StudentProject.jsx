@@ -70,9 +70,9 @@ export default function StudentProject() {
                     <div className="w-24 h-24 bg-red-50 rounded-[40px] flex items-center justify-center mx-auto mb-10 shadow-inner border border-red-100/50">
                         <ShieldAlert size={56} className="text-red-500 animate-pulse" />
                     </div>
-                    <p className="text-3xl font-black text-gray-800 uppercase tracking-tighter mb-4 font-display">Dự án không tồn tại!</p>
-                    <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold uppercase tracking-widest px-8">Mã dự án <b>{projectId}</b> không khớp với bất kỳ dữ liệu nào trong hồ sơ học thuật của bạn.</p>
-                    <Button onClick={() => navigate("/student")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black uppercase tracking-[0.3em] shadow-2xl shadow-slate-200 transition-all font-display hover:scale-105 active:scale-95 border-0">Quay lại Tổng quan</Button>
+                    <p className="text-3xl font-black text-gray-800 mb-4 font-display">Dự án không tồn tại!</p>
+                    <p className="text-sm text-gray-400 mb-12 leading-relaxed font-bold px-8">Mã dự án <b>{projectId}</b> không khớp với bất kỳ dữ liệu nào trong hồ sơ học thuật của bạn.</p>
+                    <Button onClick={() => navigate("/student")} className="w-full bg-slate-900 hover:bg-black text-white rounded-[28px] h-16 font-black shadow-2xl shadow-slate-200 transition-all font-display hover:scale-105 active:scale-95 border-0">Quay lại Tổng quan</Button>
                 </div>
             </div>
         );
@@ -88,7 +88,7 @@ export default function StudentProject() {
                     <Button 
                         key="sync" 
                         variant="outline" 
-                        className={`rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`} 
+                        className={`rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`} 
                         onClick={handleSync}
                     >
                         <RefreshCw size={18} className={`mr-3 ${isSyncing ? 'animate-spin' : ''}`} /> Sync Activity
@@ -96,7 +96,7 @@ export default function StudentProject() {
                     <Button 
                         key="upload" 
                         onClick={() => setIsUploadModalOpen(true)} 
-                        className="bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white rounded-[24px] h-12 px-10 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-teal-100 border-0 transition-all hover:scale-110 active:scale-95 font-display"
+                        className="bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-700 hover:to-indigo-700 text-white rounded-[24px] h-12 px-10 text-[11px] font-black shadow-xl shadow-teal-100 border-0 transition-all hover:scale-110 active:scale-95 font-display"
                     >
                         <Upload size={18} className="mr-3" /> Submit SRS
                     </Button>
@@ -155,7 +155,7 @@ export default function StudentProject() {
                                     <TabsTrigger 
                                         key={tab}
                                         value={tab} 
-                                        className="px-10 py-3.5 rounded-[22px] text-[10px] font-black uppercase tracking-[0.2em] data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-2xl transition-all duration-300 font-display"
+                                        className="px-10 py-3.5 rounded-[22px] text-[10px] font-black data-[state=active]:bg-white data-[state=active]:text-teal-600 data-[state=active]:shadow-2xl transition-all duration-300 font-display"
                                     >
                                         {tab === 'commits' && "Lịch sử Source"}
                                         {tab === 'performance' && "Hiệu suất Code"}

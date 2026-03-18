@@ -102,11 +102,10 @@ export function SrsFilters({
             <button
               key={item.key}
               onClick={() => setStatusFilter(item.key)}
-              className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all ${
-                statusFilter === item.key
+              className={`px-3.5 py-1.5 rounded-xl border text-[11px] font-medium transition-all ${statusFilter === item.key
                   ? "bg-teal-600 border-teal-600 text-white shadow-sm shadow-teal-200"
                   : "bg-white border-gray-100 text-gray-500 hover:border-teal-300 hover:text-teal-600"
-              }`}
+                }`}
             >
               {item.label}
             </button>

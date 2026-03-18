@@ -88,14 +88,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     try {
-      final results = await Future.wait([
-        _dashboardService.getDashboardData(),
-        _adminService.getSemesters(),
-        _adminService.getSubjects(),
-        _adminService.getCourses(),
-      ]);
-
-      final data = results[0] as Map<String, dynamic>;
+      final data = await _dashboardService.getDashboardData();
       
       setState(() {
         stats = Map<String, dynamic>.from(data['stats'] ?? {});
@@ -109,9 +102,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         recentCourses = List<Map<String, dynamic>>.from(data['recentCourses'] ?? []);
         recentGroups = List<Map<String, dynamic>>.from(data['recentGroups'] ?? []);
 
-        _semestersData = List<Map<String, dynamic>>.from(results[1] as List);
-        _subjectsData = List<Map<String, dynamic>>.from(results[2] as List);
-        _coursesData = List<Map<String, dynamic>>.from(results[3] as List);
+        _semestersData = List<Map<String, dynamic>>.from(data['semestersData'] ?? []);
+        _subjectsData = List<Map<String, dynamic>>.from(data['subjectsData'] ?? []);
+        _coursesData = List<Map<String, dynamic>>.from(data['coursesData'] ?? []);
 
         _isLoading = false;
       });
@@ -448,7 +441,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 1.7 : 2.2;
+    final ratio = isMobile ? 1.25 : 2.2;
 
     return _SectionCard(
       title: 'System Overview',
@@ -560,7 +553,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     ];
 
     final crossAxisCount = isMobile ? 2 : 3;
-    final ratio = isMobile ? 1.7 : 2.2;
+    final ratio = isMobile ? 1.25 : 2.2;
 
     return _SectionCard(
       title: 'Integration Overview',
@@ -909,13 +902,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: item['bg'] as Color,
+                    color: item['bg'] is Color ? item['bg'] : const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
-                    item['icon'] as IconData,
+                    item['icon'] is IconData ? item['icon'] : Icons.local_activity_outlined,
                     size: 18,
-                    color: item['fg'] as Color,
+                    color: item['fg'] is Color ? item['fg'] : const Color(0xFF2563EB),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -993,7 +986,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisCount: isTablet ? 3 : 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.18,
+          childAspectRatio: 0.9,
         ),
         itemBuilder: (context, index) {
           final item = actions[index];

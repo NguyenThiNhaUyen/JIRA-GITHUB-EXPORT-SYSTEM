@@ -35,7 +35,7 @@ export default function StudentContribution() {
                     <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-teal-600 animate-pulse" size={48} />
                 </div>
                 <div className="flex flex-col items-center gap-6">
-                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Analyzing Code DNA & Contributions</span>
+                    <span className="text-[11px] font-black text-gray-400 animate-pulse">Analyzing Code DNA & Contributions</span>
                     <div className="w-64 h-2 bg-gray-100/50 rounded-full overflow-hidden p-0.5 shadow-inner">
                         <div className="h-full bg-gradient-to-r from-teal-500 via-indigo-500 to-purple-500 animate-[loading_2.5s_ease-in-out_infinite] rounded-full" style={{ width: '40%' }}></div>
                     </div>
@@ -61,7 +61,7 @@ export default function StudentContribution() {
                         key="refresh" 
                         variant="outline" 
                         onClick={handleRefresh}
-                        className="rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display group"
+                        className="rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display group"
                     >
                         <History size={18} className="mr-3 group-hover:rotate-180 transition-transform duration-700" /> Refresh Insight
                     </Button>

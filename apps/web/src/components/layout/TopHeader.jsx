@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  ChevronLeft,
   Check,
   X
 } from "lucide-react";
@@ -146,33 +147,37 @@ export function TopHeader() {
 
   const getPageTitle = () => {
     const path = location.pathname;
-    
-    // Admin paths
-    if (path.includes("/admin/courses")) return "Quản lý Lớp học";
-    if (path.includes("/admin/semesters")) return "Quản lý Học kỳ";
-    if (path.includes("/admin/subjects")) return "Quản lý Môn học";
-    if (path.includes("/admin/reports")) return "Báo cáo Admin";
-    if (path === "/admin") return "Tổng quan";
+    const PAGE_TITLES = [
+      // Admin
+      { match: "/admin/courses", title: "Quản lý Lớp học" },
+      { match: "/admin/semesters", title: "Quản lý Học kỳ" },
+      { match: "/admin/subjects", title: "Quản lý Môn học" },
+      { match: "/admin/reports", title: "Báo cáo Admin" },
+      { match: "/admin/lecturer-assignment", title: "Phân công Giảng viên" },
+      { match: "/admin/workload", title: "Khối lượng Giảng dạy" },
+      { match: "/admin/users", title: "Quản lý Tài khoản" },
+      { match: "/admin", title: "Tổng quan Quản trị" },
 
-    // Lecturer paths
-    if (path.includes("/lecturer/group")) return "Chi tiết Nhóm";
-    if (path.includes("/lecturer/course")) return "Quản lý Nhóm";
-    if (path.includes("/lecturer/srs")) return "Báo cáo SRS";
-    if (path.includes("/lecturer/analytics")) return "Phân tích Lớp";
-    if (path.includes("/lecturer/contributions")) return "Theo dõi Đóng góp";
-    if (path.includes("/lecturer/reports")) return "Trung tâm Báo cáo";
-    if (path === "/lecturer") return "Tổng quan Giảng viên";
+      // Lecturer
+      { match: "/lecturer/group/", title: "Chi tiết Nhóm" },
+      { match: "/lecturer/course/", title: "Quản lý Nhóm" },
+      { match: "/lecturer/srs", title: "Báo cáo SRS" },
+      { match: "/lecturer/analytics", title: "Phân tích Lớp" },
+      { match: "/lecturer/contributions", title: "Theo dõi Đóng góp" },
+      { match: "/lecturer/reports", title: "Trung tâm Báo cáo" },
+      { match: "/lecturer", title: "Tổng quan Giảng viên" },
 
-    // Student paths
-    if (path.includes("/student/course")) return "Khóa học của tôi";
-    if (path.includes("/student/my-project")) return "Dự án của tôi";
-    if (path.includes("/student/project/")) return "Chi tiết Dự án";
-    if (path.includes("/student/contribution")) return "Đóng góp cá nhân";
-    if (path.includes("/student/alerts")) return "Thông báo & Cảnh báo";
-    if (path.includes("/student/srs")) return "Tài liệu SRS";
-    if (path === "/student") return "Tổng quan Sinh viên";
+      // Student
+      { match: "/student/course", title: "Khóa học của tôi" },
+      { match: "/student/my-project", title: "Dự án của tôi" },
+      { match: "/student/project/", title: "Chi tiết Dự án" },
+      { match: "/student/contribution", title: "Đóng góp cá nhân" },
+      { match: "/student/alerts", title: "Thông báo & Cảnh báo" },
+      { match: "/student/srs", title: "Tài liệu SRS" },
+      { match: "/student", title: "Tổng quan Sinh viên" },
+    ];
 
-    return "Dashboard";
+    return PAGE_TITLES.find(p => path.includes(p.match))?.title ?? "Dashboard";
   };
 
   const isRootPath = location.pathname === "/admin" || location.pathname === "/lecturer" || location.pathname === "/student";
@@ -189,32 +194,32 @@ export function TopHeader() {
   };
 
   return (
-    <header className="h-[88px] px-8 flex items-center justify-between border-b border-gray-100 bg-white relative z-20">
+    <header className="h-[72px] px-6 flex items-center justify-between border-b border-gray-100 bg-white relative z-20">
       {/* LEFT */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {!isRootPath && (
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 font-black transition-all"
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-all flex items-center justify-center"
           >
-            ←
+            <ChevronLeft size={20} strokeWidth={2.5} />
           </button>
         )}
-        <h1 className="text-2xl font-black text-gray-800 tracking-tight uppercase">
+        <h1 className="text-xl font-semibold text-gray-800">
           {getPageTitle()}
         </h1>
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         {/* SEARCH */}
         <div className="relative hidden md:block">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" size={15} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm nhanh..."
-            className="w-72 pl-12 pr-6 py-3 bg-gray-50 border border-transparent rounded-[20px] text-[10px] font-black uppercase tracking-widest focus:bg-white focus:border-teal-100 focus:ring-4 focus:ring-teal-50/50 outline-none transition-all"
+            placeholder="Tìm kiếm..."
+            className="w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-2xl text-sm text-gray-600 placeholder-gray-300 focus:bg-white focus:border-teal-200 focus:ring-2 focus:ring-teal-50 outline-none transition-all"
           />
         </div>
 
@@ -222,58 +227,58 @@ export function TopHeader() {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-3 rounded-2xl transition-all ${showNotifications ? 'bg-teal-50 text-teal-600' : 'hover:bg-gray-50 text-gray-400'}`}
+            className={`relative p-2.5 rounded-2xl transition-all ${showNotifications ? 'bg-teal-50 text-teal-600' : 'hover:bg-gray-50 text-gray-400'}`}
           >
-            <Bell size={20} />
+            <Bell size={19} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-[16px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                 {unreadCount}
               </span>
             )}
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-4 w-[400px] bg-white rounded-[32px] shadow-2xl shadow-gray-200/50 border border-gray-100 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/20 flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Thông báo mới</span>
-                {unreadCount > 0 && <span className="text-[9px] font-black text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full uppercase">{unreadCount} Chưa đọc</span>}
+            <div className="absolute right-0 mt-3 w-[380px] bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 z-40 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
+                <span className="text-sm font-semibold text-gray-700">Thông báo</span>
+                {unreadCount > 0 && <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{unreadCount} chưa đọc</span>}
               </div>
 
-              <div className="max-h-[450px] overflow-y-auto divide-y divide-gray-50">
+              <div className="max-h-[420px] overflow-y-auto divide-y divide-gray-50">
                 {isLoading && (
-                  <div className="py-12 text-center text-gray-300 text-[10px] font-black uppercase tracking-widest">Đang đồng bộ...</div>
+                  <div className="py-10 text-center text-gray-400 text-sm">Đang tải...</div>
                 )}
                 {notifications.map((notif, idx) => (
                   <div 
                     key={notif.id || `notif-${idx}`} 
-                    className={`px-8 py-6 hover:bg-gray-50/50 transition-all cursor-pointer group ${!notif.isRead ? 'bg-teal-50/10' : ''}`}
+                    className={`px-6 py-4 hover:bg-gray-50/70 transition-all cursor-pointer group ${!notif.isRead ? 'bg-teal-50/20' : ''}`}
                     onClick={() => !notif.isRead && handleMarkRead(notif.id)}
                   >
                     <div className="flex justify-between items-start mb-1">
-                        <span className="text-[9px] font-black text-teal-600 uppercase tracking-widest opacity-60">{notif.type}</span>
-                        <span className="text-[9px] font-bold text-gray-300 uppercase">{formatTime(notif.createdAt)}</span>
+                        <span className="text-xs font-medium text-teal-600">{notif.type}</span>
+                        <span className="text-xs text-gray-400">{formatTime(notif.createdAt)}</span>
                     </div>
-                    <p className="font-black text-gray-800 text-sm leading-tight group-hover:text-teal-600 transition-colors uppercase tracking-tight">{notif.title}</p>
-                    <p className="text-xs text-gray-500 font-bold mt-1.5 leading-relaxed">{notif.content}</p>
+                    <p className="font-semibold text-gray-800 text-sm leading-snug group-hover:text-teal-700 transition-colors">{notif.title}</p>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{notif.content}</p>
                     
                     {notif.projectName && (
-                      <div className="flex items-center gap-2 mt-3 bg-white border border-gray-100 px-3 py-1.5 rounded-lg inline-flex">
+                      <div className="flex items-center gap-1.5 mt-2 bg-white border border-gray-100 px-2.5 py-1 rounded-lg inline-flex w-fit">
                           <Check size={10} className="text-teal-500"/>
-                          <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Dự án: {notif.projectName}</span>
+                          <span className="text-xs text-gray-400">Dự án: {notif.projectName}</span>
                       </div>
                     )}
 
                     {notif.type === 'INVITATION' && !notif.isRead && (
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex gap-2 mt-3">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleAccept(notif.invitationId, notif.id); }}
-                          className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-teal-600 text-white px-4 py-2 rounded-xl shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all"
+                          className="text-xs font-semibold bg-teal-600 text-white px-3.5 py-1.5 rounded-xl hover:bg-teal-700 transition-all"
                         >
                           Chấp nhận
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDecline(notif.invitationId, notif.id); }}
-                          className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-white border border-gray-100 text-gray-400 px-4 py-2 rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+                          className="text-xs font-semibold bg-white border border-gray-200 text-gray-500 px-3.5 py-1.5 rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
                         >
                           Từ chối
                         </button>
@@ -282,9 +287,9 @@ export function TopHeader() {
                   </div>
                 ))}
                 {notifications.length === 0 && !isLoading && (
-                  <div className="py-16 text-center">
-                      <Bell size={32} className="mx-auto text-gray-100 mb-4"/>
-                      <p className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Không có thông báo mới</p>
+                  <div className="py-14 text-center">
+                      <Bell size={28} className="mx-auto text-gray-200 mb-3"/>
+                      <p className="text-sm text-gray-400">Không có thông báo mới</p>
                   </div>
                 )}
               </div>
@@ -296,33 +301,33 @@ export function TopHeader() {
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className={`flex items-center gap-3 p-1.5 pr-4 rounded-[20px] transition-all ${showUserMenu ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+            className={`flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl transition-all ${showUserMenu ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center font-black text-white shadow-lg shadow-teal-100">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center font-bold text-white shadow-md">
               {(user?.name || "U").charAt(0).toUpperCase()}
             </div>
             <div className="hidden lg:block text-left">
-                <p className="text-[10px] font-black text-gray-800 uppercase tracking-tight leading-none">{user?.name || "Tài khoản"}</p>
-                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{user?.role}</p>
+                <p className="text-sm font-semibold text-gray-800 leading-none">{user?.name || "Tài khoản"}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{user?.role}</p>
             </div>
             <ChevronDown size={14} className={`text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 mt-4 w-64 bg-white rounded-[28px] shadow-2xl shadow-gray-200/50 border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/20">
-                <p className="font-black text-gray-800 text-sm uppercase tracking-tight">{user?.name}</p>
-                <p className="text-[10px] text-gray-400 font-bold truncate mt-1">{user?.email}</p>
+            <div className="absolute right-0 mt-3 w-60 bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 z-50 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-50">
+                <p className="font-semibold text-gray-800 text-sm">{user?.name}</p>
+                <p className="text-xs text-gray-400 truncate mt-0.5">{user?.email}</p>
               </div>
               <div className="p-2">
-                  <button className="flex items-center gap-3 w-full px-6 py-4 hover:bg-gray-50 rounded-2xl text-[10px] font-black text-gray-500 uppercase tracking-widest transition-all">
-                    <Settings size={16} /> Cài đặt hồ sơ
+                  <button className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-50 rounded-2xl text-sm text-gray-600 transition-all">
+                    <Settings size={15} /> Cài đặt hồ sơ
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-6 py-4 text-red-500 hover:bg-red-50 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    className="flex items-center gap-2.5 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl text-sm transition-all"
                   >
-                    <LogOut size={16} /> Đăng xuất
+                    <LogOut size={15} /> Đăng xuất
                   </button>
               </div>
             </div>
@@ -332,6 +337,7 @@ export function TopHeader() {
     </header>
   );
 }
+
 
 
 
