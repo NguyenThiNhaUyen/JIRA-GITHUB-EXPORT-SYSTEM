@@ -222,37 +222,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final items = [
       {
         'label': 'Học kỳ',
-        'value': '${stats['semesters'] ?? stats['Semesters'] ?? 0}',
+        'value': '${stats['semesters'] ?? 0}',
         'icon': Icons.calendar_month_outlined,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Môn học',
-        'value': '${stats['subjects'] ?? stats['Subjects'] ?? 0}',
+        'value': '${stats['subjects'] ?? 0}',
         'icon': Icons.library_books_outlined,
         'color': const Color(0xFF6366F1),
       },
       {
         'label': 'Lớp học phần',
-        'value': '${stats['courses'] ?? stats['Courses'] ?? 0}',
+        'value': '${stats['courses'] ?? 0}',
         'icon': Icons.menu_book_outlined,
         'color': const Color(0xFF2563EB),
       },
       {
         'label': 'Giảng viên',
-        'value': '${stats['lecturers'] ?? stats['Lecturers'] ?? 0}',
+        'value': '${stats['lecturers'] ?? 0}',
         'icon': Icons.manage_accounts_outlined,
         'color': const Color(0xFF8B5CF6),
       },
       {
         'label': 'Sinh viên',
-        'value': '${stats['students'] ?? stats['Students'] ?? 0}',
+        'value': '${stats['students'] ?? 0}',
         'icon': Icons.school_outlined,
         'color': const Color(0xFF14B8A6),
       },
       {
         'label': 'Nhóm dự án',
-        'value': '${stats['projects'] ?? stats['Projects'] ?? 0}',
+        'value': '${stats['projects'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFFF59E0B),
       },
@@ -263,7 +263,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return _SectionCard(
       title: 'System Overview',
-      subtitle: '${stats['activeSemesters'] ?? stats['ActiveSemesters'] ?? 0} học kỳ đang mở',
+      subtitle: '${stats['activeSemesters'] ?? 0} học kỳ đang mở',
       child: GridView.builder(
         itemCount: items.length,
         shrinkWrap: true,
@@ -340,31 +340,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final items = [
       {
         'label': 'Repo Connected',
-        'value': '${integrationStats['repoConnected'] ?? integrationStats['RepoConnected'] ?? 0}',
+        'value': '${integrationStats['repoConnected'] ?? 0}',
         'icon': Icons.folder_open_outlined,
         'color': const Color(0xFF10B981),
       },
       {
         'label': 'Missing Repo',
-        'value': '${integrationStats['repoMissing'] ?? integrationStats['RepoMissing'] ?? 0}',
+        'value': '${integrationStats['repoMissing'] ?? 0}',
         'icon': Icons.error_outline,
         'color': const Color(0xFFEF4444),
       },
       {
         'label': 'Jira Project',
-        'value': '${integrationStats['jiraConnected'] ?? integrationStats['JiraConnected'] ?? 0}',
+        'value': '${integrationStats['jiraConnected'] ?? 0}',
         'icon': Icons.check_circle_outline,
         'color': const Color(0xFF3B82F6),
       },
       {
         'label': 'Sync Errors',
-        'value': '${integrationStats['syncErrors'] ?? integrationStats['SyncErrors'] ?? 0}',
+        'value': '${integrationStats['syncErrors'] ?? 0}',
         'icon': Icons.warning_amber_rounded,
         'color': const Color(0xFFF59E0B),
       },
       {
         'label': 'Reports Exported',
-        'value': '${integrationStats['reportsExported'] ?? integrationStats['ReportsExported'] ?? 0}',
+        'value': '${integrationStats['reportsExported'] ?? 0}',
         'icon': Icons.trending_up,
         'color': const Color(0xFF6366F1),
       },

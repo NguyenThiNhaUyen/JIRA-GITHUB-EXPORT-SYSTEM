@@ -39,28 +39,36 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
   List<Map<String, dynamic>> get allCourses {
     if (selectedSemester.isEmpty) return courses;
-    return courses.where((c) => c['semesterId'].toString() == selectedSemester).toList();
+    return courses.where((c) {
+      final sId = (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? '').toString();
+      return sId == selectedSemester;
+    }).toList();
   }
 
   List<Map<String, dynamic>> get filteredCourses {
     List<Map<String, dynamic>> result = courses;
     if (selectedSemester.isNotEmpty) {
-      result = result.where((c) => c['semesterId'].toString() == selectedSemester).toList();
+      result = result.where((c) {
+        final sId = (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? '').toString();
+        return sId == selectedSemester;
+      }).toList();
     }
     if (selectedCourse.isNotEmpty) {
-      result = result.where((c) => c['id'].toString() == selectedCourse).toList();
+      result = result.where((c) {
+        final cId = (c['id'] ?? c['Id'] ?? c['courseId'] ?? '').toString();
+        return cId == selectedCourse;
+      }).toList();
     }
     return result;
   }
 
   Map<String, dynamic> get stats {
-    final resultCourses = courses; // Always calculate based on all for overview if needed, or filtered?
-    // AdminReports.jsx uses allCourses for stats overview usually
+    final resultCourses = courses; 
     return {
       'totalCourses': resultCourses.length,
-      'activeCourses': resultCourses.where((c) => c['status'] == 'ACTIVE').length,
-      'totalStudents': resultCourses.fold<int>(0, (sum, c) => sum + ((c['currentStudents'] as num?)?.toInt() ?? 0)),
-      'totalProjects': resultCourses.fold<int>(0, (sum, c) => sum + ((c['projectsCount'] as num?)?.toInt() ?? 0)),
+      'activeCourses': resultCourses.where((c) => (c['status'] ?? c['Status']) == 'ACTIVE').length,
+      'totalStudents': resultCourses.fold<int>(0, (sum, c) => sum + ((c['currentStudents'] ?? c['current_students'] ?? c['studentCount'] ?? 0) as num).toInt()),
+      'totalProjects': resultCourses.fold<int>(0, (sum, c) => sum + ((c['projectsCount'] ?? c['projects_count'] ?? c['projectCount'] ?? 0) as num).toInt()),
     };
   }
 
@@ -78,9 +86,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   List<Map<String, dynamic>> get projectDistribution => filteredCourses
       .map<Map<String, dynamic>>(
         (course) => <String, dynamic>{
-          'name': course['code'],
-          'projects': course['projectsCount'] ?? 0,
-          'students': course['currentStudents'] ?? 0,
+          'name': course['code'] ?? course['courseCode'] ?? 'N/A',
+          'projects': course['projectsCount'] ?? course['projects_count'] ?? 0,
+          'students': course['currentStudents'] ?? course['current_students'] ?? 0,
         },
       )
       .toList();
@@ -127,24 +135,66 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Future<void> handleGenerateReport(String type, String id) async {
-    String message;
-    switch (type) {
-      case 'COMMIT':
-        message = 'Đã bắt đầu tạo báo cáo Commit cho lớp.';
-        break;
-      case 'ROSTER':
-        message = 'Đã bắt đầu tạo báo cáo Team Roster.';
-        break;
-      case 'SRS':
-        message = 'Đã bắt đầu xuất báo cáo SRS.';
-        break;
-      default:
-        message = 'Đã bắt đầu tạo báo cáo.';
+    setState(() => _isLoading = true);
+    
+    bool success = false;
+    String message = '';
+    
+    try {
+      switch (type) {
+        case 'COMMIT':
+          success = await _adminService.generateCommitStats(id);
+          message = success ? 'Đã yêu cầu tạo báo cáo Commit cho lớp.' : 'Không thể tạo báo cáo Commit.';
+          break;
+        case 'ROSTER':
+          success = await _adminService.generateTeamRoster(id);
+          message = success ? 'Đã yêu cầu tạo báo cáo Team Roster.' : 'Không thể tạo báo cáo Team Roster.';
+          break;
+        case 'SRS':
+          success = await _adminService.generateSrs(id);
+          message = success ? 'Đã yêu cầu xuất báo cáo SRS chuyên sâu.' : 'Không thể xuất báo cáo SRS.';
+          break;
+        default:
+          message = 'Loại báo cáo không hợp lệ.';
+      }
+    } catch (e) {
+      message = 'Lỗi hệ thống khi tạo báo cáo.';
+    } finally {
+      setState(() => _isLoading = false);
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: teal));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message), 
+          backgroundColor: success ? teal : Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        )
+      );
+    }
+  }
+
+  void _handleExportAll() {
+    // Simulate CSV export
+    String csv = 'Mã lớp,Tên lớp,Học kỳ,Sinh viên,Dự án,Trạng thái\n';
+    for (var c in courses) {
+      final code = c['code'] ?? c['courseCode'] ?? 'N/A';
+      final name = c['name'] ?? c['courseName'] ?? 'N/A';
+      final sId = c['semesterId'] ?? c['semester_id'] ?? 'N/A';
+      final students = '${c['currentStudents'] ?? 0}/${c['maxStudents'] ?? 40}';
+      final projects = c['projectsCount'] ?? c['projects_count'] ?? 0;
+      final status = c['status'] ?? c['Status'] ?? 'N/A';
+      
+      csv += '"$code","$name","$sId",$students,$projects,$status\n';
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã xuất báo cáo tổng hợp CSV! (Giả lập)'),
+        backgroundColor: teal,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -308,12 +358,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  void _handleExportAll() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đang trích xuất báo cáo tổng hợp...'), backgroundColor: teal),
     );
   }
 
@@ -718,6 +762,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 )
               else
                 ...filteredCourses.map((course) {
+                  final courseCode = course['code'] ?? course['courseCode'] ?? 'N/A';
+                  final courseName = course['name'] ?? course['courseName'] ?? 'N/A';
+                  final currentStudents = course['currentStudents'] ?? course['current_students'] ?? 0;
+                  final maxStudents = course['maxStudents'] ?? course['max_students'] ?? 40;
+                  final projectsCount = course['projectsCount'] ?? course['projects_count'] ?? 0;
+                  final status = course['status'] ?? course['Status'] ?? 'ACTIVE';
+                  final courseId = course['id']?.toString() ?? '0';
                   return TableRow(
                     decoration: const BoxDecoration(
                       border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
@@ -729,7 +780,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${course['code']}',
+                              courseCode,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -738,7 +789,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${course['name']}',
+                              courseName,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: textSecondary,
@@ -752,7 +803,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         child: Center(
                           child: RichText(
                             text: TextSpan(
-                              text: '${course['currentStudents']}',
+                              text: '$currentStudents',
                               style: const TextStyle(
                                 color: textPrimary,
                                 fontWeight: FontWeight.w700,
@@ -760,7 +811,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: '/${course['maxStudents']}',
+                                  text: '/$maxStudents',
                                   style: const TextStyle(
                                     color: Color(0xFF94A3B8),
                                     fontWeight: FontWeight.w500,
@@ -776,7 +827,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Center(
                           child: Text(
-                            '${course['projectsCount'] ?? 0}',
+                            '$projectsCount',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -788,7 +839,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: Center(
-                          child: _courseStatusBadge('${course['status']}'),
+                          child: _courseStatusBadge(status),
                         ),
                       ),
                       Padding(
@@ -804,7 +855,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Báo cáo Commit',
                                 onTap: () => handleGenerateReport(
                                   'COMMIT',
-                                  course['id'].toString(),
+                                  courseId,
                                 ),
                               ),
                               _IconActionButton(
@@ -813,7 +864,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Báo cáo Team Roster',
                                 onTap: () => handleGenerateReport(
                                   'ROSTER',
-                                  course['id'].toString(),
+                                  courseId,
                                 ),
                               ),
                               _IconActionButton(
@@ -822,7 +873,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Xuất SRS ISO',
                                 onTap: () => handleGenerateReport(
                                   'SRS',
-                                  course['id'].toString(),
+                                  courseId,
                                 ),
                               ),
                             ],

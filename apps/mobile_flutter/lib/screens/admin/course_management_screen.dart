@@ -88,9 +88,9 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   }
 
   List<Map<String, dynamic>> get _filteredCourses {
-    return _courses.where((c) {
-      final code = (c["code"] ?? "").toString().toLowerCase();
-      final name = (c["name"] ?? "").toString().toLowerCase();
+    return _courses.map(_normalizeCourseData).where((c) {
+      final code = c["code"].toLowerCase();
+      final name = c["name"].toLowerCase();
       final matchesSearch = _search.isEmpty || code.contains(_search.toLowerCase()) || name.contains(_search.toLowerCase());
       final matchesSem = _filterSemesterId == "ALL" || c["semesterId"].toString() == _filterSemesterId;
       return matchesSearch && matchesSem;
@@ -146,6 +146,20 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     );
   }
 
+  Map<String, dynamic> _normalizeCourseData(Map<String, dynamic> c) {
+    return {
+      'id': c['id'] ?? c['Id'] ?? 0,
+      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'status': (c['status'] ?? c['Status'] ?? 'ACTIVE').toString().toUpperCase(),
+      'maxStudents': (c['maxStudents'] ?? c['max_students'] ?? c['MaxStudents'] ?? 40) as num,
+      'semesterId': (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? 0),
+      'subjectId': (c['subjectId'] ?? c['subject_id'] ?? c['SubjectId'] ?? 0),
+      'enrollments': c['enrollments'] ?? c['Enrollments'] ?? c['students'] ?? c['Students'] ?? [],
+      'lecturers': c['lecturers'] ?? c['Lecturers'] ?? c['teachingBy'] ?? c['teaching_by'] ?? [],
+    };
+  }
+
   Widget _buildPageHeader(double width) {
     final bool isSmall = width < 800;
     return Row(
@@ -182,11 +196,12 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   }
 
   Widget _buildStatsGrid(double width) {
-    int active = _courses.where((c) => c["status"] == "ACTIVE").length;
-    int upcoming = _courses.where((c) => c["status"] == "UPCOMING").length;
+    final normalized = _courses.map(_normalizeCourseData).toList();
+    int active = normalized.where((c) => c["status"] == "ACTIVE").length;
+    int upcoming = normalized.where((c) => c["status"] == "UPCOMING").length;
     int totalEnrollments = 0;
-    for (var c in _courses) {
-      totalEnrollments += (c["enrollments"] as List? ?? []).length;
+    for (var c in normalized) {
+      totalEnrollments += (c["enrollments"] as List).length;
     }
 
     return GridView.count(
@@ -298,12 +313,20 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     );
   }
 
-  Widget _buildCourseItem(Map<String, dynamic> c, double width) {
-    final status = (c["status"] ?? "ACTIVE").toString().toUpperCase();
-    final enrollments = c["enrollments"] as List? ?? [];
-    final lecturer = (c["lecturers"] as List? ?? []).isNotEmpty ? c["lecturers"][0] : null;
-    final subject = _subjects.firstWhere((s) => s["id"] == c["subjectId"], orElse: () => {});
-    final semester = _semesters.firstWhere((s) => s["id"] == c["semesterId"], orElse: () => {});
+  Widget _buildCourseItem(Map<String, dynamic> course, double width) {
+    final c = _normalizeCourseData(course);
+    final status = c["status"];
+    final enrollments = c["enrollments"] as List;
+    final lecturers = c["lecturers"] as List;
+    final lecturer = lecturers.isNotEmpty ? lecturers[0] : null;
+    final subject = _subjects.firstWhere((s) {
+      final sId = s["id"] ?? s["Id"] ?? 0;
+      return sId.toString() == c["subjectId"].toString();
+    }, orElse: () => {});
+    final semester = _semesters.firstWhere((s) {
+      final semId = s["id"] ?? s["Id"] ?? 0;
+      return semId.toString() == c["semesterId"].toString();
+    }, orElse: () => {});
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -365,7 +388,7 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
               const SizedBox(width: 8),
               _actionIcon(Icons.upload_file, const Color(0xFF10B981), () => _showImportModal(c), "Import"),
               const Spacer(),
-              _actionIcon(Icons.edit_outlined, Colors.teal, () => _showCourseModal(course: c), null),
+              _actionIcon(Icons.edit_outlined, Colors.teal, () => _showCourseModal(course: course), null),
               const SizedBox(width: 8),
               _actionIcon(Icons.delete_outline, Colors.red, () => _handleDelete(c["id"]), null),
             ],
@@ -431,12 +454,14 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
 
   void _showCourseModal({Map<String, dynamic>? course}) {
     final bool isEdit = course != null;
-    final codeCtrl = TextEditingController(text: course?["code"]);
-    final nameCtrl = TextEditingController(text: course?["name"]);
-    final maxCtrl = TextEditingController(text: (course?["maxStudents"] ?? 40).toString());
-    String subjectId = course?["subjectId"]?.toString() ?? "";
-    String semesterId = course?["semesterId"]?.toString() ?? "";
-    String status = course?["status"] ?? "ACTIVE";
+    final Map<String, dynamic> c = course != null ? _normalizeCourseData(course) : {};
+    
+    final codeCtrl = TextEditingController(text: (c["code"] ?? "").toString());
+    final nameCtrl = TextEditingController(text: (c["name"] ?? "").toString());
+    final maxCtrl = TextEditingController(text: (c["maxStudents"] ?? 40).toString());
+    String subjectId = (c["subjectId"] ?? "").toString();
+    String semesterId = (c["semesterId"] ?? "").toString();
+    String status = (c["status"] ?? "ACTIVE").toString().toUpperCase();
 
     showDialog(
       context: context,
@@ -578,7 +603,8 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   }
 
   void _showViewStudentsModal(Map<String, dynamic> course) {
-    final enrollments = List<Map<String, dynamic>>.from(course["enrollments"] ?? []);
+    final c = _normalizeCourseData(course);
+    final enrollments = List<Map<String, dynamic>>.from(c["enrollments"] ?? []);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

@@ -41,21 +41,30 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
 
   List<Map<String, dynamic>> get _filteredSubjects {
     return _subjects.where((s) {
-      final name = s['name'] ?? s['subjectName'] ?? "";
-      final code = s['code'] ?? s['subjectCode'] ?? "";
+      final name = (s['name'] ?? s['subjectName'] ?? s['SubjectName'] ?? "").toString();
+      final code = (s['code'] ?? s['subjectCode'] ?? s['SubjectCode'] ?? "").toString();
+      final dept = (s['department'] ?? s['Department'] ?? "ALL").toString();
+      
       final matchesSearch = name.toLowerCase().contains(_search.toLowerCase()) || 
                            code.toLowerCase().contains(_search.toLowerCase());
-      final matchesDept = _deptFilter == "ALL" || s['department'] == _deptFilter;
+      final matchesDept = _deptFilter == "ALL" || dept == _deptFilter;
       return matchesSearch && matchesDept;
-    }).toList()..sort((a, b) => (a['code'] ?? a['subjectCode'] ?? "").compareTo(b['code'] ?? b['subjectCode'] ?? ""));
+    }).toList()..sort((a, b) {
+      final codeA = (a['code'] ?? a['subjectCode'] ?? a['SubjectCode'] ?? "").toString();
+      final codeB = (b['code'] ?? b['subjectCode'] ?? b['SubjectCode'] ?? "").toString();
+      return codeA.compareTo(codeB);
+    });
   }
 
   Map<String, dynamic> get stats {
-    final activeCount = _subjects.where((s) => s['status'] == 'ACTIVE').length;
-    final avgCredits = _subjects.isEmpty ? 0.0 : _subjects.fold<int>(0, (sum, s) => sum + ((s['credits'] as num?)?.toInt() ?? 0)) / _subjects.length;
+    final normalized = _subjects.map(_normalizeSubjectData).toList();
+    final activeCount = normalized.where((s) => s['status'] == 'ACTIVE').length;
+    
+    final totalCredits = normalized.fold<num>(0, (sum, s) => sum + s['credits']);
+    final avgCredits = normalized.isEmpty ? 0.0 : totalCredits / normalized.length;
     
     return {
-      'total': _subjects.length,
+      'total': normalized.length,
       'active': activeCount,
       'avgCredits': avgCredits.toStringAsFixed(1),
     };
@@ -143,26 +152,33 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
       ),
     );
   }
+  Map<String, dynamic> _normalizeSubjectData(Map<String, dynamic> s) {
+    return {
+      'id': s['id'] ?? s['Id'] ?? 0,
+      'name': (s['name'] ?? s['subjectName'] ?? s['SubjectName'] ?? "").toString(),
+      'code': (s['code'] ?? s['subjectCode'] ?? s['SubjectCode'] ?? "").toString(),
+      'department': (s['department'] ?? s['Department'] ?? "N/A").toString(),
+      'credits': (s['credits'] ?? s['Credits'] ?? 0) as num,
+      'maxStudents': (s['maxStudents'] ?? s['max_students'] ?? s['MaxStudents'] ?? 40) as num,
+      'status': (s['status'] ?? s['Status'] ?? "ACTIVE").toString().toUpperCase(),
+      'description': (s['description'] ?? s['Description'] ?? "").toString(),
+      'courseNumber': (s['courseNumber'] ?? s['course_number'] ?? s['CourseNumber'] ?? "").toString(),
+    };
+  }
+
   Future<void> _showSubjectDialog({Map<String, dynamic>? subject}) async {
     final bool isEdit = subject != null;
+    final Map<String, dynamic> s = subject != null ? _normalizeSubjectData(subject) : {};
 
-    final nameController = TextEditingController(text: subject?["name"] ?? "");
-    final descriptionController = TextEditingController(
-      text: subject?["description"] ?? "",
-    );
-    final courseNumberController = TextEditingController(
-      text: subject?["courseNumber"]?.toString() ?? "",
-    );
-    final creditsController = TextEditingController(
-      text: (subject?["credits"] ?? 3).toString(),
-    );
-    final maxStudentsController = TextEditingController(
-      text: (subject?["maxStudents"] ?? 40).toString(),
-    );
+    final nameController = TextEditingController(text: (s['name'] ?? "").toString());
+    final descriptionController = TextEditingController(text: (s['description'] ?? "").toString());
+    final courseNumberController = TextEditingController(text: (s['courseNumber'] ?? "").toString());
+    final creditsController = TextEditingController(text: (s['credits'] ?? 3).toString());
+    final maxStudentsController = TextEditingController(text: (s['maxStudents'] ?? 40).toString());
 
-    String department = subject?["department"] ?? "";
-    String code = subject?["code"] ?? "";
-    String status = subject?["status"] ?? "ACTIVE";
+    String department = (s['department'] ?? "").toString();
+    String code = (s['code'] ?? "").toString();
+    String status = (s['status'] ?? "ACTIVE").toString().toUpperCase();
 
     void regenerateCode(void Function(VoidCallback fn) setLocalState) {
       final prefix = _departmentPrefix[department] ?? "";
@@ -664,11 +680,12 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
                 DataColumn(label: _buildHeaderCell("Thao tác", end: true)),
               ],
               rows: _filteredSubjects.map((s) {
-                final code = s['code'] ?? s['subjectCode'] ?? "";
-                final name = s['name'] ?? s['subjectName'] ?? "";
-                final credits = (s['credits'] as num?)?.toInt() ?? 0;
-                final maxStudents = (s['maxStudents'] as num?)?.toInt() ?? 40;
-                final status = s['status'] ?? "ACTIVE";
+                final normalizedSubject = _normalizeSubjectData(s);
+                final code = normalizedSubject['code'];
+                final name = normalizedSubject['name'];
+                final credits = normalizedSubject['credits'];
+                final maxStudents = normalizedSubject['maxStudents'];
+                final status = normalizedSubject['status'];
 
                 return DataRow(
                   cells: [

@@ -89,15 +89,24 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   List<Map<String, dynamic>> get _filteredSemesters {
     return _semesters.where((s) {
-      final nameMatches = (s["name"] ?? "").toString().toLowerCase().contains(_search.toLowerCase());
-      final codeMatches = (s["code"] ?? "").toString().toLowerCase().contains(_search.toLowerCase());
-      final statusMatches = _filterStatus == "ALL" || s["status"] == _filterStatus;
+      final name = (s["name"] ?? s["Name"] ?? "").toString();
+      final code = (s["code"] ?? s["Code"] ?? "").toString();
+      final status = (s["status"] ?? s["Status"] ?? "UPCOMING").toString().toUpperCase();
+      
+      final nameMatches = name.toLowerCase().contains(_search.toLowerCase());
+      final codeMatches = code.toLowerCase().contains(_search.toLowerCase());
+      final statusMatches = _filterStatus == "ALL" || status == _filterStatus;
+      
       return (nameMatches || codeMatches) && statusMatches;
     }).toList();
   }
 
   int _getCourseCount(dynamic semesterId) {
-    return _courses.where((c) => c["semesterId"].toString() == semesterId.toString()).length;
+    if (semesterId == null) return 0;
+    return _courses.where((c) {
+      final sId = (c["semesterId"] ?? c["semester_id"] ?? c["SemesterId"] ?? "").toString();
+      return sId == semesterId.toString();
+    }).length;
   }
 
   @override
@@ -239,7 +248,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
     int completedCount = 0;
 
     for (var s in _semesters) {
-      final status = (s["status"] ?? "").toString().toUpperCase();
+      final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
       if (status == "ACTIVE") activeCount++;
       else if (status == "UPCOMING") upcomingCount++;
       else if (status == "COMPLETED") completedCount++;
@@ -291,8 +300,10 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               const Center(child: Text("Không có dữ liệu", style: TextStyle(color: Colors.grey, fontSize: 12)))
             else
               ..._semesters.take(3).map((s) {
-                final start = DateTime.tryParse(s["startDate"] ?? "") ?? DateTime.now();
-                final end = DateTime.tryParse(s["endDate"] ?? "") ?? DateTime.now();
+                final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
+                final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
+                final start = DateTime.tryParse(startStr) ?? DateTime.now();
+                final end = DateTime.tryParse(endStr) ?? DateTime.now();
                 final totalDays = end.difference(start).inDays;
                 final elapsedDays = DateTime.now().difference(start).inDays;
                 final progress = (totalDays > 0) ? (elapsedDays / totalDays).clamp(0.0, 1.0) : 0.0;
@@ -350,14 +361,16 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               const Center(child: Text("Không có dữ liệu", style: TextStyle(color: Colors.grey, fontSize: 12)))
             else
               ..._semesters.take(3).map((s) {
-                final count = _getCourseCount(s["id"]);
+                final sId = s["id"] ?? s["Id"] ?? 0;
+                final count = _getCourseCount(sId);
+                final sName = s["name"] ?? s["Name"] ?? "N/A";
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
                       Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.teal.shade300, shape: BoxShape.circle)),
                       const SizedBox(width: 12),
-                      Expanded(child: Text(s["name"] ?? "N/A", style: const TextStyle(fontSize: 13, color: Colors.grey))),
+                      Expanded(child: Text(sName, style: const TextStyle(fontSize: 13, color: Colors.grey))),
                       Text("$count lớp", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
@@ -420,18 +433,24 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                   DataColumn(label: Text("Thao tác")),
                 ],
                 rows: _filteredSemesters.map((s) {
-                  final count = _getCourseCount(s["id"]);
-                  final status = (s["status"] ?? "").toString().toUpperCase();
+                  final sId = s["id"] ?? s["Id"] ?? 0;
+                  final count = _getCourseCount(sId);
+                  final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
+                  final sName = s["name"] ?? s["Name"] ?? "N/A";
+                  final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
+                  final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"];
+                  final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"];
+
                   return DataRow(cells: [
                     DataCell(Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Text((s["code"] ?? "").toString().toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text(sName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
                       ],
                     )),
-                    DataCell(Text("${_formatDisplayDate(s["startDate"])} - ${_formatDisplayDate(s["endDate"])}", style: const TextStyle(fontSize: 12))),
+                    DataCell(Text("${_formatDisplayDate(startStr)} - ${_formatDisplayDate(endStr)}", style: const TextStyle(fontSize: 12))),
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(color: count > 0 ? Colors.indigo.shade50 : Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
@@ -450,7 +469,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                     DataCell(Row(
                       children: [
                         IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: () => _showSemesterModal(semester: s)),
-                        IconButton(icon: const Icon(Icons.delete, size: 18, color: Colors.red), onPressed: () => _handleDelete(s["id"])),
+                        IconButton(icon: const Icon(Icons.delete, size: 18, color: Colors.red), onPressed: () => _handleDelete(sId)),
                       ],
                     )),
                   ]);
@@ -469,9 +488,14 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   }
 
   Widget _buildSemesterCard(Map<String, dynamic> s) {
-    final count = _getCourseCount(s["id"]);
-    final status = (s["status"] ?? "").toString().toUpperCase();
+    final sId = s["id"] ?? s["Id"] ?? 0;
+    final count = _getCourseCount(sId);
+    final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
     final Color statusColor = status == "ACTIVE" ? Colors.teal : (status == "UPCOMING" ? Colors.blue : Colors.grey);
+    final sName = s["name"] ?? s["Name"] ?? "N/A";
+    final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
+    final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
+    final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -488,8 +512,8 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text((s["code"] ?? "").toString().toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  Text(sName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
               ),
               Container(
@@ -501,7 +525,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _infoRow(Icons.calendar_today, Colors.indigo.shade300, "${_formatDisplayDate(s["startDate"])} - ${_formatDisplayDate(s["endDate"])}"),
+          _infoRow(Icons.calendar_today, Colors.indigo.shade300, "${_formatDisplayDate(startStr)} - ${_formatDisplayDate(endStr)}"),
           const SizedBox(height: 8),
           _infoRow(Icons.class_outlined, Colors.teal.shade300, "$count lớp đang hoạt động"),
           const Divider(height: 24),
@@ -516,7 +540,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               ),
               const SizedBox(width: 8),
               TextButton.icon(
-                onPressed: () => _handleDelete(s["id"]),
+                onPressed: () => _handleDelete(sId),
                 icon: const Icon(Icons.delete_outline, size: 16),
                 label: const Text("Xóa"),
                 style: TextButton.styleFrom(foregroundColor: Colors.red),

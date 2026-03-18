@@ -103,6 +103,20 @@ class AdminService {
       body: {'newPassword': newPassword});
   }
 
+  // ─── REPORT Generation Methods ──────────────────────────
+
+  Future<bool> generateCommitStats(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/commit-statistics?courseId=$courseId&format=$format');
+  }
+
+  Future<bool> generateTeamRoster(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/team-roster?courseId=$courseId&format=$format');
+  }
+
+  Future<bool> generateSrs(String courseId, {String format = "PDF"}) async {
+    return _request('POST', '/reports/srs?courseId=$courseId&format=$format');
+  }
+
   // ─── Private Helpers ─────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> _getList(String endpoint) async {

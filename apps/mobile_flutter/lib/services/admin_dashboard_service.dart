@@ -9,7 +9,7 @@ class AdminDashboardService {
 
   Future<Map<String, dynamic>> getDashboardData() async {
     try {
-      // 1. Lấy thống kê cơ bản và chi tiết tích hợp thông qua Analytics API
+      // 1. Fetch statistics and integration details via Analytics API
       final results = await Future.wait([
         getAdminStats(),
         getIntegrationStats(),
@@ -19,19 +19,36 @@ class AdminDashboardService {
         getInactiveTeams(),
         getAuditLogs(),
         getTeamActivities(),
-        _adminService.getCourses(), // Vẫn giữ các thông tin thô để phụ trợ UI nếu cần
+        _adminService.getCourses(), 
         _adminService.getSemesters(),
         _adminService.getSubjects(),
       ]);
 
-      final stats = results[0] ?? {
-        'semesters': 0, 'subjects': 0, 'courses': 0, 
-        'lecturers': 0, 'students': 0, 'projects': 0,
+      // 2. Normalize Admin Stats (Support multiple naming conventions from backend)
+      final rawStats = results[0] as Map<String, dynamic>? ?? {};
+      final semestersData = results[9] as List? ?? [];
+      final subjectsData = (results[10] as List?) ?? [];
+      final coursesData = (results[8] as List?) ?? [];
+      
+      final stats = {
+        'semesters': rawStats['semesters'] ?? rawStats['Semesters'] ?? semestersData.length,
+        'subjects': rawStats['subjects'] ?? rawStats['Subjects'] ?? subjectsData.length,
+        'courses': rawStats['courses'] ?? rawStats['Courses'] ?? coursesData.length,
+        'lecturers': rawStats['lecturers'] ?? rawStats['Lecturers'] ?? 0,
+        'students': rawStats['students'] ?? rawStats['Students'] ?? 0,
+        'projects': rawStats['projects'] ?? rawStats['Projects'] ?? 0,
+        'activeSemesters': rawStats['activeSemesters'] ?? rawStats['ActiveSemesters'] ?? 
+                          semestersData.where((s) => s['status'] == 'ACTIVE' || s['Status'] == 'ACTIVE').length,
       };
       
-      final integrationStats = results[1] ?? {
-        'repoConnected': 0, 'repoMissing': 0, 
-        'jiraConnected': 0, 'syncErrors': 0, 'reportsExported': 0,
+      // 3. Normalize Integration Stats
+      final rawIntegration = results[1] as Map<String, dynamic>? ?? {};
+      final integrationStats = {
+        'repoConnected': rawIntegration['repoConnected'] ?? rawIntegration['RepoConnected'] ?? rawIntegration['repo_connected'] ?? 0,
+        'repoMissing': rawIntegration['repoMissing'] ?? rawIntegration['RepoMissing'] ?? rawIntegration['repo_missing'] ?? 0,
+        'jiraConnected': rawIntegration['jiraConnected'] ?? rawIntegration['JiraConnected'] ?? rawIntegration['jira_connected'] ?? 0,
+        'syncErrors': rawIntegration['syncErrors'] ?? rawIntegration['SyncErrors'] ?? rawIntegration['sync_errors'] ?? 0,
+        'reportsExported': rawIntegration['reportsExported'] ?? rawIntegration['ReportsExported'] ?? rawIntegration['reports_exported'] ?? 0,
       };
 
       return {
@@ -43,14 +60,14 @@ class AdminDashboardService {
         'inactiveTeams': results[5] ?? [],
         'systemActivity': results[6] ?? [],
         'teamActivity': results[7] ?? [],
-        'recentCourses': (results[8] as List? ?? []).take(5).toList(),
+        'recentCourses': coursesData.take(6).toList(), // Web uses 6
         'coursesData': results[8] ?? [],
         'semestersData': results[9] ?? [],
         'subjectsData': results[10] ?? [],
       };
     } catch (e) {
       print('AdminDashboardService Error: $e');
-      throw Exception('Lỗi nạp dữ liệu Dashboard từ Analytics: $e');
+      throw Exception('Lỗi nạp dữ liệu Dashboard: $e');
     }
   }
 
