@@ -33,13 +33,16 @@ export function useReports() {
     const [teamFilter, setTeamFilter] = useState("all");
     const [search, setSearch] = useState("");
 
-    const { data: coursesData, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
-    const { data: projectsData, isLoading: loadingProjects } = useGetProjects({
+    // Switch back to the stable /api/courses which also supports Lecturers
+    const { data: coursesData, isLoading: loadingCourses, isError: errorCourses } = useGetCourses({ pageSize: 100 });
+    const { data: projectsData, isLoading: loadingProjects, isError: errorProjects } = useGetProjects({
         courseId: courseFilter === "all" ? undefined : courseFilter,
         pageSize: 100
     });
-    const { data: inactiveTeams = [] } = useInactiveTeams();
-    const { data: myReports = [], isLoading: loadingMyReports } = useGetMyReports();
+    
+    // Gracefully handle potentially restricted analytics
+    const { data: inactiveTeams = [], isError: errorInactive } = useInactiveTeams();
+    const { data: myReports = [], isLoading: loadingMyReports, isError: errorReports } = useGetMyReports();
 
     // Mutations
     const commitStatsMutation = useGenerateCommitStats();
@@ -119,7 +122,7 @@ export function useReports() {
         statsRecords,
         previewData,
         myReports,
-        loading: loadingCourses || loadingProjects,
+        loading: (loadingCourses && !errorCourses) || (loadingProjects && !errorProjects),
         handleExport,
         EXPORT_TYPES
     };
