@@ -193,6 +193,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   }
 
   Widget _buildTabBar() {
+    final bool isLeader = _project['role']?.toString().toUpperCase() == 'LEADER' || _project['isLeader'] == true;
     return Container(
       color: Colors.white,
       child: TabBar(
@@ -361,24 +362,23 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                   'Sync Commits',
                   Icons.sync_rounded,
                   const Color(0xFF3B82F6),
-                  () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã đồng bộ commits từ GitHub'),
-                      backgroundColor: Color(0xFF10B981),
-                    ),
-                  ),
+                  _handleSyncCommits,
                 ),
+                if (_project['role']?.toString().toUpperCase() == 'LEADER') ...[
+                  const SizedBox(height: 8),
+                  _buildActionButton(
+                    'Cập nhật Integrations',
+                    Icons.settings_input_component_rounded,
+                    const Color(0xFF0F766E),
+                    _handleUpdateIntegrations,
+                  ),
+                ],
                 const SizedBox(height: 8),
                 _buildActionButton(
                   'Upload SRS',
                   Icons.upload_file_outlined,
                   const Color(0xFF6366F1),
-                  () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Upload SRS thành công'),
-                      backgroundColor: Color(0xFF10B981),
-                    ),
-                  ),
+                  () => context.go('/student/srs'),
                 ),
                 const SizedBox(height: 8),
                 _buildActionButton(
@@ -399,6 +399,25 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _handleSyncCommits() async {
+    final ok = await _studentService.syncCommits(_project['id']);
+    if (ok) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã yêu cầu đồng bộ commits thành công!'), backgroundColor: Color(0xFF10B981)));
+       _loadData();
+    }
+  }
+
+  Future<void> _handleUpdateIntegrations() async {
+    // Show dialog to enter Github & Jira links
+    final ok = await _studentService.updateIntegrations(_project['id'], {
+      "githubRepo": _project['repository'],
+      "jiraProject": _project['jiraKey'] ?? "PROJ",
+    });
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật liên kết tích hợp thành công!'), backgroundColor: Color(0xFF10B981)));
+    }
   }
 
   Widget _buildTasksTab() {
@@ -515,83 +534,135 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
 
   Widget _buildTeamTab() {
     final teamMembers = (_project['team'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final bool isLeader = _project['role']?.toString().toUpperCase() == 'LEADER';
+    
     if (teamMembers.isEmpty) return const Center(child: Text('Chưa có thông tin team'));
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: teamMembers.length,
-      itemBuilder: (context, i) {
-        final m = teamMembers[i];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: cardBorder),
+    return Column(
+      children: [
+        if (isLeader)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildActionButton('Mời thành viên mới', Icons.person_add_rounded, const Color(0xFF0F766E), _handleInviteMember),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: teamMembers.length,
+            itemBuilder: (context, i) {
+              final m = teamMembers[i];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF0F766E).withValues(alpha: 0.8),
-                      const Color(0xFF14B8A6),
-                    ],
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: cardBorder),
                 ),
-                child: Center(
-                  child: Text(
-                    '#${i + 1}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      m['studentName']?.toString() ?? m['name']?.toString() ?? '',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: textPrimary),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF0F766E).withValues(alpha: 0.8),
+                            const Color(0xFF14B8A6),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '#${i + 1}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ),
-                    Text(
-                      m['role']?.toString() ?? '',
-                      style: const TextStyle(
-                          fontSize: 11, color: textSecondary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m['studentName']?.toString() ?? m['name']?.toString() ?? '',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: textPrimary),
+                          ),
+                          Text(
+                            m['role']?.toString() ?? '',
+                            style: const TextStyle(
+                                fontSize: 11, color: textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            _buildMiniMetric('${m['commits'] ?? 0}', 'Commits'),
+                            const SizedBox(width: 12),
+                            _buildMiniMetric('${m['issuesDone'] ?? 0}', 'Issues'),
+                            const SizedBox(width: 12),
+                            _buildMiniMetric('${m['contributionScore'] ?? m['score'] ?? 0}%', 'Score'),
+                            if (isLeader && m['studentId'] != _currentUser?.studentCode) ...[
+                               const SizedBox(width: 12),
+                               IconButton(
+                                 icon: const Icon(Icons.person_remove_outlined, color: Color(0xFFEF4444), size: 18),
+                                 onPressed: () => _handleRemoveMember(m['studentId'] ?? m['id']),
+                               ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      _buildMiniMetric('${m['commits'] ?? 0}', 'Commits'),
-                      const SizedBox(width: 12),
-                      _buildMiniMetric('${m['issuesDone'] ?? 0}', 'Issues'),
-                      const SizedBox(width: 12),
-                      _buildMiniMetric('${m['contributionScore'] ?? m['score'] ?? 0}%', 'Score'),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
+  }
+
+  Future<void> _handleInviteMember() async {
+     // For now, simple mock invite
+     final ok = await _studentService.inviteMember(_project['id'], {
+       "studentCode": "STUDENT_CODE",
+     });
+     if (ok) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã gửi lời mời tham gia nhóm!'), backgroundColor: Color(0xFF10B981)));
+     }
+  }
+
+  Future<void> _handleRemoveMember(dynamic userId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận'),
+        content: const Text('Bạn có chắc muốn mời thành viên này khỏi nhóm?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đuổi', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      final ok = await _studentService.removeMember(_project['id'], userId);
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa thành viên khỏi nhóm.'), backgroundColor: Color(0xFF10B981)));
+        _loadData();
+      }
+    }
   }
 
   Widget _buildSrsTab() {
