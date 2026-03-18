@@ -55,6 +55,18 @@ class StudentService {
     }
   }
 
+  Future<bool> _delete(String path) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$_baseUrl$path"),
+        headers: await _headers(),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch(e) {
+      return false;
+    }
+  }
+
   // --- Student APIs ---
 
   /// GET /api/student/me/stats - Dashboard cá nhân
@@ -107,5 +119,27 @@ class StudentService {
   /// POST /api/users/student/{userId}/links - Liên kết accounts
   Future<bool> linkAccounts(dynamic userId, Map<String, dynamic> links) async {
     return _post("/users/student/$userId/links", links);
+  }
+
+  // --- Project Leader APIs ---
+
+  /// POST /api/projects/{id}/members - Mời bạn vào nhóm
+  Future<bool> inviteMember(dynamic projectId, Map<String, dynamic> body) async {
+    return _post("/projects/$projectId/members", body);
+  }
+
+  /// DELETE /api/projects/{id}/members/{uId} - Đuổi bạn khỏi nhóm
+  Future<bool> removeMember(dynamic projectId, dynamic userId) async {
+    return _delete("/projects/$projectId/members/$userId");
+  }
+
+  /// POST /api/projects/{id}/integrations - Gửi link tích hợp
+  Future<bool> updateIntegrations(dynamic projectId, Map<String, dynamic> body) async {
+    return _post("/projects/$projectId/integrations", body);
+  }
+
+  /// POST /api/projects/{id}/sync-commits - Đồng bộ dữ liệu thủ công
+  Future<bool> syncCommits(dynamic projectId) async {
+    return _post("/projects/$projectId/sync-commits", {});
   }
 }

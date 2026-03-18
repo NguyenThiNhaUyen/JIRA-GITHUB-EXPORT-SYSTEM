@@ -47,6 +47,12 @@ class AuthService {
           );
         } else if (method == "GET") {
           response = await http.get(url, headers: headers);
+        } else if (method == "PATCH") {
+          response = await http.patch(
+            url,
+            headers: headers,
+            body: jsonEncode(body ?? {}),
+          );
         } else {
           throw Exception("Unsupported method");
         }
@@ -80,11 +86,13 @@ class AuthService {
 
       final Map<String, dynamic> json = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && json["success"] == true) {
-        final token = json["data"]["accessToken"];
-        final user = User.fromJson(json["data"]["user"]);
+      if (response.statusCode == 200 && (json["success"] == true || json["Data"] != null)) {
+        final data = json["data"] ?? json["Data"];
+        final token = data["accessToken"];
+        final user = User.fromJson(data["user"]);
 
         await _storage.write(key: "token", value: token);
+        await _storage.write(key: "refreshToken", value: data["refreshToken"]);
         await _storage.write(
             key: "user", value: jsonEncode(user.toJson()));
 
@@ -105,6 +113,99 @@ class AuthService {
         "success": false,
         "error": "Server is waking up, please try again",
       };
+    }
+  }
+
+  /// =========================
+  /// LOGIN GOOGLE
+  /// =========================
+  Future<Map<String, dynamic>> loginGoogle(String idToken) async {
+    try {
+      final response = await _request(
+        "POST",
+        "/api/sessions/google",
+        body: {
+          "idToken": idToken,
+        },
+      );
+
+      final Map<String, dynamic> json = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final data = json["data"] ?? json["Data"];
+        final token = data["accessToken"];
+        final user = User.fromJson(data["user"]);
+
+        await _storage.write(key: "token", value: token);
+        await _storage.write(key: "refreshToken", value: data["refreshToken"]);
+        await _storage.write(
+            key: "user", value: jsonEncode(user.toJson()));
+
+        return {
+          "success": true,
+          "user": user,
+        };
+      }
+
+      return {
+        "success": false,
+        "error": json["message"] ?? "Google login failed",
+      };
+    } catch (e) {
+      return {
+        "success": false,
+        "error": e.toString(),
+      };
+    }
+  }
+
+  /// =========================
+  /// REFRESH TOKEN
+  /// =========================
+  Future<bool> refreshToken() async {
+    try {
+      final oldRefreshToken = await _storage.read(key: "refreshToken");
+      if (oldRefreshToken == null) return false;
+
+      final response = await _request(
+        "POST",
+        "/api/auth/refresh",
+        body: {
+          "refreshToken": oldRefreshToken,
+        },
+      );
+
+      final Map<String, dynamic> json = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final data = json["data"] ?? json["Data"];
+        await _storage.write(key: "token", value: data["accessToken"]);
+        if (data["refreshToken"] != null) {
+          await _storage.write(key: "refreshToken", value: data["refreshToken"]);
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// =========================
+  /// FORGOT PASSWORD
+  /// =========================
+  Future<bool> forgotPassword(String email) async {
+    try {
+      final response = await _request(
+        "POST",
+        "/api/auth/forgot-password",
+        body: {
+          "email": email,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -141,4 +242,4 @@ class AuthService {
   Future<String?> getToken() async {
     return await _storage.read(key: "token");
   }
-}
+}
