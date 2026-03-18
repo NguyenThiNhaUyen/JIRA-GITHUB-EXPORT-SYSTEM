@@ -1,8 +1,11 @@
-﻿import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute.jsx";
 import RoleGuard from "@/components/RoleGuard.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import { setNavigate } from "@/utils/navigation.js";
+import { useEffect } from "react";
 
 // Public pages (Keep sync for initial load)
 import Login from "./pages/Login.jsx";
@@ -60,6 +63,11 @@ const CourseWorkspace = lazy(() => import("./pages/student/CourseWorkspace.jsx")
 
 export default function App() {
   const { userRole } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
 
   const getDefaultRedirect = () => {
     if (!userRole) return "/login";
@@ -86,38 +94,44 @@ export default function App() {
         <Route path="/not-found" element={<NotFound />} />
 
         {/* Admin routes */}
-        <Route path="/admin" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><AdminDashboard /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/reports" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><AdminReports /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/courses" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><CourseManagement /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/semesters" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><SemesterManagement /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/subjects" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><SubjectManagement /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/lecturer-assignment" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><LecturerAssignment /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/users" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><UserManagement /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/my-reports" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><MyReports /></AdminLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/admin/workload" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><LecturerWorkload /></AdminLayout></RoleGuard></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout /></RoleGuard></ProtectedRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="courses" element={<CourseManagement />} />
+          <Route path="semesters" element={<SemesterManagement />} />
+          <Route path="subjects" element={<SubjectManagement />} />
+          <Route path="lecturer-assignment" element={<LecturerAssignment />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="my-reports" element={<MyReports />} />
+          <Route path="workload" element={<LecturerWorkload />} />
+        </Route>
 
         {/* Lecturer routes */}
-        <Route path="/lecturer" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><LecturerDashboard /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/my-courses" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><MyCourses /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/course/:courseId/manage-groups" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><ManageGroups /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/group/:groupId" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><GroupDetail /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/contributions" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><Contributions /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/alerts" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><Alerts /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/srs" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><SrsReports /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/reports" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><Reports /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/groups" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><LecturerDashboard /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/course/:courseId/analytics" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><CourseAnalytics /></LecturerLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/lecturer/projects" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout><ProjectsOverview /></LecturerLayout></RoleGuard></ProtectedRoute>} />
+        <Route path="/lecturer" element={<ProtectedRoute><RoleGuard requiredRole="LECTURER"><LecturerLayout /></RoleGuard></ProtectedRoute>}>
+          <Route index element={<LecturerDashboard />} />
+          <Route path="my-courses" element={<MyCourses />} />
+          <Route path="course/:courseId/manage-groups" element={<ManageGroups />} />
+          <Route path="group/:groupId" element={<GroupDetail />} />
+          <Route path="contributions" element={<Contributions />} />
+          <Route path="alerts" element={<Alerts />} />
+          <Route path="srs" element={<SrsReports />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="groups" element={<LecturerDashboard />} />
+          <Route path="course/:courseId/analytics" element={<CourseAnalytics />} />
+          <Route path="projects" element={<ProjectsOverview />} />
+        </Route>
 
         {/* Student routes */}
-        <Route path="/student" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentDashboard /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/courses" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentCoursesPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/my-project" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentMyProjectPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/contribution" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentContributionPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/alerts" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentAlertsPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/srs" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentSrsPage /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/project/:projectId" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><StudentProject /></StudentLayout></RoleGuard></ProtectedRoute>} />
-        <Route path="/student/workspace/:courseId" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout><CourseWorkspace /></StudentLayout></RoleGuard></ProtectedRoute>} />
+        <Route path="/student" element={<ProtectedRoute><RoleGuard requiredRole="STUDENT"><StudentLayout /></RoleGuard></ProtectedRoute>}>
+          <Route index element={<StudentDashboard />} />
+          <Route path="courses" element={<StudentCoursesPage />} />
+          <Route path="my-project" element={<StudentMyProjectPage />} />
+          <Route path="contribution" element={<StudentContributionPage />} />
+          <Route path="alerts" element={<StudentAlertsPage />} />
+          <Route path="srs" element={<StudentSrsPage />} />
+          <Route path="project/:projectId" element={<StudentProject />} />
+          <Route path="workspace/:courseId" element={<CourseWorkspace />} />
+        </Route>
 
         {/* Default redirect */}
         <Route path="/" element={<Navigate to={getDefaultRedirect()} replace />} />
@@ -135,4 +149,3 @@ export default function App() {
     </Suspense>
   );
 }
-

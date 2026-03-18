@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -37,4 +37,3 @@ public partial class GithubRepository
 
     public virtual ICollection<WorkLink> WorkLinks { get; set; } = new List<WorkLink>();
 }
-

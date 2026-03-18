@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,4 +67,3 @@ public class AlertsController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Alert sent"));
     }
 }
-

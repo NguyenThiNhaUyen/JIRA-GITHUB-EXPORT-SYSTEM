@@ -1,4 +1,4 @@
-﻿import { RefreshCw, Check, Upload, X } from"lucide-react";
+import { RefreshCw, Check, Upload, X } from"lucide-react";
 import { Modal } from"@/components/ui/Interactive.jsx";
 import { InputField, SelectField } from"@/components/shared/FormFields.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -75,4 +75,3 @@ export function SubmitSrsModal({ isOpen, onClose, myGroups, selectedProject, set
  </Modal>
  );
 }
-

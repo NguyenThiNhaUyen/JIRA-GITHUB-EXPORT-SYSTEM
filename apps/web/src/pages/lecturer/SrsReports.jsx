@@ -1,4 +1,4 @@
-﻿import {
+import {
  FileText,
  Eye,
  MessageSquare,
@@ -103,4 +103,3 @@ export default function SrsReports() {
  </div>
  );
 }
-

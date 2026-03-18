@@ -1,4 +1,4 @@
-﻿import { useToast } from "@/components/ui/Toast.jsx";
+import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useApproveIntegration,
     useRejectIntegration,
@@ -149,4 +149,3 @@ export function useGroupActions(groupId) {
         isSendingAlert
     };
 }
-

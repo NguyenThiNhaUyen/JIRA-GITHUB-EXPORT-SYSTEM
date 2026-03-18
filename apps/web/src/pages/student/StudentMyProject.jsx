@@ -1,4 +1,4 @@
-﻿import { useNavigate } from"react-router-dom";
+import { useNavigate } from"react-router-dom";
 import { FolderKanban, Users, Activity, Target } from"lucide-react";
 import { useAuth } from"@/context/AuthContext.jsx";
 import { useStudentProjects } from"@/features/dashboard/hooks/useDashboard.js";
@@ -95,4 +95,3 @@ export default function StudentMyProjectPage() {
  </div>
  );
 }
-

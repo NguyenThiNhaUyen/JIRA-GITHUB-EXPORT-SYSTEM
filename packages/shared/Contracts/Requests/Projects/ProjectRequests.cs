@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
 
@@ -42,4 +42,3 @@ public class RejectIntegrationRequest
 {
     public string? Reason { get; set; }
 }
-

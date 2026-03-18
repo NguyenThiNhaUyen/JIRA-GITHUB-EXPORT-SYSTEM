@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useGetAlerts, useResolveAlert } from "@/features/system/hooks/useAlerts.js";
 import { useMyCourses } from "@/features/dashboard/hooks/useDashboard.js";
 import { useToast } from "@/components/ui/Toast.jsx";
@@ -87,4 +87,3 @@ export function useAlertActions() {
     now
   };
 }
-

@@ -1,4 +1,4 @@
-﻿import { Search, UserPlus, CheckCircle, RefreshCw, X, Users } from"lucide-react";
+import { Search, UserPlus, CheckCircle, RefreshCw, X, Users } from"lucide-react";
 import { Modal } from"@/components/ui/Interactive.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -87,4 +87,3 @@ export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents
  </Modal>
  );
 }
-

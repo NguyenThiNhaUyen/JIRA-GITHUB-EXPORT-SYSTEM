@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
@@ -115,4 +115,3 @@ public class AlertService : IAlertService
         await _context.SaveChangesAsync();
     }
 }
-

@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapAnalyticsStats, mapHeatmapData, mapRadarData } from "./mappers/analyticsMapper.js";
 
@@ -91,4 +91,3 @@ export async function getLecturerCourses() {
     const res = await client.get("/analytics/lecturer/courses");
     return unwrap(res);
 }
-

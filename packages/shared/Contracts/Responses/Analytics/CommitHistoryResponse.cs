@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
+namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
 
 /// <summary>
 /// GET /api/projects/{id}/commit-history â€” per-student contribution chart
@@ -21,4 +21,3 @@ public class StudentCommitHistoryResponse
     public List<HeatmapStat> HeatmapData { get; set; } = new();
     public DateTime? LastCommitAt { get; set; }
 }
-

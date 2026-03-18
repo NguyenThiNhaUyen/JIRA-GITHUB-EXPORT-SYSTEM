@@ -1,4 +1,4 @@
-﻿// dateRange: Utilities xá»­ lĂ½ date vĂ  generate weeks (dĂ¹ng trong AppContext)
+// dateRange: Utilities xá»­ lĂ½ date vĂ  generate weeks (dĂ¹ng trong AppContext)
 export function formatDate(d) {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -52,4 +52,3 @@ export function generateWeeks(startDateStr, endDateStr) {
 
   return weeks;
 }
-

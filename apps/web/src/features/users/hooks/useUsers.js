@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUsers, createUser, getStudentLinks, linkStudentAccounts, updateUserRole, updateUserStatus, resetUserPassword } from "../api/userApi.js";
 
 export const USER_KEYS = {
@@ -53,4 +53,3 @@ export const useResetUserPassword = () => {
         mutationFn: ({ id, newPassword }) => resetUserPassword(id, newPassword),
     });
 };
-

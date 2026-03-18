@@ -1,4 +1,4 @@
-﻿import { Target, Star } from"lucide-react";
+import { Target, Star } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 
@@ -51,4 +51,3 @@ export function AcademicGradesCard({ isLoading, grades }) {
  </Card>
  );
 }
-

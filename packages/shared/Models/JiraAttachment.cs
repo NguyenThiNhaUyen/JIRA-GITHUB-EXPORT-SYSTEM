@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -17,4 +17,3 @@ public partial class JiraAttachment
 
     public virtual JiraIssue Issue { get; set; } = null!;
 }
-

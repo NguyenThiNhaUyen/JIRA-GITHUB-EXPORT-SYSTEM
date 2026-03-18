@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 export function StatsCard({ 
   label, 
@@ -49,16 +49,15 @@ export function StatsCard({
           <div className="text-4xl font-black tracking-tight text-gray-800">{value}</div>
           {trend && (
             <div className={`flex items-center px-2 py-1 rounded-xl text-[10px] font-black ${trend > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
-              {trend > 0 ? "â†‘" : "â†“"} {Math.abs(trend)}%
+              {trend > 0 ? "Ă¢â€ â€˜" : "Ă¢â€ â€œ"} {Math.abs(trend)}%
             </div>
           )}
         </div>
         
         {description && (
-          <p className="text-[10px] font-black text-gray-300 mt-1 uppercase tracking-wider">{description}</p>
+          <p className="text-[10px] font-bold text-gray-400 mt-1">{description}</p>
         )}
       </div>
     </div>
   );
 }
-

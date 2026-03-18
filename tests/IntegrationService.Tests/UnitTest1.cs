@@ -1,4 +1,4 @@
-﻿namespace IntegrationService.Tests;
+namespace IntegrationService.Tests;
 
 public class UnitTest1
 {
@@ -8,4 +8,3 @@ public class UnitTest1
 
     }
 }
-

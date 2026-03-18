@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -117,4 +117,3 @@ public class SubjectService : ISubjectService
         return _mapper.Map<List<SubjectInfo>>(items);
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace JiraGithubExport.IntegrationService.Hubs;
@@ -74,4 +74,3 @@ public class NotificationHub : Hub
         _logger.LogInformation("Sent {Type} notification to Group {GroupName}", type, groupName);
     }
 }
-

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from"react";
+import { useState, useMemo } from"react";
 import { 
  Users, 
  BookOpen, 
@@ -186,4 +186,3 @@ export default function LecturerWorkload() {
  </div>
  );
 }
-

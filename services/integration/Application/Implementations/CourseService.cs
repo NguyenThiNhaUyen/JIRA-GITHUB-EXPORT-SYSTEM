@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -614,4 +614,3 @@ public class CourseService : ICourseService
         }
     }
 }
-

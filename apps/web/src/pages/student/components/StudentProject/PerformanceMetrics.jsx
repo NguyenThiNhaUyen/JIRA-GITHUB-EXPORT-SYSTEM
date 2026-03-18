@@ -1,4 +1,4 @@
-﻿import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from"recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from"recharts";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 
 export function PerformanceMetrics({ metrics, commitHistory }) {
@@ -64,4 +64,3 @@ export function PerformanceMetrics({ metrics, commitHistory }) {
  </div>
  );
 }
-

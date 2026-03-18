@@ -1,4 +1,4 @@
-﻿// Select component
+// Select component
 export function Select({ children, className = "", ...props }) {
   return (
     <select
@@ -9,4 +9,3 @@ export function Select({ children, className = "", ...props }) {
     </select>
   );
 }
-

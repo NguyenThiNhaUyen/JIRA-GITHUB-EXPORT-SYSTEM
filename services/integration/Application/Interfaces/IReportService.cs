@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Responses.Reports;
+using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using JiraGithubExport.Shared.Models;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -14,4 +14,3 @@ public interface IReportService
     Task<string?> GetReportFileUrlAsync(long reportExportId);
     Task<List<ReportExportResponse>> GetUserReportsAsync(long userId);
 }
-

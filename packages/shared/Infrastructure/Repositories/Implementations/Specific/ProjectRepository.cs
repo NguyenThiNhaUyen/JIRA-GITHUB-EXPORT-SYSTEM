@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
@@ -43,4 +43,3 @@ public class ProjectRepository : GenericRepository<Project>, IProjectRepository
         return (items, totalItems);
     }
 }
-

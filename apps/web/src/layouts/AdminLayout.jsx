@@ -1,4 +1,4 @@
-﻿import BaseLayout from "./BaseLayout.jsx";
+import BaseLayout from "./BaseLayout.jsx";
 import {
     LayoutDashboard, CalendarDays, Library,
     Users, BookOpen, BarChart3,
@@ -33,4 +33,3 @@ const NAV = [
 export default function AdminLayout({ children }) {
     return <BaseLayout navConfig={NAV}>{children}</BaseLayout>;
 }
-

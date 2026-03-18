@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProjectCommits, syncGithubCommits, getCommitsStats } from "../api/githubApi.js";
 
 export const GITHUB_KEYS = {
@@ -37,4 +37,3 @@ export const useSyncCommits = () => {
         },
     });
 };
-

@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -89,4 +89,3 @@ public class ProjectTeamService : IProjectTeamService
         await _unitOfWork.SaveChangesAsync();
     }
 }
-

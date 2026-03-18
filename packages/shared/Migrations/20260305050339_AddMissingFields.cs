@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -68,4 +68,3 @@ namespace JiraGithubExport.Shared.Migrations
         }
     }
 }
-

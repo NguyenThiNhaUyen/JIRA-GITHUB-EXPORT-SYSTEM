@@ -1,4 +1,4 @@
-﻿import { FileText, Download, RefreshCw } from"lucide-react";
+import { FileText, Download, RefreshCw } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
@@ -68,4 +68,3 @@ export function SrsSubmissions({ loadingSrs, srsReports, onUploadModalOpen }) {
  </Card>
  );
 }
-

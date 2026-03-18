@@ -1,4 +1,4 @@
-﻿import { Target } from"lucide-react";
+import { Target } from"lucide-react";
 import { Card } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -43,4 +43,3 @@ export function TopContributors({ students }) {
  </Card>
  );
 }
-

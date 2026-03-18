@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.Shared.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -616,4 +616,3 @@ public class PdfReportGenerator : IPdfReportGenerator
         });
     }
 }
-

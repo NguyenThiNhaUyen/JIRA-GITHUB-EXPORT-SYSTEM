@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/Toast.jsx";
 import {
@@ -322,4 +322,3 @@ export function useManageGroups() {
     navigate
   };
 }
-

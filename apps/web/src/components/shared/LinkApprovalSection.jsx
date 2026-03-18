@@ -1,4 +1,4 @@
-﻿import { Button } from"../ui/Button.jsx";
+import { Button } from"../ui/Button.jsx";
 import { StatusBadge } from"./Badge.jsx";
 import { ExternalLink } from"lucide-react";
 
@@ -45,4 +45,3 @@ export function LinkApprovalSection({ icon, label, url, status, onApprove, onRej
  </div>
  );
 }
-

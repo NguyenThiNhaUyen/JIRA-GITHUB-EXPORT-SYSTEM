@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
@@ -32,4 +32,3 @@ export async function sendAlert(payload) {
     const res = await client.post("/alerts/send", payload);
     return unwrap(res);
 }
-

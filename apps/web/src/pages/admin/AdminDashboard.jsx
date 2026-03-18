@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Activity,
   Clock,
@@ -283,4 +283,3 @@ function CourseStatusBadge({ status }) {
     </span>
   );
 }
-

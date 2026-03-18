@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, ShieldAlert, CheckCircle, Clock, Users, Bell } from "lucide-react";
+import { AlertTriangle, ShieldAlert, CheckCircle, Clock, Users, Bell } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function AlertStats({ alertsList, remindedCount, now }) {
@@ -22,4 +22,3 @@ export function AlertStats({ alertsList, remindedCount, now }) {
     </div>
   );
 }
-

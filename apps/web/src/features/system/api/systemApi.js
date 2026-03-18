@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapSemester, mapSemesterList, mapSubject, mapSubjectList } from "./mappers/systemMapper.js";
 
@@ -59,4 +59,3 @@ export async function deleteSubject(id) {
     const res = await client.delete(`/subjects/${id}`);
     return unwrap(res);
 }
-

@@ -1,4 +1,4 @@
-﻿export const mapProject = (project) => {
+export const mapProject = (project) => {
     if (!project) return null;
     
     // BE can return members as Team, Members, or TeamMembers
@@ -100,4 +100,3 @@ export const mapProjectMetrics = (metrics) => {
         }))
     };
 };
-

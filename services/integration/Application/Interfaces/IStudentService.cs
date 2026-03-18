@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -20,4 +20,3 @@ public interface IStudentService
     Task<List<object>> GetStudentDeadlinesAsync(long userId);
     Task<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentDashboardStatsResponse> GetStudentDashboardStatsAsync(long userId);
 }
-

@@ -1,4 +1,4 @@
-﻿import { GraduationCap, Users, BookOpen, GitBranch, AlertTriangle, ChevronRight } from"lucide-react";
+import { GraduationCap, Users, BookOpen, GitBranch, AlertTriangle, ChevronRight } from"lucide-react";
 import { ResponsiveContainer, LineChart, Line } from"recharts";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -154,4 +154,3 @@ function StatusBadge({ status }) {
  </span>
  );
 }
-

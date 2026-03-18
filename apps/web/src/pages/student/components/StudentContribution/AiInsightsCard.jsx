@@ -1,4 +1,4 @@
-﻿import { Badge } from"@/components/ui/Badge.jsx";
+import { Badge } from"@/components/ui/Badge.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 import { BrainCircuit, Sparkles, ChevronRight } from"lucide-react";
@@ -40,4 +40,3 @@ export function AiInsightsCard({ stats }) {
  </Card>
  );
 }
-

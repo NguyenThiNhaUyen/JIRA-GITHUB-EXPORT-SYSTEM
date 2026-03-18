@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { 
   CalendarDays, 
   Library, 
@@ -36,4 +36,3 @@ export function AdminStats({ stats, integrationStats, activeSemesters }) {
     </div>
   );
 }
-

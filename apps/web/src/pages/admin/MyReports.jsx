@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ChevronLeft, Download, FileText, Clock, CheckCircle, AlertCircle, RefreshCw } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -172,4 +172,3 @@ export default function MyReports() {
  </div>
  );
 }
-

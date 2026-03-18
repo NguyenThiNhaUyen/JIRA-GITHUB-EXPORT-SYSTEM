@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
@@ -46,4 +46,3 @@ public class UpdateCourseRequest
     public int? MaxStudents { get; set; }
     public string? Status { get; set; }
 }
-

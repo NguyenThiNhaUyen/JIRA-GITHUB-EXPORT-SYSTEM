@@ -1,4 +1,4 @@
-﻿// Login page - Admin Teal theme with glassmorphism and cut-out layout
+// Login page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
@@ -216,4 +216,3 @@ export default function Login() {
     </div>
   );
 }
-

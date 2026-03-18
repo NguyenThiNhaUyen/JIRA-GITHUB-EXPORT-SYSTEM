@@ -1,4 +1,4 @@
-﻿import { useParams, useNavigate } from"react-router-dom";
+import { useParams, useNavigate } from"react-router-dom";
 import { Button } from"@/components/ui/Button.jsx";
 import {
  useGetProjectById,
@@ -149,4 +149,3 @@ export default function GroupDetail() {
  </div>
  );
 }
-

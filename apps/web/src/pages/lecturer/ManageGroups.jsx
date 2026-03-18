@@ -1,4 +1,4 @@
-﻿import { ArrowLeft, Download, Activity } from"lucide-react";
+import { ArrowLeft, Download, Activity } from"lucide-react";
 
 // Components UI
 import { Button } from"@/components/ui/Button.jsx";
@@ -118,4 +118,3 @@ export default function ManageGroups() {
  </div>
  );
 }
-

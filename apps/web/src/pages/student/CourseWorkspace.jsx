@@ -1,4 +1,4 @@
-﻿import { useParams, useNavigate } from"react-router-dom";
+import { useParams, useNavigate } from"react-router-dom";
 import { 
  Users, 
  AlertTriangle, 
@@ -150,4 +150,3 @@ export default function CourseWorkspace() {
  </div>
  );
 }
-

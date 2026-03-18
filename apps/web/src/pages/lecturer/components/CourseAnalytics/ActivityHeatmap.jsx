@@ -1,4 +1,4 @@
-﻿import React from"react";
+import React from"react";
 import CalendarHeatmap from"react-calendar-heatmap";
 import { subDays } from"date-fns";
 import { Calendar } from"lucide-react";
@@ -40,4 +40,3 @@ export function ActivityHeatmap({ heatmapData }) {
  </Card>
  );
 }
-

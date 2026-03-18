@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -35,4 +35,3 @@ public partial class InactiveAlert
 
     public virtual User ResolvedByUser { get; set; }
 }
-

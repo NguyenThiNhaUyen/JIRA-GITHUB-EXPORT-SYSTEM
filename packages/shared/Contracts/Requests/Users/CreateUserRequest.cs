@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Requests.Users;
+namespace JiraGithubExport.Shared.Contracts.Requests.Users;
 
 public class CreateUserRequest
 {
@@ -7,4 +7,3 @@ public class CreateUserRequest
     public string Role { get; set; } = null!; // LECTURER, STUDENT, ADMIN
     public string? Code { get; set; }
 }
-

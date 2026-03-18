@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -244,4 +244,3 @@ public class UserService : IUserService
         return await GetStudentLinksAsync(studentId);
     }
 }
-

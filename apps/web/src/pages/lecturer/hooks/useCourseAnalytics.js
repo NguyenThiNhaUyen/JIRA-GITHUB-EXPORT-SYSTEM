@@ -1,4 +1,4 @@
-﻿import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import { format as formatDateFn } from "date-fns";
 import { useToast } from "@/components/ui/Toast.jsx";
@@ -56,4 +56,3 @@ export function useCourseAnalytics() {
     loading
   };
 }
-

@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using JiraGithubExport.GithubService.DTOs;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
@@ -264,4 +264,3 @@ public class GitHubClient : IGitHubClient
         return dbUser.Id;
     }
 }
-

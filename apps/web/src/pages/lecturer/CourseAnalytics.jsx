@@ -1,4 +1,4 @@
-﻿import {
+import {
  Activity,
  Users,
  GitBranch,
@@ -89,4 +89,3 @@ export default function CourseAnalytics() {
  </div>
  );
 }
-

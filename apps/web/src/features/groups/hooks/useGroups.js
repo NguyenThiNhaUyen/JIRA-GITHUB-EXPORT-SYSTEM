@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getGroupById, approveGroupLink, rejectGroupLink, updateStudentScore } from "../api/groupApi.js";
 
 export const GROUP_KEYS = {
@@ -46,4 +46,3 @@ export const useUpdateStudentScore = () => {
         },
     });
 };
-

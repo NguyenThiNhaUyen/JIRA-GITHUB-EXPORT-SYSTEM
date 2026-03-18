@@ -1,4 +1,4 @@
-﻿import { ChevronRight, RefreshCw } from"lucide-react";
+import { ChevronRight, RefreshCw } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
@@ -67,4 +67,3 @@ export function MyCoursesGrid({ isLoading, courses, onCourseNavigate, onSeeAll }
  </Card>
  );
 }
-

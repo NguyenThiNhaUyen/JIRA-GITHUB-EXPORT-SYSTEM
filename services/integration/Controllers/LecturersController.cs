@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
@@ -76,4 +76,3 @@ public class LecturersController : ApiControllerBase
         return Ok(ApiResponse<LecturerWorkloadResponse>.SuccessResponse(result));
     }
 }
-

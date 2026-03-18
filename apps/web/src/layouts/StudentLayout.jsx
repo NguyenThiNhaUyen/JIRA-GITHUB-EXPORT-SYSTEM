@@ -1,4 +1,4 @@
-﻿import BaseLayout from "./BaseLayout.jsx";
+import BaseLayout from "./BaseLayout.jsx";
 import {
     LayoutDashboard, Library, Users,
     GitBranch, Bell, FileText,
@@ -36,4 +36,3 @@ const NAV = [
 export default function StudentLayout({ children }) {
     return <BaseLayout navConfig={NAV}>{children}</BaseLayout>;
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -21,4 +21,3 @@ public partial class Notification
     // Navigation properties
     public virtual User RecipientUser { get; set; } = null!;
 }
-

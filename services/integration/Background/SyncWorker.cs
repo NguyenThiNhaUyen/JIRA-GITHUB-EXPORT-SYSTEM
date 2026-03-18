@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -152,4 +152,3 @@ public class SyncWorker : BackgroundService
         _logger.LogInformation("Sync logic completed at {Time}", DateTime.UtcNow);
     }
 }
-

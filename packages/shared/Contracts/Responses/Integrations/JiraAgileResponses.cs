@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Contracts.Responses.Integrations
@@ -30,4 +30,3 @@ namespace JiraGithubExport.Shared.Contracts.Responses.Integrations
         public long OriginBoardId { get; set; }
     }
 }
-

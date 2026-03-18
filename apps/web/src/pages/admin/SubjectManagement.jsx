@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Library, Trash2, Edit2, Search, BookOpen, CheckCircle } from "lucide-react";
 
 // Components UI
@@ -287,4 +287,3 @@ export default function SubjectManagement() {
         </div>
     );
 }
-

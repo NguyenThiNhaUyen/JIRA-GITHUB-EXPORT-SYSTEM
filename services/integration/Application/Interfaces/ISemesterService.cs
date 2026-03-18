@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 
@@ -13,4 +13,3 @@ public interface ISemesterService
     Task<PagedResponse<SemesterInfo>> GetAllSemestersAsync(PagedRequest request);
     Task<List<SemesterInfo>> GetAllSemestersAsync();
 }
-

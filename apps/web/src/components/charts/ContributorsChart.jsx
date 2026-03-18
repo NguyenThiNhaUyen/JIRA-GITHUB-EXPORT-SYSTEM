@@ -1,4 +1,4 @@
-﻿// Top Contributors Chart - Horizontal Bar
+// Top Contributors Chart - Horizontal Bar
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -41,4 +41,3 @@ export function ContributorsChart({ data = [], isLoading, isError, limit = 5 }) 
     </ChartContainer>
   );
 }
-

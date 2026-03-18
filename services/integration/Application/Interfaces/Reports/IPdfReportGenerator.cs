@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Models;
+using JiraGithubExport.Shared.Models;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
@@ -56,4 +56,3 @@ public class SrsIssueRow
     public string? Priority { get; set; }
     public string? Status { get; set; }
 }
-

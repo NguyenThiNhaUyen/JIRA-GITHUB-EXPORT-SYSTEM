@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 using JiraGithubExport.Shared.Models;
 using System;
 using System.Threading.Tasks;
@@ -40,4 +40,3 @@ public interface IUnitOfWork : IDisposable
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
 }
-

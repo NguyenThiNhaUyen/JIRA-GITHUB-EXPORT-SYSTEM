@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Users;
 using JiraGithubExport.Shared.Contracts.Responses.Users;
@@ -133,4 +133,3 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<StudentLinksResponse>.SuccessResponse(result, "Accounts linked successfully"));
     }
 }
-

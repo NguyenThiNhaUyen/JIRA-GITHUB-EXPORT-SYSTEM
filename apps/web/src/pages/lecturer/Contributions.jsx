@@ -1,4 +1,4 @@
-﻿import { Download } from"lucide-react";
+import { Download } from"lucide-react";
 
 // Components Shared
 import { PageHeader } from"@/components/shared/PageHeader.jsx";
@@ -103,4 +103,3 @@ export default function Contributions() {
  </div>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -35,4 +35,3 @@ public partial class GithubUser
 
     public virtual ICollection<GithubPullRequest> GithubPullRequests { get; set; } = new List<GithubPullRequest>();
 }
-

@@ -1,4 +1,4 @@
-﻿import { Crown, RefreshCw, Users, MapPin } from"lucide-react";
+import { Crown, RefreshCw, Users, MapPin } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -62,4 +62,3 @@ export function WorkspaceHeader({ course, group, isLeader, onSync, isSyncing, on
  </div>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿import { LayoutList, Eye, Bell } from"lucide-react";
+import { LayoutList, Eye, Bell } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { Badge } from"@/components/ui/Badge.jsx";
@@ -74,4 +74,3 @@ function StatusBadge({ label, active }) {
  </span>
  );
 }
-

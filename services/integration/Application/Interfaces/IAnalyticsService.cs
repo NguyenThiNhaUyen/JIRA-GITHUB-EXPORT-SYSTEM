@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Responses.Analytics;
+using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
@@ -18,4 +18,3 @@ public interface IAnalyticsService
     Task<List<GroupRadarMetricResponse>> GetGroupRadarMetricsAsync(long courseId);
     Task<CourseContributionResponse> GetCourseContributionsAsync(long courseId);
 }
-

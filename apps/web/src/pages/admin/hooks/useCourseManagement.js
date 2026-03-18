@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useGetCourses,
@@ -275,4 +275,3 @@ export function useCourseManagement() {
         handleKickStudent
     };
 }
-

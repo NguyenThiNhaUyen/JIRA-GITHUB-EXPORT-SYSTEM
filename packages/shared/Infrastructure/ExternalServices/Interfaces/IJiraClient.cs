@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+namespace JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 
 public interface IJiraClient
 {
@@ -9,4 +9,3 @@ public interface IJiraClient
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Integrations.JiraBoardResponse>> GetBoardsAsync(string projectKey, string siteUrl);
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Integrations.JiraSprintResponse>> GetSprintsAsync(long boardId, string siteUrl);
 }
-

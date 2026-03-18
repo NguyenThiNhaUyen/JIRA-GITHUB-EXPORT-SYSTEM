@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useGetEnrolledStudents, useGetCourseById } from "@/features/courses/hooks/useCourses.js";
@@ -139,4 +139,3 @@ export function useCourseWorkspace(courseId) {
         handleRemoveMember
     };
 }
-

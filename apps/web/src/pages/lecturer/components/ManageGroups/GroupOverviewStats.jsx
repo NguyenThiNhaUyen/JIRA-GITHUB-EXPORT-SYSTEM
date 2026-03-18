@@ -1,4 +1,4 @@
-﻿import { Users, UserPlus, Layers3, Activity, ShieldAlert, PenLine } from "lucide-react";
+import { Users, UserPlus, Layers3, Activity, ShieldAlert, PenLine } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function GroupOverviewStats({ studentsLength, availableStudentsLength, groupsLength, groupsWithMetrics }) {
@@ -19,4 +19,3 @@ export function GroupOverviewStats({ studentsLength, availableStudentsLength, gr
     </div>
   );
 }
-

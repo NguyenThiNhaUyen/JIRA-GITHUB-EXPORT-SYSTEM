@@ -1,4 +1,4 @@
-﻿// Chart container wrapper vá»›i loading, error, empty states
+// Chart container wrapper vá»›i loading, error, empty states
 export function ChartContainer({
   title,
   subtitle,
@@ -38,4 +38,3 @@ export function ChartContainer({
     </div>
   );
 }
-

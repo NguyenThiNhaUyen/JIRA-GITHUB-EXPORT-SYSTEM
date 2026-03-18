@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Common;
+namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class PagedRequest
 {
@@ -8,4 +8,3 @@ public class PagedRequest
     public string? SortDir { get; set; } // "asc" hoáº·c "desc"
     public string? Q { get; set; } // Keyword search
 }
-

@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Models;
+using JiraGithubExport.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,4 +8,3 @@ public interface IProjectRepository : IGenericRepository<Project>
 {
     Task<(IEnumerable<Project> Items, int TotalCount)> GetPagedProjectsByCourseAsync(long courseId, string? keyword, string? sortDir, int page, int pageSize, bool asNoTracking = true);
 }
-

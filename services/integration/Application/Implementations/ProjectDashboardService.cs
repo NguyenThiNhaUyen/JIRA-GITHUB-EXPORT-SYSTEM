@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -383,4 +383,3 @@ public class ProjectDashboardService : IProjectDashboardService
         return response;
     }
 }
-

@@ -1,4 +1,4 @@
-﻿import { PieChart as PieChartIcon } from"lucide-react";
+import { PieChart as PieChartIcon } from"lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from"recharts";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 
@@ -55,4 +55,3 @@ export function JiraTaskDistribution({ jiraData, integrationStats }) {
  </Card>
  );
 }
-

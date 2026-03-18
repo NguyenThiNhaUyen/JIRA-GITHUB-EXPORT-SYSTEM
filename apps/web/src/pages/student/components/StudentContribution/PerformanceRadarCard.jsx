@@ -1,4 +1,4 @@
-﻿import { Target } from"lucide-react";
+import { Target } from"lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer } from"recharts";
 import { Card, CardTitle } from"@/components/ui/Card.jsx";
 
@@ -53,4 +53,3 @@ export function PerformanceRadarCard({ performanceRadar, stats }) {
  </Card>
  );
 }
-

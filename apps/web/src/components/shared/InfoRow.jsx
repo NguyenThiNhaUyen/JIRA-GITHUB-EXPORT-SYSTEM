@@ -1,4 +1,4 @@
-﻿export function InfoRow({ label, value }) {
+export function InfoRow({ label, value }) {
     return (
         <div className="space-y-2">
             <label className="text-[9px] font-black text-gray-400  block">{label}</label>
@@ -6,4 +6,3 @@
         </div>
     );
 }
-

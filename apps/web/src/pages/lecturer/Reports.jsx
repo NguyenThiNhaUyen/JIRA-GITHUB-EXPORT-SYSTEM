@@ -1,4 +1,4 @@
-﻿import {
+import {
  Download,
  AlertTriangle,
  ShieldAlert,
@@ -140,4 +140,3 @@ export default function Reports() {
  </div>
  );
 }
-

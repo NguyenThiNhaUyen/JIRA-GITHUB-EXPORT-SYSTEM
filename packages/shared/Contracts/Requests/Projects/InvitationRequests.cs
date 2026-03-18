@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
 
@@ -9,4 +9,3 @@ public class CreateInvitationRequest
     
     public string? Message { get; set; }
 }
-

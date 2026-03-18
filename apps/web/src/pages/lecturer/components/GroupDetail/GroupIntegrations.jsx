@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { LinkApprovalSection } from"@/components/shared/LinkApprovalSection.jsx";
 import { Shield, GitBranch, BookOpen } from"lucide-react";
 
@@ -35,4 +35,3 @@ export function GroupIntegrations({ group, handleApproveLink, handleRejectLink }
  </Card>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { 
     RefreshCw, 
     Upload, 
@@ -232,4 +232,3 @@ export default function StudentProject() {
         </div>
     );
 }
-

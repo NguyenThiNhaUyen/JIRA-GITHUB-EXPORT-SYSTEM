@@ -1,4 +1,4 @@
-﻿import { Upload } from"lucide-react";
+import { Upload } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 
@@ -36,4 +36,3 @@ export function UploadSrsCard({ onOpenModal }) {
  </Card>
  );
 }
-

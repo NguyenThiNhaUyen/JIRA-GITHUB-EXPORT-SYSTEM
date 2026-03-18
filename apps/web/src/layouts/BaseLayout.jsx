@@ -1,4 +1,4 @@
-﻿import { NavLink } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import { BookOpen, Menu } from "lucide-react";
@@ -11,7 +11,7 @@ export default function BaseLayout({ navConfig, children }) {
 
     return (
         <div className="h-screen flex relative overflow-hidden bg-[#e6f4f1]">
-            {/* â•â•â•â• SIDEBAR â•â•â•â• */}
+            {/* Ă¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢Â SIDEBAR Ă¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢Â */}
             <aside className={[
                 "bg-[#255f58] p-4 transition-all duration-300 shadow-xl z-20 flex flex-col relative rounded-r-3xl my-2 ml-2",
                 collapsed ? "w-20" : "w-[260px]",
@@ -36,7 +36,7 @@ export default function BaseLayout({ navConfig, children }) {
                     {navConfig.map((section) => (
                         <div key={section.label} className="mb-4">
                             {!collapsed && (
-                                <div className="text-xs text-teal-400 font-medium px-4 mb-2 whitespace-nowrap uppercase tracking-widest">
+                                <div className="text-xs text-teal-400 font-medium px-4 mb-2 whitespace-nowrap">
                                     {section.label}
                                 </div>
                             )}
@@ -67,21 +67,21 @@ export default function BaseLayout({ navConfig, children }) {
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         className="w-full flex items-center justify-center p-3 rounded-xl text-teal-100 hover:bg-teal-800/50 hover:text-white transition-colors"
-                        title={collapsed ? "Má»Ÿ rá»™ng" : "Thu gá»n"}
+                        title={collapsed ? "MĂ¡Â»Å¸ rĂ¡Â»â„¢ng" : "Thu gĂ¡Â»Ân"}
                     >
                         <Menu size={20} />
-                        {!collapsed && <span className="ml-3 text-sm whitespace-nowrap font-medium">Thu gá»n menu</span>}
+                        {!collapsed && <span className="ml-3 text-sm whitespace-nowrap font-medium">Thu gĂ¡Â»Ân menu</span>}
                     </button>
                 </div>
             </aside>
 
-            {/* â•â•â•â• CONTENT â•â•â•â• */}
+            {/* Ă¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢Â CONTENT Ă¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢ÂĂ¢â€¢Â */}
             <div className="flex-1 flex flex-col z-10 overflow-hidden relative">
                 <div className="p-4 md:p-6 lg:p-8 flex-1 flex flex-col h-full overflow-y-auto w-full max-w-[1600px] mx-auto">
                     <div className="bg-white/95 backdrop-blur-md rounded-[32px] shadow-xl flex-1 flex flex-col overflow-hidden border border-white/40">
                         <TopHeader />
                         <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-transparent">
-                            {children}
+                            {children || <Outlet />}
                         </main>
                     </div>
                 </div>
@@ -89,4 +89,3 @@ export default function BaseLayout({ navConfig, children }) {
         </div>
     );
 }
-

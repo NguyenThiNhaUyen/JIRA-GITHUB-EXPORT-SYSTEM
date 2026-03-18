@@ -1,4 +1,4 @@
-﻿import { Button } from"@/components/ui/Button.jsx";
+import { Button } from"@/components/ui/Button.jsx";
 
 export function ForceAddModal({
  isOpen,
@@ -62,4 +62,3 @@ export function ForceAddModal({
  </div>
  );
 }
-

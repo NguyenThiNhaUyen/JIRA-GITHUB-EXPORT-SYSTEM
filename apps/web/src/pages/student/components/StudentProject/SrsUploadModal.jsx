@@ -1,4 +1,4 @@
-﻿import { Upload, Check, RefreshCw } from"lucide-react";
+import { Upload, Check, RefreshCw } from"lucide-react";
 import { Modal } from"@/components/ui/Interactive.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -72,4 +72,3 @@ export function SrsUploadModal({ isOpen, onClose, uploadFile, setUploadFile, onS
  </Modal>
  );
 }
-

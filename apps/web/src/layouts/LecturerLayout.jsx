@@ -1,4 +1,4 @@
-﻿import BaseLayout from "./BaseLayout.jsx";
+import BaseLayout from "./BaseLayout.jsx";
 import {
     LayoutDashboard, GraduationCap, Users,
     BarChart3, AlertTriangle, FileText, Download,
@@ -38,4 +38,3 @@ const NAV = [
 export default function LecturerLayout({ children }) {
     return <BaseLayout navConfig={NAV}>{children}</BaseLayout>;
 }
-

@@ -1,4 +1,4 @@
-﻿import { Flame, Target } from"lucide-react";
+import { Flame, Target } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 
@@ -80,4 +80,3 @@ export function WeeklyActivityCharts({ isLoading, commitActivity, heatmap }) {
  </Card>
  );
 }
-

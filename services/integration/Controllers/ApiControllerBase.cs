@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using JiraGithubExport.Shared.Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,4 +24,3 @@ public abstract class ApiControllerBase : ControllerBase
         return User.FindFirst(ClaimTypes.Role)?.Value;
     }
 }
-

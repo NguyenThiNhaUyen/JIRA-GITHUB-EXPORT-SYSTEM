@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
 import {
@@ -159,4 +159,3 @@ export function useLecturerDashboard() {
     handleResolveAlert
   };
 }
-

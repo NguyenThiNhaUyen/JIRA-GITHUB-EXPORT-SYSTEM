@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { BookOpen, Target, Users, Activity, FolderKanban, ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
@@ -104,4 +104,3 @@ export default function StudentCoursesPage() {
         </div>
     );
 }
-

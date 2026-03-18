@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using JiraGithubExport.Shared.Contracts.Requests.Auth;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
@@ -174,4 +174,3 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Metadata, opt => opt.MapFrom(src => src.Metadata));
     }
 }
-

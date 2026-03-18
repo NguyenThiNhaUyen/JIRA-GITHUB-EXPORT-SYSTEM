@@ -1,4 +1,4 @@
-﻿import { FileDown, Target } from"lucide-react";
+import { FileDown, Target } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 
@@ -31,4 +31,3 @@ export function SrsTemplatesCard() {
  </Card>
  );
 }
-

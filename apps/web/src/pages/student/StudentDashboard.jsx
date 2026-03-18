@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { 
     Download, 
     LogOut,
@@ -124,4 +124,3 @@ export default function StudentDashboard() {
     </div>
   );
 }
-

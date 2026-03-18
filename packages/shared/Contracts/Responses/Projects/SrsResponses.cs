@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
+namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class SrsDocumentResponse
 {
@@ -38,4 +38,3 @@ public class SrsSummary
     public int Approved { get; set; }
     public int Overdue { get; set; }
 }
-

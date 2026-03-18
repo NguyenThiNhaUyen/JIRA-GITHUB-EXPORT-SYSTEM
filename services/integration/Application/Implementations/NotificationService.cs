@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Responses.Notifications;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
@@ -107,4 +107,3 @@ public class NotificationService : INotificationService
         }
     }
 }
-

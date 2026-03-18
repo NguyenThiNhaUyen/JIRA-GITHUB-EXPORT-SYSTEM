@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Responses.Reports;
+using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -130,4 +130,3 @@ public class ReportsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { DownloadUrl = url }));
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Collections.Generic;
 using JiraGithubExport.Shared.Models;
 
@@ -10,4 +10,3 @@ public interface IJwtService
     ClaimsPrincipal? ValidateToken(string token);
     ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
 }
-

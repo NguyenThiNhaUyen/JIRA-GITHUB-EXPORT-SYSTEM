@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
@@ -106,4 +106,3 @@ public class AssignmentItem
     [Required]
     public long LecturerId { get; set; }
 }
-

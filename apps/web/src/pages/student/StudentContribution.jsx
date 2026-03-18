@@ -1,4 +1,4 @@
-﻿import { Activity, History, Zap } from "lucide-react";
+import { Activity, History, Zap } from "lucide-react";
 
 // Components UI
 import { Button } from "@/components/ui/Button.jsx";
@@ -89,4 +89,3 @@ export default function StudentContribution() {
         </div>
     );
 }
-

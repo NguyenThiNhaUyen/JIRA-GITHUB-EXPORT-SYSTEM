@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { HubConnectionBuilder, LogLevel, HttpTransportType } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -337,4 +337,3 @@ export function TopHeader() {
     </header>
   );
 }
-

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   FileText,
   ExternalLink,
@@ -163,7 +163,7 @@ export function SrsDetailPanel({
         <div className="p-6 bg-gray-100/50 border-t border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-gray-400">
             <Clock size={12} />
-            <span className="text-[10px] font-bold uppercase">Cáº­p nháº­t lĂºc:</span>
+            <span className="text-[10px] font-bold">Cập nhật lúc:</span>
           </div>
           <span className="text-[10px] font-bold text-gray-600">
             {new Date(selectedSrs.updatedAt || Date.now()).toLocaleString("vi-VN")}
@@ -173,4 +173,3 @@ export function SrsDetailPanel({
     </Card>
   );
 }
-

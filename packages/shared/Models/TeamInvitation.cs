@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -26,4 +26,3 @@ public partial class TeamInvitation
 
     public virtual Student InvitedStudentUser { get; set; } = null!;
 }
-

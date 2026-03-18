@@ -1,4 +1,4 @@
-﻿import { Search } from"lucide-react";
+import { Search } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { InputField } from"@/components/shared/FormFields.jsx";
 
@@ -42,4 +42,3 @@ export function AlertFilters({ filter, setFilter, search, setSearch }) {
  </Card>
  );
 }
-

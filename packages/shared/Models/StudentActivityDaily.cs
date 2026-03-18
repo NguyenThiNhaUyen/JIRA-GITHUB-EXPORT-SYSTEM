@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -43,4 +43,3 @@ public partial class StudentActivityDaily
 
     public virtual Project Project { get; set; } = null!;
 }
-

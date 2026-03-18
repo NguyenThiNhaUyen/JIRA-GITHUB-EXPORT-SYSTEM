@@ -1,4 +1,4 @@
-﻿import { Badge } from"@/components/ui/Badge.jsx";
+import { Badge } from"@/components/ui/Badge.jsx";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 
 export function StudentTeamList({ project, metrics, userId }) {
@@ -58,4 +58,3 @@ export function StudentTeamList({ project, metrics, userId }) {
  </Card>
  );
 }
-

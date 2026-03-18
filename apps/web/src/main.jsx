@@ -1,4 +1,4 @@
-﻿// Entry point: Mount React app vá»›i TanStack Query
+// Entry point: Mount React app vá»›i TanStack Query
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -38,4 +38,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
-

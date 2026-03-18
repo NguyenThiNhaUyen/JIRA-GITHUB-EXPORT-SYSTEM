@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
@@ -15,4 +15,3 @@ public interface ISrsService
     Task DeleteSrsAsync(long srsId, long userId);
     Task RemindOverdueAsync();
 }
-

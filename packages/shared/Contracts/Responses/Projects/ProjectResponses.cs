@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
+namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class ProjectDetailResponse
 {
@@ -230,4 +230,3 @@ public class AgingWipItem
     public int DaysInProgress { get; set; }
     public string? Assignee { get; set; }
 }
-

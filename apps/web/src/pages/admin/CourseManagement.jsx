@@ -1,4 +1,4 @@
-﻿import {
+import {
     BookOpen,
     AlertCircle,
     PlayCircle,
@@ -384,4 +384,3 @@ export default function CourseManagement() {
         </div>
     );
 }
-

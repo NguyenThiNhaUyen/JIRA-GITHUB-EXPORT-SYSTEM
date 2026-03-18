@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Responses.Reports;
+using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using System.Security.Claims;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -504,4 +504,3 @@ public class ReportService : IReportService
         }
     }
 }
-

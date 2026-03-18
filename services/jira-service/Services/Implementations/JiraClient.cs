@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using JiraGithubExport.JiraService.DTOs;
@@ -241,4 +241,3 @@ public class JiraClient : IJiraClient
         return sprints;
     }
 }
-

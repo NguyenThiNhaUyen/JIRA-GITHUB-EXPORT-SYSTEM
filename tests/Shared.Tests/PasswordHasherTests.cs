@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
 using Xunit;
 
@@ -73,4 +73,3 @@ namespace Shared.Tests.Identity
         }
     }
 }
-

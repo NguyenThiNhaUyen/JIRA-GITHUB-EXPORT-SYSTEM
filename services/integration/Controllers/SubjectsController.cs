@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
@@ -77,4 +77,3 @@ public class SubjectsController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Subject deleted successfully"));
     }
 }
-

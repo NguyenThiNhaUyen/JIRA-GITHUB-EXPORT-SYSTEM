@@ -1,4 +1,4 @@
-﻿/**
+/**
  * systemMapper.js â€” BE SemesterInfo/SubjectInfo â†’ FE shape
  */
 
@@ -37,4 +37,3 @@ export function mapSubjectList(beData) {
     const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSubject);
 }
-

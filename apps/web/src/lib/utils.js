@@ -1,4 +1,4 @@
-﻿// Utility functions
+// Utility functions
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -26,4 +26,3 @@ export function debounce(func, wait) {
     timeout = setTimeout(later, wait);
   };
 }
-

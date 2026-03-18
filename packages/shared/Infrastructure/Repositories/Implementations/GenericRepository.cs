@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -120,4 +120,3 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return (items, totalCount);
     }
 }
-

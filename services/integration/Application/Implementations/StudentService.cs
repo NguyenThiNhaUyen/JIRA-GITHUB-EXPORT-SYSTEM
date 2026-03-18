@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -449,4 +449,3 @@ public class StudentService : IStudentService
         return deadlines.OrderBy(d => ((dynamic)d).deadline).ToList();
     }
 }
-

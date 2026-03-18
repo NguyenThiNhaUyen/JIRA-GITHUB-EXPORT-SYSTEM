@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Auth;
 
@@ -18,4 +18,3 @@ public class ResetPasswordRequest
     [MinLength(8)]
     public string NewPassword { get; set; } = null!;
 }
-

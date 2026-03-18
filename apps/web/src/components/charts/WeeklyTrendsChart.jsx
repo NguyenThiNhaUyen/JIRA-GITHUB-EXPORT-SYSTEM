@@ -1,4 +1,4 @@
-﻿// Weekly Activity Trends Chart - Stacked Area hoáº·c Multi Line
+// Weekly Activity Trends Chart - Stacked Area hoáº·c Multi Line
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -69,4 +69,3 @@ export function WeeklyTrendsChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
-

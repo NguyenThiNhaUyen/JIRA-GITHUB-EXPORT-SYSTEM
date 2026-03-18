@@ -1,4 +1,4 @@
-﻿// GroupRadarChart â€” So sĂ¡nh hiá»‡u suáº¥t cĂ¡c nhĂ³m trong lá»›p há»c
+// GroupRadarChart â€” So sĂ¡nh hiá»‡u suáº¥t cĂ¡c nhĂ³m trong lá»›p há»c
 import {
     RadarChart,
     Radar,
@@ -104,4 +104,3 @@ export function GroupRadarChart({ data = [] }) {
 }
 
 export default GroupRadarChart;
-

@@ -1,4 +1,4 @@
-﻿import { Activity, Clock, FileDown, FileText } from"lucide-react";
+import { Activity, Clock, FileDown, FileText } from"lucide-react";
 import { useGetProjectSrs } from"@/features/srs/hooks/useSrs.js";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
@@ -77,4 +77,3 @@ export function SrsProjectHistory({ project, index }) {
  </Card>
  );
 }
-

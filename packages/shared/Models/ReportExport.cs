@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -33,4 +33,3 @@ public partial class ReportExport
     // Navigation properties
     public virtual User RequestedByUser { get; set; } = null!;
 }
-

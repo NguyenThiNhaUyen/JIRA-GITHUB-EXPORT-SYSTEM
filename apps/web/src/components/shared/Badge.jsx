@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 export function StatusBadge({ status, label, variant = "default", icon: Icon }) {
   const variants = {
@@ -27,4 +27,3 @@ export function StatusPill({ ok, icon: Icon, label }) {
     </span>
   );
 }
-

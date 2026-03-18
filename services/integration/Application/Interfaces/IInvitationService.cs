@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
@@ -11,4 +11,3 @@ public interface IInvitationService
     Task<InvitationResponse> AcceptInvitationAsync(long invitationId, long studentUserId);
     Task<InvitationResponse> RejectInvitationAsync(long invitationId, long studentUserId);
 }
-

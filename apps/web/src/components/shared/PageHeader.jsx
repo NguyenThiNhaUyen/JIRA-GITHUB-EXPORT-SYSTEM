@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ChevronRight } from "lucide-react";
 
 export function PageHeader({ 
@@ -47,4 +47,3 @@ export function PageHeader({
     </div>
   );
 }
-

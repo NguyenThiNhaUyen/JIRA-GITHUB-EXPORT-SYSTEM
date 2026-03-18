@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Users;
 using JiraGithubExport.Shared.Contracts.Responses.Users;
 
@@ -18,4 +18,3 @@ public interface IUserService
     Task<StudentLinksResponse> GetStudentLinksAsync(long studentId);
     Task<StudentLinksResponse> LinkStudentAccountsAsync(long studentId, LinkStudentAccountsRequest request);
 }
-

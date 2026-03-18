@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -256,4 +256,3 @@ public class ProjectsController : ApiControllerBase
         return Ok(ApiResponse<AgingWipResponse>.SuccessResponse(result));
     }
 }
-

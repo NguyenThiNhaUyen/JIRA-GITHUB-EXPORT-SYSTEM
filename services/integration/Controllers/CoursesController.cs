@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
@@ -188,4 +188,3 @@ public class CoursesController : ApiControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { }, "Student removed from course"));
     }
 }
-

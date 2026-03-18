@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Models;
+using JiraGithubExport.Shared.Models;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
@@ -8,4 +8,3 @@ public interface IExcelReportGenerator
     byte[] GenerateTeamRosterReport(Project project);
     byte[] GenerateActivitySummaryReport(Project project, List<dynamic> activityList);
 }
-

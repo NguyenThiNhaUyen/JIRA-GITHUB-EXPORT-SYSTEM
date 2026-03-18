@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { GitBranch, Users, Target, GitPullRequest, ShieldAlert } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
@@ -46,4 +46,3 @@ export function ContributionStats({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * authApi.js â€” Authentication API calls
  */
 import client from "../../../api/client.js";
@@ -27,4 +27,3 @@ export async function loginWithCredentials(email, password) {
 export async function loginWithGoogle(idToken) {
     return client.post("/sessions/google", { idToken, IdToken: idToken });
 }
-

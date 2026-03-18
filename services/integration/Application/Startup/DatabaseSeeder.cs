@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -1015,4 +1015,3 @@ public static class DatabaseSeeder
         }
     }
 }
-

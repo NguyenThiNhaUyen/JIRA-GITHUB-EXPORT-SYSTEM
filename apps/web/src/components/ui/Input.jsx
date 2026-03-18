@@ -1,4 +1,4 @@
-﻿// Input component - Updated with theme consistency
+// Input component - Updated with theme consistency
 export function Input({ className = "", ...props }) {
   return (
     <input
@@ -7,4 +7,3 @@ export function Input({ className = "", ...props }) {
     />
   );
 }
-

@@ -1,4 +1,4 @@
-﻿// Forgot Password page - Admin Teal theme with glassmorphism and cut-out layout
+// Forgot Password page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button.jsx";
@@ -190,4 +190,3 @@ export default function ForgotPassword() {
         </div>
     );
 }
-

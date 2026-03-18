@@ -1,4 +1,4 @@
-﻿// AppContext: Quáº£n lĂ½ state toĂ n cá»¥c (semester, week, repo) - dĂ¹ng useApp() Ä‘á»ƒ truy cáº­p
+// AppContext: Quáº£n lĂ½ state toĂ n cá»¥c (semester, week, repo) - dĂ¹ng useApp() Ä‘á»ƒ truy cáº­p
 import { createContext, useContext, useMemo, useState } from "react";
 import { generateWeeks } from "@/utils/dateRange.js";
 
@@ -60,4 +60,3 @@ export function useApp() {
   if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
-

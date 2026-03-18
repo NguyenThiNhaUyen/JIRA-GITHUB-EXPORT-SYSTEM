@@ -1,4 +1,4 @@
-﻿// Table Component - Part of UI Kit
+// Table Component - Part of UI Kit
 export function Table({ children, className = '', ...props }) {
   return (
     <div className={`overflow-x-auto ${className}`}>
@@ -52,4 +52,3 @@ export function TableCell({ children, className = '', ...props }) {
     </td>
   );
 }
-

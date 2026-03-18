@@ -1,4 +1,4 @@
-﻿export const COURSE_CODES = ["SE1811", "SE1812", "SE1813", "SE1821", "SE1822", "IA1801", "AI1802"];
+export const COURSE_CODES = ["SE1811", "SE1812", "SE1813", "SE1821", "SE1822", "IA1801", "AI1802"];
 
 export const COURSE_STATUSES = {
     ACTIVE: { label: "Äang má»Ÿ", variant: "success", text: "ACTIVE" },
@@ -20,4 +20,3 @@ export const DEFAULT_COURSE_FORM = {
     maxStudents: 40,
     status: "ACTIVE",
 };
-

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
@@ -31,4 +31,3 @@ public interface ICourseService
     // Students list
     Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize);
 }
-

@@ -1,4 +1,4 @@
-﻿// Burndown Chart - Sprint burndown
+// Burndown Chart - Sprint burndown
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -33,4 +33,3 @@ export function BurndownChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
-

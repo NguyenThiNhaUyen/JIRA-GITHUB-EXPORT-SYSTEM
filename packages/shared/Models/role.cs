@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -11,4 +11,3 @@ public partial class Role
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }
-

@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 export async function generateSrsReport(projectId, format = "PDF") {
@@ -33,4 +33,3 @@ export async function generateActivitySummaryReport(projectId, startDate, endDat
     });
     return unwrap(res);
 }
-

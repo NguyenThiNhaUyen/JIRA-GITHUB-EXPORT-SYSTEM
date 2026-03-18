@@ -1,4 +1,4 @@
-﻿import { Search } from"lucide-react";
+import { Search } from"lucide-react";
 
 export function SrsListTable({ 
  loadingReports, 
@@ -120,4 +120,3 @@ export function SrsListTable({
  </div>
  );
 }
-

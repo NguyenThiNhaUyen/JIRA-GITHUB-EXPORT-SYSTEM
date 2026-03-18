@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -39,4 +39,3 @@ public partial class Course : JiraGithubExport.Shared.Interfaces.ISoftDelete
 
     public bool IsDeleted { get; set; }
 }
-

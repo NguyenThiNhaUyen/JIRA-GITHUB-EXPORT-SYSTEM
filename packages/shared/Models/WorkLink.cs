@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -31,4 +31,3 @@ public partial class WorkLink
 
     public virtual GithubRepository Repo { get; set; } = null!;
 }
-

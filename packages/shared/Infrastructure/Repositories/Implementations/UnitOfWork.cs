@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
@@ -82,4 +82,3 @@ public class UnitOfWork : IUnitOfWork
         GC.SuppressFinalize(this);
     }
 }
-

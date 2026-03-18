@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
@@ -97,4 +97,3 @@ public class CourseRepository : GenericRepository<Course>, ICourseRepository
         return (items, totalItems);
     }
 }
-

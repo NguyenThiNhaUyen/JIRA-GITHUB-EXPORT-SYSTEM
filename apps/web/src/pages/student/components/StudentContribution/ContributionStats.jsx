@@ -1,4 +1,4 @@
-﻿import { GitCommit, GitPullRequest, TrendingUp, Star } from "lucide-react";
+import { GitCommit, GitPullRequest, TrendingUp, Star } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function ContributionStats({ stats }) {
@@ -11,4 +11,3 @@ export function ContributionStats({ stats }) {
         </div>
     );
 }
-

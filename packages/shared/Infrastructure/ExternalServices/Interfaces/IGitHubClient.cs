@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+namespace JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 
 public interface IGitHubClient
 {
@@ -8,4 +8,3 @@ public interface IGitHubClient
     Task<int> GetCommitCountAsync(string owner, string repo, DateTime since);
     Task<DateTime?> GetLastCommitDateAsync(string owner, string repo);
 }
-

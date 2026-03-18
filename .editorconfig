@@ -1,0 +1,33 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+# Organization
+dotnet_separate_import_directive_groups = true
+dotnet_sort_system_directives_first = true
+
+# Casing
+dotnet_naming_rule.interface_should_be_begun_with_i.severity = suggestion
+dotnet_naming_rule.interface_should_be_begun_with_i.symbols = interface_symbols
+dotnet_naming_rule.interface_should_be_begun_with_i.style = interface_style
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_style.interface_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.required_prefix = I
+
+# Formatting
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+
+[*.{js,jsx,json,css}]
+indent_size = 2

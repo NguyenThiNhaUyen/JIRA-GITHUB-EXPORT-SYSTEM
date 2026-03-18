@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from"react";
+import { useState, useMemo } from"react";
 import { 
  Plus, 
  CalendarDays, 
@@ -351,4 +351,3 @@ export default function SemesterManagement() {
  </div>
  );
 }
-

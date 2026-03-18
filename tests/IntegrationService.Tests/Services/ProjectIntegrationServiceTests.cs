@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using JiraGithubExport.IntegrationService.Application.Implementations;
@@ -140,4 +140,3 @@ namespace IntegrationService.Tests.Services
         }
     }
 }
-

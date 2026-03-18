@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Common;
+namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class PagedResponse<T>
 {
@@ -25,4 +25,3 @@ public class PagedResponse<T>
         TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
     }
 }
-

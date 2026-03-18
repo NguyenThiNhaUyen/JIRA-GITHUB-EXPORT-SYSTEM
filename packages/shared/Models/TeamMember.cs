@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -27,4 +27,3 @@ public partial class TeamMember
 
     public virtual Student StudentUser { get; set; } = null!;
 }
-

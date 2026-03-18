@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -135,4 +135,3 @@ public class SemesterService : ISemesterService
         return new PagedResponse<SemesterInfo>(_mapper.Map<List<SemesterInfo>>(items), totalItems, request.Page, request.PageSize);
     }
 }
-

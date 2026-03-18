@@ -1,4 +1,4 @@
-﻿export function mapAnalyticsStats(data) {
+export function mapAnalyticsStats(data) {
     if (!data) return null;
     return {
         semesters: data.semesters || 0,
@@ -22,4 +22,3 @@ export function mapRadarData(data) {
     if (!data) return [];
     return data;
 }
-

@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, CheckCircle, Activity, Clock } from"lucide-react";
+import { AlertTriangle, CheckCircle, Activity, Clock } from"lucide-react";
 import { useAuth } from"@/context/AuthContext.jsx";
 import { useGetAlerts } from"@/features/system/hooks/useAlerts.js";
 
@@ -69,4 +69,3 @@ export default function StudentAlertsPage() {
  </div>
  );
 }
-

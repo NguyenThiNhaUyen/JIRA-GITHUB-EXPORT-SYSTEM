@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Auth;
@@ -44,7 +44,6 @@ public class AuthController : ApiControllerBase
             return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during login"));
         }
     }
-
 
     [HttpPost("login/google")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
@@ -144,4 +143,3 @@ public class AuthController : ApiControllerBase
         }
     }
 }
-

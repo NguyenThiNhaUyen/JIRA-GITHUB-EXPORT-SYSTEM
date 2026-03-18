@@ -1,11 +1,11 @@
-﻿// AuthContext: Quáº£n lĂ½ authentication state â€” Real API (ASP.NET BE)
+// AuthContext: QuĂ¡ÂºÂ£n lÄ‚Â½ authentication state Ă¢â‚¬â€ Real API (ASP.NET BE)
 import { createContext, useContext, useState } from "react";
 import { loginWithCredentials } from "@/features/auth/api/authApi.js";
 
 /* eslint-disable react-refresh/only-export-components */
 const AuthContext = createContext(null);
 
-// Role-based redirects â€” khá»›p vá»›i BE Roles enum
+// Role-based redirects Ă¢â‚¬â€ khĂ¡Â»â€ºp vĂ¡Â»â€ºi BE Roles enum
 const ROLE_REDIRECTS = {
   ADMIN: "/admin",
   LECTURER: "/lecturer",
@@ -13,32 +13,32 @@ const ROLE_REDIRECTS = {
 };
 
 /**
- * Chuyá»ƒn BE response (LoginResponse) sang FE user object.
- * BE tráº£ vá»: { accessToken, tokenType, expiresIn, user: { id, email, fullName, roles, studentCode, lecturerCode } }
+ * ChuyĂ¡Â»Æ’n BE response (LoginResponse) sang FE user object.
+ * BE trĂ¡ÂºÂ£ vĂ¡Â»Â: { accessToken, tokenType, expiresIn, user: { id, email, fullName, roles, studentCode, lecturerCode } }
  */
 function mapBEUserToFEUser(loginResponse) {
-  const beUser = loginResponse.user ?? loginResponse.User ?? loginResponse; 
+  const beUser = loginResponse.user ?? loginResponse; 
   
-  const rawRoles = beUser.roles ?? beUser.Roles ?? beUser.role ?? beUser.Role ?? [];
+  const rawRoles = beUser.roles || [];
   const rolesArray = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
   
   let primaryRole = rolesArray[0] ?? "STUDENT";
   if (typeof primaryRole === "object") {
-    primaryRole = primaryRole.name ?? primaryRole.Name ?? primaryRole.roleName ?? "STUDENT";
+    primaryRole = primaryRole.name || primaryRole.roleName || "STUDENT";
   }
 
   return {
-    id: beUser.id ?? beUser.Id,
-    email: beUser.email ?? beUser.Email,
-    name: beUser.fullName ?? beUser.FullName,
+    id: beUser.id,
+    email: beUser.email,
+    name: beUser.fullName,
     role: String(primaryRole).toUpperCase(),
-    studentCode: beUser.studentCode ?? beUser.StudentCode,
-    lecturerCode: beUser.lecturerCode ?? beUser.LecturerCode,
+    studentCode: beUser.studentCode,
+    lecturerCode: beUser.lecturerCode,
   };
 }
 
 /**
- * KhĂ´i phá»¥c user tá»« localStorage khi load láº¡i trang.
+ * KhÄ‚Â´i phĂ¡Â»Â¥c user tĂ¡Â»Â« localStorage khi load lĂ¡ÂºÂ¡i trang.
  */
 function restoreUserFromStorage() {
   try {
@@ -85,7 +85,7 @@ export function AuthProvider({ children }) {
       return { success: true, redirectPath: redirect };
     } catch (err) {
       console.error("Login failed:", err);
-      return { success: false, error: err?.message ?? "Email hoáº·c máº­t kháº©u khĂ´ng Ä‘Ăºng" };
+      return { success: false, error: err?.message ?? "Email hoĂ¡ÂºÂ·c mĂ¡ÂºÂ­t khĂ¡ÂºÂ©u khÄ‚Â´ng Ă„â€˜Ä‚Âºng" };
     } finally {
       setLoading(false);
     }
@@ -123,4 +123,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-

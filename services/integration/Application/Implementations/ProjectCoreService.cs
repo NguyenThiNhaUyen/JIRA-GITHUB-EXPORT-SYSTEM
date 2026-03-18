@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -481,4 +481,3 @@ public class ProjectCoreService : IProjectCoreService
         return new { Message = "Sync triggered. Data will be updated in the background.", projectId };
     }
 }
-

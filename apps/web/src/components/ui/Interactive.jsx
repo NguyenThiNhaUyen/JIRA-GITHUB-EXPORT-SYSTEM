@@ -1,4 +1,4 @@
-﻿// Tabs Component - Part of UI Kit
+// Tabs Component - Part of UI Kit
 import React, { useState, useEffect } from 'react';
 import { Button } from "./Button.jsx";
 
@@ -161,4 +161,3 @@ export function Alert({ children, variant = 'default', className = '', ...props 
     </div>
   );
 }
-

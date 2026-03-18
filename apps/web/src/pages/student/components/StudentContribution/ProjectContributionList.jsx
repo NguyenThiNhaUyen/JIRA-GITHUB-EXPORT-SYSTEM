@@ -1,4 +1,4 @@
-﻿import { ChevronRight, Code2 } from"lucide-react";
+import { ChevronRight, Code2 } from"lucide-react";
 import { Badge } from"@/components/ui/Badge.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
@@ -55,4 +55,3 @@ export function ProjectContributionList({ projects }) {
  </div>
  );
 }
-

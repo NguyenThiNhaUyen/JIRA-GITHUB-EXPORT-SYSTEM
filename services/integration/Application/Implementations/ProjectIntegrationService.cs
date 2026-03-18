@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -263,4 +263,3 @@ public class ProjectIntegrationService : IProjectIntegrationService
         return (segments[0], segments[1].Replace(".git", ""));
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Contracts.Responses.Notifications
@@ -13,4 +13,3 @@ namespace JiraGithubExport.Shared.Contracts.Responses.Notifications
         public Dictionary<string, object>? Metadata { get; set; }
     }
 }
-

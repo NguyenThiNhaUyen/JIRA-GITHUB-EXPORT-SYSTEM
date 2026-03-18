@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import {
     generateCommitStats,
     generateTeamRoster,
@@ -108,4 +108,3 @@ export function useCourseProjectReports(projectIds, type) {
         }))
     });
 }
-

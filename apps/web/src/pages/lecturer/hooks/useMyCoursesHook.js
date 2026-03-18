@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
 
 export function useMyCoursesHook() {
@@ -30,4 +30,3 @@ export function useMyCoursesHook() {
     isLoading
   };
 }
-

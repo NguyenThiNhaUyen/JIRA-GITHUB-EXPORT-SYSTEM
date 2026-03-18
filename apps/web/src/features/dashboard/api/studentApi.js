@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
@@ -88,4 +88,3 @@ export async function getStudentInvitations(params = {}) {
     const res = await client.get("/student/me/invitations", { params });
     return unwrap(res);
 }
-

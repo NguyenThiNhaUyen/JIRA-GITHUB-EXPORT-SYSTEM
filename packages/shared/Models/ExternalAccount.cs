@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -21,4 +21,3 @@ public partial class ExternalAccount
 
     public virtual User User { get; set; } = null!;
 }
-

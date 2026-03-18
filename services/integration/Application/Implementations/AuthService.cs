@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Auth;
 using JiraGithubExport.Shared.Contracts.Responses.Auth;
@@ -291,4 +291,3 @@ public class AuthService : IAuthService
         };
     }
 }
-

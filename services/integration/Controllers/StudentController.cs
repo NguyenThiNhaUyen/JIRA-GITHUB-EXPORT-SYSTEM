@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -112,4 +112,3 @@ public class StudentController : ApiControllerBase
         return Ok(ApiResponse<List<object>>.SuccessResponse(result));
     }
 }
-

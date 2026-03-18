@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -173,4 +173,3 @@ public class AdminService : IAdminService
         }).ToList();
     }
 }
-

@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
  BookOpen,
@@ -292,4 +292,3 @@ export default function AdminReports() {
  </div>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Filter, Settings2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 import { Button } from "@/components/ui/Button.jsx";
@@ -69,4 +69,3 @@ export function LecturerFilters({
     </Card>
   );
 }
-

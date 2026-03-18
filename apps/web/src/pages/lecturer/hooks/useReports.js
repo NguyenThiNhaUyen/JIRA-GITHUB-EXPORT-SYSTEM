@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useGetMyReports,
@@ -124,4 +124,3 @@ export function useReports() {
         EXPORT_TYPES
     };
 }
-

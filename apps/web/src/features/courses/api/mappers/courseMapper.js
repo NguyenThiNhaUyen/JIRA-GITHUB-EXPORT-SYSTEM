@@ -1,4 +1,4 @@
-﻿/**
+/**
  * courseMapper.js â€” Adapter: BE CourseDetailResponse â†’ FE shape
  */
 
@@ -100,4 +100,3 @@ export function mapCourseList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
@@ -137,4 +137,3 @@ public class CourseContributionResponse
     public List<int> WeeklyCommits { get; set; } = new();
     public List<int> WeeklyJira { get; set; } = new();
 }
-

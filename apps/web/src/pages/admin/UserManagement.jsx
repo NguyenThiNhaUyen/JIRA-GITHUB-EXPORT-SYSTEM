@@ -1,4 +1,4 @@
-﻿// User Management - ADMIN user management page
+// User Management - ADMIN user management page
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Interactive.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
@@ -154,4 +154,3 @@ export default function UserManagement() {
     </div>
   );
 }
-

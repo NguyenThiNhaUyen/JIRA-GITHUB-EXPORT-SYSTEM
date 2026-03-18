@@ -1,4 +1,4 @@
-﻿/**
+/**
  * notificationMapper.js â€” BE NotificationResponse â†’ FE shape
  */
 
@@ -43,4 +43,3 @@ export function mapNotificationList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
-

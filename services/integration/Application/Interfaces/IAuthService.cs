@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Contracts.Requests.Auth;
+using JiraGithubExport.Shared.Contracts.Requests.Auth;
 using JiraGithubExport.Shared.Contracts.Responses.Auth;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -11,4 +11,3 @@ public interface IAuthService
     Task ResetPasswordAsync(string token, string newPassword);
     Task<LoginResponse> RefreshTokenAsync(RefreshRequest request);
 }
-

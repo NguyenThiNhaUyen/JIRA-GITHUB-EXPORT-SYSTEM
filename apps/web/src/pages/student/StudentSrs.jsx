@@ -1,4 +1,4 @@
-﻿import { FileText } from"lucide-react";
+import { FileText } from"lucide-react";
 
 // Components UI
 import { Card } from"@/components/ui/Card.jsx";
@@ -87,4 +87,3 @@ export default function StudentSrsPage() {
  </div>
  );
 }
-

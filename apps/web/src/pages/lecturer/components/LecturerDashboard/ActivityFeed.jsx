@@ -1,4 +1,4 @@
-﻿import { Activity, Clock, Zap } from"lucide-react";
+import { Activity, Clock, Zap } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -48,4 +48,3 @@ export function ActivityFeed({ activities, loadingLogs }) {
  </Card>
  );
 }
-

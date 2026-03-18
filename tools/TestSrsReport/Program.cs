@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
+using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.Shared.Models;
 using QuestPDF.Infrastructure;
@@ -132,4 +132,3 @@ await File.WriteAllBytesAsync(outputPath, pdfBytes);
 
 Console.WriteLine($"âœ… PDF saved to: {outputPath}");
 Console.WriteLine("đŸ‰ Open the file to review the SRS report!");
-

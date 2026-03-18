@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -29,4 +29,3 @@ public partial class AuditLog
     // Navigation properties
     public virtual User PerformedByUser { get; set; }
 }
-

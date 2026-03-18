@@ -64,7 +64,7 @@ builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
 {
     options.UseNpgsql(connectionString, o =>
     {
-        o.EnableRetryOnFailure(3); // ThĂªm retry Ä‘á»ƒ chá»‘ng rá»›t máº¡ng
+        o.EnableRetryOnFailure(3); // ThÄ‚Âªm retry Ă„â€˜Ă¡Â»Æ’ chĂ¡Â»â€˜ng rĂ¡Â»â€ºt mĂ¡ÂºÂ¡ng
     });
 
     if (builder.Environment.IsDevelopment())
@@ -159,7 +159,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-// Táº§ng Application (Services)
+// TĂ¡ÂºÂ§ng Application (Services)
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
@@ -205,24 +205,37 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSignalR();
 
-// Redis Configuration (Non-blocking Connect)
+// ============================================
+// REDIS & CACHING
+// ============================================
+
 var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+bool useRedis = false;
 
 try
 {
+    // abortConnect=false ensures it doesn't throw immediate exception on Connect
     var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
     builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+    useRedis = true;
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
+    Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Falling back to In-Memory Cache.");
 }
 
-builder.Services.AddStackExchangeRedisCache(options =>
+if (useRedis)
 {
-    options.Configuration = redisConnection;
-    options.InstanceName = "PBLPlatform_";
-});
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "PBLPlatform_";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 
 // Proper Health Checks
 builder.Services.AddHealthChecks()
@@ -353,19 +366,20 @@ app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificat
 app.MapGet("/", () => Results.Ok(new { Status = "Healthy", version = "1.1.0", Timestamp = DateTime.UtcNow }));
 
 // ============================================
-// DATABASE SEEDING (Background)
+// DATABASE SEEDING
 // ============================================
-_ = Task.Run(async () =>
+
+using (var scope = app.Services.CreateScope())
 {
     try
     {
-        await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+        await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(scope.ServiceProvider);
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
+        Console.WriteLine($"[CRITICAL] Seeder failed: {ex.Message}");
     }
-});
+}
 
 // ============================================
 // RUN APPLICATION
@@ -386,4 +400,3 @@ else
     Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
     await app.RunAsync();
 }
-

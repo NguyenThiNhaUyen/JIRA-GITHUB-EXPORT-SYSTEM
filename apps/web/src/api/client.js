@@ -1,13 +1,14 @@
-﻿/**
- * Axios client â€” káº¿t ná»‘i Backend ASP.NET Core
+/**
+ * Axios client Ă¢â‚¬â€ kĂ¡ÂºÂ¿t nĂ¡Â»â€˜i Backend ASP.NET Core
  *
  * baseURL = VITE_API_URL + "/api"
- *   â†’ Äáº£m báº£o KHĂ”NG bao giá» cĂ³ /api/api double-prefix
+ *   Ă¢â€ â€™ Ă„ÂĂ¡ÂºÂ£m bĂ¡ÂºÂ£o KHÄ‚â€NG bao giĂ¡Â»Â cÄ‚Â³ /api/api double-prefix
  *
- * Äá»ƒ dĂ¹ng local BE:
- *   Táº¡o .env.local vĂ  thĂªm: VITE_API_URL=http://localhost:5000
+ * Ă„ÂĂ¡Â»Æ’ dÄ‚Â¹ng local BE:
+ *   TĂ¡ÂºÂ¡o .env.local vÄ‚Â  thÄ‚Âªm: VITE_API_URL=http://localhost:5000
  */
 import axios from "axios";
+import { navigate } from "@/utils/navigation";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "https://jira-github-export-system.onrender.com";
 
@@ -31,9 +32,9 @@ client.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-/* â”€â”€ Response Interceptor: BĂ³c tĂ¡ch wrapper ApiResponse<T> â”€â”€ */
-// BE luĂ´n tráº£ vá»: { success, message, data: T }
-// Interceptor nĂ y tráº£ vá» response.data (ApiResponse object) Ä‘á»ƒ FE xá»­ lĂ½
+/* Ă¢â€â‚¬Ă¢â€â‚¬ Response Interceptor: BÄ‚Â³c tÄ‚Â¡ch wrapper ApiResponse<T> Ă¢â€â‚¬Ă¢â€â‚¬ */
+// BE luÄ‚Â´n trĂ¡ÂºÂ£ vĂ¡Â»Â: { success, message, data: T }
+// Interceptor nÄ‚Â y trĂ¡ÂºÂ£ vĂ¡Â»Â response.data (ApiResponse object) Ă„â€˜Ă¡Â»Æ’ FE xĂ¡Â»Â­ lÄ‚Â½
 client.interceptors.response.use(
     (response) => {
         return response.data;
@@ -49,7 +50,7 @@ client.interceptors.response.use(
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             if (!window.location.pathname.includes("/login")) {
-                window.location.href = "/login";
+                navigate("/login");
             }
         } else if (!status) {
             // Network error
@@ -60,4 +61,3 @@ client.interceptors.response.use(
 );
 
 export default client;
-

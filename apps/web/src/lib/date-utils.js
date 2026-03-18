@@ -1,4 +1,4 @@
-﻿// Date utilities using dayjs
+// Date utilities using dayjs
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -46,4 +46,3 @@ export const getWeeksInRange = (start, end) => {
   }
   return weeks;
 };
-

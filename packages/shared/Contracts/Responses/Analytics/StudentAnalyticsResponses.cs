@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
+namespace JiraGithubExport.Shared.Contracts.Responses.Analytics;
 
 /// <summary>GET /api/analytics/student/stats</summary>
 public class StudentDashboardStatsResponse
@@ -80,4 +80,3 @@ public class DailyLabeledCommitStat
     public string Label { get; set; } = string.Empty; // T2, T3... or Mon, Tue...
     public int Commits { get; set; }
 }
-

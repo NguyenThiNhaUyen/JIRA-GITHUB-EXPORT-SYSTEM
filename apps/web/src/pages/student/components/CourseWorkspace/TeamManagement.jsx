@@ -1,4 +1,4 @@
-﻿import { Users, UserPlus, Crown, Trash2 } from"lucide-react";
+import { Users, UserPlus, Crown, Trash2 } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { Badge } from"@/components/ui/Badge.jsx";
@@ -62,4 +62,3 @@ export function TeamManagement({ groupStudents = [], isLeader, onInviteOpen, onR
  </Card>
  );
 }
-

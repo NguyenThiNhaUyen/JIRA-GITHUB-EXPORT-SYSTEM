@@ -1,4 +1,4 @@
-﻿import client from "../../../api/client.js";
+import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
@@ -120,4 +120,3 @@ function mapSrs(s) {
         reviewerName: s.reviewerName,
     };
 }
-

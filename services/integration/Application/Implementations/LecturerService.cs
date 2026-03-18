@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -112,4 +112,3 @@ public class LecturerService : ILecturerService
         };
     }
 }
-

@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.Shared.Contracts.Common;
+namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class ApiResponse<T>
 {
@@ -53,4 +53,3 @@ public class ApiResponse
         };
     }
 }
-

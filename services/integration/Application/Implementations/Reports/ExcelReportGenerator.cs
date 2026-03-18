@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.Shared.Models;
 
@@ -97,4 +97,3 @@ public class ExcelReportGenerator : IExcelReportGenerator
         return stream.ToArray();
     }
 }
-

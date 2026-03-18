@@ -1,4 +1,4 @@
-﻿import { RefreshCw, Plus } from"lucide-react";
+import { RefreshCw, Plus } from"lucide-react";
 
 // Components UI
 import { Button } from"@/components/ui/Button.jsx";
@@ -88,4 +88,3 @@ export default function Alerts() {
  </div>
  );
 }
-

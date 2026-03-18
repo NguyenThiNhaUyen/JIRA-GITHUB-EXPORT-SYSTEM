@@ -1,4 +1,4 @@
-﻿import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/AuthContext.jsx";
 import { useToast } from "@/components/ui/Toast.jsx";
 import {
   useStudentDeadlines,
@@ -63,4 +63,3 @@ export function useStudentDashboard() {
     success
   };
 }
-

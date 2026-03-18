@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
@@ -39,4 +39,3 @@ public partial class GithubCommit
 
     public virtual ICollection<GithubBranch> Branches { get; set; } = new List<GithubBranch>();
 }
-

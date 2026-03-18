@@ -1,4 +1,4 @@
-﻿import { useNavigate } from"react-router-dom";
+import { useNavigate } from"react-router-dom";
 import { GraduationCap, BookOpen, Users, Search } from"lucide-react";
 
 import { PageHeader } from"@/components/shared/PageHeader.jsx";
@@ -71,4 +71,3 @@ export default function MyCourses() {
  </div>
  );
 }
-

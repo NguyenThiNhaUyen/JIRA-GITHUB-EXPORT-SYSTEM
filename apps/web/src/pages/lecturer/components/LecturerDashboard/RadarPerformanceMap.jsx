@@ -1,4 +1,4 @@
-﻿import { TrendingUp, LayoutList } from"lucide-react";
+import { TrendingUp, LayoutList } from"lucide-react";
 import { Card, CardTitle } from"@/components/ui/Card.jsx";
 import { GroupRadarChart } from"@/components/charts/RadarChart.jsx";
 
@@ -24,4 +24,3 @@ export function RadarPerformanceMap({ radarData, alertsCount }) {
  </Card>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using JiraGithubExport.Shared.Common;
@@ -125,4 +125,3 @@ public class JwtService : IJwtService
         }
     }
 }
-

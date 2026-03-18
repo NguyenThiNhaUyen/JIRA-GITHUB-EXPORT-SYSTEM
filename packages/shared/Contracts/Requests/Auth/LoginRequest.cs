@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Auth;
 
@@ -11,4 +11,3 @@ public class LoginRequest
     [Required]
     public string Password { get; set; } = null!;
 }
-

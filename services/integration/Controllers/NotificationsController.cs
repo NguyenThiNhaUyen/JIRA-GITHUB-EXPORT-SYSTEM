@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,4 +54,3 @@ public class NotificationsController : ApiControllerBase
         return Ok(ApiResponse.SuccessResponse("Notification marked as read"));
     }
 }
-

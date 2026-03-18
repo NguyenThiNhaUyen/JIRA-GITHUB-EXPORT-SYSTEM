@@ -1,4 +1,4 @@
-﻿/**
+/**
  * courseApi.js â€” API calls cho Courses
  */
 import client from "../../../api/client.js";
@@ -105,4 +105,3 @@ export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
     return mapUserList(unwrap(res));
 }
-

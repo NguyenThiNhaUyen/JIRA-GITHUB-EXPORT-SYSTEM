@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, ArrowLeft, Home, Lock } from 'lucide-react';
 import { Button } from "@/components/ui/Button.jsx";
@@ -61,4 +61,3 @@ export default function Unauthorized() {
         </div>
     );
 }
-

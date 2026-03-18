@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Clock, Activity } from"lucide-react";
 
 export function AgingWipTable({ agingWipData, loadingAgingWip }) {
@@ -53,4 +53,3 @@ export function AgingWipTable({ agingWipData, loadingAgingWip }) {
  </Card>
  );
 }
-

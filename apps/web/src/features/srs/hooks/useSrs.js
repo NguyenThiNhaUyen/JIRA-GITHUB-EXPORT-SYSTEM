@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     getProjectSrs,
     submitSrsReport,
@@ -99,4 +99,3 @@ export const useDeleteSrs = () => {
         },
     });
 };
-

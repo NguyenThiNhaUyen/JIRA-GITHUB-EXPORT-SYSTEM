@@ -1,4 +1,4 @@
-﻿import { CalendarClock, ChevronRight, CheckCircle } from"lucide-react";
+import { CalendarClock, ChevronRight, CheckCircle } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -55,4 +55,3 @@ export function UpcomingDeadlines({ isLoading, upcomingDeadlines, onSeeAll }) {
  </Card>
  );
 }
-

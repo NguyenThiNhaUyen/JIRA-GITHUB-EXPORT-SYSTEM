@@ -1,4 +1,4 @@
-﻿import { Layers, ChevronRight, LayoutGrid } from"lucide-react";
+import { Layers, ChevronRight, LayoutGrid } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 
 export function ProjectsTable({ projects, onNavigate }) {
@@ -79,4 +79,3 @@ function StatusPill({ status, label }) {
  </span>
  );
 }
-

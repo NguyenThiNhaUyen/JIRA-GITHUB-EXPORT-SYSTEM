@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSemesters, createSemester, updateSemester, deleteSemester, generateSemesters, getSubjects, createSubject, updateSubject, deleteSubject as deleteSubjectApi } from "../api/systemApi.js";
 
 export const SYSTEM_KEYS = {
@@ -65,4 +65,3 @@ export const useDeleteSubject = () => {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
     });
 };
-

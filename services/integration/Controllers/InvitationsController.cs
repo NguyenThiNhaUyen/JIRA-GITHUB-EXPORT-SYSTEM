@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -90,4 +90,3 @@ public class InvitationsController : ControllerBase
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation rejected"));
     }
 }
-

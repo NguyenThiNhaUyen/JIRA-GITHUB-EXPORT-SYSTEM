@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -36,4 +36,3 @@ public interface IGenericRepository<T> where T : class
         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         bool asNoTracking = true);
 }
-

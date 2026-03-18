@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -50,4 +50,3 @@ namespace JiraGithubExport.IntegrationService.Controllers
         }
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -147,4 +147,3 @@ public class SrsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { }, "SRS deleted successfully"));
     }
 }
-

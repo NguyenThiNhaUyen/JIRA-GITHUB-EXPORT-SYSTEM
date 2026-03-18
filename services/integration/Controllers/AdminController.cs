@@ -1,4 +1,4 @@
-﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Analytics;
@@ -49,4 +49,3 @@ public class AdminController : ApiControllerBase
         return Ok(ApiResponse<List<AuditLogResponse>>.SuccessResponse(result));
     }
 }
-

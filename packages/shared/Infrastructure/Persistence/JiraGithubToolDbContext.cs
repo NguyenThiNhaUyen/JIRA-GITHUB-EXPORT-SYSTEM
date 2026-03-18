@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using JiraGithubExport.Shared.Models;
 using JiraGithubExport.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -966,4 +966,3 @@ public partial class JiraGithubToolDbContext : DbContext
         return result.ToString();
     }
 }
-

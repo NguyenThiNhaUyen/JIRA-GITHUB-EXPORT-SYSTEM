@@ -1,4 +1,4 @@
-﻿// ErrorBoundary - Báº¯t lá»—i React vĂ  hiá»ƒn thá»‹ fallback thay vĂ¬ tráº¯ng trang
+// ErrorBoundary - Báº¯t lá»—i React vĂ  hiá»ƒn thá»‹ fallback thay vĂ¬ tráº¯ng trang
 import { Component } from "react";
 
 export default class ErrorBoundary extends Component {
@@ -53,4 +53,3 @@ export default class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
-

@@ -1,7 +1,6 @@
-﻿namespace JiraGithubExport.Shared.Interfaces;
+namespace JiraGithubExport.Shared.Interfaces;
 
 public interface ISoftDelete
 {
     bool IsDeleted { get; set; }
 }
-

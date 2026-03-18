@@ -1,4 +1,4 @@
-﻿namespace JiraGithubExport.GithubService.DTOs;
+namespace JiraGithubExport.GithubService.DTOs;
 
 public class GitHubRepoResponse
 {
@@ -86,4 +86,3 @@ public class GitHubCommitSummary
     public string Sha { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
 }
-

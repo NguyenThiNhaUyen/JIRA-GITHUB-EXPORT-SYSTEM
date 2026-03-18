@@ -1,4 +1,4 @@
-﻿/**
+/**
  * unwrap.js â€” Helper bĂ³c tĂ¡ch ApiResponse<T> wrapper tá»« ASP.NET BE
  *
  * BE luĂ´n tráº£ vá»: { success: bool, message: string|null, data: T, errors: string[]|null }
@@ -50,4 +50,3 @@ export function unwrapError(apiResponse) {
 export function isSuccess(apiResponse) {
     return apiResponse?.success === true || apiResponse?.Success === true;
 }
-

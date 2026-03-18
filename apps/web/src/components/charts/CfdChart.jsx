@@ -1,4 +1,4 @@
-﻿// Cumulative Flow Diagram (CFD)
+// Cumulative Flow Diagram (CFD)
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -55,4 +55,3 @@ export function CfdChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
-

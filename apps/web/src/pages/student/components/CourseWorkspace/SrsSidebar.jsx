@@ -1,4 +1,4 @@
-﻿import { Plus, BarChart2, FileText, ExternalLink } from"lucide-react";
+import { Plus, BarChart2, FileText, ExternalLink } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
@@ -61,4 +61,3 @@ export function SrsSidebar({ groupSrs = [], loadingSrs, onSrsCenterNavigate }) {
  </Card>
  );
 }
-

@@ -1,4 +1,4 @@
-﻿import { useMemo } from"react";
+import { useMemo } from"react";
 import { Monitor, Eye, Trash2, PenLine, Users, Target, ShieldCheck, Zap, MoreHorizontal, UserPlus } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -187,4 +187,3 @@ function MetricCard({ label, value, icon: Icon, color, children }) {
  </div>
  );
 }
-

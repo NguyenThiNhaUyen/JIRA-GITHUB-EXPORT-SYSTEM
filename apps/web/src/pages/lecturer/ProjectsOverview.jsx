@@ -1,4 +1,4 @@
-﻿import {
+import {
  GitBranch,
  Activity,
  Search,
@@ -110,4 +110,3 @@ export default function ProjectsOverview() {
  </div>
  );
 }
-

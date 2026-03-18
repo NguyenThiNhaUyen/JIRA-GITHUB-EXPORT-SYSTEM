@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 
@@ -52,4 +52,3 @@ export function WeeklyActivityChart({ weeklyCommits }) {
     </Card>
   );
 }
-

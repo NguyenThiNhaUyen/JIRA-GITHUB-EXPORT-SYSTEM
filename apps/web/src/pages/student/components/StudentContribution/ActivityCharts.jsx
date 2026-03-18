@@ -1,4 +1,4 @@
-﻿import { Flame, Calendar } from"lucide-react";
+import { Flame, Calendar } from"lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from"recharts";
 import CalendarHeatmap from"react-calendar-heatmap";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
@@ -114,4 +114,3 @@ export function ActivityCharts({ commitActivity, heatmapData }) {
  </div>
  );
 }
-

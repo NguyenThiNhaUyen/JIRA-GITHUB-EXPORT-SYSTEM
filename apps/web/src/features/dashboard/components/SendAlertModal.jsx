@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Bell, RefreshCw, Send, ShieldAlert, AlertTriangle, Info } from "lucide-react";
 import { Modal } from "@/components/ui/Interactive.jsx";
 import { Button } from "@/components/ui/Button.jsx";
@@ -93,4 +93,3 @@ export function SendAlertModal({ isOpen, onClose, groups = [], initialGroupId = 
         </Modal>
     );
 }
-
