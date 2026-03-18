@@ -109,7 +109,7 @@ class AdminService {
     try {
       final token = await _auth.getToken();
       final response = await http.get(
-        Uri.parse('${AuthService.baseUrl}$endpoint'),
+        Uri.parse('${AuthService.baseUrl}/api$endpoint'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -137,7 +137,7 @@ class AdminService {
   Future<Map<String, dynamic>?> _post(String endpoint, dynamic body) async {
     try {
       final token = await _auth.getToken();
-      final url = Uri.parse('${AuthService.baseUrl}$endpoint');
+      final url = Uri.parse('${AuthService.baseUrl}/api$endpoint');
       final response = await http.post(
         url,
         headers: {
@@ -161,7 +161,7 @@ class AdminService {
   Future<bool> _request(String method, String endpoint, {dynamic body}) async {
     try {
       final token = await _auth.getToken();
-      final url = Uri.parse('${AuthService.baseUrl}$endpoint');
+      final url = Uri.parse('${AuthService.baseUrl}/api$endpoint');
       final headers = {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',

@@ -83,17 +83,67 @@ class AdminDashboardService {
         'subjectsData': subjects,
         'coursesData': courses,
       };
-    } catch (e) {
-      print('AdminDashboardService Error: $e');
-      throw Exception('Lỗi nạp dữ liệu Dashboard: $e');
-    }
+  // --- New Advanced Analytics APIs ---
+
+  /// GET /api/analytics/stats - Thống kê tổng quan Admin
+  Future<Map<String, dynamic>?> getAdminStats() async {
+    final data = await _get("/analytics/stats");
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// GET /api/analytics/integration-stats - Thống kê kết nối Jira/Github
+  Future<Map<String, dynamic>?> getIntegrationStats() async {
+    final data = await _get("/analytics/integration-stats");
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// GET /api/analytics/commit-trends - Xu hướng commit
+  Future<List<dynamic>> getCommitTrends({int days = 7}) async {
+    final data = await _get("/analytics/commit-trends?days=$days");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/heatmap - Biểu đồ nhiệt hoạt động
+  Future<List<dynamic>> getHeatmap({int days = 90}) async {
+    final data = await _get("/analytics/heatmap?days=$days");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/team-rankings - Xếp hạng nhóm hiệu suất cao
+  Future<List<dynamic>> getTeamRankings({int limit = 4}) async {
+    final data = await _get("/analytics/team-rankings?limit=$limit");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/inactive-teams - Các nhóm không hoạt động
+  Future<List<dynamic>> getInactiveTeams() async {
+    final data = await _get("/analytics/inactive-teams");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/activity-log - Nhật ký hệ thống (Audit logs)
+  Future<List<dynamic>> getAuditLogs({int limit = 10}) async {
+    final data = await _get("/analytics/activity-log?limit=$limit");
+    if (data is List) return data;
+    return [];
+  }
+
+  /// GET /api/analytics/team-activities - Dòng hoạt động của các nhóm
+  Future<List<dynamic>> getTeamActivities() async {
+    final data = await _get("/analytics/team-activities");
+    if (data is List) return data;
+    return [];
   }
 
   Future<dynamic> _get(String endpoint) async {
     try {
       final token = await _auth.getToken();
       final response = await http.get(
-        Uri.parse('${AuthService.baseUrl}$endpoint'),
+        Uri.parse('${AuthService.baseUrl}/api$endpoint'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',

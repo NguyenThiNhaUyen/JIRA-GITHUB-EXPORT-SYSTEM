@@ -18,7 +18,7 @@ class StudentService {
   // --- Helpers ---
   Future<dynamic> _get(String path) async {
     try {
-      final response = await http.get(Uri.parse("$_baseUrl$path"), headers: await _headers());
+      final response = await http.get(Uri.parse("$_baseUrl/api$path"), headers: await _headers());
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final json = jsonDecode(response.body);
         return json['data'] ?? json['Data'] ?? json;
@@ -32,7 +32,7 @@ class StudentService {
   Future<bool> _post(String path, dynamic body) async {
     try {
       final response = await http.post(
-        Uri.parse("$_baseUrl$path"),
+        Uri.parse("$_baseUrl/api$path"),
         headers: await _headers(),
         body: jsonEncode(body),
       );
@@ -45,7 +45,7 @@ class StudentService {
   Future<bool> _patch(String path, dynamic body) async {
     try {
       final response = await http.patch(
-        Uri.parse("$_baseUrl$path"),
+        Uri.parse("$_baseUrl/api$path"),
         headers: await _headers(),
         body: jsonEncode(body),
       );
@@ -58,7 +58,7 @@ class StudentService {
   Future<bool> _delete(String path) async {
     try {
       final response = await http.delete(
-        Uri.parse("$_baseUrl$path"),
+        Uri.parse("$_baseUrl/api$path"),
         headers: await _headers(),
       );
       return response.statusCode >= 200 && response.statusCode < 300;
