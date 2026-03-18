@@ -9,6 +9,7 @@ import '../screens/auth/forgot_password_screen.dart';
 // STUDENT
 import '../screens/student/student_dashboard.dart';
 import '../screens/student/student_project_screen.dart';
+import '../screens/student/student_placeholders.dart';
 
 // ADMIN
 import '../screens/admin/admin_dashboard_screen.dart';
@@ -51,7 +52,7 @@ GoRouter createRouter(AuthProvider authProvider) {
         if (user == null) return '/login';
         if (user.isStudent) return '/student';
         if (user.isLecturer) return '/lecturer';
-        if (user.isAdmin) return '/admin';
+        if (user.isAdmin) return '/admin/dashboard';
       }
 
       return null;
@@ -75,6 +76,26 @@ GoRouter createRouter(AuthProvider authProvider) {
       GoRoute(
         path: '/student/project',
         builder: (context, state) => const StudentProjectScreen(),
+      ),
+      GoRoute(
+        path: '/student/courses',
+        builder: (context, state) => const StudentCoursesScreen(),
+      ),
+      GoRoute(
+        path: '/student/my-project',
+        builder: (context, state) => const StudentMyProjectScreen(),
+      ),
+      GoRoute(
+        path: '/student/contribution',
+        builder: (context, state) => const StudentContributionScreen(),
+      ),
+      GoRoute(
+        path: '/student/alerts',
+        builder: (context, state) => const StudentAlertsScreen(),
+      ),
+      GoRoute(
+        path: '/student/srs',
+        builder: (context, state) => const StudentSrsScreen(),
       ),
 
       // LECTURER
@@ -121,7 +142,7 @@ GoRouter createRouter(AuthProvider authProvider) {
 
       // ADMIN
       GoRoute(
-        path: '/admin',
+        path: '/admin/dashboard',
         builder: (context, state) => const AdminDashboardScreen(),
       ),
       GoRoute(

@@ -248,9 +248,9 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         text,
@@ -516,7 +516,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -597,7 +597,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF0F766E).withOpacity(0.8),
+                      const Color(0xFF0F766E).withValues(alpha: 0.8),
                       const Color(0xFF14B8A6),
                     ],
                   ),
@@ -670,7 +670,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isLatest
-                  ? const Color(0xFF10B981).withOpacity(0.4)
+                  ? const Color(0xFF10B981).withValues(alpha: 0.4)
                   : cardBorder,
             ),
           ),
@@ -788,7 +788,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -912,9 +912,9 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

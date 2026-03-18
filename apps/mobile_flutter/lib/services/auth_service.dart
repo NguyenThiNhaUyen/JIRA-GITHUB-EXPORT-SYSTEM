@@ -8,7 +8,7 @@ class AuthService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   static const String baseUrl =
-      "https://jira-github-export-system-fc1r.onrender.com/api";
+      "https://jira-github-export-system.onrender.com/api";
 
   /// LOGIN
   Future<Map<String, dynamic>> login(String email, String password) async {

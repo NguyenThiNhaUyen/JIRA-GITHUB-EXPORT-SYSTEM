@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
+import '../../services/lecturer_service.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 
 class MyCoursesScreen extends StatefulWidget {
   const MyCoursesScreen({super.key});
@@ -18,69 +21,36 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
   static const Color teal = Color(0xFF0F766E);
   static const Color tealLight = Color(0xFF14B8A6);
 
-  static const List<int> _mockCommits = [5, 7, 3, 9, 12];
-
-  static const List<Map<String, dynamic>> _mockCourses = [
-    {
-      'id': '1',
-      'code': 'SWD392-SE1831',
-      'name': 'Software Architecture',
-      'subjectCode': 'SWD392',
-      'semester': 'Fall 2025',
-      'currentStudents': 32,
-      'lastCommit': '2 hours ago',
-      'archived': false,
-      'projects': [
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': false},
-        {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true, 'jiraConnected': true},
-      ],
-    },
-    {
-      'id': '2',
-      'code': 'SWD392-SE1832',
-      'name': 'Software Architecture',
-      'subjectCode': 'SWD392',
-      'semester': 'Fall 2025',
-      'currentStudents': 28,
-      'lastCommit': '1 day ago',
-      'archived': false,
-      'projects': [
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': false, 'jiraConnected': false},
-        {'repoConnected': true, 'jiraConnected': true},
-      ],
-    },
-    {
-      'id': '3',
-      'code': 'PRJ301-SE1841',
-      'name': 'Project Management',
-      'subjectCode': 'PRJ301',
-      'semester': 'Fall 2025',
-      'currentStudents': 40,
-      'lastCommit': '5 minutes ago',
-      'archived': false,
-      'projects': [
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-        {'repoConnected': true, 'jiraConnected': true},
-      ],
-    },
-  ];
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  bool _isLoading = true;
+  User? _currentUser;
+  List<Map<String, dynamic>> _courses = [];
 
   String _search = '';
   final _searchCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final courses = await _lecturerService.getMyCourses();
+      setState(() {
+        _currentUser = user;
+        _courses = courses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnack("Lỗi tải danh sách lớp học");
+    }
+  }
 
   @override
   void dispose() {
@@ -90,19 +60,19 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
 
   List<Map<String, dynamic>> get _filtered {
     final kw = _search.toLowerCase();
-    if (kw.isEmpty) return _mockCourses;
-    return _mockCourses.where((c) {
+    if (kw.isEmpty) return _courses;
+    return _courses.where((c) {
       return (c['code'] as String).toLowerCase().contains(kw) ||
           (c['name'] as String).toLowerCase().contains(kw) ||
-          (c['subjectCode'] as String).toLowerCase().contains(kw);
+          (c['subjectCode'] as String? ?? '').toLowerCase().contains(kw);
     }).toList();
   }
 
   int get _totalGroups =>
-      _mockCourses.fold(0, (s, c) => s + (c['projects'] as List).length);
+      _courses.fold(0, (s, c) => s + ((c['projectsCount'] ?? (c['projects'] as List?)?.length ?? 0) as int));
 
   int get _totalStudents =>
-      _mockCourses.fold(0, (s, c) => s + (c['currentStudents'] as int));
+      _courses.fold(0, (s, c) => s + ((c['currentStudents'] ?? 0) as int));
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -124,15 +94,17 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(
+      appBar: AppTopHeader(
         title: 'Lớp của tôi',
         user: AppUser(
-          name: 'Nguyễn Văn Nam',
-          email: 'namnv@fe.edu.vn',
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
           role: 'LECTURER',
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: teal))
+          : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +265,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     final stats = [
       {
         'label': 'Tổng lớp',
-        'value': '${_mockCourses.length}',
+        'value': '${_courses.length}',
         'color': teal,
         'bg': const Color(0xFFF0FDFA),
         'border': const Color(0xFFCCFBF1),
@@ -339,7 +311,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: color.withOpacity(0.85),
+                      color: color.withValues(alpha: 0.85),
                     ),
                   ),
                 ),
@@ -384,7 +356,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: color.withOpacity(0.85),
+                      color: color.withValues(alpha: 0.85),
                     ),
                   ),
                 ),
@@ -437,7 +409,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
         border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -733,19 +705,20 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
   }
 
   Widget _buildMiniCommitChart() {
-    final max = _mockCommits.reduce((a, b) => a > b ? a : b);
+    final List<int> defaultCommits = [5, 7, 3, 9, 12];
+    final max = defaultCommits.reduce((a, b) => a > b ? a : b);
     return SizedBox(
       height: 36,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: _mockCommits.map((v) {
+        children: defaultCommits.map((v) {
           final pct = v / max;
           return Expanded(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
               height: (28 * pct).clamp(4.0, 36.0),
               decoration: BoxDecoration(
-                color: tealLight.withOpacity(0.55 + pct * 0.45),
+                color: tealLight.withValues(alpha: 0.55 + pct * 0.45),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
