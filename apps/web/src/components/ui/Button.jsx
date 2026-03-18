@@ -19,24 +19,24 @@ const buttonSizes = {
   xl: 'px-8 py-4 text-xl',
 };
 
-export function Button({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  disabled = false, 
-  className = '', 
-  ...props 
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  className = '',
+  ...props
 }) {
-  const baseClasses = 'inline-flex items-center justify-center font-black rounded-2xl transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest font-display active:scale-95';
+  const baseClasses = 'inline-flex items-center justify-center font-black rounded-2xl transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed font-display active:scale-95';
   const variantClasses = buttonVariants[variant] || buttonVariants.primary;
   const sizeClasses = buttonSizes[size] || buttonSizes.md;
-  
+
   const classes = `${baseClasses} ${variantClasses} ${sizeClasses} ${className}`;
-  
+
   return (
-    <button 
-      className={classes} 
-      disabled={disabled} 
+    <button
+      className={classes}
+      disabled={disabled}
       {...props}
     >
       {children}

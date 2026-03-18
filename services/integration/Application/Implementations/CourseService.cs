@@ -168,9 +168,11 @@ public class CourseService : ICourseService
             .Include(l => l.courses)
             .FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
 
+        // Return empty list instead of 404/500 if lecturer profile not created yet
         if (lecturer == null)
         {
-            throw new NotFoundException("Lecturer not found");
+            _logger.LogWarning("No lecturer profile found for user {UserId}. Returning empty list.", lecturerUserId);
+            return new PagedResponse<CourseDetailResponse>(new List<CourseDetailResponse>(), 0, request.Page, request.PageSize);
         }
 
         var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByLecturerAsync(
@@ -188,9 +190,11 @@ public class CourseService : ICourseService
     public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request)
     {
         var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == studentUserId);
+        // Return empty list instead of 404/500 if student profile not created yet
         if (student == null)
         {
-            throw new NotFoundException("Student not found");
+            _logger.LogWarning("No student profile found for user {UserId}. Returning empty list.", studentUserId);
+            return new PagedResponse<CourseDetailResponse>(new List<CourseDetailResponse>(), 0, request.Page, request.PageSize);
         }
 
         var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByStudentAsync(

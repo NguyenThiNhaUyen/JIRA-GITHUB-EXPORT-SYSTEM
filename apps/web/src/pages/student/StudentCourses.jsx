@@ -54,7 +54,7 @@ export default function StudentCoursesPage() {
                     <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-200">
                         <BookOpen size={40} />
                     </div>
-                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Bạn chưa được đăng ký lớp nào</p>
+                    <p className="text-[10px] font-black text-gray-300">Bạn chưa được đăng ký lớp nào</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -70,9 +70,9 @@ export default function StudentCoursesPage() {
                                 <div className="h-2 bg-gradient-to-r from-teal-500 to-indigo-500" />
                                 <CardContent className="p-10 space-y-8">
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-teal-600 bg-teal-50 px-4 py-1.5 rounded-full inline-block uppercase tracking-widest">{c.subject?.code || c.code || "SWD392"}</p>
-                                        <h4 className="font-black text-gray-800 text-xl tracking-tighter group-hover:text-teal-600 transition-colors uppercase leading-tight">{c.name}</h4>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <p className="text-[10px] font-black text-teal-600 bg-teal-50 px-4 py-1.5 rounded-full inline-block">{c.subject?.code || c.code || "SWD392"}</p>
+                                        <h4 className="font-black text-gray-800 text-xl group-hover:text-teal-600 transition-colors leading-tight">{c.name}</h4>
+                                        <p className="text-[10px] text-gray-400 font-bold flex items-center gap-2">
                                             <Users size={12} /> GV: {c.lecturerNames?.join(", ") || "Chưa có GV"}
                                         </p>
                                     </div>
@@ -84,13 +84,13 @@ export default function StudentCoursesPage() {
                                                     <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
                                                         <FolderKanban size={16}/>
                                                     </div>
-                                                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest truncate max-w-[120px]">{project.name}</span>
+                                                    <span className="text-[10px] font-black text-gray-600 truncate max-w-[120px]">{project.name}</span>
                                                 </div>
                                                 <StatusBadge status={isLeader ? 'warning' : 'info'} label={isLeader ? 'Leader' : 'Member'} variant={isLeader ? 'warning' : 'info'} />
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between opacity-40">
-                                                <p className="text-[10px] font-black text-gray-300 uppercase italic tracking-widest">Chưa phân nhóm</p>
+                                                <p className="text-[10px] font-black text-gray-300 italic">Chưa phân nhóm</p>
                                                 <ChevronRight size={14} className="text-gray-300" />
                                             </div>
                                         )}

@@ -15,8 +15,8 @@ export async function getGroupById(groupId) {
  * POST /api/projects/{projectId}/github/approve
  * Approve liên kết GitHub cho nhóm
  */
-export async function approveGroupLink(groupId, linkType, lecturerId) {
-    const res = await client.post(`/projects/${groupId}/links/${linkType}/approve`, { lecturerId });
+export async function approveGroupLink(groupId, linkType) {
+    const res = await client.post(`/projects/${groupId}/links/${linkType}/approve`);
     return unwrap(res);
 }
 
@@ -24,8 +24,8 @@ export async function approveGroupLink(groupId, linkType, lecturerId) {
  * POST /api/projects/{projectId}/github/reject
  * Reject liên kết GitHub/Jira cho nhóm
  */
-export async function rejectGroupLink(groupId, linkType, lecturerId) {
-    const res = await client.post(`/projects/${groupId}/links/${linkType}/reject`, { lecturerId });
+export async function rejectGroupLink(groupId, linkType) {
+    const res = await client.post(`/projects/${groupId}/links/${linkType}/reject`);
     return unwrap(res);
 }
 

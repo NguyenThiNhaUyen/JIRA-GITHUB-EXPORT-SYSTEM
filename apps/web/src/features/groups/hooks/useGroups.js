@@ -19,7 +19,7 @@ export const useGetGroupById = (id) => {
 export const useApproveLink = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ groupId, linkType, lecturerId }) => approveGroupLink(groupId, linkType, lecturerId),
+        mutationFn: ({ groupId, linkType }) => approveGroupLink(groupId, linkType),
         onSuccess: (_, variables) => {
             // Ảo thuật nằm đây: Gọi API OK -> Xoá Cache báo React tải lại giao diện Nhóm đó lập tức
             queryClient.invalidateQueries({ queryKey: GROUP_KEYS.detail(variables.groupId) });
@@ -30,7 +30,7 @@ export const useApproveLink = () => {
 export const useRejectLink = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ groupId, linkType, lecturerId }) => rejectGroupLink(groupId, linkType, lecturerId),
+        mutationFn: ({ groupId, linkType }) => rejectGroupLink(groupId, linkType),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: GROUP_KEYS.detail(variables.groupId) });
         },

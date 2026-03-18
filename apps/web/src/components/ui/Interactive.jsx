@@ -22,7 +22,7 @@ export function Tabs({ children, defaultValue, className = '', ...props }) {
 
 export function TabsList({ children, activeTab, setActiveTab, className = '', ...props }) {
   return (
-    <div className={`flex space-x-1 border-b border-secondary-200 ${className}`} {...props}>
+    <div className={`flex space-x-1 ${className}`} {...props}>
       {children.map((child, index) => {
         if (child.type === TabsTrigger) {
           return React.cloneElement(child, {
@@ -37,7 +37,7 @@ export function TabsList({ children, activeTab, setActiveTab, className = '', ..
 }
 
 export function TabsTrigger({ children, value, isActive, onClick, className = '', ...props }) {
-  const baseClasses = 'px-8 py-3 text-[10px] font-black uppercase tracking-[0.2em] font-display rounded-2xl transition-all duration-300 active:scale-95';
+  const baseClasses = 'px-8 py-3 text-[10px] font-black tracking-[0.2em] font-display rounded-2xl transition-all duration-300 active:scale-95';
   const activeClasses = isActive
     ? 'bg-teal-600 text-white shadow-xl shadow-teal-100 -translate-y-0.5'
     : 'text-gray-400 bg-gray-100/50 hover:bg-gray-100 hover:text-gray-600';
@@ -64,7 +64,7 @@ export function TabsContent({ children, value, activeTab, className = '', ...pro
 }
 
 // Modal Component - Part of UI Kit
-export function Modal({ isOpen, onClose, title, children, size = 'md', className = '', ...props }) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', showDefaultFooter = false, className = '', ...props }) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -95,21 +95,23 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
       <div className={`relative bg-white rounded-[40px] shadow-premium w-full border border-gray-100 overflow-hidden animate-in zoom-in-95 fade-in duration-300 ${sizes[size]} ${className}`}>
         {title && (
           <div className="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
-            <h3 className="text-xl font-black text-gray-800 uppercase tracking-widest font-display">{title}</h3>
+            <h3 className="text-xl font-black text-gray-800 font-display">{title}</h3>
             <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-200 transition-all">✕</button>
           </div>
         )}
         <div className="px-10 py-8">
           {children}
         </div>
-        <div className="px-10 py-8 border-t border-gray-50 bg-gray-50/10 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose} className="rounded-2xl h-12 px-8">
-            Hủy
-          </Button>
-          <Button onClick={onClose} className="rounded-2xl h-12 px-8 bg-black text-white hover:bg-zinc-800 border-0">
-            Xác nhận
-          </Button>
-        </div>
+        {showDefaultFooter && (
+          <div className="px-10 py-8 border-t border-gray-50 bg-gray-50/10 flex justify-end gap-3">
+            <Button variant="outline" onClick={onClose} className="rounded-2xl h-12 px-8">
+              Hủy
+            </Button>
+            <Button onClick={onClose} className="rounded-2xl h-12 px-8 bg-black text-white hover:bg-zinc-800 border-0">
+              Xác nhận
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
