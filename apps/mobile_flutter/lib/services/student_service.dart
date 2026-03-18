@@ -89,6 +89,13 @@ class StudentService {
     return [];
   }
 
+  /// GET /api/alerts - Danh sách cảnh báo
+  Future<List<Map<String, dynamic>>> getAlerts() async {
+    final data = await _get("/alerts?pageSize=1000");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
   /// GET /api/student/me/invitations - Lời mời vào nhóm
   Future<List<Map<String, dynamic>>> getInvitations() async {
     final data = await _get("/student/me/invitations");

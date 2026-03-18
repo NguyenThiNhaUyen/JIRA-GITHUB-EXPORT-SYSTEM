@@ -39,11 +39,13 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
       final user = await _authService.getCurrentUser();
       final projects = await _studentService.getMyProjects();
       
-      // Find the specific project by ID
-      final target = projects.firstWhere(
+      // Find and normalize the specific project
+      final rawTarget = projects.firstWhere(
         (p) => p['id'].toString() == widget.projectId || p['projectId'].toString() == widget.projectId,
         orElse: () => projects.isNotEmpty ? projects[0] : <String, dynamic>{},
       );
+
+      final target = _normalizeProject(rawTarget);
 
       setState(() {
         _currentUser = user;
@@ -53,6 +55,28 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
     } catch (e) {
       setState(() => _isLoading = false);
     }
+  }
+
+  Map<String, dynamic> _normalizeProject(Map<String, dynamic> p) {
+    if (p.isEmpty) return p;
+    final integration = p['integration'] ?? p['Integration'] ?? {};
+    final github = integration['github'] ?? integration['GitHub'] ?? {};
+    final jira = integration['jira'] ?? integration['Jira'] ?? {};
+    final metrics = p['metrics'] ?? p['stats'] ?? {};
+    
+    return {
+      ...p,
+      'title': p['name'] ?? p['topic'] ?? p['title'] ?? 'Dự án chưa tên',
+      'commits': metrics['totalCommits'] ?? github['commits'] ?? p['commits'] ?? 0,
+      'issuesDone': metrics['totalIssuesDone'] ?? jira['issuesDone'] ?? p['issuesDone'] ?? 0,
+      'prsMerged': metrics['totalPrsMerged'] ?? github['prsMerged'] ?? p['prsMerged'] ?? 0,
+      'myContribution': metrics['myContribution'] ?? p['myContribution'] ?? 0,
+      'repository': github['repositoryName'] ?? github['url'] ?? p['repository'] ?? 'No GitHub',
+      'jiraKey': jira['projectKey'] ?? p['jiraKey'] ?? 'No Jira',
+      'srs': p['srs'] ?? p['srsHistory'] ?? [],
+      'tasks': p['tasks'] ?? p['jiraTasks'] ?? [],
+      'team': p['team'] ?? p['members'] ?? [],
+    };
   }
 
   @override

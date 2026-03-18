@@ -176,20 +176,19 @@ class _AppTopHeaderState extends State<AppTopHeader> {
     }
 
     // Center content: search bar or title text
-    // If showBack is true → always show title (back/detail screens)
-    // If showSearch explicitly false → show title
-    // Otherwise (sidebar screens) → show search bar
     final bool useSearch = widget.showSearch && !widget.showBack;
     final double scWidth = MediaQuery.of(context).size.width;
     final bool isSmall = scWidth < 600;
 
     Widget centerWidget;
     if (useSearch) {
-      if (isSmall && (widget.actions?.isNotEmpty ?? false)) {
-        // On small screen with many actions, just show a search icon button to save space
+      if (isSmall) {
+        // On small screen, don't show the full search bar to avoid right overflow
         centerWidget = Align(
           alignment: Alignment.centerLeft,
           child: IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             icon: const Icon(Icons.search_rounded, color: _txtSec, size: 22),
             onPressed: _showSearchSheet,
           ),
@@ -197,10 +196,9 @@ class _AppTopHeaderState extends State<AppTopHeader> {
       } else {
         centerWidget = Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 500),
             child: Container(
-              height: 44,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: 40,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
@@ -209,14 +207,11 @@ class _AppTopHeaderState extends State<AppTopHeader> {
               child: TextField(
                 controller: _searchController,
                 textAlignVertical: TextAlignVertical.center,
-                style: const TextStyle(fontSize: 14, color: _txtPrimary, fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 13, color: _txtPrimary),
                 decoration: const InputDecoration(
                   hintText: 'Tìm kiếm...',
-                  hintStyle: TextStyle(fontSize: 14, color: Color(0xFF94A3B8), fontWeight: FontWeight.normal),
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-                  ),
+                  hintStyle: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
@@ -229,11 +224,9 @@ class _AppTopHeaderState extends State<AppTopHeader> {
     } else {
       centerWidget = Text(
         widget.title,
-        style: const TextStyle(
-          color: _txtPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 16,
-        ),
+        style: const TextStyle(color: _txtPrimary, fontWeight: FontWeight.w700, fontSize: 16),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       );
     }
 
@@ -245,22 +238,14 @@ class _AppTopHeaderState extends State<AppTopHeader> {
       shape: const Border(bottom: BorderSide(color: _borderColor, width: 1)),
       leading: leadingWidget,
       title: centerWidget,
-      titleSpacing: (isSmall && useSearch) ? 0 : 8,
+      centerTitle: !useSearch,
+      titleSpacing: isSmall ? 0 : 8,
       actions: [
-        // Extra custom actions
-        if (widget.actions != null)
-          ...widget.actions!.map((a) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: a,
-              )),
-
-        // Bell
+        if (widget.actions != null) ...widget.actions!,
         _buildBell(),
         const SizedBox(width: 4),
-
-        // ── Avatar + PopupMenu ─────────────────────────────
         _buildUserMenu(),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
       ],
     );
   }
