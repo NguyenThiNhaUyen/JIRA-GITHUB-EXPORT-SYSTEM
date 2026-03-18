@@ -13,4 +13,8 @@ public interface IUserService
     Task UpdateUserRoleAsync(long userId, string role);
     Task UpdateUserStatusAsync(long userId, bool enabled);
     Task AdminResetPasswordAsync(long userId, string newPassword);
+    
+    Task<UserDetailResponse> CreateUserAsync(CreateUserRequest request);
+    Task<StudentLinksResponse> GetStudentLinksAsync(long studentId);
+    Task<StudentLinksResponse> LinkStudentAccountsAsync(long studentId, LinkStudentAccountsRequest request);
 }

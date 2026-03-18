@@ -52,7 +52,7 @@ export default function StudentDashboard() {
           <Button 
             key="export" 
             variant="outline" 
-            className="rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display" 
+            className="rounded-[24px] border-teal-100 text-teal-700 h-12 px-8 text-[11px] font-black hover:bg-teal-50 hover:border-teal-200 shadow-sm transition-all font-display" 
             onClick={() => success?.("Báo cáo hiệu suất đã được gửi qua Email")}
           >
             <Download size={18} className="mr-3" /> Export Insight
@@ -60,7 +60,7 @@ export default function StudentDashboard() {
           <Button 
             key="logout" 
             onClick={handleLogout} 
-            className="bg-slate-900 hover:bg-black text-white rounded-[24px] h-12 px-10 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-200 border-0 transition-all hover:scale-105 active:scale-95 font-display"
+            className="bg-slate-900 hover:bg-black text-white rounded-[24px] h-12 px-10 text-[11px] font-black shadow-xl shadow-slate-200 border-0 transition-all hover:scale-105 active:scale-95 font-display"
           >
             <LogOut size={18} className="mr-3" /> Sign Out
           </Button>
@@ -96,12 +96,12 @@ export default function StudentDashboard() {
               <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
                   <Sparkles size={120} className="animate-pulse" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-4 opacity-80">AI RECOMMENDATION</p>
-              <h4 className="text-2xl font-black uppercase tracking-tighter leading-tight mb-8 font-display">Optimization Plan Available</h4>
+              <p className="text-[10px] font-black mb-4 opacity-80">AI RECOMMENDATION</p>
+              <h4 className="text-2xl font-black leading-tight mb-8 font-display">Optimization Plan Available</h4>
               <p className="text-xs font-bold leading-relaxed mb-10 opacity-80">
                   Phân tích GitHub cho thấy tần suất code của bạn cao hơn 40% so với tuần trước. Hãy duy trì phong độ này để đạt điểm A+ dự án.
               </p>
-              <Button className="w-full h-14 bg-white text-teal-700 hover:bg-teal-50 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all font-display border-0 shadow-2xl">View Detailed Stats</Button>
+              <Button className="w-full h-14 bg-white text-teal-700 hover:bg-teal-50 rounded-[24px] text-[10px] font-black transition-all font-display border-0 shadow-2xl">View Detailed Stats</Button>
           </div>
 
           {/* Recent Activity */}

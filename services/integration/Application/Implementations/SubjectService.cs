@@ -53,6 +53,17 @@ public class SubjectService : ISubjectService
         var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
         if (subject == null) throw new NotFoundException("Subject not found");
 
+        if (!string.IsNullOrWhiteSpace(request.SubjectCode))
+        {
+            // Check uniqueness if changed
+            if (subject.subject_code != request.SubjectCode)
+            {
+                var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.subject_code == request.SubjectCode);
+                if (existing != null) throw new BusinessException("Subject code already exists");
+                subject.subject_code = request.SubjectCode;
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(request.SubjectName))
             subject.subject_name = request.SubjectName;
             

@@ -52,15 +52,15 @@ export default function SubjectManagement() {
     const [deptFilter, setDeptFilter] = useState("ALL");
 
     const [formData, setFormData] = useState({
-  department: "",
-  courseNumber: "",
-  code: "",
-  name: "",
-  description: "",
-  credits: 3,
-  maxStudents: 40,
-  status: "ACTIVE",
-});
+        department: "",
+        courseNumber: "",
+        code: "",
+        name: "",
+        description: "",
+        credits: 3,
+        maxStudents: 40,
+        status: "ACTIVE",
+    });
 
     /* Auto generate code */
     useEffect(() => {
@@ -80,7 +80,7 @@ export default function SubjectManagement() {
             const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) || code.toLowerCase().includes(search.toLowerCase());
             const matchesDept = deptFilter === "ALL" || s.department === deptFilter;
             return matchesSearch && matchesDept;
-        }).sort((a,b) => (a.subject_code || a.code || "").localeCompare(b.subject_code || b.code || ""));
+        }).sort((a, b) => (a.subject_code || a.code || "").localeCompare(b.subject_code || b.code || ""));
     }, [subjects, search, deptFilter]);
 
     const handleCreate = () => {
@@ -156,12 +156,12 @@ export default function SubjectManagement() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <PageHeader 
+            <PageHeader
                 title="Quản lý Môn học"
                 subtitle="Danh mục chương trình đào tạo và cấu trúc các học phần."
                 breadcrumb={["Admin", "Hệ thống", "Môn học"]}
                 actions={[
-                    <Button key="add" onClick={handleCreate} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0">
+                    <Button key="add" onClick={handleCreate} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black shadow-lg shadow-teal-100 border-0">
                         <Plus size={16} className="mr-2" /> Thêm Môn học
                     </Button>
                 ]}
@@ -176,14 +176,14 @@ export default function SubjectManagement() {
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                 <CardHeader className="border-b border-gray-50 py-5 px-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                        <CardTitle className="text-base font-black text-gray-800 uppercase tracking-widest leading-none">Danh mục học phần</CardTitle>
+                        <CardTitle className="text-base font-black text-gray-800 leading-none">Danh mục học phần</CardTitle>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                             <InputField placeholder="Tìm mã hoặc tên môn..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
                             <div className="min-w-[200px]">
-                              <SelectField value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
-                                <option value="ALL">Tất cả khoa</option>
-                                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                              </SelectField>
+                                <SelectField value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
+                                    <option value="ALL">Tất cả khoa</option>
+                                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                </SelectField>
                             </div>
                         </div>
                     </div>
@@ -192,11 +192,11 @@ export default function SubjectManagement() {
                     <Table>
                         <TableHeader className="bg-gray-50/50">
                             <TableRow className="border-b border-gray-100 hover:bg-transparent">
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mã môn / Tên môn</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Tín chỉ</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">SV tối đa</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Trạng thái</TableHead>
-                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Thao tác</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400">Mã môn / Tên môn</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">Tín chỉ</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">SV tối đa</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-center">Trạng thái</TableHead>
+                                <TableHead className="py-4 px-6 text-[10px] font-black text-gray-400 text-right">Thao tác</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="divide-y divide-gray-50">
@@ -205,7 +205,7 @@ export default function SubjectManagement() {
                                     <TableCell className="py-4 px-6">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-teal-600 font-black text-xs group-hover:bg-white shadow-sm transition-all border border-gray-100">
-                                              {(s.subject_code || s.code || "").substring(0, 3)}
+                                                {(s.subject_code || s.code || "").substring(0, 3)}
                                             </div>
                                             <div className="text-left">
                                                 <p className="font-bold text-gray-800 text-sm leading-tight">{s.subject_code || s.code}</p>
@@ -214,7 +214,7 @@ export default function SubjectManagement() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
-                                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 uppercase tracking-wider">{s.credits} tín chỉ</span>
+                                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">{s.credits} tín chỉ</span>
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-center">
                                         <span className="text-xs font-bold text-gray-600">{s.maxStudents || s.max_students || 40}</span>
@@ -224,8 +224,8 @@ export default function SubjectManagement() {
                                     </TableCell>
                                     <TableCell className="py-4 px-6 text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button onClick={() => handleEdit(s)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-teal-600 hover:bg-teal-50"><Edit2 size={14}/></Button>
-                                            <Button onClick={() => handleDelete(s.id)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50"><Trash2 size={14}/></Button>
+                                            <Button onClick={() => handleEdit(s)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-teal-600 hover:bg-teal-50"><Edit2 size={14} /></Button>
+                                            <Button onClick={() => handleDelete(s.id)} variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50"><Trash2 size={14} /></Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -245,40 +245,40 @@ export default function SubjectManagement() {
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingSubject ? "Sửa môn học" : "Thêm môn học mới"}>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                        <SelectField label="Bộ môn *" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} required>
+                        <SelectField label="Bộ môn *" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required>
                             <option value="">Chọn bộ môn</option>
                             {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                         </SelectField>
-                        <InputField label="Course Number *" type="number" value={formData.courseNumber} onChange={e => setFormData({...formData, courseNumber: e.target.value})} placeholder="VD: 392" required />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField label="Mã môn học (Tự động)" value={formData.code} readOnly className="bg-gray-50 font-bold" />
-                        <InputField label="Số tín chỉ" type="number" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} />
+                        <InputField label="Course Number *" type="number" value={formData.courseNumber} onChange={e => setFormData({ ...formData, courseNumber: e.target.value })} placeholder="VD: 392" required />
                     </div>
 
-                    <InputField label="Tên môn học *" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="VD: Software Architecture" required />
-                    
                     <div className="grid grid-cols-2 gap-4">
-                        <InputField label="SV tối đa" type="number" value={formData.maxStudents} onChange={e => setFormData({...formData, maxStudents: Number(e.target.value)})} />
-                        <SelectField label="Trạng thái" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                        <InputField label="Mã môn học (Tự động)" value={formData.code} readOnly className="bg-gray-50 font-bold" />
+                        <InputField label="Số tín chỉ" type="number" value={formData.credits} onChange={e => setFormData({ ...formData, credits: Number(e.target.value) })} />
+                    </div>
+
+                    <InputField label="Tên môn học *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="VD: Software Architecture" required />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="SV tối đa" type="number" value={formData.maxStudents} onChange={e => setFormData({ ...formData, maxStudents: Number(e.target.value) })} />
+                        <SelectField label="Trạng thái" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                             <option value="ACTIVE">ACTIVE</option>
                             <option value="INACTIVE">INACTIVE</option>
                         </SelectField>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Mô tả môn học</label>
-                        <textarea 
+                        <label className="text-xs font-black text-gray-400">Mô tả môn học</label>
+                        <textarea
                             className="w-full p-4 rounded-xl border border-gray-100 focus:ring-2 focus:ring-teal-100 outline-none text-sm transition-all min-h-[100px]"
                             value={formData.description}
-                            onChange={e => setFormData({...formData, description: e.target.value})}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
                         />
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="rounded-xl h-11 px-6 font-bold">Hủy</Button>
-                        <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-11 px-8 font-black uppercase tracking-widest shadow-lg shadow-teal-100 border-0">
+                        <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-11 px-8 font-black shadow-lg shadow-teal-100 border-0">
                             {editingSubject ? "Lưu thay đổi" : "Tạo môn học"}
                         </Button>
                     </div>

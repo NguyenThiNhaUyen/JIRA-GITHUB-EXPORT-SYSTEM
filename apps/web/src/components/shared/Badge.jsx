@@ -11,7 +11,7 @@ export function StatusBadge({ status, label, variant = "default", icon: Icon }) 
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${variants[variant]}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black  ${variants[variant]}`}>
       {Icon && <Icon size={12} />}
       {label || status}
     </span>
@@ -20,7 +20,7 @@ export function StatusBadge({ status, label, variant = "default", icon: Icon }) 
 
 export function StatusPill({ ok, icon: Icon, label }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${ok ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-medium ${ok ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-gray-100 text-gray-500 border border-gray-200"}`}>
       {Icon && <Icon size={10} />}
       {label}
       {ok && <span className="text-[8px] ml-0.5">✓</span>}

@@ -11,7 +11,7 @@ export default function Unauthorized() {
             <div className="max-w-xl w-full text-center relative">
                 {/* Decorative background elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-100/30 rounded-full blur-[120px] -z-10 animate-pulse"></div>
-                
+
                 <div className="bg-white rounded-[48px] shadow-[0_32px_120px_-20px_rgba(220,38,38,0.12)] border border-red-50 p-12 md:p-16 relative overflow-hidden group">
                     {/* Header Icon */}
                     <div className="mb-10 relative inline-block">
@@ -23,25 +23,25 @@ export default function Unauthorized() {
                         </div>
                     </div>
 
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 uppercase tracking-tighter leading-none mb-6">
+                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 leading-none mb-6">
                         Access <span className="text-red-600">Denied</span>
                     </h1>
-                    
+
                     <p className="text-gray-500 text-lg font-medium leading-relaxed mb-12 max-w-sm mx-auto">
                         Ops! Bạn không có quyền truy cập vào khu vực này. Vui lòng liên hệ Admin nếu bạn tin đây là một sai sót.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button 
+                        <Button
                             onClick={() => navigate(-1)}
-                            className="w-full sm:w-auto h-14 px-10 rounded-2xl bg-white border border-gray-100 text-gray-800 font-black uppercase tracking-widest text-[10px] shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+                            className="w-full sm:w-auto h-14 px-10 rounded-2xl bg-white border border-gray-100 text-gray-800 font-black text-[10px] shadow-sm hover:bg-gray-50 transition-all active:scale-95"
                         >
                             <ArrowLeft size={16} className="mr-3" /> Quay lại
                         </Button>
-                        
-                        <Button 
+
+                        <Button
                             onClick={() => navigate('/')}
-                            className="w-full sm:w-auto h-14 px-12 rounded-2xl bg-slate-900 border-0 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95"
+                            className="w-full sm:w-auto h-14 px-12 rounded-2xl bg-slate-900 border-0 text-white font-black text-[10px] shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95"
                         >
                             <Home size={16} className="mr-3" /> Về Trang chủ
                         </Button>
@@ -49,12 +49,12 @@ export default function Unauthorized() {
 
                     {/* Fun extra detail */}
                     <div className="mt-12 pt-10 border-t border-gray-50">
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">403 Forbidden Error</p>
+                        <p className="text-[10px] font-black text-gray-300">403 Forbidden Error</p>
                     </div>
                 </div>
 
                 {/* Footer credit-ish style */}
-                <p className="mt-8 text-[11px] font-bold text-gray-400 uppercase tracking-widest opacity-60">
+                <p className="mt-8 text-[11px] font-bold text-gray-400">
                     Jira GitHub Export System &copy; 2026
                 </p>
             </div>

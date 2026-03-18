@@ -96,4 +96,40 @@ public class UsersController : ControllerBase
         await _userService.AdminResetPasswordAsync(id, request.NewPassword);
         return Ok(ApiResponse.SuccessResponse("Password reset successfully"));
     }
+
+    /// <summary>
+    /// Create a new user (Admin only)
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<UserDetailResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+    {
+        var result = await _userService.CreateUserAsync(request);
+        return Ok(ApiResponse<UserDetailResponse>.SuccessResponse(result, "User created successfully"));
+    }
+
+    /// <summary>
+    /// Get linked accounts (Github/Jira) for a student
+    /// </summary>
+    [HttpGet("student/{id}/links")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<StudentLinksResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentLinks(long id)
+    {
+        var result = await _userService.GetStudentLinksAsync(id);
+        return Ok(ApiResponse<StudentLinksResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Link accounts (Github/Jira) for a student
+    /// </summary>
+    [HttpPost("student/{id}/links")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<StudentLinksResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> LinkStudentAccounts(long id, [FromBody] LinkStudentAccountsRequest request)
+    {
+        var result = await _userService.LinkStudentAccountsAsync(id, request);
+        return Ok(ApiResponse<StudentLinksResponse>.SuccessResponse(result, "Accounts linked successfully"));
+    }
 }

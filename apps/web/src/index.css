@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -32,19 +32,12 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
     letter-spacing: -0.01em;
   }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  .font-display {
-    font-family: 'Outfit', sans-serif;
-  }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+    @apply bg-white/70 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+    /* Xóa viền trắng để mượt hơn giống ảnh cũ */
   }
 
   .premium-shadow {
@@ -52,7 +45,7 @@
   }
 
   .premium-gradient-primary {
-    @apply bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600;
+    @apply bg-gradient-to-br from-teal-700 via-teal-800 to-teal-900;
   }
 
   .premium-gradient-indigo {
@@ -68,13 +61,20 @@
   }
 
   .glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
+    @apply bg-teal-900/40 backdrop-blur-2xl border border-teal-500/20 shadow-2xl;
   }
 }
+
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-teal-800/20 rounded-full hover:bg-teal-800/40;
   }
 }
 

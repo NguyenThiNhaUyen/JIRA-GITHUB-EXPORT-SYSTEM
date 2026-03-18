@@ -109,6 +109,29 @@ public class AuthController : ControllerBase
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
         }
     }
+
+    /// <summary>
+    /// Refresh an expired access token
+    /// </summary>
+    [HttpPost("auth/refresh")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshRequest request)
+    {
+        try
+        {
+            var response = await _authService.RefreshTokenAsync(request);
+            return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Token refreshed successfully"));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh token failed");
+            return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during token refresh"));
+        }
+    }
 }
 
 

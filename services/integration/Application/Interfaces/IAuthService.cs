@@ -9,6 +9,7 @@ public interface IAuthService
     Task<LoginResponse> GoogleLoginAsync(GoogleLoginRequest request);
     Task<string> ForgotPasswordAsync(string email); // Returns reset token (dev mode)
     Task ResetPasswordAsync(string token, string newPassword);
+    Task<LoginResponse> RefreshTokenAsync(RefreshRequest request);
 }
 
 

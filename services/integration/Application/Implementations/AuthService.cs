@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -242,5 +243,51 @@ public class AuthService : IAuthService
         if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN")) return "ADMIN";
         if (upperRoles.Contains("LECTURER")) return "LECTURER";
         return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
+    }
+
+    public async Task<LoginResponse> RefreshTokenAsync(RefreshRequest request)
+    {
+        var principal = _jwtService.GetPrincipalFromExpiredToken(request.Token);
+        if (principal == null)
+        {
+            throw new UnauthorizedException("Invalid token");
+        }
+
+        var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!long.TryParse(userIdClaim, out var userId))
+        {
+            throw new UnauthorizedException("Invalid token claims");
+        }
+
+        var user = await _context.users
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .Include(u => u.lecturer)
+            .FirstOrDefaultAsync(u => u.id == userId);
+
+        if (user == null || !user.enabled)
+        {
+            throw new UnauthorizedException("User not found or disabled");
+        }
+
+        var roles = user.roles.Select(r => r.role_name).ToList();
+        var token = _jwtService.GenerateToken(user, roles);
+
+        return new LoginResponse
+        {
+            AccessToken = token,
+            TokenType = "Bearer",
+            ExpiresIn = 3600, // 1 hour
+            User = new UserInfo
+            {
+                Id = user.id,
+                Email = user.email,
+                FullName = user.full_name ?? user.email,
+                Role = GetPrimaryRole(roles),
+                Roles = roles,
+                StudentCode = user.student?.student_code,
+                LecturerCode = user.lecturer?.lecturer_code
+            }
+        };
     }
 }
