@@ -1,3 +1,4 @@
+using JiraGithubExport.Shared.Contracts.Responses.Projects;
 namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
@@ -28,7 +29,17 @@ public class CourseGroupInfo
     public string GithubStatus { get; set; } = "NONE";
     public string JiraStatus { get; set; } = "NONE";
     public string? Topic { get; set; }
+    public string? Description => Topic; // Alias
+    public string Status => (GithubStatus != "NONE" || JiraStatus != "NONE") ? "ACTIVE" : "PENDING";
+    public long CourseId { get; set; }
     public List<EnrollmentInfo> Team { get; set; } = new();
+    public List<EnrollmentInfo> Members => Team; // Alias for FE mapProject
+    
+    public IntegrationInfo? Integration => new IntegrationInfo 
+    { 
+        GithubStatus = GithubStatus, 
+        JiraStatus = JiraStatus 
+    };
 }
 
 public class SubjectInfo

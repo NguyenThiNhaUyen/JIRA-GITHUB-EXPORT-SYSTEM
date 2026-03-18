@@ -4,7 +4,7 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface IProjectDashboardService
 {
-    Task<ProjectDashboardResponse> GetProjectDashboardAsync(long projectId);
+    Task<ProjectDashboardResponse> GetProjectDashboardAsync(long projectId, long? userId = null);
     Task<KanbanBoardResponse> GetProjectKanbanAsync(long projectId);
     Task<CfdBoardResponse> GetProjectCfdAsync(long projectId);
     Task<RoadmapResponse> GetProjectRoadmapAsync(long projectId);

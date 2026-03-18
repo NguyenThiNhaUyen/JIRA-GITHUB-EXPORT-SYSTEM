@@ -3,6 +3,7 @@ namespace JiraGithubExport.Shared.Contracts.Responses.Users;
 public class UserDetailResponse
 {
     public long Id { get; set; }
+    public long UserId => Id; // Alias for FE compatibility
     public string Email { get; set; } = null!;
     public string? FullName { get; set; }
     public bool Enabled { get; set; }
