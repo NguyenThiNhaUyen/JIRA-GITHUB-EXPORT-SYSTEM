@@ -1,12 +1,9 @@
 // Student Placeholders - based on student-placeholders.jsx
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'dart:math';
-import '../../../providers/auth_provider.dart';
 import '../../../widgets/app_top_header.dart';
 import '../../../widgets/student_navigation.dart';
-import '../../../models/user.dart';
 
 // ───────────────────────── MOCK DATA ─────────────────────────
 
@@ -924,7 +921,7 @@ class StudentSrsScreen extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: _srsStatusBgColors[e.key],
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: _srsStatusColors[e.key]!.withValues(alpha: 0.2)),
+                                      border: Border.all(color: (_srsStatusColors[e.key] ?? const Color(0xFF64748B)).withValues(alpha: 0.2)),
                                     ),
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -965,7 +962,7 @@ class StudentSrsScreen extends StatelessWidget {
                                                 children: [
                                                   Text('v${rpt['version']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'monospace', color: Color(0xFF334155))),
                                                   const SizedBox(width: 8),
-                                                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: _srsStatusBgColors[rpt['status']] ?? Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: _srsStatusColors[rpt['status']]!.withValues(alpha: 0.2))), child: Text(rpt['status'], style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _srsStatusColors[rpt['status']]))),
+                                                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: _srsStatusBgColors[rpt['status']] ?? Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: (_srsStatusColors[rpt['status']] ?? const Color(0xFF64748B)).withValues(alpha: 0.2))), child: Text(rpt['status'] ?? '', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _srsStatusColors[rpt['status']] ?? const Color(0xFF64748B)))),
                                                   const SizedBox(width: 8),
                                                   Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))), child: Text(rpt['receiver'] ?? 'Admin', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF475569)))),
                                                 ],

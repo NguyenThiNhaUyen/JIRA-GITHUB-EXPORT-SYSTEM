@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
+import '../../widgets/lecturer_navigation.dart';
 import '../../services/lecturer_service.dart';
 import '../../services/admin_service.dart';
 import '../../services/auth_service.dart';
@@ -212,6 +213,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
+      drawer: const LecturerDrawer(),
       appBar: AppTopHeader(
         title: 'Tổng quan Giảng viên',
         user: AppUser(
@@ -300,14 +302,14 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: textPrimary)),
-        if (subject != null && (subject['code'] ?? '').isNotEmpty) ...[
+        if (subject != null && ('${subject['code'] ?? subject['subjectCode'] ?? ''}').isNotEmpty) ...[
           const Icon(Icons.chevron_right, size: 14, color: Color(0xFF94A3B8)),
-          Text(subject['code'] as String,
+          Text('${subject['code'] ?? subject['subjectCode'] ?? ''}',
               style: const TextStyle(fontSize: 12, color: textSecondary)),
         ],
-        if (course != null && (course['code'] ?? '').isNotEmpty) ...[
+        if (course != null && ('${course['code'] ?? course['className'] ?? ''}').isNotEmpty) ...[
           const Icon(Icons.chevron_right, size: 14, color: Color(0xFF94A3B8)),
-          Text(course['code'] as String,
+          Text('${course['code'] ?? course['className'] ?? ''}',
               style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -367,8 +369,8 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
             items: [
               const DropdownMenuItem(value: '', child: Text('— Chọn môn học —')),
               ..._subjects.map((s) => DropdownMenuItem(
-                    value: s['id'] as String,
-                    child: Text('${s['code']} – ${s['name']}'),
+                    value: s['id'].toString(),
+                    child: Text('${s['code'] ?? s['subjectCode']} – ${s['name'] ?? s['subjectName']}'),
                   )),
             ],
             onChanged: (v) => _onSubjectChanged(v),
@@ -384,7 +386,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
               const DropdownMenuItem(value: '', child: Text('— Chọn lớp học —')),
               ..._courses.where((c) => c['subjectId'].toString() == _selectedSubject).map((c) => DropdownMenuItem(
                     value: c['id'].toString(),
-                    child: Text(c['code'] as String),
+                    child: Text('${c['code'] ?? c['className']}'),
                   )),
             ],
             onChanged: (v) => setState(() {
@@ -431,6 +433,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         DropdownButtonFormField<String>(
           value: value.isEmpty ? null : value,
           items: items,
+          isExpanded: true,
           onChanged: enabled ? onChanged : null,
           decoration: InputDecoration(
             contentPadding:
@@ -560,12 +563,12 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
 
   // ─── 4. Alerts + Recent Activity ──────────────────
   Widget _buildAlertsAndActivity() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: _buildAlertsCard()),
-        const SizedBox(width: 12),
-        Expanded(child: _buildActivityCard()),
+        _buildAlertsCard(),
+        const SizedBox(height: 16),
+        _buildActivityCard(),
       ],
     );
   }
@@ -1435,7 +1438,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(t['name'] as String,
+                      child: Text('${t['name']}',
                           style: const TextStyle(
                               fontSize: 12, color: textPrimary),
                           overflow: TextOverflow.ellipsis),
@@ -1488,7 +1491,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                           size: 14, color: Color(0xFFEF4444)),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(g['name'] as String,
+                        child: Text('${g['name']}',
                             style: const TextStyle(
                                 fontSize: 12, color: textPrimary),
                             overflow: TextOverflow.ellipsis),

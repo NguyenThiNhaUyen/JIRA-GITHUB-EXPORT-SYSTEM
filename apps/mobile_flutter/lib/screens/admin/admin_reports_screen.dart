@@ -38,24 +38,24 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   List<Map<String, dynamic>> get allCourses {
     if (selectedSemester.isEmpty) return allCoursesRaw;
     return allCoursesRaw
-        .where((c) => c['semesterId'] == selectedSemester)
+        .where((c) => c['semesterId'].toString() == selectedSemester)
         .toList();
   }
 
   List<Map<String, dynamic>> get filteredCourses {
     if (selectedCourse.isEmpty) return allCourses;
-    return allCourses.where((c) => c['id'] == selectedCourse).toList();
+    return allCourses.where((c) => c['id'].toString() == selectedCourse).toList();
   }
 
   Map<String, dynamic> get stats {
     final totalCourses = allCourses.length;
     final totalStudents = allCourses.fold<int>(
       0,
-      (sum, c) => sum + ((c['currentStudents'] ?? 0) as int),
+      (sum, c) => sum + ((c['currentStudents'] as num?)?.toInt() ?? 0),
     );
     final totalProjects = allCourses.fold<int>(
       0,
-      (sum, c) => sum + ((c['projectsCount'] ?? 0) as int),
+      (sum, c) => sum + ((c['projectsCount'] as num?)?.toInt() ?? 0),
     );
     final activeCourses = allCourses
         .where((c) => c['status'] == 'ACTIVE')
@@ -299,8 +299,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           items: semesters
               .map(
                 (semester) => DropdownMenuItem<String>(
-                  value: semester['id'] as String,
-                  child: Text(semester['name'] as String),
+                  value: semester['id'].toString(),
+                  child: Text('${semester['name']}'),
                 ),
               )
               .toList(),
@@ -350,7 +350,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           items: allCourses
               .map(
                 (course) => DropdownMenuItem<String>(
-                  value: course['id'] as String,
+                  value: course['id'].toString(),
                   child: Text('${course['code']} - ${course['name']}'),
                 ),
               )
@@ -454,7 +454,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            item['title'] as String,
+                            '${item['title']}',
                             style: TextStyle(
                               fontSize: isNarrow ? 10 : 12,
                               color: textSecondary,
@@ -465,7 +465,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            item['value'] as String,
+                            '${item['value']}',
                             style: TextStyle(
                               fontSize: isNarrow ? 18 : 22,
                               fontWeight: FontWeight.w800,
@@ -473,7 +473,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                             ),
                           ),
                           Text(
-                            item['sub'] as String,
+                            '${item['sub']}',
                             style: TextStyle(
                               fontSize: isNarrow ? 9 : 10,
                               color: item['subColor'] as Color,
@@ -526,7 +526,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 .map<Map<String, dynamic>>(
                   (course) => <String, dynamic>{
                     'name': course['code'],
-                    'completed': ((course['projectsCount'] ?? 0) as int) + 4,
+                    'completed': ((course['projectsCount'] as num?)?.toInt() ?? 0) + 4,
                     'remaining': 5,
                   },
                 )
@@ -696,7 +696,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Báo cáo Commit',
                                 onTap: () => handleGenerateReport(
                                   'COMMIT',
-                                  course['id'] as String,
+                                  course['id'].toString(),
                                 ),
                               ),
                               _IconActionButton(
@@ -705,7 +705,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Báo cáo Team Roster',
                                 onTap: () => handleGenerateReport(
                                   'ROSTER',
-                                  course['id'] as String,
+                                  course['id'].toString(),
                                 ),
                               ),
                               _IconActionButton(
@@ -714,7 +714,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                                 tooltip: 'Xuất SRS ISO',
                                 onTap: () => handleGenerateReport(
                                   'SRS',
-                                  course['id'] as String,
+                                  course['id'].toString(),
                                 ),
                               ),
                             ],
@@ -732,7 +732,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Widget _buildSilentProjectsAlert() {
-    final int silentProjects = projectStats['silentProjects'] as int;
+    final int silentProjects = (projectStats['silentProjects'] as num?)?.toInt() ?? 0;
 
     if (silentProjects > 0) {
       return _SectionCard(
@@ -1035,13 +1035,13 @@ class _SimpleBarChart extends StatelessWidget {
     final maxValue = data.isEmpty
         ? 1
         : data
-              .map((e) => (e['projects'] as int))
+              .map((e) => (e['projects'] as num?)?.toInt() ?? 0)
               .fold<int>(0, (a, b) => a > b ? a : b);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: data.map((item) {
-        final value = item['projects'] as int;
+        final value = (item['projects'] as num?)?.toInt() ?? 0;
         final ratio = maxValue == 0 ? 0.0 : value / maxValue;
         return Expanded(
           child: Padding(
@@ -1251,8 +1251,8 @@ class _SimpleProgressChart extends StatelessWidget {
 
     return Column(
       children: data.map((item) {
-        final int completed = item['completed'] as int;
-        final int remaining = item['remaining'] as int;
+        final int completed = (item['completed'] as num?)?.toInt() ?? 0;
+        final int remaining = (item['remaining'] as num?)?.toInt() ?? 0;
         final int total = completed + remaining;
         final double ratio = total == 0 ? 0 : completed / total;
 

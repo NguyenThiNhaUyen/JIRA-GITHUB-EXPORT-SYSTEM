@@ -809,7 +809,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.88,
+        childAspectRatio: 1.65,
       ),
       itemCount: stats.length,
       itemBuilder: (_, i) {
