@@ -70,7 +70,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDashboardResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProjectDashboard(long projectId)
     {
-        var result = await _dashboardService.GetProjectDashboardAsync(projectId);
+        var result = await _dashboardService.GetProjectDashboardAsync(projectId, GetCurrentUserId());
         return Ok(ApiResponse<ProjectDashboardResponse>.SuccessResponse(result));
     }
 

@@ -30,7 +30,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student != null ? src.student.student_code : null))
             .ForMember(dest => dest.LecturerCode, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.lecturer_code : null))
             .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.department : (src.student != null ? src.student.department : null)))
-            .ForMember(dest => dest.AssignedCourses, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.courses.Select(c => c.course_code).ToList() : new List<string>()));
+            .ForMember(dest => dest.AssignedCourses, opt => opt.MapFrom(src => src.lecturer != null ? src.lecturer.courses.Select(c => c.course_code).ToList() : new List<string>()))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at));
 
         CreateMap<user, UserInfo>() 
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => 
@@ -113,7 +114,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.team_members.Where(tm => tm.participation_status == "ACTIVE")))
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.github_repo != null ? src.project_integration.github_repo.repo_url : null))
             .ForMember(dest => dest.JiraProjectUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.jira_project != null ? src.project_integration.jira_project.jira_url : null))
-            .ForPath(dest => dest.Integration!.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"));
+            .ForPath(dest => dest.Integration!.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.updated_at));
 
         CreateMap<team_invitation, InvitationResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
