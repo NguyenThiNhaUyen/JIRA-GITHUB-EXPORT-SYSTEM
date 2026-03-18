@@ -39,12 +39,31 @@ public class AlertsController : ControllerBase
     /// <summary>
     /// Mark an alert as resolved (Lecturer/Admin only)
     /// </summary>
-    [HttpPatch("{id}/resolve")]
+    [HttpPut("{id}/resolve")]
+    [HttpPatch("{id}/resolve")] // keeping patch for backward compatibility
     [Authorize(Roles = "LECTURER,ADMIN")]
     public async Task<IActionResult> ResolveAlert(long id)
     {
         var userId = GetCurrentUserId();
         await _alertService.ResolveAlertAsync(id, userId);
         return Ok(ApiResponse.SuccessResponse("Alert resolved"));
+    }
+
+    public class SendAlertRequest
+    {
+        public long GroupId { get; set; }
+        public string Message { get; set; } = null!;
+        public string Severity { get; set; } = "MEDIUM";
+    }
+
+    /// <summary>
+    /// Send an alert manually
+    /// </summary>
+    [HttpPost("send")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    public async Task<IActionResult> SendAlert([FromBody] SendAlertRequest request)
+    {
+        await _alertService.SendAlertAsync(request.GroupId, request.Message, request.Severity);
+        return Ok(ApiResponse.SuccessResponse("Alert sent"));
     }
 }

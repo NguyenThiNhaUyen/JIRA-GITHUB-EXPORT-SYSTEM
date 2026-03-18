@@ -20,7 +20,7 @@ public class ProjectInvitationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "STUDENT,LECTURER,ADMIN")] // Usually project leader
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")] // Usually project leader
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SendInvitation(long projectId, [FromBody] CreateInvitationRequest request)
     {
@@ -41,8 +41,25 @@ public class InvitationsController : ControllerBase
         _invitationService = invitationService;
     }
 
+    public class SendInvitationFlatRequest
+    {
+        public long GroupId { get; set; }
+        public long InvitedStudentId { get; set; }
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendInvitationFlat([FromBody] SendInvitationFlatRequest request)
+    {
+        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var createRequest = new CreateInvitationRequest { StudentUserId = request.InvitedStudentId };
+        var result = await _invitationService.SendInvitationAsync(request.GroupId, userId, createRequest);
+        return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation sent successfully"));
+    }
+
     [HttpGet("my-pending")]
-    [Authorize(Roles = "STUDENT")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<InvitationResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyPendingInvitations([FromQuery] PagedRequest request)
     {
@@ -51,6 +68,7 @@ public class InvitationsController : ControllerBase
         return Ok(ApiResponse<PagedResponse<InvitationResponse>>.SuccessResponse(result));
     }
 
+    [HttpPut("{id}/accept")]
     [HttpPatch("{id}/accept")]
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
@@ -61,6 +79,7 @@ public class InvitationsController : ControllerBase
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation accepted"));
     }
 
+    [HttpPut("{id}/decline")]
     [HttpPatch("{id}/reject")]
     [Authorize(Roles = "STUDENT")]
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]

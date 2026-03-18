@@ -2,6 +2,7 @@ using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
@@ -73,7 +74,8 @@ public class AlertService : IAlertService
         return new PagedResponse<AlertResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
+            TotalItems = total, // Standardized alias
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -88,6 +90,28 @@ public class AlertService : IAlertService
         alert.is_resolved = true;
         alert.resolved_at = DateTime.UtcNow;
         alert.resolved_by_user_id = resolvedByUserId;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task SendAlertAsync(long projectId, string message, string severity = "MEDIUM")
+    {
+        var project = await _context.projects
+            .Include(p => p.course)
+            .FirstOrDefaultAsync(p => p.id == projectId);
+        if (project == null) throw new NotFoundException($"Project {projectId} not found");
+
+        var alert = new inactive_alert
+        {
+            alert_type = "MANUAL",
+            target_entity_type = "PROJECT",
+            target_entity_id = projectId,
+            project_id = projectId,
+            severity = severity,
+            message = message,
+            is_resolved = false,
+            created_at = DateTime.UtcNow
+        };
+        _context.inactive_alerts.Add(alert);
         await _context.SaveChangesAsync();
     }
 }

@@ -3,14 +3,26 @@ import { unwrap } from "../../../api/unwrap.js";
 import { mapSemester, mapSemesterList, mapSubject, mapSubjectList } from "./mappers/systemMapper.js";
 
 export async function getSemesters() {
-    const res = await client.get("/semesters", { params: { pageSize: 100 } });
-    const payload = unwrap(res);
-    return mapSemesterList(payload);
+    // Try /all first, fallback to paged with large size
+    try {
+        const res = await client.get("/semesters/all");
+        return mapSemesterList(unwrap(res));
+    } catch (e) {
+        const res = await client.get("/semesters", { params: { pageSize: 100 } });
+        return mapSemesterList(unwrap(res));
+    }
 }
 
 export async function createSemester(data) {
     const res = await client.post("/semesters", data);
     return mapSemester(unwrap(res));
+}
+
+export async function generateSemesters(data) {
+    // data can be an object with { year } or just a year value depending on implementation
+    const body = typeof data === 'object' ? data : { year: data };
+    const res = await client.post("/semesters/generate", body);
+    return unwrap(res);
 }
 
 export async function updateSemester(id, updates) {
@@ -23,15 +35,14 @@ export async function deleteSemester(id) {
     return unwrap(res);
 }
 
-export async function generateSemesters(year) {
-    const res = await client.post("/semesters/generate", { year });
-    return unwrap(res);
-}
-
 export async function getSubjects() {
-    const res = await client.get("/subjects", { params: { pageSize: 100 } });
-    const payload = unwrap(res);
-    return mapSubjectList(payload);
+    try {
+        const res = await client.get("/subjects/all");
+        return mapSubjectList(unwrap(res));
+    } catch (e) {
+        const res = await client.get("/subjects", { params: { pageSize: 100 } });
+        return mapSubjectList(unwrap(res));
+    }
 }
 
 export async function createSubject(data) {

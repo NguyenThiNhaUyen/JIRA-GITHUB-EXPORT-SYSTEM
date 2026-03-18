@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAlerts, resolveAlert } from "../api/alertApi.js";
+import { getAlerts, resolveAlert, sendAlert } from "../api/alertApi.js";
 
 export const ALERT_KEYS = {
     all: ["alerts"],
@@ -20,5 +20,11 @@ export const useResolveAlert = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ALERT_KEYS.all });
         },
+    });
+};
+
+export const useSendAlert = () => {
+    return useMutation({
+        mutationFn: (payload) => sendAlert(payload),
     });
 };

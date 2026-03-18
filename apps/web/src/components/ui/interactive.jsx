@@ -1,5 +1,6 @@
 // Tabs Component - Part of UI Kit
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from './button.jsx';
 
 export function Tabs({ children, defaultValue, className = '', ...props }) {
   const [activeTab, setActiveTab] = useState(defaultValue);
@@ -63,8 +64,6 @@ export function TabsContent({ children, value, activeTab, className = '', ...pro
 }
 
 // Modal Component - Part of UI Kit
-import { useEffect } from 'react';
-
 export function Modal({ isOpen, onClose, title, children, size = 'md', className = '', ...props }) {
   useEffect(() => {
     if (isOpen) {
@@ -115,8 +114,6 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
 }
 
 // Alert/Callout Component - Part of UI Kit
-import { Button } from './button.jsx';
-
 export function Alert({ children, variant = 'default', className = '', ...props }) {
   const variants = {
     default: 'bg-secondary-50 border-secondary-200 text-secondary-800',

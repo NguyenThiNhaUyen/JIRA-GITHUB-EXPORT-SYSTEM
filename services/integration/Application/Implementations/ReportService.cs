@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
@@ -85,12 +84,12 @@ public class ReportService : IReportService
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name, projects);
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name, projects);
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
@@ -397,11 +396,3 @@ public class ReportService : IReportService
         }
     }
 }
-
-
-
-
-
-
-
-

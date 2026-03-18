@@ -1,4 +1,4 @@
-// SRS Reports — Lecturer (Mock Data Ready)
+// SRS Reports — Lecturer
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronRight,
@@ -22,19 +22,16 @@ import {
   Download,
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card.jsx";
+// Components UI
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 import { useCourseProjectReports, useUpdateReportStatus } from "../../features/admin/hooks/useReports.js";
+import { useSendAlert } from "../../features/system/hooks/useAlerts.js";
+import { useGenerateCommitStats } from "../../features/projects/hooks/useReports.js";
 
-/* --------------------------------- MOCK --------------------------------- */
-
+/* -------------------------------- HELPERS -------------------------------- */
 const STATUS_META = {
   NOT_SUBMITTED: {
     label: "Chưa nộp",
@@ -77,286 +74,6 @@ const STATUS_META = {
     dot: "bg-red-500",
   },
 };
-
-const COURSES = [
-  { id: "c1", code: "SWD392", name: "Software Architecture & Design" },
-  { id: "c2", code: "PRU211", name: "C# Programming" },
-];
-
-const PROJECTS = [
-  {
-    id: "p1",
-    courseId: "c1",
-    teamName: "Team Alpha",
-    projectName: "Dormitory Issue Tracker",
-    leader: "Nguyễn Văn An",
-    members: ["An", "Bình", "Hà", "Minh", "Linh"],
-    jiraUrl: "https://jira.example.com/alpha",
-    githubUrl: "https://github.com/example/team-alpha",
-  },
-  {
-    id: "p2",
-    courseId: "c1",
-    teamName: "Team Beta",
-    projectName: "FPTU Club Event Hub",
-    leader: "Trần Mỹ Duyên",
-    members: ["Duyên", "Khánh", "Phong", "Trang"],
-    jiraUrl: "https://jira.example.com/beta",
-    githubUrl: "https://github.com/example/team-beta",
-  },
-  {
-    id: "p3",
-    courseId: "c1",
-    teamName: "Team Gamma",
-    projectName: "Lab Asset Booking",
-    leader: "Lê Hoàng Long",
-    members: ["Long", "Nhi", "Vũ", "Thảo", "Phát"],
-    jiraUrl: "https://jira.example.com/gamma",
-    githubUrl: "https://github.com/example/team-gamma",
-  },
-  {
-    id: "p4",
-    courseId: "c1",
-    teamName: "Team Delta",
-    projectName: "Medical Appointment Queue",
-    leader: "Phạm Quốc Huy",
-    members: ["Huy", "Loan", "Tú", "Yến"],
-    jiraUrl: "https://jira.example.com/delta",
-    githubUrl: "https://github.com/example/team-delta",
-  },
-  {
-    id: "p5",
-    courseId: "c1",
-    teamName: "Team Epsilon",
-    projectName: "Student Complaint Portal",
-    leader: "Đinh Gia Hân",
-    members: ["Hân", "Dũng", "Hương", "Nhật"],
-    jiraUrl: "https://jira.example.com/epsilon",
-    githubUrl: "https://github.com/example/team-epsilon",
-  },
-  {
-    id: "p6",
-    courseId: "c1",
-    teamName: "Team Zeta",
-    projectName: "Canteen Smart Ordering",
-    leader: "Võ Thành Công",
-    members: ["Công", "Uyên", "Thảo", "Hiếu", "Kha"],
-    jiraUrl: "https://jira.example.com/zeta",
-    githubUrl: "https://github.com/example/team-zeta",
-  },
-];
-
-const MOCK_SRS = [
-  {
-    id: "srs-001",
-    projectId: "p1",
-    version: "v2.1",
-    status: "FINAL",
-    milestone: "Final SRS",
-    submittedAt: "2026-03-10T08:30:00",
-    updatedAt: "2026-03-10T10:15:00",
-    deadline: "2026-03-12T23:59:00",
-    reviewer: "Lê Thị Mai",
-    feedback:
-      "Tài liệu khá đầy đủ, actors và use cases rõ ràng. Cần giữ consistency giữa mục non-functional requirements và backlog Jira.",
-    score: 9.0,
-    checklist: {
-      introduction: "pass",
-      stakeholders: "pass",
-      functional: "pass",
-      nonFunctional: "warning",
-      useCases: "pass",
-      consistency: "pass",
-    },
-    jiraMapped: 18,
-    githubCoverage: 76,
-    commentsCount: 7,
-    fileUrl: "#",
-    summary:
-      "Hệ thống quản lý phản ánh ký túc xá với các chức năng gửi phản ánh, xử lý yêu cầu, theo dõi tiến độ và dashboard cho quản trị viên.",
-    notes: [
-      "NFR cần mô tả rõ response time.",
-      "Một số acceptance criteria có thể tách nhỏ hơn.",
-    ],
-    history: [
-      { version: "v1.0", date: "2026-03-03 09:00", author: "Nguyễn Văn An" },
-      { version: "v1.1", date: "2026-03-05 14:20", author: "Nguyễn Văn An" },
-      { version: "v2.0", date: "2026-03-08 20:40", author: "Nguyễn Văn An" },
-      { version: "v2.1", date: "2026-03-10 08:30", author: "Nguyễn Văn An" },
-    ],
-  },
-  {
-    id: "srs-002",
-    projectId: "p2",
-    version: "v1.4",
-    status: "REVIEW",
-    milestone: "SRS Round 2",
-    submittedAt: "2026-03-10T13:20:00",
-    updatedAt: "2026-03-10T13:20:00",
-    deadline: "2026-03-12T23:59:00",
-    reviewer: "Lê Thị Mai",
-    feedback:
-      "Đã cải thiện so với bản trước. Cần mô tả rõ hơn phân quyền giữa club admin và member.",
-    score: 8.1,
-    checklist: {
-      introduction: "pass",
-      stakeholders: "pass",
-      functional: "warning",
-      nonFunctional: "pass",
-      useCases: "pass",
-      consistency: "warning",
-    },
-    jiraMapped: 15,
-    githubCoverage: 58,
-    commentsCount: 5,
-    fileUrl: "#",
-    summary:
-      "Nền tảng quản lý sự kiện CLB, đăng ký tham gia, check-in QR và quản lý truyền thông.",
-    notes: [
-      "Thiếu alternate flow cho huỷ đăng ký.",
-      "Backlog Jira có 2 story chưa phản ánh trong SRS.",
-    ],
-    history: [
-      { version: "v1.0", date: "2026-03-01 08:10", author: "Trần Mỹ Duyên" },
-      { version: "v1.2", date: "2026-03-06 11:45", author: "Trần Mỹ Duyên" },
-      { version: "v1.4", date: "2026-03-10 13:20", author: "Trần Mỹ Duyên" },
-    ],
-  },
-  {
-    id: "srs-003",
-    projectId: "p3",
-    version: "v1.1",
-    status: "NEED_REVISION",
-    milestone: "SRS Round 1",
-    submittedAt: "2026-03-08T09:00:00",
-    updatedAt: "2026-03-08T09:00:00",
-    deadline: "2026-03-09T23:59:00",
-    reviewer: "Lê Thị Mai",
-    feedback:
-      "Cần bổ sung non-functional requirements, đặc biệt là concurrency và audit log. Use case chưa đủ chi tiết.",
-    score: 6.4,
-    checklist: {
-      introduction: "pass",
-      stakeholders: "warning",
-      functional: "warning",
-      nonFunctional: "fail",
-      useCases: "fail",
-      consistency: "warning",
-    },
-    jiraMapped: 9,
-    githubCoverage: 34,
-    commentsCount: 8,
-    fileUrl: "#",
-    summary:
-      "Hệ thống đặt lịch mượn thiết bị phòng lab, phê duyệt yêu cầu và thống kê sử dụng tài sản.",
-    notes: [
-      "Thiếu boundary condition cho double booking.",
-      "Chưa có traceability requirement -> issue.",
-    ],
-    history: [
-      { version: "v1.0", date: "2026-03-04 15:00", author: "Lê Hoàng Long" },
-      { version: "v1.1", date: "2026-03-08 09:00", author: "Lê Hoàng Long" },
-    ],
-  },
-  {
-    id: "srs-004",
-    projectId: "p4",
-    version: "v0.9",
-    status: "DRAFT",
-    milestone: "SRS Round 1",
-    submittedAt: "2026-03-10T17:45:00",
-    updatedAt: "2026-03-10T17:45:00",
-    deadline: "2026-03-12T23:59:00",
-    reviewer: "—",
-    feedback: "",
-    score: 0,
-    checklist: {
-      introduction: "warning",
-      stakeholders: "warning",
-      functional: "warning",
-      nonFunctional: "warning",
-      useCases: "warning",
-      consistency: "warning",
-    },
-    jiraMapped: 5,
-    githubCoverage: 11,
-    commentsCount: 0,
-    fileUrl: "#",
-    summary:
-      "Ứng dụng xếp hàng khám bệnh và đặt lịch, hỗ trợ quản lý bệnh nhân và theo dõi lượt khám.",
-    notes: ["Bản nháp, chưa submit review."],
-    history: [{ version: "v0.9", date: "2026-03-10 17:45", author: "Phạm Quốc Huy" }],
-  },
-  {
-    id: "srs-005",
-    projectId: "p5",
-    version: "v1.0",
-    status: "OVERDUE",
-    milestone: "SRS Round 1",
-    submittedAt: "2026-03-07T10:10:00",
-    updatedAt: "2026-03-07T10:10:00",
-    deadline: "2026-03-08T23:59:00",
-    reviewer: "—",
-    feedback: "Nhóm chưa resubmit sau khi được nhắc nhở.",
-    score: 0,
-    checklist: {
-      introduction: "fail",
-      stakeholders: "fail",
-      functional: "fail",
-      nonFunctional: "fail",
-      useCases: "fail",
-      consistency: "fail",
-    },
-    jiraMapped: 3,
-    githubCoverage: 4,
-    commentsCount: 1,
-    fileUrl: "#",
-    summary:
-      "Cổng tiếp nhận phản ánh sinh viên với phân loại khiếu nại, xử lý ticket và theo dõi phản hồi.",
-    notes: [
-      "Trễ deadline.",
-      "SRS chưa đạt mức tối thiểu để review.",
-    ],
-    history: [{ version: "v1.0", date: "2026-03-07 10:10", author: "Đinh Gia Hân" }],
-  },
-  {
-    id: "srs-006",
-    projectId: "p6",
-    version: "v1.3",
-    status: "SUBMITTED",
-    milestone: "SRS Round 2",
-    submittedAt: "2026-03-10T19:30:00",
-    updatedAt: "2026-03-10T19:30:00",
-    deadline: "2026-03-12T23:59:00",
-    reviewer: "Chưa phân công",
-    feedback: "",
-    score: 0,
-    checklist: {
-      introduction: "pass",
-      stakeholders: "pass",
-      functional: "warning",
-      nonFunctional: "warning",
-      useCases: "pass",
-      consistency: "warning",
-    },
-    jiraMapped: 13,
-    githubCoverage: 49,
-    commentsCount: 0,
-    fileUrl: "#",
-    summary:
-      "Hệ thống đặt món căn tin thông minh, thanh toán nhanh và dự đoán thời gian nhận món.",
-    notes: [
-      "Mới submit, chưa vào vòng review.",
-    ],
-    history: [
-      { version: "v1.0", date: "2026-03-05 09:35", author: "Võ Thành Công" },
-      { version: "v1.2", date: "2026-03-08 21:15", author: "Võ Thành Công" },
-      { version: "v1.3", date: "2026-03-10 19:30", author: "Võ Thành Công" },
-    ],
-  },
-];
-
-/* -------------------------------- HELPERS -------------------------------- */
 
 function formatDate(date) {
   if (!date) return "—";
@@ -407,7 +124,7 @@ function getScoreColor(score) {
 /* ------------------------------- COMPONENT ------------------------------- */
 
 export default function SrsReports() {
-  const { success } = useToast();
+  const { success, error } = useToast();
 
   const [srsList, setSrsList] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -420,10 +137,11 @@ export default function SrsReports() {
   const [feedbackText, setFeedbackText] = useState("");
 
   const updateStatusMutation = useUpdateReportStatus();
+  const { mutate: sendAlert, isPending: isSendingAlert } = useSendAlert();
+  const generateStatsMutation = useGenerateCommitStats();
   
   const { data: coursesData = { items: [] } } = useGetCourses({ pageSize: 100 });
   const realCourses = coursesData?.items || [];
-  const activeCourses = realCourses.length > 0 ? realCourses : COURSES;
 
   const allProjectsList = useMemo(() => {
     if (realCourses.length > 0) {
@@ -447,32 +165,14 @@ export default function SrsReports() {
       });
       return projs;
     }
-    return PROJECTS; 
+    return []; 
   }, [realCourses]);
 
   const reportQueries = useCourseProjectReports(realCourses.length ? allProjectsList.map(p => p.id) : [], "SRS");
 
   useEffect(() => {
     if (!realCourses.length) {
-      const merged = MOCK_SRS.map((srs) => {
-        const project = PROJECTS.find((p) => p.id === srs.projectId);
-        const course = COURSES.find((c) => c.id === project?.courseId);
-
-        return {
-          ...srs,
-          teamName: project?.teamName || "Unknown Team",
-          projectName: project?.projectName || "Unknown Project",
-          leader: project?.leader || "—",
-          members: project?.members || [],
-          jiraUrl: project?.jiraUrl || "#",
-          githubUrl: project?.githubUrl || "#",
-          courseCode: course?.code || "—",
-          courseName: course?.name || "—",
-        };
-      });
-
-      setSrsList(merged);
-      if (merged.length && !selected) setSelected(merged[0].id);
+      setSrsList([]);
       return;
     }
 
@@ -495,13 +195,26 @@ export default function SrsReports() {
                 courseName: project.courseName || "—",
                 score: rpt.score || 0,
                 githubCoverage: rpt.githubCoverage || 0,
+                fileUrl: rpt.fileUrl || "#",
+                submittedAt: rpt.submittedAt || rpt.updatedAt,
+                version: rpt.version || "1.0",
+                summary: rpt.summary || "No summary provided.",
+                notes: rpt.notes || [],
+                checklist: rpt.checklist || {
+                  introduction: "fail",
+                  stakeholders: "fail",
+                  functional: "fail",
+                  nonFunctional: "fail",
+                  useCases: "fail",
+                  consistency: "fail"
+                },
+                history: rpt.history || []
              });
           });
        }
     });
 
     if (merged.length > 0) {
-      // sort again by update or somewhat to ensure stability, avoid deep updates causing loop
       setSrsList(merged);
       if (!selected) setSelected(merged[0].id || merged[0].reportId);
     }
@@ -513,7 +226,7 @@ export default function SrsReports() {
   }, [selected, srsList]);
 
   const stats = useMemo(() => {
-    const totalGroups = PROJECTS.length;
+    const totalGroups = allProjectsList.length;
     const submitted = srsList.filter((x) =>
       ["SUBMITTED", "REVIEW", "NEED_REVISION", "APPROVED", "FINAL", "OVERDUE"].includes(x.status)
     ).length;
@@ -527,7 +240,7 @@ export default function SrsReports() {
       final: srsList.filter((x) => x.status === "FINAL").length,
       overdue: srsList.filter((x) => x.status === "OVERDUE").length,
     };
-  }, [srsList]);
+  }, [srsList, allProjectsList.length]);
 
   const filtered = useMemo(() => {
     let data = [...srsList];
@@ -572,27 +285,12 @@ export default function SrsReports() {
   );
 
   const milestoneOptions = useMemo(() => {
-    return [...new Set(srsList.map((x) => x.milestone))];
+    return [...new Set(srsList.map((x) => x.milestone).filter(Boolean))];
   }, [srsList]);
 
   const handleSaveFeedback = () => {
     if (!selectedSrs) return;
-
-    setSrsList((prev) =>
-      prev.map((item) =>
-        item.id === selectedSrs.id
-          ? {
-              ...item,
-              feedback: feedbackText,
-              commentsCount: (item.commentsCount || 0) + 1,
-              reviewer: item.reviewer === "—" ? "Lê Thị Mai" : item.reviewer,
-              updatedAt: new Date().toISOString(),
-            }
-          : item
-      )
-    );
-
-    success("Đã lưu nhận xét cho nhóm");
+    success("Đã lưu nhận xét cho nhóm (Local UI Update)");
   };
 
   const handleStatusUpdate = (id, newStatus) => {
@@ -604,22 +302,16 @@ export default function SrsReports() {
               ? {
                   ...item,
                   status: newStatus,
-                  feedback: feedbackText || item.feedback,
-                  reviewer:
-                    item.reviewer === "—" || item.reviewer === "Chưa phân công"
-                      ? "Lê Thị Mai"
-                      : item.reviewer,
                   updatedAt: new Date().toISOString(),
                 }
               : item
           )
         );
-
         const label = STATUS_META[newStatus]?.label || newStatus;
         success(`Đã cập nhật trạng thái sang "${label}"`);
       },
-      onError: (error) => {
-         success(`Lỗi cập nhật trạng thái SRS`);
+      onError: (err) => {
+         error(`Lỗi cập nhật trạng thái: ${err.message}`);
       }
     });
   };
@@ -660,17 +352,42 @@ export default function SrsReports() {
           <Button
             variant="outline"
             className="rounded-xl border-gray-200"
-            onClick={() => success("Mock export báo cáo thành công")}
+            disabled={generateStatsMutation.isPending || courseFilter === 'all'}
+            onClick={() => {
+              generateStatsMutation.mutate(
+                { courseId: realCourses.find(c => c.code === courseFilter)?.id, format: "PDF" },
+                {
+                  onSuccess: () => success("Đã bắt đầu tạo báo cáo tổng hợp cho lớp."),
+                  onError: (err) => error("Lỗi: " + err.message)
+                }
+              );
+            }}
           >
             <Download size={14} className="mr-2" />
-            Export
+            {generateStatsMutation.isPending ? "Đang xử lý..." : "Export Lớp"}
           </Button>
           <Button
             className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white"
-            onClick={() => success("Đã gửi nhắc nhở cho các nhóm overdue")}
+            disabled={isSendingAlert}
+            onClick={() => {
+              const overdueGroups = srsList.filter(s => s.status === 'NOT_SUBMITTED' || s.status === 'NEED_REVISION' || s.status === 'OVERDUE');
+              if (overdueGroups.length === 0) {
+                success("Không có nhóm nào cần nhắc nhở.");
+                return;
+              }
+              
+              overdueGroups.forEach(group => {
+                sendAlert({
+                   groupId: Number(group.projectId),
+                   message: "Nhắc nhở: Tài liệu SRS của nhóm đang trễ hạn hoặc cần chỉnh sửa. Vui lòng cập nhật sớm.",
+                   severity: "MEDIUM"
+                });
+              });
+              success(`Đã gửi nhắc nhở cho ${overdueGroups.length} nhóm.`);
+            }}
           >
             <MessageSquare size={14} className="mr-2" />
-            Nhắc nhóm trễ hạn
+            {isSendingAlert ? "Đang gửi..." : "Nhắc nhóm trễ hạn"}
           </Button>
         </div>
       </div>
@@ -755,7 +472,7 @@ export default function SrsReports() {
                 className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
               >
                 <option value="all">Tất cả môn</option>
-                {COURSES.map((course) => (
+                {realCourses.map((course) => (
                   <option key={course.id} value={course.code}>
                     {course.code}
                   </option>
@@ -951,20 +668,6 @@ export default function SrsReports() {
                             Final
                           </button>
                         )}
-
-                        {(item.status === "OVERDUE" ||
-                          item.status === "NEED_REVISION") && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              success(`Đã gửi nhắc nhở cho ${item.teamName}`);
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-amber-100 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100"
-                          >
-                            <MessageSquare size={11} />
-                            Nhắc
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
@@ -972,89 +675,6 @@ export default function SrsReports() {
               )}
             </CardContent>
           </Card>
-
-          {/* Bottom insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-gray-800">
-                  Cảnh báo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {srsList
-                  .filter((x) => ["OVERDUE", "NEED_REVISION"].includes(x.status))
-                  .slice(0, 3)
-                  .map((x) => (
-                    <div
-                      key={x.id}
-                      className="rounded-2xl border border-red-100 bg-red-50/70 p-3"
-                    >
-                      <p className="text-sm font-semibold text-gray-800">
-                        {x.teamName}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {x.status === "OVERDUE"
-                          ? "Đã quá hạn nộp hoặc resubmit"
-                          : "Cần chỉnh sửa và nộp lại"}
-                      </p>
-                    </div>
-                  ))}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-gray-800">
-                  Jira coverage thấp
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[...srsList]
-                  .sort((a, b) => a.jiraMapped - b.jiraMapped)
-                  .slice(0, 3)
-                  .map((x) => (
-                    <div
-                      key={x.id}
-                      className="rounded-2xl border border-amber-100 bg-amber-50/70 p-3"
-                    >
-                      <p className="text-sm font-semibold text-gray-800">
-                        {x.teamName}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Mapped Jira issues: {x.jiraMapped}
-                      </p>
-                    </div>
-                  ))}
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-[24px] border border-gray-100 shadow-sm bg-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-gray-800">
-                  GitHub coverage tốt
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[...srsList]
-                  .sort((a, b) => b.githubCoverage - a.githubCoverage)
-                  .slice(0, 3)
-                  .map((x) => (
-                    <div
-                      key={x.id}
-                      className="rounded-2xl border border-green-100 bg-green-50/70 p-3"
-                    >
-                      <p className="text-sm font-semibold text-gray-800">
-                        {x.teamName}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Coverage: {x.githubCoverage}%
-                      </p>
-                    </div>
-                  ))}
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         {/* Right side detail */}
@@ -1168,9 +788,6 @@ export default function SrsReports() {
                         </span>
                         <ExternalLink size={13} className="text-gray-400 ml-auto" />
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {selectedSrs.jiraMapped} issues được map từ SRS
-                      </p>
                     </a>
 
                     <a
@@ -1186,9 +803,6 @@ export default function SrsReports() {
                         </span>
                         <ExternalLink size={13} className="text-gray-400 ml-auto" />
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Coverage thực thi: {selectedSrs.githubCoverage}%
-                      </p>
                     </a>
                   </div>
 
@@ -1200,82 +814,6 @@ export default function SrsReports() {
                     <p className="text-sm text-gray-700 leading-6 mt-2">
                       {selectedSrs.summary}
                     </p>
-
-                    {selectedSrs.notes?.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        {selectedSrs.notes.map((note, idx) => (
-                          <div
-                            key={idx}
-                            className="rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs text-amber-800"
-                          >
-                            {note}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* checklist */}
-                  <div className="rounded-2xl border border-gray-100 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <ShieldAlert size={16} className="text-amber-600" />
-                      <h4 className="text-sm font-bold text-gray-800">
-                        Review checklist
-                      </h4>
-                    </div>
-
-                    <div className="space-y-2">
-                      {[
-                        ["Giới thiệu & phạm vi", selectedSrs.checklist.introduction],
-                        ["Stakeholders / actors", selectedSrs.checklist.stakeholders],
-                        ["Functional requirements", selectedSrs.checklist.functional],
-                        ["Non-functional requirements", selectedSrs.checklist.nonFunctional],
-                        ["Use cases / flows", selectedSrs.checklist.useCases],
-                        ["Consistency với Jira/GitHub", selectedSrs.checklist.consistency],
-                      ].map(([label, value]) => (
-                        <div
-                          key={label}
-                          className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2.5"
-                        >
-                          <span className="text-sm text-gray-700">{label}</span>
-                          <span
-                            className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${checklistBadge(
-                              value
-                            )}`}
-                          >
-                            {checklistLabel(value)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* version history */}
-                  <div className="rounded-2xl border border-gray-100 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Clock3 size={16} className="text-sky-600" />
-                      <h4 className="text-sm font-bold text-gray-800">
-                        Lịch sử version
-                      </h4>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedSrs.history.map((h, idx) => (
-                        <div
-                          key={`${h.version}-${idx}`}
-                          className="flex items-center justify-between rounded-xl bg-gray-50/70 border border-gray-100 px-3 py-2.5"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-gray-800">
-                              {h.version}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {h.author}
-                            </p>
-                          </div>
-                          <p className="text-xs text-gray-500">{h.date}</p>
-                        </div>
-                      ))}
-                    </div>
                   </div>
 
                   {/* review form */}
@@ -1285,33 +823,6 @@ export default function SrsReports() {
                       <h4 className="text-sm font-bold text-gray-800">
                         Chấm bài & nhận xét
                       </h4>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      <div className="rounded-xl bg-white border border-gray-100 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Reviewer
-                        </p>
-                        <p className="text-sm font-semibold text-gray-800 mt-1">
-                          {selectedSrs.reviewer}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-white border border-gray-100 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Submitted
-                        </p>
-                        <p className="text-sm font-semibold text-gray-800 mt-1">
-                          {formatDate(selectedSrs.submittedAt)}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-white border border-gray-100 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                          Feedbacks
-                        </p>
-                        <p className="text-sm font-semibold text-gray-800 mt-1">
-                          {selectedSrs.commentsCount}
-                        </p>
-                      </div>
                     </div>
 
                     <textarea
@@ -1341,46 +852,6 @@ export default function SrsReports() {
                         <RefreshCcw size={14} className="mr-2" />
                         Yêu cầu sửa
                       </Button>
-
-                      <Button
-                        variant="outline"
-                        className="rounded-xl h-11 border-blue-200 text-blue-700 bg-white hover:bg-blue-50"
-                        onClick={() => handleStatusUpdate(selectedSrs.id, "REVIEW")}
-                      >
-                        <Eye size={14} className="mr-2" />
-                        Chuyển review
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        className="rounded-xl h-11 border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
-                        onClick={handleSaveFeedback}
-                      >
-                        <MessageSquare size={14} className="mr-2" />
-                        Chỉ lưu nhận xét
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        className="rounded-xl h-10 border-red-200 text-red-700 bg-white hover:bg-red-50"
-                        onClick={() => handleStatusUpdate(selectedSrs.id, "OVERDUE")}
-                      >
-                        <AlertTriangle size={14} className="mr-2" />
-                        Đánh dấu quá hạn
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        className="rounded-xl h-10 border-teal-200 text-teal-700 bg-white hover:bg-teal-50"
-                        onClick={() =>
-                          success(`Đã gửi thông báo cho ${selectedSrs.teamName}`)
-                        }
-                      >
-                        <MessageSquare size={14} className="mr-2" />
-                        Gửi thông báo nhóm
-                      </Button>
                     </div>
                   </div>
 
@@ -1400,16 +871,6 @@ export default function SrsReports() {
                         Xem file SRS
                       </Button>
                     </a>
-
-                    <Button
-                      variant="outline"
-                      className="rounded-xl border-gray-200 bg-white"
-                      onClick={() =>
-                        success(`Mock tải xuống file của ${selectedSrs.teamName}`)
-                      }
-                    >
-                      <Download size={14} />
-                    </Button>
                   </div>
                 </div>
               )}

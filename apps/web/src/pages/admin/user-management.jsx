@@ -5,10 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../components/ui/table.jsx";
 import { Badge } from "../../components/ui/badge.jsx";
 import { Button } from "../../components/ui/button.jsx";
-import { mockUsers } from "../../mock/data.js";
+import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 
 export default function UserManagement() {
   const [activeTab, setActiveTab] = useState('lecturers');
+  
+  const { data: lecturersData, isLoading: loadingLecturers } = useGetUsers('Lecturer');
+  const { data: studentsData, isLoading: loadingStudents } = useGetUsers('Student');
+
+  const lecturers = lecturersData || [];
+  const students = studentsData || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,8 +34,8 @@ export default function UserManagement() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="lecturers" activeTab={activeTab} setActiveTab={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="lecturers">Giảng viên ({mockUsers.lecturers.length})</TabsTrigger>
-            <TabsTrigger value="students">Sinh viên ({mockUsers.students.length})</TabsTrigger>
+            <TabsTrigger value="lecturers">Giảng viên ({loadingLecturers ? '...' : lecturers.length})</TabsTrigger>
+            <TabsTrigger value="students">Sinh viên ({loadingStudents ? '...' : students.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="lecturers">
@@ -38,43 +44,52 @@ export default function UserManagement() {
                 <CardTitle>Danh sách Giảng viên</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mã GV</TableHead>
-                      <TableHead>Họ tên</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Khoa</TableHead>
-                      <TableHead>Số Course</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockUsers.lecturers.map((lecturer) => (
-                      <TableRow key={lecturer.id}>
-                        <TableCell className="font-medium">{lecturer.id}</TableCell>
-                        <TableCell>{lecturer.name}</TableCell>
-                        <TableCell>{lecturer.email}</TableCell>
-                        <TableCell>{lecturer.department}</TableCell>
-                        <TableCell>{lecturer.courses?.length || 0}</TableCell>
-                        <TableCell>
-                          <Badge variant="success">Đang hoạt động</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              Sửa
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              Chi tiết
-                            </Button>
-                          </div>
-                        </TableCell>
+                {loadingLecturers ? (
+                  <div className="text-center py-8">Đang tải...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mã GV</TableHead>
+                        <TableHead>Họ tên</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Khoa</TableHead>
+                        <TableHead>Số Course</TableHead>
+                        <TableHead>Trạng thái</TableHead>
+                        <TableHead>Thao tác</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {lecturers.map((lecturer) => (
+                        <TableRow key={lecturer.id}>
+                          <TableCell className="font-medium">{lecturer.userName || lecturer.id}</TableCell>
+                          <TableCell>{lecturer.fullName || lecturer.name}</TableCell>
+                          <TableCell>{lecturer.email}</TableCell>
+                          <TableCell>{lecturer.department || "Khác"}</TableCell>
+                          <TableCell>{lecturer.courses?.length || 0}</TableCell>
+                          <TableCell>
+                            <Badge variant="success">Đang hoạt động</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline">
+                                Sửa
+                              </Button>
+                              <Button size="sm" variant="ghost">
+                                Chi tiết
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {lecturers.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-4">Không có giảng viên nào.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -85,43 +100,52 @@ export default function UserManagement() {
                 <CardTitle>Danh sách Sinh viên</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mã SV</TableHead>
-                      <TableHead>Họ tên</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Khoa</TableHead>
-                      <TableHead>Khóa</TableHead>
-                      <TableHead>Số Course</TableHead>
-                      <TableHead>Số Project</TableHead>
-                      <TableHead>Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockUsers.students.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell className="font-medium">{student.studentCode}</TableCell>
-                        <TableCell>{student.name}</TableCell>
-                        <TableCell>{student.email}</TableCell>
-                        <TableCell>{student.department}</TableCell>
-                        <TableCell>{student.batch}</TableCell>
-                        <TableCell>{student.courses?.length || 0}</TableCell>
-                        <TableCell>{student.projects?.length || 0}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              Sửa
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              Chi tiết
-                            </Button>
-                          </div>
-                        </TableCell>
+                {loadingStudents ? (
+                  <div className="text-center py-8">Đang tải...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mã SV</TableHead>
+                        <TableHead>Họ tên</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Khoa</TableHead>
+                        <TableHead>Khóa</TableHead>
+                        <TableHead>Số Course</TableHead>
+                        <TableHead>Số Project</TableHead>
+                        <TableHead>Thao tác</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium">{student.studentCode || student.userName || student.id}</TableCell>
+                          <TableCell>{student.fullName || student.name}</TableCell>
+                          <TableCell>{student.email}</TableCell>
+                          <TableCell>{student.department || "Khác"}</TableCell>
+                          <TableCell>{student.batch || "Khác"}</TableCell>
+                          <TableCell>{student.courses?.length || 0}</TableCell>
+                          <TableCell>{student.projects?.length || 0}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline">
+                                Sửa
+                              </Button>
+                              <Button size="sm" variant="ghost">
+                                Chi tiết
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {students.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-4">Không có sinh viên nào.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

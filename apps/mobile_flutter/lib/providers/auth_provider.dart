@@ -1,10 +1,11 @@
+// Authentication Provider - State Management
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
-
+  
   User? _user;
   bool _isLoading = false;
   String? _error;
@@ -26,14 +27,12 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final isLoggedIn = await _authService.isLoggedIn();
-
       if (isLoggedIn) {
         _user = await _authService.getCurrentUser();
       }
     } catch (e) {
       _error = e.toString();
     }
-
     _isLoading = false;
     notifyListeners();
   }

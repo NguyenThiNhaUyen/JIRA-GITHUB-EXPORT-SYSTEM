@@ -34,6 +34,11 @@ public class SubjectService : ISubjectService
         {
             subject_code = request.SubjectCode,
             subject_name = request.SubjectName,
+            department = request.Department,
+            description = request.Description,
+            credits = request.Credits,
+            max_students = request.MaxStudents,
+            status = request.Status,
             created_at = DateTime.UtcNow
         };
 
@@ -48,7 +53,23 @@ public class SubjectService : ISubjectService
         var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
         if (subject == null) throw new NotFoundException("Subject not found");
 
-        subject.subject_name = request.SubjectName;
+        if (!string.IsNullOrWhiteSpace(request.SubjectName))
+            subject.subject_name = request.SubjectName;
+            
+        if (!string.IsNullOrWhiteSpace(request.Department))
+            subject.department = request.Department;
+            
+        if (request.Description != null)
+            subject.description = request.Description;
+            
+        if (request.Credits.HasValue)
+            subject.credits = request.Credits.Value;
+            
+        if (request.MaxStudents.HasValue)
+            subject.max_students = request.MaxStudents.Value;
+            
+        if (!string.IsNullOrWhiteSpace(request.Status))
+            subject.status = request.Status;
 
         _unitOfWork.Subjects.Update(subject);
         await _unitOfWork.SaveChangesAsync();
@@ -69,10 +90,19 @@ public class SubjectService : ISubjectService
         var (items, totalItems) = await _unitOfWork.Subjects.GetPagedAsync(
             request.Page, 
             request.PageSize,
-            string.IsNullOrWhiteSpace(request.Q) ? null : s => s.subject_name.ToLower().Contains(request.Q.ToLower()) || s.subject_code.ToLower().Contains(request.Q.ToLower()),
+            string.IsNullOrWhiteSpace(request.Q) ? null : s => (s.subject_name ?? "").ToLower().Contains(request.Q.ToLower()) || (s.subject_code ?? "").ToLower().Contains(request.Q.ToLower()),
             request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.created_at) : q => q.OrderBy(x => x.created_at)
         );
 
         return new PagedResponse<SubjectInfo>(_mapper.Map<List<SubjectInfo>>(items), totalItems, request.Page, request.PageSize);
+    }
+
+    public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
+    {
+        var items = await _unitOfWork.Subjects.Query()
+            .OrderBy(s => s.subject_name)
+            .ToListAsync();
+
+        return _mapper.Map<List<SubjectInfo>>(items);
     }
 }

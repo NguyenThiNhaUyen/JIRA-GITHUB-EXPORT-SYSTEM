@@ -29,10 +29,26 @@ public class JwtService : IJwtService
             new Claim("email", user.email)
         };
 
-        // Add roles as claims
+        // Add primary role as claim (ưu tiên cao nhất: ADMIN > LECTURER > STUDENT)
+        // Chỉ dùng 1 role duy nhất để [Authorize(Roles = "...")] hoạt động chính xác
+        var upperRoles = roles.Select(r => r.ToUpper()).ToList();
+        string primaryRole;
+        if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN"))
+            primaryRole = "ADMIN";
+        else if (upperRoles.Contains("LECTURER"))
+            primaryRole = "LECTURER";
+        else
+            primaryRole = upperRoles.FirstOrDefault() ?? "STUDENT";
+
+        claims.Add(new Claim(ClaimTypes.Role, primaryRole));
+        // Cũng thêm claim "role" để FE decode JWT lấy được
+        claims.Add(new Claim("role", primaryRole));
+
+        // Optional: Keep all roles if multiple role support is needed in the future
         foreach (var role in roles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            if (role.ToUpper() != primaryRole) 
+                claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));

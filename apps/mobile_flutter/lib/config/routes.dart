@@ -147,7 +147,7 @@ GoRouter createRouter(AuthProvider authProvider) {
       ),
       GoRoute(
         path: '/admin/semesters',
-        builder: (context, state) => const AdminCoursesScreen(),
+        builder: (context, state) => const AdminSemestersScreen(),
       ),
       GoRoute(
         path: '/admin/subjects',

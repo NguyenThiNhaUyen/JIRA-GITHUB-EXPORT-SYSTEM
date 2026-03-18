@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using JiraGithubExport.IntegrationService.Application.Implementations;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -91,6 +92,7 @@ namespace IntegrationService.Tests.Services
             Assert.Equal("Bearer", response.TokenType);
             Assert.Equal(3600, response.ExpiresIn);
             Assert.Equal("test@example.com", response.User.Email);
+            Assert.Equal("STUDENT", response.User.Role);
             Assert.Contains("STUDENT", response.User.Roles);
         }
 

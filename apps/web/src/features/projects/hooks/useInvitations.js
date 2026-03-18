@@ -24,8 +24,13 @@ export const useAcceptInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (invitationId) => {
-            const res = await client.put(`/invitations/${invitationId}/accept`);
-            return unwrap(res);
+            try {
+                const res = await client.put(`/invitations/${invitationId}/accept`);
+                return unwrap(res);
+            } catch (e) {
+                const res = await client.patch(`/invitations/${invitationId}/accept`);
+                return unwrap(res);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.all });
@@ -35,13 +40,19 @@ export const useAcceptInvitation = () => {
     });
 };
 
-/** Từ chối lời mời nhóm */
+/** Từ chối/Decline lời mời nhóm */
 export const useRejectInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (invitationId) => {
-            const res = await client.put(`/invitations/${invitationId}/decline`);
-            return unwrap(res);
+            try {
+                const res = await client.put(`/invitations/${invitationId}/decline`);
+                return unwrap(res);
+            } catch (e) {
+                // Fallback to reject if decline fails or is handled differently in BE
+                const res = await client.patch(`/invitations/${invitationId}/reject`);
+                return unwrap(res);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.all });

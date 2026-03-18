@@ -68,6 +68,7 @@ function restoreUserFromStorage() {
   }
   return null;
 }
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(restoreUserFromStorage);
   const [loading, setLoading] = useState(false);
@@ -82,8 +83,6 @@ export function AuthProvider({ children }) {
     try {
       // client.js interceptor đã bóc vỏ ApiResponse<T>
       // loginResponse = { accessToken, tokenType, expiresIn, user: {...} }
-      // Nhưng do interceptor trả về response.data (= toàn bộ ApiResponse),
-      // ta cần bóc thêm tầng .data bên trong nếu BE wrap: { success, data: LoginResponse }
       const apiRes = await loginWithCredentials(email, password);
 
       // apiRes có thể là ApiResponse wrapper { Success, Message, Data }

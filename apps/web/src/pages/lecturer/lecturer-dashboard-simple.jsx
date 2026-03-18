@@ -25,23 +25,11 @@ export default function LecturerDashboard() {
 
   useEffect(() => {
     // Mock data for simple dashboard
-    setCourses([
-      { id: 'se101', code: 'SE101', name: 'Software Engineering Fundamentals' },
-      { id: 'se102', code: 'SE102', name: 'Advanced Software Engineering' }
-    ]);
+    setCourses([]);
     
-    setProjects([
-      { id: 'proj1', name: 'E-commerce Platform', status: 'ACTIVE', description: 'Build full-stack e-commerce' },
-      { id: 'proj2', name: 'Task Management System', status: 'ACTIVE', description: 'Create task management app' },
-      { id: 'proj3', name: 'AI Chatbot', status: 'IN_PROGRESS', description: 'Develop AI-powered chatbot' }
-    ]);
+    setProjects([]);
     
-    setStats({
-      totalProjects: 3,
-      totalStudents: 45,
-      activeTeams: 3,
-      lastSync: "2 phút"
-    });
+    setStats({ totalProjects: 0, totalStudents: 0, activeTeams: 0, lastSync: "--" });
   }, []);
 
   const handleLogout = () => {

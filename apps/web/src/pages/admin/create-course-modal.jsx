@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { courseService } from '../../services/courseService.js';
 import { useToast } from '../../components/ui/toast.jsx';
 
+import { useGetSemesters, useGetSubjects } from '../../features/system/hooks/useSystem.js';
+
 export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   const navigate = useNavigate();
   const { success, error } = useToast();
@@ -26,17 +28,11 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Mock data for dropdowns
-  const semesters = [
-    { id: '2026-spring', name: 'Spring 2026' },
-    { id: '2025-fall', name: 'Fall 2025' },
-  ];
+  const { data: semestersData } = useGetSemesters();
+  const { data: subjectsData } = useGetSubjects();
 
-  const subjects = [
-    { id: 'se101', name: 'Software Engineering Fundamentals', code: 'SE101' },
-    { id: 'se102', name: 'Advanced Software Engineering', code: 'SE102' },
-    { id: 'cs201', name: 'Computer Science Fundamentals', code: 'CS201' },
-  ];
+  const semesters = semestersData || [];
+  const subjects = subjectsData || [];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -5,6 +5,7 @@ using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace JiraGithubExport.IntegrationService.Controllers;
 
@@ -96,10 +97,10 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a project (Admin only)
+    /// Delete a project (Admin/Lecturer only)
     /// </summary>
     [HttpDelete("{projectId}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteProject(long projectId)
     {
@@ -133,6 +134,7 @@ public class ProjectsController : ControllerBase
     /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
     /// </summary>
     [HttpPost("{projectId}/integrations")]
+    [HttpPut("{projectId}/integration")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
@@ -145,6 +147,7 @@ public class ProjectsController : ControllerBase
     /// Approve integration (Lecturer only)
     /// </summary>
     [HttpPost("{projectId}/integrations/approve")]
+    [HttpPut("{projectId}/approve-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveIntegration(long projectId)
@@ -158,6 +161,7 @@ public class ProjectsController : ControllerBase
     /// Reject integration (Lecturer only)
     /// </summary>
     [HttpPost("{projectId}/integrations/reject")]
+    [HttpPut("{projectId}/reject-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectIntegration(long projectId, [FromBody] RejectIntegrationRequest request)
@@ -175,6 +179,7 @@ public class ProjectsController : ControllerBase
     public async Task<IActionResult> GetIntegration(long projectId)
     {
         var result = await _integrationService.GetIntegrationStatusAsync(projectId);
+        if (result == null) return NotFound(ApiResponse<IntegrationInfo>.ErrorResponse("Integration status not found"));
         return Ok(ApiResponse<IntegrationInfo>.SuccessResponse(result));
     }
 
@@ -189,12 +194,37 @@ public class ProjectsController : ControllerBase
         await _teamService.UpdateContributionScoreAsync(projectId, memberId, request.ContributionScore);
         return Ok(ApiResponse.SuccessResponse("Contribution score updated"));
     }
+
+    /// <summary>
+    /// Get project commits
+    /// </summary>
+    [HttpGet("{projectId}/commits")]
+    [ProducesResponseType(typeof(ApiResponse<List<CommitResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCommits(long projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    {
+        var result = await _coreService.GetProjectCommitsAsync(projectId, page, pageSize);
+        return Ok(ApiResponse<List<CommitResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Get project commit history grouped by student
+    /// </summary>
+    [HttpGet("{projectId}/commit-history")]
+    [ProducesResponseType(typeof(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCommitHistory(long projectId)
+    {
+        var result = await _coreService.GetProjectCommitHistoryAsync(projectId);
+        return Ok(ApiResponse<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Sync project commits
+    /// </summary>
+    [HttpPost("{projectId}/sync-commits")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> SyncProjectCommits(long projectId)
+    {
+        var result = await _coreService.SyncProjectCommitsAsync(projectId);
+        return Ok(ApiResponse<object>.SuccessResponse(result, "Sync triggered"));
+    }
 }
-
-
-
-
-
-
-
-

@@ -1,39 +1,44 @@
 /**
- * notificationMapper.js — BE NotificationResponse → FE shape (v2.1)
- * BE mới trả về: { id, type, message, timestamp, isRead, metadata }
+ * notificationMapper.js — BE NotificationResponse → FE shape
  */
 
 export function mapNotification(beNotif) {
     if (!beNotif) return null;
 
     return {
-        id: beNotif.id,
-        // BE v2.1 dùng "message", fallback "content" cho backward compat
-        content: beNotif.message || beNotif.content || "",
-        title: beNotif.title || (beNotif.type === 'INVITATION' ? 'Lời mời nhóm' : 'Thông báo hệ thống'),
-        type: beNotif.type || "SYSTEM",
-        isRead: beNotif.isRead ?? false,
-        // BE v2.1 dùng "timestamp", fallback "createdAt" cho backward compat
-        createdAt: beNotif.timestamp || beNotif.createdAt,
+        id: beNotif.id || beNotif.Id || "",
+        content: beNotif.message || beNotif.Message || beNotif.content || beNotif.Content || "",
+        title: beNotif.title || beNotif.Title || (beNotif.type === 'INVITATION' || beNotif.Type === 'INVITATION' ? 'Lời mời nhóm' : 'Thông báo hệ thống'),
+        type: (beNotif.type || beNotif.Type || "SYSTEM").toUpperCase(),
+        isRead: beNotif.isRead ?? beNotif.IsRead ?? false,
+        createdAt: beNotif.timestamp || beNotif.Timestamp || beNotif.createdAt || beNotif.CreatedAt || null,
         // Dữ liệu mở rộng cho lời mời nhóm
-        projectName: beNotif.projectName || null,
-        invitedByName: beNotif.invitedByName || null,
-        invitationId: beNotif.invitationId || null
+        projectName: beNotif.projectName || beNotif.ProjectName || null,
+        invitedByName: beNotif.invitedByName || beNotif.InvitedByName || null,
+        invitationId: beNotif.invitationId || beNotif.InvitationId || null
     };
 }
 
 export function mapNotificationList(beData) {
-    if (beData && beData.items) {
+    if (!beData) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+
+    if (beData.results !== undefined || beData.Results !== undefined || beData.items !== undefined || beData.Items !== undefined) {
+        const results = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
         return {
-            items: beData.items.map(mapNotification),
-            totalCount: beData.totalCount || beData.items.length,
-            page: beData.page || 1,
-            pageSize: beData.pageSize || beData.items.length
+            items: results.map(mapNotification),
+            totalCount: beData.totalCount ?? beData.TotalCount ?? beData.totalItems ?? beData.TotalItems ?? results.length,
+            page: beData.page ?? beData.Page ?? 1,
+            pageSize: beData.pageSize ?? beData.PageSize ?? results.length
         };
     }
 
     if (Array.isArray(beData)) {
-        return beData.map(mapNotification);
+        return {
+            items: beData.map(mapNotification),
+            totalCount: beData.length,
+            page: 1,
+            pageSize: beData.length
+        };
     }
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
