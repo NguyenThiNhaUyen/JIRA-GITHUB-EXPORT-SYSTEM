@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
-import '../../services/auth_service.dart';
 import '../../models/user.dart';
+import '../../services/lecturer_service.dart';
+import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 import 'lecturer_groups_widgets.dart';
 
 const int kMinMembers = 4;
@@ -39,16 +41,16 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
   List<Map<String, dynamic>> _groups = [];
 
   final AuthService _authService = AuthService();
+  final LecturerService _lecturerService = LecturerService();
+  final AdminService _adminService = AdminService();
   User? _currentUser;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _course['id'] = widget.courseId ?? 1;
-    _course['code'] = 'COURSE-${widget.courseId ?? "ID"}';
-    _course['name'] = 'Course Description Phase';
     _loadUser();
+    _loadData();
   }
 
   Future<void> _loadUser() async {
@@ -57,46 +59,116 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
       if (mounted) {
         setState(() {
           _currentUser = user;
+        });
+      }
+    } catch (e) {
+      if (mounted) print("Error loading user: $e");
+    }
+  }
+
+  Future<void> _loadData() async {
+    if (widget.courseId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _lecturerService.getCourseGroups(widget.courseId),
+        _lecturerService.getCourseStudents(widget.courseId),
+        _adminService.getCourses(),
+      ]);
+
+      final courseInfo = (results[2] as List).firstWhere(
+        (c) => c['id'].toString() == widget.courseId.toString(),
+        orElse: () => null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _groups = List<Map<String, dynamic>>.from(results[0]);
+          _students = List<Map<String, dynamic>>.from(results[1]);
+          if (courseInfo != null) {
+            _course = courseInfo;
+          }
           _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _snack('Lỗi khi tải dữ liệu lớp học');
+      }
     }
+  }
+
+  Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
+    return {
+      'id': (s['id'] ?? s['Id'] ?? s['userId'] ?? 0) as int,
+      'name': (s['name'] ?? s['fullName'] ?? s['FullName'] ?? 'N/A').toString(),
+      'studentCode': (s['studentCode'] ?? s['studentId'] ?? s['StudentCode'] ?? '').toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
+    final integration = g['integration'] ?? g['Integration'] ?? {};
+    return {
+      'id': (g['id'] ?? g['Id'] ?? 0) as int,
+      'name': (g['name'] ?? g['groupName'] ?? g['GroupName'] ?? 'N/A').toString(),
+      'description': (g['description'] ?? g['topic'] ?? g['projectName'] ?? g['ProjectName'] ?? '').toString(),
+      'team': g['team'] ?? g['members'] ?? g['Members'] ?? g['students'] ?? g['Students'] ?? [],
+      'integration': {
+        'githubStatus': (integration['githubStatus'] ?? integration['github_status'] ?? g['githubStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+        'jiraStatus': (integration['jiraStatus'] ?? integration['jira_status'] ?? g['jiraStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+      },
+    };
+  }
+
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? c['ClassName'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+    };
   }
 
   // Computed: assignedStudentIds
   Set<int> get _assignedIds => _groups
-      .expand((g) => (g['team'] as List).map((m) => m['studentId'] as int))
+      .map(_normalizeGroup)
+      .expand((g) => (g['team'] as List).map((m) => (m['studentId'] ?? m['userId'] ?? 0) as int))
       .toSet();
 
   // Computed: availableStudents
   List<Map<String, dynamic>> get _available =>
-      _students.where((s) => !_assignedIds.contains(s['id'] as int)).toList();
+      _students.map(_normalizeStudent).where((s) => !_assignedIds.contains(s['id'] as int)).toList();
 
   // Computed: filteredAvailableStudents
   List<Map<String, dynamic>> get _filteredAvailable {
     final kw = _studentSearch.trim().toLowerCase();
     if (kw.isEmpty) return _available;
-    return _available.where((s) =>
-      (s['name'] as String).toLowerCase().contains(kw) ||
-      (s['studentCode'] as String).toLowerCase().contains(kw)).toList();
+    return _available.where((s) {
+      final name = s['name'].toString().toLowerCase();
+      final code = s['studentCode'].toString().toLowerCase();
+      return name.contains(kw) || code.contains(kw);
+    }).toList();
   }
 
   // Computed: filteredForceAddStudents
   List<Map<String, dynamic>> get _filteredForceAdd {
     final kw = _forceAddSearch.trim().toLowerCase();
     if (kw.isEmpty) return _available;
-    return _available.where((s) =>
-      (s['name'] as String).toLowerCase().contains(kw) ||
-      (s['studentCode'] as String).toLowerCase().contains(kw)).toList();
+    return _available.where((s) {
+      final name = s['name'].toString().toLowerCase();
+      final code = s['studentCode'].toString().toLowerCase();
+      return name.contains(kw) || code.contains(kw);
+    }).toList();
   }
 
   // Computed: groupsWithMetrics (mirrors JSX useMemo)
   List<Map<String, dynamic>> get _groupsWithMetrics => _groups.asMap().entries.map((e) {
-    final i = e.key; final g = e.value;
-    final integration = (g['integration'] as Map<String, dynamic>?) ?? {};
-    final team = (g['team'] as List?) ?? [];
+    final i = e.key; final g = _normalizeGroup(e.value);
+    final integration = (g['integration'] as Map<String, dynamic>) ;
+    final team = (g['team'] as List);
     final memberCount = team.length;
     final githubApproved = integration['githubStatus'] == 'APPROVED';
     final jiraApproved = integration['jiraStatus'] == 'APPROVED';
@@ -112,12 +184,12 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
     if (!githubApproved) riskScore += 15;
     if (!jiraApproved) riskScore += 10;
     riskScore = riskScore.clamp(0, 100);
-    final leader = team.cast<Map<String,dynamic>>().where((m) => m['role'] == 'LEADER').map((m) => m['studentName'] as String?).firstOrNull;
+    final leader = team.where((m) => m['role'] == 'LEADER').map((m) => (m['studentName'] ?? m['fullName'] ?? 'N/A').toString()).firstOrNull;
     String state = 'healthy';
     if (!githubApproved && !jiraApproved) state = 'critical';
     else if (riskScore >= 55) state = 'warning';
     else if (riskScore >= 30) state = 'watch';
-    final missingTopic = (g['description'] as String? ?? '').trim().isEmpty;
+    final missingTopic = (g['description'] as String).trim().isEmpty;
     return {...g, 'integration': integration, 'memberCount': memberCount, 'githubApproved': githubApproved,
       'jiraApproved': jiraApproved, 'commitCount': commitCount, 'issueCount': issueCount,
       'lastActivity': lastActivity, 'progress': progress, 'riskScore': riskScore,

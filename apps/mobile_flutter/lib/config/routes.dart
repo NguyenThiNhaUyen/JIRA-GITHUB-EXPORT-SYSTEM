@@ -9,6 +9,11 @@ import '../screens/auth/forgot_password_screen.dart';
 // STUDENT
 import '../screens/student/student_dashboard.dart';
 import '../screens/student/student_project_screen.dart';
+import '../screens/student/student_courses_screen.dart';
+import '../screens/student/student_my_project_screen.dart';
+import '../screens/student/student_contribution_screen.dart';
+import '../screens/student/student_alerts_screen.dart';
+import '../screens/student/student_srs_screen.dart';
 import '../screens/student/student_placeholders.dart';
 import '../screens/student/student_settings_screen.dart';
 

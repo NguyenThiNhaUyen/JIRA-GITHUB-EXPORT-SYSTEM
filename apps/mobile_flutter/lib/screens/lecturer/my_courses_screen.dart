@@ -58,21 +58,50 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     super.dispose();
   }
 
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    final rawProjects = (c['projects'] ?? c['groups'] ?? c['Groups'] ?? c['Projects'] ?? []) as List;
+    final projects = rawProjects.map((p) {
+      final integration = p['integration'] ?? p['Integration'] ?? {};
+      final githubStatus = (p['githubStatus'] ?? integration['githubStatus'] ?? integration['github_status'] ?? 'NONE').toString().toUpperCase();
+      final jiraStatus = (p['jiraStatus'] ?? integration['jiraStatus'] ?? integration['jira_status'] ?? 'NONE').toString().toUpperCase();
+      return {
+        ...p,
+        'repoConnected': githubStatus == 'APPROVED',
+        'jiraConnected': jiraStatus == 'APPROVED',
+      };
+    }).toList();
+
+    return {
+      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
+      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? c['className'] ?? c['ClassName'] ?? 'N/A').toString(),
+      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'subjectCode': (c['subjectCode'] ?? c['SubjectCode'] ?? 'N/A').toString(),
+      'semester': (c['semester'] ?? c['Semester'] ?? 'N/A').toString(),
+      'currentStudents': (c['currentStudents'] ?? c['enrollmentCount'] ?? c['studentsCount'] ?? (c['enrollments'] as List?)?.length ?? 0) as int,
+      'projectsCount': (c['projectsCount'] ?? c['groupCount'] ?? projects.length).toInt(),
+      'projects': projects,
+      'lastCommit': (c['lastCommit'] ?? c['last_activity'] ?? 'No activity').toString(),
+      'archived': c['archived'] ?? c['isArchived'] ?? false,
+      'commits': c['commits'] ?? c['commitHistory'] ?? [],
+    };
+  }
+
   List<Map<String, dynamic>> get _filtered {
     final kw = _search.toLowerCase();
-    if (kw.isEmpty) return _courses;
-    return _courses.where((c) {
+    final normalized = _courses.map(_normalizeCourse).toList();
+    if (kw.isEmpty) return normalized;
+    return normalized.where((c) {
       return (c['code'] as String).toLowerCase().contains(kw) ||
           (c['name'] as String).toLowerCase().contains(kw) ||
-          (c['subjectCode'] as String? ?? '').toLowerCase().contains(kw);
+          (c['subjectCode'] as String).toLowerCase().contains(kw);
     }).toList();
   }
 
   int get _totalGroups =>
-      _courses.fold(0, (s, c) => s + ((c['projectsCount'] ?? (c['projects'] as List?)?.length ?? 0) as int));
+      _courses.map(_normalizeCourse).fold(0, (s, c) => s + (c['projectsCount'] as int));
 
   int get _totalStudents =>
-      _courses.fold(0, (s, c) => s + ((c['currentStudents'] ?? 0) as int));
+      _courses.map(_normalizeCourse).fold(0, (s, c) => s + (c['currentStudents'] as int));
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -311,7 +340,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: color.withValues(alpha: 0.85),
+                      color: color.withOpacity(0.85),
                     ),
                   ),
                 ),
@@ -356,7 +385,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: color.withValues(alpha: 0.85),
+                      color: color.withOpacity(0.85),
                     ),
                   ),
                 ),
@@ -409,7 +438,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
         border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

@@ -40,15 +40,16 @@ client.interceptors.response.use(
         const status = error.response?.status;
         const message = error.response?.data?.message ?? error.message;
 
-        if (status === 401 || status === 403) {
-            // Clear all auth related storage
+        if (status === 401) {
+            // Only logout on true auth failure (expired or invalid token)
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             if (!window.location.pathname.includes("/login")) {
                 window.location.href = "/login";
             }
-        } else if (!status) {
+        }
+ else if (!status) {
             // Network error
         }
 
