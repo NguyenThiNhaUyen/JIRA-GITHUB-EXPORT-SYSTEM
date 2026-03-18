@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
 import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
 import '../../models/user.dart';
 
 class ContributionsScreen extends StatefulWidget {
@@ -41,14 +42,10 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
     'T12'
   ];
 
-  static const List<int> _wGh = [];
-  static const List<int> _wJira = [];
-
-  static const List<Map<String, dynamic>> _courses = [];
-
-  static const List<Map<String, dynamic>> _allStudents = [];
-
-  static const List<Map<String, dynamic>> _groupStats = [];
+  final AuthService _authService = AuthService();
+  final LecturerService _lecturerService = LecturerService();
+  User? _currentUser;
+  bool _isLoading = true;
 
   // ── state ─────────────────────────────────────────
   String _course = 'c1';
@@ -61,22 +58,35 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
   final TextEditingController _modalMsg = TextEditingController();
   String? _banner;
 
-  final AuthService _authService = AuthService();
-  User? _currentUser;
-  bool _isLoading = true;
+  // ── dynamic data ──────────────────────────────────
+  List<String> _weeks = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  List<int> _wGh = [];
+  List<int> _wJira = [];
+  List<Map<String, dynamic>> _courseList = [];
+  List<Map<String, dynamic>> _allStudents = [];
+  List<Map<String, dynamic>> _groupStats = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadInitialData();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
     try {
       final user = await _authService.getCurrentUser();
-      if (mounted) {
+      if (user != null) {
+        final results = await Future.wait([
+          _lecturerService.getMyCourses(),
+          _lecturerService.getCourseContributions(_course),
+        ]);
+
         setState(() {
           _currentUser = user;
+          _courseList = List<Map<String, dynamic>>.from(results[0] as List);
+          _allStudents = List<Map<String, dynamic>>.from(results[1] as List);
+          // Process _allStudents to get _groupStats and weekly data if needed
           _isLoading = false;
         });
       }
@@ -84,6 +94,7 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   @override
   void dispose() {

@@ -114,13 +114,57 @@ Widget _buildEmptyState(IconData icon, String title, String desc) {
 
 // ───────────────────────── PAGES ─────────────────────────
 
+import '../../../providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import '../../../services/student_service.dart';
+import '../../../services/auth_service.dart';
+import '../../../models/user.dart';
+
+// ───────────────────────── PAGES ─────────────────────────
+
 // 1. Courses Page
-class StudentCoursesScreen extends StatelessWidget {
+class StudentCoursesScreen extends StatefulWidget {
   const StudentCoursesScreen({super.key});
 
   @override
+  State<StudentCoursesScreen> createState() => _StudentCoursesScreenState();
+}
+
+class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
+  final StudentService _studentService = StudentService();
+  final AuthService _authService = AuthService();
+  
+  bool _isLoading = true;
+  User? _currentUser;
+  List<Map<String, dynamic>> _courses = [];
+  List<Map<String, dynamic>> _projects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final courses = await _studentService.getMyCourses();
+      final projects = await _studentService.getMyProjects();
+      setState(() {
+        _currentUser = user;
+        _courses = courses;
+        _projects = projects;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final activeCourses = _mockCourses.where((c) => c['status'] == 'ACTIVE').length;
+    final activeCourses = _courses.where((c) => c['status'] == 'ACTIVE').length;
     final isMobile = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
@@ -140,34 +184,48 @@ class StudentCoursesScreen extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    const AppTopHeader(title: 'Lớp của tôi', primary: false),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBreadcrumb(context, 'Lớp của tôi'),
-                            const SizedBox(height: 16),
-                            _buildSectionHeader('Lớp học của tôi', 'Tất cả lớp học phần bạn đang tham gia'),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(child: _buildSummaryCard(Icons.menu_book_rounded, const Color(0xFF14B8A6), 'Tổng số lớp', '${_mockCourses.length}')),
-                                const SizedBox(width: 12),
-                                Expanded(child: _buildSummaryCard(Icons.folder_shared_rounded, const Color(0xFF3B82F6), 'Project đang tham gia', '${_mockProjects.length}')),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildSummaryCard(Icons.verified_rounded, const Color(0xFF10B981), 'Lớp đang hoạt động', '$activeCourses'),
-                            const SizedBox(height: 20),
-                            if (_mockCourses.isEmpty)
-                              _buildEmptyState(Icons.menu_book_rounded, 'Bạn chưa được đăng ký lớp nào', 'Hiện chưa có khóa học nào hiển thị')
-                            else
-                              ..._mockCourses.map((c) => _buildCourseCard(context, c)),
-                          ],
-                        ),
+                    AppTopHeader(
+                      title: 'Lớp của tôi',
+                      primary: false,
+                      user: AppUser(
+                        name: _currentUser?.fullName ?? 'Student',
+                        email: _currentUser?.email ?? '',
+                        role: 'STUDENT',
                       ),
+                    ),
+                    Expanded(
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F766E)))
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildBreadcrumb(context, 'Lớp của tôi'),
+                                  const SizedBox(height: 16),
+                                  _buildSectionHeader('Lớp học của tôi', 'Tất cả lớp học phần bạn đang tham gia'),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(child: _buildSummaryCard(Icons.menu_book_rounded, const Color(0xFF14B8A6), 'Tổng số lớp', '${_courses.length}')),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: _buildSummaryCard(Icons.folder_shared_rounded, const Color(0xFF3B82F6), 'Project đang tham gia', '${_projects.length}')),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSummaryCard(Icons.verified_rounded, const Color(0xFF10B981), 'Lớp đang hoạt động', '$activeCourses'),
+                                  const SizedBox(height: 20),
+                                  if (_courses.isEmpty)
+                                    _buildEmptyState(Icons.menu_book_rounded, 'Bạn chưa được đăng ký lớp nào', 'Hiện chưa có khóa học nào hiển thị')
+                                  else
+                                    ..._courses.map((c) => _buildCourseCard(context, c)),
+                                ],
+                              ),
+                            ),
+                          ),
                     ),
                   ],
                 ),
@@ -180,7 +238,7 @@ class StudentCoursesScreen extends StatelessWidget {
   }
 
   Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course) {
-    final project = _mockProjects.firstWhere((p) => p['courseId'] == course['id'], orElse: () => {});
+    final project = _projects.firstWhere((p) => p['courseId'] == course['id'], orElse: () => {});
     final isLeader = project.isNotEmpty && project['teamLeaderId'] == 'SE123456';
 
     return Container(
@@ -304,12 +362,45 @@ class StudentCoursesScreen extends StatelessWidget {
 }
 
 // 2. My Project Page
-class StudentMyProjectScreen extends StatelessWidget {
+class StudentMyProjectScreen extends StatefulWidget {
   const StudentMyProjectScreen({super.key});
 
   @override
+  State<StudentMyProjectScreen> createState() => _StudentMyProjectScreenState();
+}
+
+class _StudentMyProjectScreenState extends State<StudentMyProjectScreen> {
+  final StudentService _studentService = StudentService();
+  final AuthService _authService = AuthService();
+  
+  bool _isLoading = true;
+  User? _currentUser;
+  List<Map<String, dynamic>> _projects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final projects = await _studentService.getMyProjects();
+      setState(() {
+        _currentUser = user;
+        _projects = projects;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    int leaderCount = _mockProjects.where((p) => p['teamLeaderId'] == 'SE123456').length;
+    int leaderCount = _projects.where((p) => p['teamLeaderId'] == _currentUser?.studentCode).length;
     final isMobile = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
@@ -329,32 +420,46 @@ class StudentMyProjectScreen extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    const AppTopHeader(title: 'Nhóm của tôi', primary: false),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBreadcrumb(context, 'Nhóm của tôi'),
-                            const SizedBox(height: 16),
-                            _buildSectionHeader('Nhóm / Project của tôi', 'Danh sách project bạn đang tham gia'),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(child: _buildSummaryCard(Icons.folder_shared_rounded, const Color(0xFF14B8A6), 'Số project', '${_mockProjects.length}')),
-                                const SizedBox(width: 12),
-                                Expanded(child: _buildSummaryCard(Icons.group_rounded, const Color(0xFF3B82F6), 'Leader', '$leaderCount')),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            if (_mockProjects.isEmpty)
-                              _buildEmptyState(Icons.folder_shared_rounded, 'Bạn chưa tham gia project nào', 'Project sẽ hiển thị khi bạn được thêm vào nhóm')
-                            else
-                              ..._mockProjects.map((p) => _buildProjectCard(context, p)),
-                          ],
-                        ),
+                    AppTopHeader(
+                      title: 'Nhóm của tôi',
+                      primary: false,
+                      user: AppUser(
+                        name: _currentUser?.fullName ?? 'Student',
+                        email: _currentUser?.email ?? '',
+                        role: 'STUDENT',
                       ),
+                    ),
+                    Expanded(
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F766E)))
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildBreadcrumb(context, 'Nhóm của tôi'),
+                                  const SizedBox(height: 16),
+                                  _buildSectionHeader('Nhóm / Project của tôi', 'Danh sách project bạn đang tham gia'),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(child: _buildSummaryCard(Icons.folder_shared_rounded, const Color(0xFF14B8A6), 'Số project', '${_projects.length}')),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: _buildSummaryCard(Icons.group_rounded, const Color(0xFF3B82F6), 'Leader', '$leaderCount')),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  if (_projects.isEmpty)
+                                    _buildEmptyState(Icons.folder_shared_rounded, 'Bạn chưa tham gia project nào', 'Project sẽ hiển thị khi bạn được thêm vào nhóm')
+                                  else
+                                    ..._projects.map((p) => _buildProjectCard(context, p)),
+                                ],
+                              ),
+                            ),
+                          ),
                     ),
                   ],
                 ),
@@ -367,7 +472,7 @@ class StudentMyProjectScreen extends StatelessWidget {
   }
 
   Widget _buildProjectCard(BuildContext context, Map<String, dynamic> project) {
-    final isLeader = project['teamLeaderId'] == 'SE123456';
+    final isLeader = project['teamLeaderId'] == _currentUser?.studentCode;
     final memberCount = (project['team'] as List).length;
 
     return Container(
@@ -424,17 +529,48 @@ class StudentMyProjectScreen extends StatelessWidget {
 }
 
 // 3. Contribution Page
-class StudentContributionScreen extends StatelessWidget {
+class StudentContributionScreen extends StatefulWidget {
   const StudentContributionScreen({super.key});
+
+  @override
+  State<StudentContributionScreen> createState() => _StudentContributionScreenState();
+}
+
+class _StudentContributionScreenState extends State<StudentContributionScreen> {
+  final StudentService _studentService = StudentService();
+  final AuthService _authService = AuthService();
+  
+  bool _isLoading = true;
+  User? _currentUser;
+  List<Map<String, dynamic>> _projects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final projects = await _studentService.getMyProjects();
+      setState(() {
+        _currentUser = user;
+        _projects = projects;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCommits = 0;
-    _mockProjectMetrics.forEach((k, v) {
-      final lst = v['studentMetrics'] as List;
-      final me = lst.firstWhere((m) => m['studentId'] == 'SE123456', orElse: () => {'commitCount': 0});
-      totalCommits += (me['commitCount'] as int);
-    });
+    for (var p in _projects) {
+      totalCommits += ((p['commits'] ?? 0) as num).toInt();
+    }
     final isMobile = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
@@ -454,32 +590,46 @@ class StudentContributionScreen extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    const AppTopHeader(title: 'Đóng góp của tôi', primary: false),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBreadcrumb(context, 'Đóng góp của tôi'),
-                            const SizedBox(height: 16),
-                            _buildSectionHeader('Đóng góp của tôi', 'Tổng quan commit và đóng góp cá nhân theo nhóm'),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(child: _buildSummaryCard(Icons.call_split_rounded, const Color(0xFF14B8A6), 'Tổng commits', '$totalCommits')),
-                                const SizedBox(width: 12),
-                                Expanded(child: _buildSummaryCard(Icons.group_rounded, const Color(0xFF3B82F6), 'Nhóm tham gia', '${_mockProjects.length}')),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            if (_mockProjects.isEmpty)
-                              _buildEmptyState(Icons.bar_chart_rounded, 'Bạn chưa tham gia nhóm nào', 'Khi có project, contribution sẽ hiển thị')
-                            else
-                              ..._mockProjects.map((p) => _buildContributionCard(p)),
-                          ],
-                        ),
+                    AppTopHeader(
+                      title: 'Đóng góp của tôi',
+                      primary: false,
+                      user: AppUser(
+                        name: _currentUser?.fullName ?? 'Student',
+                        email: _currentUser?.email ?? '',
+                        role: 'STUDENT',
                       ),
+                    ),
+                    Expanded(
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F766E)))
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildBreadcrumb(context, 'Đóng góp của tôi'),
+                                  const SizedBox(height: 16),
+                                  _buildSectionHeader('Đóng góp của tôi', 'Tổng quan commit và đóng góp cá nhân theo nhóm'),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(child: _buildSummaryCard(Icons.call_split_rounded, const Color(0xFF14B8A6), 'Tổng commits', '$totalCommits')),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: _buildSummaryCard(Icons.group_rounded, const Color(0xFF3B82F6), 'Nhóm tham gia', '${_projects.length}')),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  if (_projects.isEmpty)
+                                    _buildEmptyState(Icons.bar_chart_rounded, 'Bạn chưa tham gia nhóm nào', 'Khi có project, contribution sẽ hiển thị')
+                                  else
+                                    ..._projects.map((p) => _buildContributionCard(p)),
+                                ],
+                              ),
+                            ),
+                          ),
                     ),
                   ],
                 ),
@@ -492,14 +642,13 @@ class StudentContributionScreen extends StatelessWidget {
   }
 
   Widget _buildContributionCard(Map<String, dynamic> project) {
-    final metrics = _mockProjectMetrics[project['id']];
-    if (metrics == null) return const SizedBox();
+    final members = (project['team'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    if (members.isEmpty) return const SizedBox();
 
-    final members = project['team'] as List;
-    final stdMetrics = metrics['studentMetrics'] as List;
-    final maxCommits = (stdMetrics.map((e) => e['commitCount'] as int).reduce(max)).toDouble().clamp(1.0, 1000.0);
-    final myCommits = stdMetrics.firstWhere((m) => m['studentId'] == 'SE123456', orElse: () => {'commitCount': 0})['commitCount'];
-    final total = metrics['totalCommits'];
+    final total = (project['commits'] ?? 0) as num;
+    final maxCommits = members.fold(1.0, (m, e) => (e['commits'] ?? 0) > m ? (e['commits'] as num).toDouble() : m);
+    final myMember = members.firstWhere((m) => m['studentId'] == _currentUser?.studentCode, orElse: () => {'commits': 0});
+    final myCommits = myMember['commits'] ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -511,7 +660,7 @@ class StudentContributionScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(project['name'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B))), const SizedBox(height: 2), Text(project['course']['name'], style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)))] )),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(project['name'] ?? project['title'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B))), const SizedBox(height: 2), Text(project['courseName'] ?? '', style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)))] )),
                 Row(
                   children: [
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('$myCommits', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF0F766E))), const Text('My commits', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8)))]),
@@ -526,16 +675,15 @@ class StudentContributionScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              children: stdMetrics.map((m) {
-                final student = members.firstWhere((s) => s['studentId'] == m['studentId'], orElse: () => {'studentName': 'Unknown'});
-                final isMe = m['studentId'] == 'SE123456';
-                final p = m['commitCount'] / maxCommits;
+              children: members.map((m) {
+                final isMe = m['studentId'] == _currentUser?.studentCode;
+                final p = (m['commits'] ?? 0) / maxCommits;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
-                      Container(width: 28, height: 28, decoration: BoxDecoration(color: isMe ? const Color(0xFFCCFBF1) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(student['studentName'].toString()[0], style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isMe ? const Color(0xFF0F766E) : const Color(0xFF475569))))),
+                      Container(width: 28, height: 28, decoration: BoxDecoration(color: isMe ? const Color(0xFFCCFBF1) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(14)), child: Center(child: Text((m['studentName'] ?? 'U')[0], style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isMe ? const Color(0xFF0F766E) : const Color(0xFF475569))))),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -543,18 +691,18 @@ class StudentContributionScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Text(student['studentName'], style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                                Text(m['studentName'] ?? m['name'] ?? 'Unknown', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
                                 const SizedBox(width: 6),
                                 if (isMe) Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFF0FDFA), border: Border.all(color: const Color(0xFFCCFBF1)), borderRadius: BorderRadius.circular(10)), child: const Text('Bạn', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: Color(0xFF0D9488))))
                               ],
                             ),
                             const SizedBox(height: 4),
-                            ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: p, minHeight: 6, backgroundColor: const Color(0xFFF1F5F9), valueColor: AlwaysStoppedAnimation(isMe ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1))))
+                            ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: p.toDouble(), minHeight: 6, backgroundColor: const Color(0xFFF1F5F9), valueColor: AlwaysStoppedAnimation(isMe ? const Color(0xFF14B8A6) : const Color(0xFFCBD5E1))))
                           ],
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text('${m['commitCount']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
+                      Text('${m['commits'] ?? 0}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
                     ],
                   ),
                 );
@@ -665,18 +813,60 @@ class StudentAlertsScreen extends StatelessWidget {
 }
 
 // 5. SRS Page
-class StudentSrsScreen extends StatelessWidget {
+class StudentSrsScreen extends StatefulWidget {
   const StudentSrsScreen({super.key});
+
+  @override
+  State<StudentSrsScreen> createState() => _StudentSrsScreenState();
+}
+
+class _StudentSrsScreenState extends State<StudentSrsScreen> {
+  final StudentService _studentService = StudentService();
+  final AuthService _authService = AuthService();
+  
+  bool _isLoading = true;
+  User? _currentUser;
+  List<Map<String, dynamic>> _projects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final projects = await _studentService.getMyProjects();
+      setState(() {
+        _currentUser = user;
+        _projects = projects;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleSubmitSrs() async {
+    if (_projects.isEmpty) return;
+    // Show a dialog to select project and enter version/link
+    // For now, mock a quick submit for the first project
+    final ok = await _studentService.submitSrs({
+      "projectId": _projects[0]['id'],
+      "content": "Link to SRS document",
+      "version": "1.0"
+    });
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nộp SRS thành công!'), backgroundColor: Color(0xFF10B981)));
+      _loadData();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     Map<String, int> summary = {"SUBMITTED": 0, "UNDER_REVIEW": 0, "NEEDS_REVISION": 0, "APPROVED": 0, "REJECTED": 0};
-    for (var list in _mockSrsData.values) {
-      for (var s in list) {
-        String st = s['status'] ?? "SUBMITTED";
-        if (summary.containsKey(st)) summary[st] = summary[st]! + 1;
-      }
-    }
     final isMobile = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
@@ -696,108 +886,75 @@ class StudentSrsScreen extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    const AppTopHeader(title: 'SRS', primary: false),
+                    AppTopHeader(
+                      title: 'SRS',
+                      primary: false,
+                      user: AppUser(
+                        name: _currentUser?.fullName ?? 'Student',
+                        email: _currentUser?.email ?? '',
+                        role: 'STUDENT',
+                      ),
+                    ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBreadcrumb(context, 'SRS Reports'),
-                            const SizedBox(height: 16),
-                            _buildSectionHeader('SRS Reports của nhóm', 'Xem lịch sử nộp SRS và phản hồi từ admin'),
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              height: 70,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: summary.entries.map((e) {
-                                  return Container(
-                                    margin: const EdgeInsets.only(right: 12),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      color: _srsStatusBgColors[e.key],
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: (_srsStatusColors[e.key] ?? const Color(0xFF64748B)).withValues(alpha: 0.2)),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(e.key, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _srsStatusColors[e.key])),
-                                        const SizedBox(height: 2),
-                                        Text('${e.value}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _srsStatusColors[e.key])),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
+                      child: _isLoading 
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF0F766E)))
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildBreadcrumb(context, 'SRS Reports'),
+                                  const SizedBox(height: 16),
+                                  _buildSectionHeader('SRS Reports của nhóm', 'Xem lịch sử nộp SRS và phản hồi từ admin'),
+                                  const SizedBox(height: 20),
+                                  if (_projects.isEmpty)
+                                    _buildEmptyState(Icons.menu_book_rounded, 'Bạn chưa có project nào', 'Cần có project mới có thể nộp SRS')
+                                  else
+                                    ...[
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: _primaryBtn('Nộp SRS mới', Icons.upload_rounded, _handleSubmitSrs),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Render SRS list from projects
+                                      ..._projects.map((p) => _buildProjectSrsSection(p)),
+                                    ],
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: _primaryBtn('Nộp SRS mới', Icons.upload_rounded, () {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mở form nộp SRS mới'), behavior: SnackBarBehavior.floating, backgroundColor: Color(0xFF2563EB)));
-                              }),
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFF1F5F9)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)]),
-                              child: _mockProjects.isEmpty
-                                  ? _buildEmptyState(Icons.menu_book_rounded, 'Nhóm chưa có SRS nào được nộp', 'Khi có file SRS, danh sách sẽ hiển thị ở đây')
-                                  : Column(
-                                      children: _mockProjects.expand((p) {
-                                        final srsList = _mockSrsData[p['id']] ?? [];
-                                        if ((srsList as List).isEmpty) return [const SizedBox()];
-                                        return srsList.map((rpt) => Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFF8FAFC)))),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Text('v${rpt['version']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'monospace', color: Color(0xFF334155))),
-                                                  const SizedBox(width: 8),
-                                                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: _srsStatusBgColors[rpt['status']] ?? Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: (_srsStatusColors[rpt['status']] ?? const Color(0xFF64748B)).withValues(alpha: 0.2))), child: Text(rpt['status'] ?? '', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: _srsStatusColors[rpt['status']] ?? const Color(0xFF64748B)))),
-                                                  const SizedBox(width: 8),
-                                                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))), child: Text(rpt['receiver'] ?? 'Admin', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF475569)))),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Text('${p['name']} · ${p['course']['name']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                                              if (rpt['feedback'] != null) ...[
-                                                const SizedBox(height: 4),
-                                                Text('Phản hồi admin: ${rpt['feedback']}', style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Color(0xFF2563EB))),
-                                              ],
-                                              const SizedBox(height: 10),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      const Icon(Icons.access_time, size: 10, color: Color(0xFF94A3B8)),
-                                                      const SizedBox(width: 4),
-                                                      Text(rpt['submittedAt'].toString().split('T')[0], style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      _textBtn('Tải file', Icons.download_rounded, const Color(0xFF0D9488), () {}),
-                                                      const SizedBox(width: 12),
-                                                      _textBtn('Xem', Icons.visibility_rounded, const Color(0xFF2563EB), () {}),
-                                                      const SizedBox(width: 12),
-                                                      _textBtn('Nộp lại', Icons.upload_rounded, const Color(0xFFEA580C), () {}),
-                                                    ],
-                                                  )
-                                                ],
-                                              )
-                                            ],
-                                          ),
-                                        )).toList();
-                                      }).toList(),
-                                    ),
-                            ),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectSrsSection(Map<String, dynamic> project) {
+    // This would ideally come from a specific srs API or project details
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFF1F5F9))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(project['name'] ?? project['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          const SizedBox(height: 8),
+          const Text('Lịch sử SRS:', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          const SizedBox(height: 8),
+          _buildEmptyState(Icons.description_outlined, 'Chưa có bản nộp nào', 'Hãy nộp bản SRS đầu tiên cho nhóm này'),
+        ],
+      ),
+    );
+  }
                           ],
                         ),
                       ),

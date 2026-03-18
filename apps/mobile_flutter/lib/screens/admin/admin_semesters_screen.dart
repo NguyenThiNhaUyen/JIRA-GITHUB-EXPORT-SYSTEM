@@ -1136,13 +1136,140 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   Widget _buildTopNavbar(double width) {
     return AppTopHeader(
-      title: 'Lớp học',
+      title: 'Học kỳ & Lớp học',
       primary: false,
       user: _currentUser ?? const AppUser(
         name: 'Admin',
         email: '',
         role: 'ADMIN',
       ),
+      actions: [
+        FilledButton.icon(
+          onPressed: _showSemesterManagementDialog,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF0F766E),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.calendar_month, size: 18),
+          label: const Text("Học kỳ", style: TextStyle(fontSize: 13)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: () => _showCourseDialog(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text("Thêm lớp", style: TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showSemesterManagementDialog() async {
+    int? generateYear;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text("Quản lý học kỳ"),
+              content: SizedBox(
+                width: 500,
+                height: 450,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: "Năm cần sinh học kỳ",
+                                hintText: "VD: 2026",
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (v) => generateYear = int.tryParse(v),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (generateYear == null) return;
+                              setLocalState(() => _isLoading = true);
+                              final ok = await _adminService.generateSemesters(generateYear!);
+                              if (ok) {
+                                _showSnack("Đã sinh học kỳ cho năm $generateYear");
+                                _loadData();
+                                Navigator.pop(dialogContext);
+                              } else {
+                                _showSnack("Thao tác thất bại", success: false);
+                                setLocalState(() => _isLoading = false);
+                              }
+                            },
+                            child: const Text("Tự động sinh"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 32),
+                    const Text("Danh sách hiện tại:",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _semesters.length,
+                        itemBuilder: (ctx, i) {
+                          final sem = _semesters[i];
+                          return ListTile(
+                            title: Text(sem["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Text("${sem["startDate"] ?? ""} - ${sem["endDate"] ?? ""}"),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () async {
+                                final ok = await _adminService.deleteSemester(sem["id"]);
+                                if (ok) {
+                                  _showSnack("Đã xóa học kỳ ${sem["name"]}");
+                                  _loadData();
+                                  setLocalState(() {});
+                                } else {
+                                  _showSnack("Lỗi: Học kỳ đang có lớp học gắn liền.", success: false);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text("Đóng"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

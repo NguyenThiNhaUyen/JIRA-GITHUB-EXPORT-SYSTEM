@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
 import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
 import '../../models/user.dart';
 // ── Palette ───────────────────────────────────────────────────
 const _kT = Color(0xFF0F766E);
@@ -53,6 +54,11 @@ class LecturerReportsScreen extends StatefulWidget {
 }
 
 class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   String _selectedType = 'by-course';
   String _search = '';
   String _courseFilter = 'all';
@@ -60,22 +66,26 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
   String _semesterFilter = 'all';
   String _riskFilter = 'all';
 
-  final AuthService _authService = AuthService();
-  User? _currentUser;
-  bool _isLoading = true;
+  List<Map<String, dynamic>> _courseList = [];
+  List<Map<String, dynamic>> _teamList = [];
+  List<Map<String, dynamic>> _studentList = [];
+  List<Map<String, dynamic>> _exportHistory = [];
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadInitialData();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
     try {
       final user = await _authService.getCurrentUser();
-      if (mounted) {
+      if (user != null) {
+        final courses = await _lecturerService.getMyCourses();
         setState(() {
           _currentUser = user;
+          _courseList = courses;
           _isLoading = false;
         });
       }
@@ -83,6 +93,7 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
   Map<String,dynamic> get _selectedConfig => _exportTypes.firstWhere((e) => e['id'] == _selectedType);
 
   List<Map<String,dynamic>> get _teamOptions {

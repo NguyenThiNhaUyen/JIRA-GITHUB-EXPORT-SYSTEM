@@ -32,12 +32,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
   User? _currentUser;
   List<Map<String, dynamic>> _courses = [];
   List<Map<String, dynamic>> _projects = [];
+  List<Map<String, dynamic>> _invitations = [];
+  Map<String, dynamic>? _stats;
+
   String _selectedCourseId = 'all';
 
-  // Mock weekly activity
+  // Mock weekly activity (keep for now until backend provides)
   final List<Map<String, dynamic>> _weeklyActivity = [];
 
-  // Mock heatmap (28 cells = 4 weeks)
+  // Mock heatmap (keep for now until backend provides)
   final List<int> _heatmapData = [];
 
   @override
@@ -47,22 +50,38 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final user = authProvider.user ?? await _authService.getCurrentUser();
-      final courses = await _studentService.getMyCourses();
-      final projects = user != null ? await _studentService.getMyProjects(user.id) : <Map<String, dynamic>>[];
-      setState(() {
-        _currentUser = user;
-        _courses = courses;
-        _projects = projects;
-        _isLoading = false;
-      });
+      
+      final results = await Future.wait([
+        _studentService.getStats(),
+        _studentService.getInvitations(),
+        _studentService.getMyCourses(),
+        _studentService.getMyProjects(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _stats = results[0] as Map<String, dynamic>?;
+          _invitations = (results[1] as List).cast<Map<String, dynamic>>();
+          _courses = (results[2] as List).cast<Map<String, dynamic>>();
+          _projects = (results[3] as List).cast<Map<String, dynamic>>();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  int get _totalCommits => _stats?['totalCommits'] ?? _projects.fold(0, (s, p) => s + ((p['commits'] ?? 0) as num).toInt());
+  int get _totalIssues => _stats?['totalIssuesDone'] ?? _projects.fold(0, (s, p) => s + ((p['issuesDone'] ?? 0) as num).toInt());
+  int get _totalPrs => _stats?['totalPrsMerged'] ?? _projects.fold(0, (s, p) => s + ((p['prsMerged'] ?? 0) as num).toInt());
+  int get _avgContrib => _stats?['avgContribution'] ?? (_projects.isEmpty ? 0 : (_projects.fold(0, (s, p) => s + ((p['myContribution'] ?? 0) as num).toInt()) / _projects.length).round());
 
   List<Map<String, dynamic>> get _filteredProjects {
     if (_selectedCourseId == 'all') return _projects;
@@ -70,11 +89,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Map<String, dynamic>? get _currentMainProject => _filteredProjects.isNotEmpty ? _filteredProjects[0] : (_projects.isNotEmpty ? _projects[0] : null);
-
-  int get _totalCommits => _projects.fold(0, (s, p) => s + ((p['commits'] ?? 0) as num).toInt());
-  int get _totalIssues => _projects.fold(0, (s, p) => s + ((p['issuesDone'] ?? 0) as num).toInt());
-  int get _totalPrs => _projects.fold(0, (s, p) => s + ((p['prsMerged'] ?? 0) as num).toInt());
-  int get _avgContrib => _projects.isEmpty ? 0 : (_projects.fold(0, (s, p) => s + ((p['myContribution'] ?? 0) as num).toInt()) / _projects.length).round();
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -167,6 +181,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _buildHeader(),
+                                    if (_invitations.isNotEmpty) ...[
+                                      const SizedBox(height: 20),
+                                      _buildInvitationsSection(),
+                                    ],
                                     const SizedBox(height: 20),
                                     _buildKpiCards(),
                                     const SizedBox(height: 20),
@@ -308,6 +326,77 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
         ),
       );
+
+  // ── Invitations ────────────────────────────────────
+  Widget _buildInvitationsSection() {
+    return _sectionCard(
+      title: 'Lời mời vào nhóm',
+      subtitle: 'Bạn có lờ mời gia nhập các nhóm dự án bên dưới',
+      child: Column(
+        children: _invitations.map((inv) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0FDFA),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFCCFBF1)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.group_add_rounded, color: emerald),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(inv['groupName'] ?? 'Nhóm mới', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: textPrimary)),
+                        Text('Từ: ${inv['inviterName'] ?? 'Bạn bè'}', style: const TextStyle(fontSize: 12, color: textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                   Expanded(child: _primaryButton('Chấp nhận', Icons.check_circle_outline, () => _handleAcceptInvitation(inv['id']))),
+                   const SizedBox(width: 8),
+                   Expanded(child: _actionButton('Từ chối', Icons.cancel_outlined, () => _handleRejectInvitation(inv['id']))),
+                ],
+              ),
+            ],
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  Future<void> _handleAcceptInvitation(dynamic id) async {
+    final ok = await _studentService.acceptInvitation(id);
+    if (ok) {
+      _showSnack('Đã gia nhập nhóm thành công!');
+      _loadData();
+    } else {
+      _showSnack('Có lỗi xảy ra, vui lòng thử lại.');
+    }
+  }
+
+  Future<void> _handleRejectInvitation(dynamic id) async {
+    final ok = await _studentService.rejectInvitation(id);
+    if (ok) {
+      _showSnack('Đã từ chối lời mời.');
+      _loadData();
+    } else {
+      _showSnack('Có lỗi xảy ra.');
+    }
+  }
 
   // ── 2. KPI Cards ───────────────────────────────────
   Widget _buildKpiCards() {

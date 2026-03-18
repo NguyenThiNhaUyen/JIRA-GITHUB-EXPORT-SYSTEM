@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
 import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
 import '../../models/user.dart';
 // ── Constants ────────────────────────────────────────────────
 const _kTeal = Color(0xFF0F766E);
@@ -47,32 +48,34 @@ class LecturerAlertsScreen extends StatefulWidget {
 }
 
 class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   String _filter = 'all';
   String _search = '';
   final Set<String> _remindedIds = {};
   List<Map<String, dynamic>> _alerts = List<Map<String, dynamic>>.from(_mockAlerts);
   String? _selectedId;
 
-  final AuthService _authService = AuthService();
-  User? _currentUser;
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
     if (_alerts.isNotEmpty) _selectedId = _alerts.first['id'] as String;
-    _loadUser();
+    _loadInitialData();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
     try {
       final user = await _authService.getCurrentUser();
-      if (mounted) {
-        setState(() {
-          _currentUser = user;
-          _isLoading = false;
-        });
-      }
+      // In a real app, we'd fetch actual alerts from backend
+      // For now we use mock but integrate the ACTIONS
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -82,15 +85,15 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     final kw = _search.trim().toLowerCase();
     return _alerts.where((a) {
       final matchKw = kw.isEmpty ||
-          (a['groupName'] as String).toLowerCase().contains(kw) ||
-          (a['courseCode'] as String).toLowerCase().contains(kw) ||
-          (a['targetName'] as String).toLowerCase().contains(kw) ||
-          (a['message'] as String).toLowerCase().contains(kw) ||
+          (a['groupName'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['courseCode'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['targetName'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['message'] as String? ?? '').toLowerCase().contains(kw) ||
           (_typeLabel[a['type']] ?? '').toLowerCase().contains(kw);
       if (!matchKw) return false;
       if (_filter == 'resolved') return a['status'] == 'RESOLVED';
       if (_filter == 'all') return a['status'] == 'OPEN';
-      return a['status'] == 'OPEN' && (a['severity'] as String).toLowerCase() == _filter;
+      return a['status'] == 'OPEN' && (a['severity'] as String? ?? '').toLowerCase() == _filter;
     }).toList();
   }
 
@@ -110,18 +113,24 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     _snack('Đã đánh dấu là đã giải quyết');
   });
 
-  void _remind(Map<String, dynamic> a) => setState(() {
-    _remindedIds.add(a['id'] as String);
-    _snack('Đã gửi nhắc nhở đến ${a['targetName'] ?? a['groupName']}');
-  });
+  Future<void> _remind(Map<String, dynamic> a) async {
+    final groupId = a['groupId'] ?? a['id']; // Fallback for mock
+    final ok = await _lecturerService.sendAlert(groupId, 'Hệ thống gửi nhắc nhở về cảnh báo: ${a['message']}');
+    if (ok) {
+      setState(() {
+        _remindedIds.add(a['id'] as String);
+        _snack('Đã gửi nhắc nhở đến ${a['targetName'] ?? a['groupName']}');
+      });
+    } else {
+      _snack('Lỗi khi gửi nhắc nhở', isError: true);
+    }
+  }
 
-  void _refresh() => setState(() {
-    _alerts = List<Map<String, dynamic>>.from(_mockAlerts);
-    _snack('Đã làm mới dữ liệu mô phỏng');
-  });
+  void _refresh() => _loadInitialData();
 
-  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(msg), backgroundColor: _kTeal, behavior: SnackBarBehavior.floating));
+  void _snack(String msg, {bool isError = false}) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: isError ? Colors.red : _kTeal, behavior: SnackBarBehavior.floating));
+
 
   @override
   Widget build(BuildContext context) {

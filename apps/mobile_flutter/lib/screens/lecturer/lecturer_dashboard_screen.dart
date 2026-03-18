@@ -55,7 +55,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
       final user = await _authService.getCurrentUser();
       if (user != null) {
         final results = await Future.wait([
-          _lecturerService.getWorkload(user.id),
+          _lecturerService.getWorkload(),
           _adminService.getSubjects(),
           _adminService.getCourses(),
           _lecturerService.getActivityLogs(),
@@ -63,7 +63,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
 
         setState(() {
           _currentUser = user;
-          _workload = results[0] as Map<String, dynamic>;
+          _workload = results[0] as Map<String, dynamic>? ?? {};
           _subjects = List<Map<String, dynamic>>.from(results[1] as List);
           _courses = List<Map<String, dynamic>>.from(results[2] as List);
           _activities = List<Map<String, dynamic>>.from(results[3] as List);
@@ -96,18 +96,16 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
   }
 
   Future<void> _loadCourseDetail(String courseId) async {
-    // In a real app, we might call getCourseById
-    // For now we can find in _allCourses or call a detail API
     try {
-      // Find course in _courses to get groups
-      final course = _courses.firstWhere((c) => c['id'].toString() == courseId, orElse: () => {});
+      final groups = await _lecturerService.getCourseGroups(courseId);
       setState(() {
-        _groups = List<Map<String, dynamic>>.from(course['groups'] ?? []);
+        _groups = groups;
       });
     } catch (e) {
       print("Error loading course detail: $e");
     }
   }
+
 
   List<Map<String, dynamic>> get _filteredGroups {
     return _groups.where((g) {
@@ -161,11 +159,17 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
     ));
   }
 
-  void _handleApprove(String groupName) {
-    _showSnack('Đã duyệt tích hợp cho nhóm "$groupName"');
+  Future<void> _handleApprove(dynamic projectId, String groupName) async {
+    final ok = await _lecturerService.approveIntegration(projectId);
+    if (ok) {
+      _showSnack('Đã duyệt tích hợp cho nhóm "$groupName"');
+      _loadCourseDetail(_selectedCourse);
+    } else {
+      _showSnack('Lỗi khi duyệt tích hợp', isError: true);
+    }
   }
 
-  void _handleReject(String groupName) async {
+  Future<void> _handleReject(dynamic projectId, String groupName) async {
     final ctrl = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
@@ -196,9 +200,16 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
       ),
     );
     if (confirmed == true) {
-      _showSnack('Đã từ chối tích hợp cho nhóm "$groupName"', isError: true);
+      final ok = await _lecturerService.rejectIntegration(projectId, ctrl.text);
+      if (ok) {
+        _showSnack('Đã từ chối tích hợp cho nhóm "$groupName"', isError: true);
+        _loadCourseDetail(_selectedCourse);
+      } else {
+        _showSnack('Lỗi khi từ chối tích hợp', isError: true);
+      }
     }
   }
+
 
   // ─── Build ────────────────────────────────────────
   @override
@@ -913,8 +924,14 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
                   ),
                   const SizedBox(height: 4),
                   GestureDetector(
-                    onTap: () =>
-                        _showSnack('Đã gửi cảnh báo đến nhóm "${group['name']}"'),
+                    onTap: () async {
+                      final ok = await _lecturerService.sendAlert(group['id'], 'Giảng viên nhắc nhở nhóm thực hiện đồ án đúng tiến độ.');
+                      if (ok) {
+                        _showSnack('Đã gửi cảnh báo đến nhóm "${group['name']}"');
+                      } else {
+                        _showSnack('Lỗi khi gửi cảnh báo', isError: true);
+                      }
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 5),
@@ -1117,8 +1134,8 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
             _buildIntegrationApproveRow(
               icon: Icons.account_tree_outlined,
               url: group['githubUrl'] as String? ?? 'Chưa có link GitHub',
-              onApprove: () => _handleApprove(group['name'] as String),
-              onReject: () => _handleReject(group['name'] as String),
+              onApprove: () => _handleApprove(group['id'], group['name'] as String),
+              onReject: () => _handleReject(group['id'], group['name'] as String),
             ),
           if (group['githubStatus'] == 'PENDING' &&
               group['jiraStatus'] == 'PENDING')
@@ -1127,8 +1144,8 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
             _buildIntegrationApproveRow(
               icon: Icons.book_outlined,
               url: group['jiraUrl'] as String? ?? 'Chưa có link Jira',
-              onApprove: () => _handleApprove(group['name'] as String),
-              onReject: () => _handleReject(group['name'] as String),
+              onApprove: () => _handleApprove(group['id'], group['name'] as String),
+              onReject: () => _handleReject(group['id'], group['name'] as String),
             ),
         ],
       ),

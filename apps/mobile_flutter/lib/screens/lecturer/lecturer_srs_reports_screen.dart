@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
 import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
 import '../../models/user.dart';
 const _kT = Color(0xFF0F766E);
 const _kBg = Color(0xFFF9FAFB);
@@ -48,6 +49,11 @@ class LecturerSrsReportsScreen extends StatefulWidget {
 }
 
 class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   late List<Map<String, dynamic>> _srsList;
   String? _selected;
   String _search = '';
@@ -57,10 +63,6 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
   String _sortBy = 'latest';
   String _feedbackText = '';
 
-  final AuthService _authService = AuthService();
-  User? _currentUser;
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -68,25 +70,26 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
     if (_srsList.isNotEmpty) _selected = _srsList.first['id'] as String;
     _feedbackText = _srsList.isNotEmpty ? ((_srsList.first['feedback'] as String?) ?? '') : '';
     
-    _loadUser();
+    _loadInitialData();
   }
 
-  Future<void> _loadUser() async {
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
     try {
       final user = await _authService.getCurrentUser();
-      if (mounted) {
-        setState(() {
-          _currentUser = user;
-          _isLoading = false;
-        });
-      }
+      // In a real app, we'd fetch SRS list for the lecturer's courses
+      // For now, if _mockData is empty, we keep it as is or try to fetch
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   // Computed
-  List<String> get _milestones => _srsList.map((x) => x['milestone'] as String).toSet().toList();
+  List<String> get _milestones => _srsList.map((x) => x['milestone'] as String? ?? 'N/A').toSet().toList();
 
   Map<String, int> get _stats {
     final submitted = _srsList.where((x) => ['SUBMITTED','REVIEW','NEED_REVISION','APPROVED','FINAL','OVERDUE'].contains(x['status'])).length;
@@ -108,15 +111,15 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
     if (_search.trim().isNotEmpty) {
       final q = _search.toLowerCase();
       data = data.where((x) =>
-        (x['teamName'] as String).toLowerCase().contains(q) ||
-        (x['projectName'] as String).toLowerCase().contains(q) ||
-        (x['courseCode'] as String).toLowerCase().contains(q) ||
-        (x['leader'] as String).toLowerCase().contains(q)).toList();
+        (x['teamName'] as String? ?? '').toLowerCase().contains(q) ||
+        (x['projectName'] as String? ?? '').toLowerCase().contains(q) ||
+        (x['courseCode'] as String? ?? '').toLowerCase().contains(q) ||
+        (x['leader'] as String? ?? '').toLowerCase().contains(q)).toList();
     }
     data.sort((a, b) {
-      if (_sortBy == 'score') return ((b['score'] as double) - (a['score'] as double)).sign.toInt();
-      if (_sortBy == 'coverage') return ((b['githubCoverage'] as int) - (a['githubCoverage'] as int));
-      return (b['updatedAt'] as String).compareTo(a['updatedAt'] as String);
+      if (_sortBy == 'score') return ((b['score'] as double? ?? 0.0) - (a['score'] as double? ?? 0.0)).sign.toInt();
+      if (_sortBy == 'coverage') return ((b['githubCoverage'] as int? ?? 0) - (a['githubCoverage'] as int? ?? 0));
+      return (b['updatedAt'] as String? ?? '').compareTo(a['updatedAt'] as String? ?? '');
     });
     return data;
   }
@@ -124,29 +127,40 @@ class _LecturerSrsReportsScreenState extends State<LecturerSrsReportsScreen> {
   Map<String, dynamic>? get _selectedSrs =>
       _selected == null ? null : _srsList.cast<Map<String,dynamic>?>().firstWhere((x) => x!['id'] == _selected, orElse: () => null);
 
-  void _handleStatusUpdate(String id, String newStatus) {
-    setState(() {
-      final i = _srsList.indexWhere((x) => x['id'] == id);
-      if (i >= 0) {
-        _srsList[i] = {..._srsList[i], 'status': newStatus, 'feedback': _feedbackText, 'updatedAt': DateTime.now().toString().substring(0, 16)};
-      }
-    });
-    _snack('Đã cập nhật trạng thái sang "${_statusMeta(newStatus)['label']}"');
+  Future<void> _handleStatusUpdate(String id, String newStatus) async {
+    final ok = await _lecturerService.reviewSrs(id, status: newStatus);
+    if (ok) {
+      setState(() {
+        final i = _srsList.indexWhere((x) => x['id'] == id);
+        if (i >= 0) {
+          _srsList[i] = {..._srsList[i], 'status': newStatus, 'updatedAt': DateTime.now().toString().substring(0, 16)};
+        }
+      });
+      _snack('Đã cập nhật trạng thái sang "${_statusMeta(newStatus)['label']}"');
+    } else {
+      _snack('Lỗi khi cập nhật trạng thái', isError: true);
+    }
   }
 
-  void _handleSaveFeedback() {
+  Future<void> _handleSaveFeedback() async {
     if (_selected == null) return;
-    setState(() {
-      final i = _srsList.indexWhere((x) => x['id'] == _selected);
-      if (i >= 0) {
-        _srsList[i] = {..._srsList[i], 'feedback': _feedbackText, 'commentsCount': (_srsList[i]['commentsCount'] as int) + 1};
-      }
-    });
-    _snack('Đã lưu nhận xét');
+    final ok = await _lecturerService.reviewSrs(_selected!, feedback: _feedbackText);
+    if (ok) {
+      setState(() {
+        final i = _srsList.indexWhere((x) => x['id'] == _selected);
+        if (i >= 0) {
+          _srsList[i] = {..._srsList[i], 'feedback': _feedbackText, 'commentsCount': (_srsList[i]['commentsCount'] as int? ?? 0) + 1};
+        }
+      });
+      _snack('Đã lưu nhận xét');
+    } else {
+      _snack('Lỗi khi lưu nhận xét', isError: true);
+    }
   }
 
-  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(msg), backgroundColor: _kT, behavior: SnackBarBehavior.floating));
+  void _snack(String msg, {bool isError = false}) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: isError ? Colors.red : _kT, behavior: SnackBarBehavior.floating));
+
 
   @override
   Widget build(BuildContext context) {

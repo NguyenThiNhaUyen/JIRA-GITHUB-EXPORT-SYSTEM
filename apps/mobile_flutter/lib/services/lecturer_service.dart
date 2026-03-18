@@ -15,83 +15,123 @@ class LecturerService {
     };
   }
 
-  /// GET /api/lecturers/{id}/workload
-  Future<Map<String, dynamic>> getWorkload(int lecturerId) async {
-    final url = Uri.parse("$_baseUrl/lecturers/$lecturerId/workload");
-    final response = await http.get(url, headers: await _headers());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return (data['data'] ?? data['Data'] ?? data) as Map<String, dynamic>;
+  // --- Helpers ---
+  Future<dynamic> _get(String path) async {
+    try {
+      final response = await http.get(Uri.parse("$_baseUrl$path"), headers: await _headers());
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final json = jsonDecode(response.body);
+        return json['data'] ?? json['Data'] ?? json;
+      }
+      return null;
+    } catch(e) {
+      return null;
     }
-    throw Exception("Failed to load workload");
   }
 
-  /// GET /api/analytics/lecturer/activity-logs
-  Future<List<Map<String, dynamic>>> getActivityLogs({int limit = 5}) async {
-    final url = Uri.parse("$_baseUrl/analytics/lecturer/activity-logs?limit=$limit");
-    final response = await http.get(url, headers: await _headers());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final list = (data['data'] ?? data['Data'] ?? data['items'] ?? []) as List;
-      return list.cast<Map<String, dynamic>>();
+  Future<bool> _post(String path, dynamic body) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$_baseUrl$path"),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch(e) {
+      return false;
     }
-    return [];
   }
 
-  /// GET /api/courses (Filtered by lecturer if needed, or backend might handle it)
+  Future<bool> _patch(String path, dynamic body) async {
+    try {
+      final response = await http.patch(
+        Uri.parse("$_baseUrl$path"),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // --- Lecturer APIs ---
+
+  /// GET /api/lecturers/me/workload
+  Future<Map<String, dynamic>?> getWorkload() async {
+    final data = await _get("/lecturers/me/workload");
+    return data != null ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// GET /api/lecturers/me/courses
   Future<List<Map<String, dynamic>>> getMyCourses() async {
-    // Current backend might return all courses, we might need to filter manually
-    // or use a specific endpoint if exists.
-    final url = Uri.parse("$_baseUrl/courses?pageSize=1000");
-    final response = await http.get(url, headers: await _headers());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final list = (data['data'] ?? data['Data'] ?? data['items'] ?? data['results'] ?? []) as List;
-      return list.cast<Map<String, dynamic>>();
-    }
+    final data = await _get("/lecturers/me/courses");
+    if (data is List) return data.cast<Map<String, dynamic>>();
     return [];
   }
 
-  /// GET /api/courses/{id}/projects (groups)
+  /// GET /api/courses/{id}/pending-integrations
+  Future<List<Map<String, dynamic>>> getPendingIntegrations(dynamic courseId) async {
+    final data = await _get("/courses/$courseId/pending-integrations");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  /// POST /api/projects/{id}/integrations/approve
+  Future<bool> approveIntegration(dynamic projectId) async {
+    return _post("/projects/$projectId/integrations/approve", {});
+  }
+
+  /// POST /api/projects/{id}/integrations/reject
+  Future<bool> rejectIntegration(dynamic projectId, String reason) async {
+    return _post("/projects/$projectId/integrations/reject", {"reason": reason});
+  }
+
+  /// Chấm báo cáo SRS (Review status & feedback)
+  Future<bool> reviewSrs(dynamic srsId, {String? status, String? feedback, double? score}) async {
+    bool ok = true;
+    if (status != null) {
+      ok = ok && await _patch("/srs/$srsId/status", {"status": status, "score": score});
+    }
+    if (feedback != null) {
+      ok = ok && await _patch("/srs/$srsId/feedback", {"feedback": feedback});
+    }
+    return ok;
+  }
+
+  /// POST /api/alerts/send
+  Future<bool> sendAlert(dynamic groupId, String message, {String severity = "MEDIUM"}) async {
+    return _post("/alerts/send", {
+      "groupId": groupId,
+      "message": message,
+      "severity": severity,
+    });
+  }
+
+  /// GET /api/analytics/courses/{id}/contributions
+  Future<List<Map<String, dynamic>>> getCourseContributions(dynamic courseId) async {
+    final data = await _get("/analytics/courses/$courseId/contributions");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  // --- Legacy / Extra ---
+
+  Future<List<Map<String, dynamic>>> getActivityLogs({int limit = 5}) async {
+    final data = await _get("/analytics/lecturer/activity-logs?limit=$limit");
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
   Future<List<Map<String, dynamic>>> getCourseGroups(dynamic courseId) async {
-    final url = Uri.parse("$_baseUrl/courses/$courseId/projects?pageSize=1000");
-    final response = await http.get(url, headers: await _headers());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final list = (data['data'] ?? data['Data'] ?? data['items'] ?? data['results'] ?? []) as List;
-      return list.cast<Map<String, dynamic>>();
-    }
+    final data = await _get("/courses/$courseId/projects?pageSize=1000");
+    if (data is List) return data.cast<Map<String, dynamic>>();
     return [];
   }
 
-  /// GET /api/courses/{id}/students
   Future<List<Map<String, dynamic>>> getCourseStudents(dynamic courseId) async {
-    final url = Uri.parse("$_baseUrl/courses/$courseId/students?pageSize=1000");
-    final response = await http.get(url, headers: await _headers());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final list = (data['data'] ?? data['Data'] ?? data['items'] ?? data['results'] ?? []) as List;
-      return list.cast<Map<String, dynamic>>();
-    }
+    final data = await _get("/courses/$courseId/students?pageSize=1000");
+    if (data is List) return data.cast<Map<String, dynamic>>();
     return [];
-  }
-
-  /// POST /api/courses/{id}/projects
-  Future<bool> createGroup(dynamic courseId, String name, List<String> studentIds) async {
-    final url = Uri.parse("$_baseUrl/courses/$courseId/projects");
-    final response = await http.post(
-      url,
-      headers: await _headers(),
-      body: jsonEncode({
-        "name": name,
-        "studentIds": studentIds,
-      }),
-    );
-    return response.statusCode == 200 || response.statusCode == 201;
   }
 }
