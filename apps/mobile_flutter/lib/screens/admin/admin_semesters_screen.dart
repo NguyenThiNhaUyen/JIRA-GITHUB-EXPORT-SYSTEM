@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/admin_navigation.dart';
 import '../../services/admin_service.dart';
+import '../../services/auth_service.dart';
 
 class AdminSemestersScreen extends StatefulWidget {
   const AdminSemestersScreen({super.key});
@@ -13,6 +14,8 @@ class AdminSemestersScreen extends StatefulWidget {
 class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   final TextEditingController _searchController = TextEditingController();
   final AdminService _adminService = AdminService();
+  final AuthService _authService = AuthService();
+  AppUser? _currentUser;
 
   final List<Map<String, dynamic>> _semesters = [];
 
@@ -70,7 +73,21 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUser();
     _loadData();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null && mounted) {
+      setState(() {
+        _currentUser = AppUser(
+          name: user.fullName.isNotEmpty ? user.fullName : 'Admin',
+          email: user.email,
+          role: user.roles.isNotEmpty ? user.roles.first : 'ADMIN',
+        );
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -208,10 +225,15 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
     );
 
     if (confirmed == true) {
-      setState(() {
-        _courses.removeWhere((course) => course["id"] == id);
-      });
-      _showSnack("Xóa lớp học thành công!");
+      setState(() => _isLoading = true);
+      final success = await _adminService.deleteCourse(id);
+      if (success) {
+        _showSnack("Xóa lớp học thành công!");
+        _loadData();
+      } else {
+        setState(() => _isLoading = false);
+        _showSnack("Không thể xóa lớp học này.", success: false);
+      }
     }
   }
 
@@ -675,60 +697,52 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                     final selectedLecturer = _lecturers.where(
                       (l) => l["id"].toString() == lecturerId,
                     );
+                    final payload = {
+                      'courseCode': code,
+                      'courseName': name,
+                      'subjectId': int.parse(subjectId),
+                      'semesterId': int.parse(semesterId),
+                      'maxStudents': maxStudents,
+                      'status': status,
+                      'description': description,
+                      'room': room,
+                      'startDate': startDate,
+                      'endDate': endDate,
+                      'minStudents': minStudents == 0 ? 10 : minStudents,
+                    };
 
-                    final lecturers = lecturerId.isEmpty
-                        ? <Map<String, dynamic>>[]
-                        : [
-                            {
-                              "id": selectedLecturer.first["id"],
-                              "name": selectedLecturer.first["name"],
-                              "email": selectedLecturer.first["email"],
-                            },
-                          ];
+                    _isLoading = true;
+                    setState(() {});
 
                     if (isEdit) {
-                      setState(() {
-                        course["code"] = code;
-                        course["name"] = name;
-                        course["description"] = description;
-                        course["subjectId"] = int.parse(subjectId);
-                        course["semesterId"] = int.parse(semesterId);
-                        course["lecturers"] = lecturers;
-                        course["room"] = room;
-                        course["startDate"] = startDate;
-                        course["endDate"] = endDate;
-                        course["minStudents"] = minStudents == 0
-                            ? 10
-                            : minStudents;
-                        course["maxStudents"] = maxStudents;
-                        course["status"] = status;
-                        course["currentStudents"] =
-                            List<Map<String, dynamic>>.from(
-                              course["students"] ?? [],
-                            ).length;
+                      _adminService.updateCourse(course["id"], payload).then((success) async {
+                        if (success) {
+                          if (lecturerId.isNotEmpty) {
+                            await _adminService.assignLecturer(course["id"], int.parse(lecturerId));
+                          }
+                          _showSnack("Cập nhật lớp học thành công!");
+                          _loadData();
+                        } else {
+                          _showSnack("Cập nhật thất bại.", success: false);
+                          setState(() => _isLoading = false);
+                        }
                       });
-                      _showSnack("Cập nhật lớp học thành công!");
                     } else {
-                      setState(() {
-                        _courses.add({
-                          "id": _nextCourseId,
-                          "code": code,
-                          "name": name,
-                          "description": description,
-                          "subjectId": int.parse(subjectId),
-                          "semesterId": int.parse(semesterId),
-                          "lecturers": lecturers,
-                          "room": room,
-                          "startDate": startDate,
-                          "endDate": endDate,
-                          "minStudents": minStudents == 0 ? 10 : minStudents,
-                          "maxStudents": maxStudents,
-                          "currentStudents": 0,
-                          "status": status,
-                          "students": <Map<String, dynamic>>[],
-                        });
+                      _adminService.createCourse(payload).then((newCourse) async {
+                        if (newCourse != null) {
+                          if (lecturerId.isNotEmpty) {
+                            final cid = newCourse["id"] ?? newCourse["Id"];
+                            if (cid != null) {
+                              await _adminService.assignLecturer(cid, int.parse(lecturerId));
+                            }
+                          }
+                          _showSnack("Tạo lớp học thành công!");
+                          _loadData();
+                        } else {
+                          _showSnack("Tạo lớp học thất bại.", success: false);
+                          setState(() => _isLoading = false);
+                        }
                       });
-                      _showSnack("Tạo lớp học thành công!");
                     }
 
                     Navigator.pop(dialogContext);
@@ -1122,13 +1136,140 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   Widget _buildTopNavbar(double width) {
     return AppTopHeader(
-      title: 'Lớp học',
+      title: 'Học kỳ & Lớp học',
       primary: false,
-      user: const AppUser(
-        name: 'Super Admin',
-        email: 'admin@fe.edu.vn',
+      user: _currentUser ?? const AppUser(
+        name: 'Admin',
+        email: '',
         role: 'ADMIN',
       ),
+      actions: [
+        FilledButton.icon(
+          onPressed: _showSemesterManagementDialog,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF0F766E),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.calendar_month, size: 18),
+          label: const Text("Học kỳ", style: TextStyle(fontSize: 13)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: () => _showCourseDialog(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text("Thêm lớp", style: TextStyle(fontSize: 13)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showSemesterManagementDialog() async {
+    int? generateYear;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text("Quản lý học kỳ"),
+              content: SizedBox(
+                width: 500,
+                height: 450,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: "Năm cần sinh học kỳ",
+                                hintText: "VD: 2026",
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (v) => generateYear = int.tryParse(v),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (generateYear == null) return;
+                              setLocalState(() => _isLoading = true);
+                              final ok = await _adminService.generateSemesters(generateYear!);
+                              if (ok) {
+                                _showSnack("Đã sinh học kỳ cho năm $generateYear");
+                                _loadData();
+                                Navigator.pop(dialogContext);
+                              } else {
+                                _showSnack("Thao tác thất bại", success: false);
+                                setLocalState(() => _isLoading = false);
+                              }
+                            },
+                            child: const Text("Tự động sinh"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 32),
+                    const Text("Danh sách hiện tại:",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _semesters.length,
+                        itemBuilder: (ctx, i) {
+                          final sem = _semesters[i];
+                          return ListTile(
+                            title: Text(sem["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Text("${sem["startDate"] ?? ""} - ${sem["endDate"] ?? ""}"),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () async {
+                                final ok = await _adminService.deleteSemester(sem["id"]);
+                                if (ok) {
+                                  _showSnack("Đã xóa học kỳ ${sem["name"]}");
+                                  _loadData();
+                                  setLocalState(() {});
+                                } else {
+                                  _showSnack("Lỗi: Học kỳ đang có lớp học gắn liền.", success: false);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text("Đóng"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

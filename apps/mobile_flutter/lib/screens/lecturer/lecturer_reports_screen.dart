@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
-
+import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
+import '../../models/user.dart';
 // ── Palette ───────────────────────────────────────────────────
 const _kT = Color(0xFF0F766E);
 const _kBg = Color(0xFFF9FAFB);
@@ -10,37 +12,10 @@ const _kTxt = Color(0xFF111827);
 const _kSub = Color(0xFF6B7280);
 
 // ── Mock Data ────────────────────────────────────────────────
-const _courses = [
-  {'id':'c1','code':'SWD392','className':'SE1841','semester':'Spring 2026','totalTeams':6,'totalStudents':31},
-  {'id':'c2','code':'SWD392','className':'SE1842','semester':'Spring 2026','totalTeams':5,'totalStudents':27},
-  {'id':'c3','code':'PRU211','className':'SE1801','semester':'Spring 2026','totalTeams':4,'totalStudents':22},
-];
-
-const _teams = [
-  {'id':'t1','courseId':'c1','name':'Team Alpha','project':'Dormitory Issue Tracker','members':5,'commits':124,'issuesDone':42,'issuesTotal':57,'prsMerged':18,'overdueTasks':2,'riskLevel':'Medium','jiraCoverage':74,'githubCoverage':76,'contributionBalance':81,'sprintCompletion':73,'warningCount':2},
-  {'id':'t2','courseId':'c1','name':'Team Beta','project':'FPTU Club Event Hub','members':4,'commits':142,'issuesDone':50,'issuesTotal':63,'prsMerged':21,'overdueTasks':1,'riskLevel':'Low','jiraCoverage':82,'githubCoverage':84,'contributionBalance':87,'sprintCompletion':79,'warningCount':1},
-  {'id':'t3','courseId':'c1','name':'Team Gamma','project':'Lab Asset Booking','members':5,'commits':68,'issuesDone':23,'issuesTotal':48,'prsMerged':9,'overdueTasks':6,'riskLevel':'High','jiraCoverage':51,'githubCoverage':39,'contributionBalance':58,'sprintCompletion':44,'warningCount':5},
-  {'id':'t4','courseId':'c2','name':'Team Delta','project':'Medical Appointment Queue','members':5,'commits':97,'issuesDone':31,'issuesTotal':52,'prsMerged':11,'overdueTasks':4,'riskLevel':'Medium','jiraCoverage':61,'githubCoverage':56,'contributionBalance':72,'sprintCompletion':59,'warningCount':3},
-  {'id':'t5','courseId':'c2','name':'Team Epsilon','project':'Student Complaint Portal','members':6,'commits':44,'issuesDone':15,'issuesTotal':47,'prsMerged':6,'overdueTasks':8,'riskLevel':'High','jiraCoverage':38,'githubCoverage':28,'contributionBalance':42,'sprintCompletion':31,'warningCount':6},
-  {'id':'t6','courseId':'c1','name':'Team Zeta','project':'Canteen Smart Ordering','members':5,'commits':115,'issuesDone':37,'issuesTotal':49,'prsMerged':15,'overdueTasks':2,'riskLevel':'Low','jiraCoverage':78,'githubCoverage':71,'contributionBalance':85,'sprintCompletion':76,'warningCount':1},
-];
-
-const _students = [
-  {'id':'s1','teamId':'t1','name':'Nguyễn Văn An','email':'an.nguyen@fpt.edu.vn','commits':34,'issuesDone':12,'prsMerged':5,'sprintCoverage':82,'contributionScore':86,'status':'Good'},
-  {'id':'s2','teamId':'t1','name':'Trần Hải Bình','email':'binh.tran@fpt.edu.vn','commits':26,'issuesDone':8,'prsMerged':4,'sprintCoverage':71,'contributionScore':74,'status':'Good'},
-  {'id':'s3','teamId':'t3','name':'Lê Hoàng Long','email':'long.le@fpt.edu.vn','commits':8,'issuesDone':3,'prsMerged':1,'sprintCoverage':39,'contributionScore':42,'status':'Warning'},
-  {'id':'s4','teamId':'t5','name':'Đinh Gia Hân','email':'han.dinh@fpt.edu.vn','commits':5,'issuesDone':2,'prsMerged':0,'sprintCoverage':26,'contributionScore':31,'status':'At Risk'},
-  {'id':'s5','teamId':'t2','name':'Trần Mỹ Duyên','email':'duyen.tran@fpt.edu.vn','commits':41,'issuesDone':15,'prsMerged':6,'sprintCoverage':88,'contributionScore':91,'status':'Excellent'},
-  {'id':'s6','teamId':'t6','name':'Võ Thành Công','email':'cong.vo@fpt.edu.vn','commits':29,'issuesDone':10,'prsMerged':4,'sprintCoverage':80,'contributionScore':83,'status':'Good'},
-];
-
-const _exports = [
-  {'id':1,'type':'Báo cáo theo Lớp','target':'SWD392 - SE1841','format':'PDF','date':'2026-03-01','size':'1.8 MB','createdBy':'Lê Thị Mai','filterSummary':'Spring 2026 • All Teams • Full Course'},
-  {'id':2,'type':'Báo cáo theo Nhóm','target':'Team Alpha','format':'Excel','date':'2026-03-03','size':'920 KB','createdBy':'Lê Thị Mai','filterSummary':'SWD392 • Team Alpha • Sprint 3'},
-  {'id':3,'type':'Báo cáo theo Sinh viên','target':'SWD392 - SE1841','format':'CSV','date':'2026-03-05','size':'240 KB','createdBy':'Lê Thị Mai','filterSummary':'Students • Warning score < 50'},
-  {'id':4,'type':'Báo cáo Cảnh báo','target':'SWD392 - SE1842','format':'PDF','date':'2026-03-08','size':'1.1 MB','createdBy':'Lê Thị Mai','filterSummary':'High Risk • Overdue > 3'},
-  {'id':5,'type':'Đối chiếu Jira ↔ GitHub','target':'All SWD392 Teams','format':'Excel','date':'2026-03-10','size':'1.4 MB','createdBy':'Lê Thị Mai','filterSummary':'Spring 2026 • Sync Analysis'},
-];
+List<Map<String, dynamic>> _courses = [];
+List<Map<String, dynamic>> _teams = [];
+List<Map<String, dynamic>> _students = [];
+List<Map<String, dynamic>> _exports = [];
 
 // Export type configs
 final _exportTypes = [
@@ -79,12 +54,45 @@ class LecturerReportsScreen extends StatefulWidget {
 }
 
 class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   String _selectedType = 'by-course';
   String _search = '';
   String _courseFilter = 'all';
   String _teamFilter = 'all';
   String _semesterFilter = 'all';
   String _riskFilter = 'all';
+
+  List<Map<String, dynamic>> _courseList = [];
+  List<Map<String, dynamic>> _teamList = [];
+  List<Map<String, dynamic>> _studentList = [];
+  List<Map<String, dynamic>> _exportHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      if (user != null) {
+        final courses = await _lecturerService.getMyCourses();
+        setState(() {
+          _currentUser = user;
+          _courseList = courses;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Map<String,dynamic> get _selectedConfig => _exportTypes.firstWhere((e) => e['id'] == _selectedType);
 
@@ -131,7 +139,7 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
   int get _riskyTeams => _teams.where((t) => t['riskLevel'] == 'High').length;
   int get _warnStudents => _students.where((s) => s['status'] == 'Warning' || s['status'] == 'At Risk').length;
   int get _overdueTasks => _teams.fold<int>(0, (s, t) => s + (t['overdueTasks'] as int));
-  int get _avgCompletion => (_teams.fold<int>(0, (s, t) => s + (t['sprintCompletion'] as int)) / _teams.length).round();
+  int get _avgCompletion => _teams.isEmpty ? 0 : (_teams.fold<int>(0, (s, t) => s + (t['sprintCompletion'] as int)) / _teams.length).round();
 
   String get _scopeLabel {
     if (_teamFilter != 'all') return _teams.firstWhere((t) => t['id'] == _teamFilter)['name'] as String;
@@ -155,9 +163,17 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(title: 'Báo cáo & Export',
-        user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
-      body: SingleChildScrollView(
+      appBar: AppTopHeader(
+        title: 'Báo cáo & Export',
+        user: AppUser(
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
+          role: 'LECTURER'
+        )
+      ),
+      body: _isLoading
+        ? const Center(child: CircularProgressIndicator(color: _kT))
+        : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Breadcrumb

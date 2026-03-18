@@ -1,9 +1,10 @@
-// Student Project Screen (Flutter Mobile)
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../../../services/student_service.dart';
+import '../../../services/auth_service.dart';
+import '../../../models/user.dart';
 
 class StudentProjectScreen extends StatefulWidget {
-  const StudentProjectScreen({super.key});
+  final String? projectId;
+  const StudentProjectScreen({super.key, this.projectId});
 
   @override
   State<StudentProjectScreen> createState() => _StudentProjectScreenState();
@@ -15,127 +16,41 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   static const Color textSecondary = Color(0xFF64748B);
   static const Color cardBorder = Color(0xFFE2E8F0);
 
+  final StudentService _studentService = StudentService();
+  final AuthService _authService = AuthService();
+
   late TabController _tabController;
-
-  // Mock project data
-  static const Map<String, dynamic> _project = {
-    'title': 'AI Interview System',
-    'description':
-        'Hệ thống phỏng vấn tự động sử dụng AI để đánh giá kỹ năng ứng viên',
-    'courseCode': 'SWD392',
-    'groupName': 'Team Alpha',
-    'role': 'Backend Developer',
-    'status': 'ACTIVE',
-    'repository': 'github.com/team-alpha/ai-interview',
-    'jiraKey': 'AIINT',
-    'branch': 'main',
-    'commits': 34,
-    'issuesDone': 12,
-    'prsMerged': 8,
-    'myContribution': 32,
-    'sprintCompletion': 68,
-    'openIssues': 7,
-    'techStack': ['Spring Boot', 'React', 'Python', 'PostgreSQL', 'Docker'],
-  };
-
-  static const List<Map<String, dynamic>> _milestones = [
-    {'title': 'Requirements Analysis', 'progress': 100, 'status': 'Done'},
-    {'title': 'System Design', 'progress': 100, 'status': 'Done'},
-    {'title': 'Core Backend API', 'progress': 75, 'status': 'In Progress'},
-    {'title': 'Frontend UI', 'progress': 50, 'status': 'In Progress'},
-    {'title': 'AI Integration', 'progress': 20, 'status': 'In Progress'},
-    {'title': 'Testing & QA', 'progress': 0, 'status': 'Not started'},
-  ];
-
-  static const List<Map<String, dynamic>> _personalTasks = [
-    {
-      'key': 'AIINT-45',
-      'title': 'Implement JWT Authentication',
-      'status': 'Done',
-      'priority': 'High',
-      'due': '12/03/2026',
-    },
-    {
-      'key': 'AIINT-62',
-      'title': 'Design Interview Question API',
-      'status': 'In Progress',
-      'priority': 'High',
-      'due': '18/03/2026',
-    },
-    {
-      'key': 'AIINT-71',
-      'title': 'Database Schema Optimization',
-      'status': 'In Progress',
-      'priority': 'Medium',
-      'due': '20/03/2026',
-    },
-    {
-      'key': 'AIINT-80',
-      'title': 'Unit Tests for Auth Module',
-      'status': 'To Do',
-      'priority': 'Low',
-      'due': '25/03/2026',
-    },
-  ];
-
-  static const List<Map<String, dynamic>> _teamMembers = [
-    {
-      'name': 'Nguyễn Văn An',
-      'role': 'Frontend Dev',
-      'commits': 45,
-      'issuesDone': 15,
-      'score': 28,
-    },
-    {
-      'name': 'Trần Thị Bình',
-      'role': 'Backend Dev',
-      'commits': 34,
-      'issuesDone': 12,
-      'score': 32,
-    },
-    {
-      'name': 'Lê Văn Chi',
-      'role': 'AI Engineer',
-      'commits': 28,
-      'issuesDone': 9,
-      'score': 22,
-    },
-    {
-      'name': 'Phạm Thị Dung',
-      'role': 'DevOps',
-      'commits': 38,
-      'issuesDone': 14,
-      'score': 18,
-    },
-  ];
-
-  static const List<Map<String, dynamic>> _srsFiles = [
-    {
-      'version': 'SRS v2.1',
-      'updatedAt': '10/03/2026',
-      'status': 'Approved',
-    },
-    {
-      'version': 'SRS v2.0',
-      'updatedAt': '28/02/2026',
-      'status': 'Archived',
-    },
-    {
-      'version': 'SRS v1.0',
-      'updatedAt': '15/02/2026',
-      'status': 'Archived',
-    },
-  ];
-
-  static const List<int> _weeklyCommits = [5, 12, 8, 18, 6, 14, 9];
-  static const List<String> _weekDays = [
-    'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
-  ];
+  bool _isLoading = true;
+  User? _currentUser;
+  Map<String, dynamic> _project = {};
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      final projects = await _studentService.getMyProjects();
+      
+      // Find the specific project by ID
+      final target = projects.firstWhere(
+        (p) => p['id'].toString() == widget.projectId || p['projectId'].toString() == widget.projectId,
+        orElse: () => projects.isNotEmpty ? projects[0] : <String, dynamic>{},
+      );
+
+      setState(() {
+        _currentUser = user;
+        _project = target;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -146,6 +61,20 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF0F766E))),
+      );
+    }
+
+    if (_project.isEmpty) {
+       return Scaffold(
+         appBar: AppBar(title: const Text('Project không tồn tại')),
+         body: const Center(child: Text('Không tìm thấy thông tin project này.')),
+       );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: NestedScrollView(
@@ -212,17 +141,17 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
               // Badges
               Row(
                 children: [
-                  _buildBadge(_project['role'] as String, Colors.blue),
+                  _buildBadge(_project['role']?.toString() ?? 'MEMBER', Colors.blue),
                   const SizedBox(width: 6),
                   _buildBadge(
-                      _project['courseCode'] as String, Colors.purple),
+                      _project['courseCode']?.toString() ?? 'Course', Colors.purple),
                   const SizedBox(width: 6),
-                  _buildBadge('ACTIVE', Colors.green),
+                  _buildBadge(_project['status']?.toString() ?? 'ACTIVE', Colors.green),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                _project['title'] as String,
+                _project['title']?.toString() ?? _project['name']?.toString() ?? '',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -231,7 +160,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                _project['groupName'] as String,
+                _project['groupName']?.toString() ?? '',
                 style: const TextStyle(
                   color: Colors.white60,
                   fontSize: 12,
@@ -285,7 +214,12 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   }
 
   Widget _buildOverviewTab() {
-    final maxCommit = _weeklyCommits.fold(0, (a, b) => a > b ? a : b);
+    final weeklyCommits = (_project['weeklyCommits'] as List?)?.cast<int>() ?? [0,0,0,0,0,0,0];
+    final weekDays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+    final milestones = (_project['milestones'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final teamMembers = (_project['team'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    
+    final maxCommit = weeklyCommits.isEmpty ? 0 : weeklyCommits.reduce((a, b) => a > b ? a : b);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -324,9 +258,11 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
           // Milestones
           _buildCard(
             title: 'Milestones',
-            child: Column(
-              children: _milestones.map((m) => _buildMilestoneItem(m)).toList(),
-            ),
+            child: milestones.isEmpty
+              ? const Padding(padding: EdgeInsets.all(20), child: Center(child: Text('Chưa có milestones', style: TextStyle(fontSize: 12, color: textSecondary))))
+              : Column(
+                  children: milestones.map((m) => _buildMilestoneItem(m)).toList(),
+                ),
           ),
           const SizedBox(height: 16),
 
@@ -337,16 +273,16 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
               height: 140,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(_weeklyCommits.length, (i) {
+                children: List.generate(weeklyCommits.length, (i) {
                   final h = maxCommit == 0
                       ? 0.0
-                      : (_weeklyCommits[i] / maxCommit) * 110.0 + 10;
+                      : (weeklyCommits[i] / maxCommit) * 110.0 + 10;
                   return Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          '${_weeklyCommits[i]}',
+                          '${weeklyCommits[i]}',
                           style: const TextStyle(
                               fontSize: 9, color: textSecondary),
                         ),
@@ -368,7 +304,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _weekDays[i],
+                          i < weekDays.length ? weekDays[i] : '',
                           style: const TextStyle(
                               fontSize: 9, color: textSecondary),
                         ),
@@ -387,16 +323,16 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
             child: Column(
               children: [
                 _buildInfoRow('Sprint completion',
-                    '${_project['sprintCompletion']}%'),
-                _buildInfoRow('Open issues', '${_project['openIssues']}'),
-                _buildInfoRow('Team size', '${_teamMembers.length}'),
-                _buildInfoRow('Repository', _project['repository'] as String),
+                    '${_project['sprintCompletion'] ?? 0}%'),
+                _buildInfoRow('Open issues', '${_project['openIssues'] ?? 0}'),
+                _buildInfoRow('Team size', '${teamMembers.length}'),
+                _buildInfoRow('Repository', _project['repository']?.toString() ?? '—'),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children:
-                      (_project['techStack'] as List<String>).map((t) {
+                      ((_project['techStack'] as List?)?.cast<String>() ?? []).map((t) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
@@ -466,11 +402,13 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   }
 
   Widget _buildTasksTab() {
+    final personalTasks = (_project['tasks'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    if (personalTasks.isEmpty) return const Center(child: Text('Chưa có task nào'));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _personalTasks.length,
+      itemCount: personalTasks.length,
       itemBuilder: (context, i) {
-        final task = _personalTasks[i];
+        final task = personalTasks[i];
         Color statusColor;
         switch (task['status'] as String) {
           case 'Done':
@@ -504,7 +442,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      task['key'] as String,
+                      task['key']?.toString() ?? 'Task',
                       style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -520,7 +458,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      task['status'] as String,
+                      task['status']?.toString() ?? 'Open',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -538,7 +476,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                           Border.all(color: const Color(0xFFFCD34D)),
                     ),
                     child: Text(
-                      task['priority'] as String,
+                      task['priority']?.toString() ?? 'Normal',
                       style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -562,7 +500,7 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                       size: 11, color: textSecondary),
                   const SizedBox(width: 4),
                   Text(
-                    'Due: ${task['due']}',
+                    'Due: ${task['due'] ?? '—'}',
                     style: const TextStyle(
                         fontSize: 11, color: textSecondary),
                   ),
@@ -576,11 +514,13 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   }
 
   Widget _buildTeamTab() {
+    final teamMembers = (_project['team'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    if (teamMembers.isEmpty) return const Center(child: Text('Chưa có thông tin team'));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _teamMembers.length,
+      itemCount: teamMembers.length,
       itemBuilder: (context, i) {
-        final m = _teamMembers[i];
+        final m = teamMembers[i];
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(14),
@@ -620,14 +560,14 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      m['name'] as String,
+                      m['studentName']?.toString() ?? m['name']?.toString() ?? '',
                       style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                           color: textPrimary),
                     ),
                     Text(
-                      m['role'] as String,
+                      m['role']?.toString() ?? '',
                       style: const TextStyle(
                           fontSize: 11, color: textSecondary),
                     ),
@@ -638,11 +578,11 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
                 children: [
                   Row(
                     children: [
-                      _buildMiniMetric('${m['commits']}', 'Commits'),
+                      _buildMiniMetric('${m['commits'] ?? 0}', 'Commits'),
                       const SizedBox(width: 12),
-                      _buildMiniMetric('${m['issuesDone']}', 'Issues'),
+                      _buildMiniMetric('${m['issuesDone'] ?? 0}', 'Issues'),
                       const SizedBox(width: 12),
-                      _buildMiniMetric('${m['score']}%', 'Score'),
+                      _buildMiniMetric('${m['contributionScore'] ?? m['score'] ?? 0}%', 'Score'),
                     ],
                   ),
                 ],
@@ -655,11 +595,13 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   }
 
   Widget _buildSrsTab() {
+    final srsFiles = (_project['srs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    if (srsFiles.isEmpty) return const Center(child: Text('Chưa có file SRS nào'));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _srsFiles.length,
+      itemCount: srsFiles.length,
       itemBuilder: (context, i) {
-        final f = _srsFiles[i];
+        final f = srsFiles[i];
         final isLatest = i == 0;
 
         return Container(

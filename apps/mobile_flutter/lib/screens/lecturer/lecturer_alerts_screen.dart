@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
-
+import '../../services/auth_service.dart';
+import '../../services/lecturer_service.dart';
+import '../../models/user.dart';
 // ── Constants ────────────────────────────────────────────────
 const _kTeal = Color(0xFF0F766E);
 const _kBg = Color(0xFFF9FAFB);
@@ -19,68 +21,7 @@ const _typeLabel = {
   'JIRA_GITHUB_MISMATCH': 'Lệch Jira/GitHub',
 };
 
-const _mockAlerts = [
-  {
-    'id': 'mock-1', 'groupName': 'Team Alpha', 'courseCode': 'SWD392-SE1801',
-    'severity': 'HIGH', 'status': 'OPEN', 'type': 'NO_COMMIT',
-    'targetType': 'student', 'targetName': 'Nguyễn Minh Anh',
-    'message': 'Sinh viên chưa có commit trong 10 ngày gần đây. Hệ thống ghi nhận mức tham gia rất thấp so với tiến độ chung của nhóm.',
-    'createdAt': '2026-03-11T08:10:00',
-    'lastActivityAt': '2026-03-01T19:20:00',
-    'metrics': {'commits': 0, 'jiraDone': 1, 'overdueTasks': 3, 'score': 18, 'balance': 41},
-    'suggestion': 'Ưu tiên liên hệ trực tiếp sinh viên để xác minh tình trạng tham gia và phân chia lại công việc nếu cần.',
-  },
-  {
-    'id': 'mock-2', 'groupName': 'Team Alpha', 'courseCode': 'SWD392-SE1801',
-    'severity': 'MEDIUM', 'status': 'OPEN', 'type': 'LOW_BALANCE',
-    'targetType': 'group', 'targetName': 'Team Alpha',
-    'message': 'Nhóm có dấu hiệu mất cân bằng đóng góp. Một thành viên đang gánh phần lớn commit và task hoàn thành.',
-    'createdAt': '2026-03-10T21:30:00',
-    'lastActivityAt': '2026-03-10T20:40:00',
-    'metrics': {'commits': 18, 'jiraDone': 13, 'overdueTasks': 1, 'score': 76, 'balance': 41},
-    'suggestion': 'Kiểm tra lại cách phân chia task của nhóm và yêu cầu các thành viên còn lại cập nhật đóng góp cụ thể.',
-  },
-  {
-    'id': 'mock-3', 'groupName': 'Team Gamma', 'courseCode': 'SWD392-SE1801',
-    'severity': 'HIGH', 'status': 'OPEN', 'type': 'OVERDUE_TASKS',
-    'targetType': 'student', 'targetName': 'Mai Ngọc Hân',
-    'message': 'Sinh viên đang có nhiều task Jira quá hạn và chưa phản hồi cập nhật tiến độ trong giai đoạn gần đây.',
-    'createdAt': '2026-03-10T18:00:00',
-    'lastActivityAt': '2026-03-04T14:00:00',
-    'metrics': {'commits': 2, 'jiraDone': 2, 'overdueTasks': 4, 'score': 26, 'balance': 50},
-    'suggestion': 'Nên nhắc nhở ngay và yêu cầu cập nhật trạng thái task Jira trước buổi review tiếp theo.',
-  },
-  {
-    'id': 'mock-4', 'groupName': 'Team Beta', 'courseCode': 'SWD392-SE1801',
-    'severity': 'LOW', 'status': 'OPEN', 'type': 'LOW_ACTIVITY',
-    'targetType': 'group', 'targetName': 'Team Beta',
-    'message': 'Tổng hoạt động GitHub của nhóm giảm rõ rệt trong tuần này so với nhịp bình thường.',
-    'createdAt': '2026-03-09T16:15:00',
-    'lastActivityAt': '2026-03-09T13:00:00',
-    'metrics': {'commits': 8, 'jiraDone': 6, 'overdueTasks': 0, 'score': 63, 'balance': 68},
-    'suggestion': 'Theo dõi thêm trong 2-3 ngày tới trước khi escalates thành cảnh báo nghiêm trọng hơn.',
-  },
-  {
-    'id': 'mock-5', 'groupName': 'Vision Crew', 'courseCode': 'EXE101-SE1802',
-    'severity': 'MEDIUM', 'status': 'RESOLVED', 'type': 'INACTIVE_MEMBER',
-    'targetType': 'student', 'targetName': 'Lê Anh Tú',
-    'message': 'Sinh viên từng ít hoạt động trong 7 ngày, đã được giảng viên nhắc nhở và nhóm xác nhận đã quay lại tiến độ.',
-    'createdAt': '2026-03-08T10:00:00',
-    'lastActivityAt': '2026-03-10T09:30:00',
-    'metrics': {'commits': 5, 'jiraDone': 4, 'overdueTasks': 0, 'score': 52, 'balance': 59},
-    'suggestion': 'Tiếp tục quan sát trong sprint hiện tại để đảm bảo mức tham gia đã ổn định.',
-  },
-  {
-    'id': 'mock-6', 'groupName': 'Startup Sparks', 'courseCode': 'EXE101-SE1802',
-    'severity': 'MEDIUM', 'status': 'OPEN', 'type': 'JIRA_GITHUB_MISMATCH',
-    'targetType': 'group', 'targetName': 'Startup Sparks',
-    'message': 'Số task Jira hoàn thành cao nhưng output GitHub thấp hơn đáng kể. Cần kiểm tra chất lượng cập nhật task.',
-    'createdAt': '2026-03-11T07:45:00',
-    'lastActivityAt': '2026-03-11T07:20:00',
-    'metrics': {'commits': 4, 'jiraDone': 12, 'overdueTasks': 1, 'score': 47, 'balance': 55},
-    'suggestion': 'Đối chiếu issue Jira với commit hoặc pull request tương ứng để xác nhận tiến độ thật.',
-  },
-];
+final _mockAlerts = <Map<String, dynamic>>[];
 
 // ── Severity helpers ─────────────────────────────────────────
 Map<String, dynamic> _sevMeta(String sev) {
@@ -107,6 +48,11 @@ class LecturerAlertsScreen extends StatefulWidget {
 }
 
 class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
+  final LecturerService _lecturerService = LecturerService();
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
   String _filter = 'all';
   String _search = '';
   final Set<String> _remindedIds = {};
@@ -117,21 +63,37 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
   void initState() {
     super.initState();
     if (_alerts.isNotEmpty) _selectedId = _alerts.first['id'] as String;
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _authService.getCurrentUser();
+      // In a real app, we'd fetch actual alerts from backend
+      // For now we use mock but integrate the ACTIONS
+      setState(() {
+        _currentUser = user;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   List<Map<String, dynamic>> get _filtered {
     final kw = _search.trim().toLowerCase();
     return _alerts.where((a) {
       final matchKw = kw.isEmpty ||
-          (a['groupName'] as String).toLowerCase().contains(kw) ||
-          (a['courseCode'] as String).toLowerCase().contains(kw) ||
-          (a['targetName'] as String).toLowerCase().contains(kw) ||
-          (a['message'] as String).toLowerCase().contains(kw) ||
+          (a['groupName'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['courseCode'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['targetName'] as String? ?? '').toLowerCase().contains(kw) ||
+          (a['message'] as String? ?? '').toLowerCase().contains(kw) ||
           (_typeLabel[a['type']] ?? '').toLowerCase().contains(kw);
       if (!matchKw) return false;
       if (_filter == 'resolved') return a['status'] == 'RESOLVED';
       if (_filter == 'all') return a['status'] == 'OPEN';
-      return a['status'] == 'OPEN' && (a['severity'] as String).toLowerCase() == _filter;
+      return a['status'] == 'OPEN' && (a['severity'] as String? ?? '').toLowerCase() == _filter;
     }).toList();
   }
 
@@ -151,27 +113,41 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
     _snack('Đã đánh dấu là đã giải quyết');
   });
 
-  void _remind(Map<String, dynamic> a) => setState(() {
-    _remindedIds.add(a['id'] as String);
-    _snack('Đã gửi nhắc nhở đến ${a['targetName'] ?? a['groupName']}');
-  });
+  Future<void> _remind(Map<String, dynamic> a) async {
+    final groupId = a['groupId'] ?? a['id']; // Fallback for mock
+    final ok = await _lecturerService.sendAlert(groupId, 'Hệ thống gửi nhắc nhở về cảnh báo: ${a['message']}');
+    if (ok) {
+      setState(() {
+        _remindedIds.add(a['id'] as String);
+        _snack('Đã gửi nhắc nhở đến ${a['targetName'] ?? a['groupName']}');
+      });
+    } else {
+      _snack('Lỗi khi gửi nhắc nhở', isError: true);
+    }
+  }
 
-  void _refresh() => setState(() {
-    _alerts = List<Map<String, dynamic>>.from(_mockAlerts);
-    _snack('Đã làm mới dữ liệu mô phỏng');
-  });
+  void _refresh() => _loadInitialData();
 
-  void _snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(msg), backgroundColor: _kTeal, behavior: SnackBarBehavior.floating));
+  void _snack(String msg, {bool isError = false}) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(msg), backgroundColor: isError ? Colors.red : _kTeal, behavior: SnackBarBehavior.floating));
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(title: 'Cảnh báo',
-        user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER')),
-      body: SingleChildScrollView(
+      appBar: AppTopHeader(
+        title: 'Cảnh báo',
+        user: AppUser(
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
+          role: 'LECTURER'
+        )
+      ),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: _kTeal))
+        : SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Breadcrumb

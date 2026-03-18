@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart';
 import 'lecturer_groups_widgets.dart';
 
 const int kMinMembers = 4;
@@ -31,44 +33,37 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
   String _forceAddSearch = '';
   int _autoGroupSize = 5;
 
-  // Mock data (thay cho API calls trong JSX)
-  final Map<String, dynamic> _course = {'id': 1, 'code': 'SWD392', 'name': 'Software Development Project'};
+  // Data placeholders
+  Map<String, dynamic> _course = {'id': 1, 'code': '...', 'name': '...'};
+  List<Map<String, dynamic>> _students = [];
+  List<Map<String, dynamic>> _groups = [];
 
-  final List<Map<String, dynamic>> _students = List.generate(12, (i) => {
-    'id': i + 1,
-    'name': 'Sinh viên ${i + 1}',
-    'studentCode': 'SE16${1000 + i}',
-  });
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
 
-  List<Map<String, dynamic>> _groups = [
-    {
-      'id': 1, 'name': 'Nhóm 1', 'description': 'AI Interview System',
-      'team': [
-        {'studentId': 1, 'studentName': 'Nguyễn Văn An', 'role': 'LEADER'},
-        {'studentId': 2, 'studentName': 'Trần Thị Bình', 'role': 'MEMBER'},
-        {'studentId': 3, 'studentName': 'Lê Văn Chi', 'role': 'MEMBER'},
-        {'studentId': 4, 'studentName': 'Phạm Thị Dung', 'role': 'MEMBER'},
-      ],
-      'integration': {'githubStatus': 'APPROVED', 'jiraStatus': 'APPROVED'},
-    },
-    {
-      'id': 2, 'name': 'Nhóm 2', 'description': 'Job Matching Platform',
-      'team': [
-        {'studentId': 5, 'studentName': 'Hoàng Văn Em', 'role': 'LEADER'},
-        {'studentId': 6, 'studentName': 'Ngô Thị Phượng', 'role': 'MEMBER'},
-        {'studentId': 7, 'studentName': 'Võ Văn Giang', 'role': 'MEMBER'},
-      ],
-      'integration': {'githubStatus': 'PENDING', 'jiraStatus': 'APPROVED'},
-    },
-    {
-      'id': 3, 'name': 'Nhóm 3', 'description': '',
-      'team': [
-        {'studentId': 8, 'studentName': 'Đinh Thị Hoa', 'role': 'LEADER'},
-        {'studentId': 9, 'studentName': 'Bùi Văn Ích', 'role': 'MEMBER'},
-      ],
-      'integration': {'githubStatus': 'MISSING', 'jiraStatus': 'MISSING'},
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _course['id'] = widget.courseId ?? 1;
+    _course['code'] = 'COURSE-${widget.courseId ?? "ID"}';
+    _course['name'] = 'Course Description Phase';
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   // Computed: assignedStudentIds
   Set<int> get _assignedIds => _groups
@@ -243,11 +238,17 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       drawer: const LecturerDrawer(),
-      appBar: const AppTopHeader(
+      appBar: AppTopHeader(
         title: 'Nhóm & Dự án',
-        user: AppUser(name: 'Giảng viên', email: 'gv@fe.edu.vn', role: 'LECTURER'),
+        user: AppUser(
+          name: _currentUser?.fullName ?? 'Giảng viên',
+          email: _currentUser?.email ?? '',
+          role: 'LECTURER'
+        )
       ),
-      body: Stack(children: [
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: kTeal))
+        : Stack(children: [
         SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

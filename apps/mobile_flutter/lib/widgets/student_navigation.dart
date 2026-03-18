@@ -220,6 +220,16 @@ class _StudentNavList extends StatelessWidget {
           label: 'SRS',
           route: '/student/srs',
         ),
+        SizedBox(height: 16),
+
+        // ── HỆ THỐNG ──
+        _SidebarSectionTitle('HỆ THỐNG'),
+        SizedBox(height: 6),
+        _SidebarItem(
+          icon: Icons.settings_outlined,
+          label: 'Cài đặt & Liên kết',
+          route: '/student/settings',
+        ),
       ],
     );
   }

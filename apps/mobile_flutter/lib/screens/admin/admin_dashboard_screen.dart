@@ -64,7 +64,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<Map<String, dynamic>> _semestersData = [];
   List<Map<String, dynamic>> _subjectsData = [];
   List<Map<String, dynamic>> _coursesData = [];
-  List<String> _majorsData = ['Software Engineering', 'Artificial Intelligence', 'Information Systems', 'Graphic Design'];
+  List<String> _majorsData = [];
 
   @override
   void initState() {
@@ -105,6 +105,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _semestersData = List<Map<String, dynamic>>.from(data['semestersData'] ?? []);
         _subjectsData = List<Map<String, dynamic>>.from(data['subjectsData'] ?? []);
         _coursesData = List<Map<String, dynamic>>.from(data['coursesData'] ?? []);
+        _majorsData = _subjectsData
+            .map((s) => s['department']?.toString() ?? '')
+            .where((d) => d.isNotEmpty)
+            .toSet()
+            .toList();
 
         _isLoading = false;
       });

@@ -10,6 +10,7 @@ import '../screens/auth/forgot_password_screen.dart';
 import '../screens/student/student_dashboard.dart';
 import '../screens/student/student_project_screen.dart';
 import '../screens/student/student_placeholders.dart';
+import '../screens/student/student_settings_screen.dart';
 
 // ADMIN
 import '../screens/admin/admin_dashboard_screen.dart';
@@ -74,8 +75,10 @@ GoRouter createRouter(AuthProvider authProvider) {
         builder: (context, state) => const StudentDashboard(),
       ),
       GoRoute(
-        path: '/student/project',
-        builder: (context, state) => const StudentProjectScreen(),
+        path: '/student/project/:projectId',
+        builder: (context, state) => StudentProjectScreen(
+          projectId: state.pathParameters['projectId'],
+        ),
       ),
       GoRoute(
         path: '/student/courses',
@@ -96,6 +99,10 @@ GoRouter createRouter(AuthProvider authProvider) {
       GoRoute(
         path: '/student/srs',
         builder: (context, state) => const StudentSrsScreen(),
+      ),
+      GoRoute(
+        path: '/student/settings',
+        builder: (context, state) => const StudentSettingsScreen(),
       ),
 
       // LECTURER
