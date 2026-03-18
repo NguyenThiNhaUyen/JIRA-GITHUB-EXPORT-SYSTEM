@@ -70,14 +70,39 @@ public class ProjectCoreService : IProjectCoreService
 
     public async Task<ProjectDetailResponse> GetProjectByIdAsync(long projectId)
     {
-        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        // Bug #4 fix: Include all nav props required by mapper and response DTO
+        var project = await _unitOfWork.Projects.Query()
+            .AsNoTracking()
+            .Include(p => p.course)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(s => s.user)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.github_repo)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.jira_project)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.approved_by)
+            .FirstOrDefaultAsync(p => p.id == projectId);
         if (project == null) throw new NotFoundException("Project not found");
         return _mapper.Map<ProjectDetailResponse>(project);
     }
 
     public async Task<ProjectDetailResponse> UpdateProjectAsync(long projectId, UpdateProjectRequest request)
     {
-        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        // Bug #4 fix: include nav props needed after save so mapper can read them
+        var project = await _unitOfWork.Projects.Query()
+            .Include(p => p.course)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(s => s.user)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.github_repo)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.jira_project)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.approved_by)
+            .FirstOrDefaultAsync(p => p.id == projectId);
         if (project == null) throw new NotFoundException("Project not found");
 
         if (project.name != request.Name)
@@ -176,11 +201,21 @@ public class ProjectCoreService : IProjectCoreService
                     lastCommitByRepo[lc.RepoId] = lc.Last;
             }
 
-            var srsExportsByProject = await _unitOfWork.ReportExports.Query()
-                .Where(r => r.report_type == "SRS" && r.scope == "PROJECT")
-                .GroupBy(r => r.scope_entity_id)
-                .Select(g => new { ProjectId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
+            // Bug #3 fix: wrap ReportExports in try-catch — table may not exist or have schema mismatch
+            Dictionary<long, int> srsExportsByProject;
+            try
+            {
+                srsExportsByProject = await _unitOfWork.ReportExports.Query()
+                    .Where(r => r.report_type == "SRS" && r.scope == "PROJECT")
+                    .GroupBy(r => r.scope_entity_id)
+                    .Select(g => new { ProjectId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[GetProjectsByCourse] ReportExports query failed, using empty dict");
+                srsExportsByProject = new Dictionary<long, int>();
+            }
 
             foreach (var dto in dtoList)
             {

@@ -105,18 +105,45 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.approved_at))
             .ForMember(dest => dest.RejectedReason, opt => opt.MapFrom(src => src.rejected_reason));
 
+        // Bug #1 fix: ForPath on a nullable nested object causes AutoMapper crash at startup.
+        // Use ForMember(Ignore) + AfterMap to construct IntegrationInfo safely.
         CreateMap<project, ProjectDetailResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.name))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.description))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status))
+            .ForMember(dest => dest.CourseId, opt => opt.MapFrom(src => src.course_id))
             .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.course != null ? src.course.course_name : "N/A"))
-            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.team_members.Where(tm => tm.participation_status == "ACTIVE")))
+            .ForMember(dest => dest.CourseCode, opt => opt.MapFrom(src => src.course != null ? src.course.course_code : ""))
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.team_members != null ? src.team_members.Where(tm => tm.participation_status == "ACTIVE") : Enumerable.Empty<JiraGithubExport.Shared.Models.team_member>()))
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.github_repo != null ? src.project_integration.github_repo.repo_url : null))
             .ForMember(dest => dest.JiraProjectUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.jira_project != null ? src.project_integration.jira_project.jira_url : null))
-            .ForPath(dest => dest.Integration!.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"))
+            .ForMember(dest => dest.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : null))
+            .ForMember(dest => dest.JiraStatus, opt => opt.MapFrom(src => src.project_integration != null ? (src.project_integration.jira_project != null ? "LINKED" : "NONE") : null))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at))
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.updated_at));
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => (DateTime?)src.updated_at))
+            .ForMember(dest => dest.Integration, opt => opt.Ignore())
+            .AfterMap((src, dest) =>
+            {
+                if (src.project_integration != null)
+                    dest.Integration = new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
+                    {
+                        GithubUrl = src.project_integration.github_repo?.repo_url,
+                        GithubRepoOwner = src.project_integration.github_repo?.owner_login,
+                        GithubRepoName = src.project_integration.github_repo?.name,
+                        JiraUrl = src.project_integration.jira_project?.jira_url,
+                        JiraProjectKey = src.project_integration.jira_project?.jira_project_key,
+                        ApprovalStatus = src.project_integration.approval_status ?? "PENDING",
+                        GithubStatus = src.project_integration.approval_status ?? "PENDING",
+                        JiraStatus = src.project_integration.jira_project != null ? "LINKED" : "NONE",
+                        SubmittedByUserId = src.project_integration.submitted_by_user_id,
+                        SubmittedAt = src.project_integration.submitted_at,
+                        ApprovedByUserId = src.project_integration.approved_by_user_id,
+                        ApprovedByName = src.project_integration.approved_by?.full_name,
+                        ApprovedAt = src.project_integration.approved_at,
+                        RejectedReason = src.project_integration.rejected_reason
+                    };
+            });
 
         CreateMap<team_invitation, InvitationResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
