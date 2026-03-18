@@ -7,6 +7,7 @@ public interface IJwtService
 {
     string GenerateToken(user user, List<string> roles);
     ClaimsPrincipal? ValidateToken(string token);
+    ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
 }
 
 
