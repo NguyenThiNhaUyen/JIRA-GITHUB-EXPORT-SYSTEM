@@ -334,8 +334,6 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
           children: [
             const Text('Giảng viên', style: TextStyle(fontSize: 11, color: kTeal, fontWeight: FontWeight.bold)),
             const Icon(Icons.chevron_right, size: 14, color: kTxtSx),
-            const Text('Hệ thống', style: TextStyle(fontSize: 11, color: kTxtSx)),
-            const Icon(Icons.chevron_right, size: 14, color: kTxtSx),
             const Text('Tổng quan', style: TextStyle(fontSize: 11, color: kTxtPx, fontWeight: FontWeight.bold)),
           ],
         ),
