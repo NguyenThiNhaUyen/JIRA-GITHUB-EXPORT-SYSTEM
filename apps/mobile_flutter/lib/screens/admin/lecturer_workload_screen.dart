@@ -80,23 +80,32 @@ class _LecturerWorkloadScreenState extends State<LecturerWorkloadScreen> {
 
   List<Map<String, dynamic>> get _workloadData {
     return _lecturers.map((lecturer) {
+      final lId = (lecturer["id"] ?? lecturer["Id"] ?? "").toString();
+      final lName = (lecturer["name"] ?? lecturer["fullName"] ?? lecturer["FullName"] ?? "N/A").toString();
+      final lEmail = (lecturer["email"] ?? lecturer["Email"] ?? "").toString();
+
       final lecturerCourses = _courses.where((c) {
-        final lecturers = c["lecturers"] as List? ?? [];
-        return lecturers.any((l) => l["id"].toString() == lecturer["id"].toString());
+        final teachingBy = c["lecturers"] ?? c["teachingBy"] ?? c["teaching_by"] ?? [];
+        final lecturers = teachingBy as List;
+        return lecturers.any((l) {
+          final id = (l["id"] ?? l["Id"] ?? "").toString();
+          return id == lId;
+        });
       }).toList();
 
       int studentCount = 0;
       for (var c in lecturerCourses) {
-        studentCount += (c["enrollments"] as List? ?? []).length;
+        final enrollments = c["enrollments"] ?? c["students"] ?? c["Students"] ?? [];
+        studentCount += (enrollments as List).length;
       }
 
       return {
-        "id": lecturer["id"],
-        "name": lecturer["name"],
-        "email": lecturer["email"],
+        "id": lId,
+        "name": lName,
+        "email": lEmail,
         "courseCount": lecturerCourses.length,
         "studentCount": studentCount,
-        "courses": lecturerCourses.map((c) => c["code"].toString()).toList(),
+        "courses": lecturerCourses.map((c) => (c["code"] ?? c["courseCode"] ?? c["CourseCode"] ?? "").toString()).toList(),
       };
     }).toList();
   }
