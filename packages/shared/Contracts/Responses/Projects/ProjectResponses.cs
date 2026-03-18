@@ -39,6 +39,9 @@ public class ProjectDetailResponse
     public DateTime? LastActivity { get; set; }
     public int ProgressPercent { get; set; }
     public int RiskScore { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string IntegrationStatus => GithubStatus ?? "NONE";
 }
 
 public class TeamMemberInfo
@@ -111,6 +114,13 @@ public class ProjectDashboardResponse
     public GitHubStats? GitHubStats { get; set; }
     public JiraStats? JiraStats { get; set; }
     public List<MemberContribution> MemberContributions { get; set; } = new();
+    
+    // Flat fields for FE mapping
+    public int TotalCommits => GitHubStats?.TotalCommits ?? 0;
+    public int TotalIssues => JiraStats?.TotalIssues ?? 0;
+    public int UserCommits { get; set; } // Specific to requesting user
+    public int UserIssues { get; set; }  // Specific to requesting user
+    public DateTime? LastSyncAt { get; set; }
 }
 
 public class ProjectSummary
@@ -145,11 +155,14 @@ public class JiraStats
 
 public class MemberContribution
 {
+    public long StudentUserId { get; set; }
     public string StudentCode { get; set; } = null!;
     public string FullName { get; set; } = null!;
     public int Commits30d { get; set; }
+    public int CommitsCount => Commits30d; // Alias
     public int PullRequests30d { get; set; }
     public int JiraIssuesCompleted30d { get; set; }
+    public int IssuesCount => JiraIssuesCompleted30d; // Alias
     public DateTime? LastActivityDate { get; set; }
     public int InactiveDays { get; set; }
     public string? Alert { get; set; }

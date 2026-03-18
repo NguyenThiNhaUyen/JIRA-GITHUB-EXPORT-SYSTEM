@@ -19,10 +19,10 @@ public class ProjectDashboardService : IProjectDashboardService
         _cache = cache;
     }
 
-    public async Task<ProjectDashboardResponse> GetProjectDashboardAsync(long projectId)
+    public async Task<ProjectDashboardResponse> GetProjectDashboardAsync(long projectId, long? userId = null)
     {
         var projectIdStr = projectId.ToString();
-        var cacheKey = $"PBLPlatform_ProjectDashboard_{projectIdStr}";
+        var cacheKey = $"PBLPlatform_ProjectDashboard_{projectIdStr}_{(userId?.ToString() ?? "All")}";
 
         var cachedData = await _cache.GetStringAsync(cacheKey);
         if (!string.IsNullOrEmpty(cachedData))
@@ -33,7 +33,7 @@ public class ProjectDashboardService : IProjectDashboardService
         var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
         if (project == null) throw new NotFoundException("Project not found");
 
-        var response = await CalculateDashboardMetrics(projectId);
+        var response = await CalculateDashboardMetrics(projectId, userId);
 
         var serializedData = System.Text.Json.JsonSerializer.Serialize(response);
         await _cache.SetStringAsync(cacheKey, serializedData, new DistributedCacheEntryOptions
@@ -44,7 +44,7 @@ public class ProjectDashboardService : IProjectDashboardService
         return response;
     }
 
-    private async Task<ProjectDashboardResponse> CalculateDashboardMetrics(long projectId)
+    private async Task<ProjectDashboardResponse> CalculateDashboardMetrics(long projectId, long? userId)
     {
         var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
         if (project == null) throw new NotFoundException("Project not found");
@@ -120,6 +120,7 @@ public class ProjectDashboardService : IProjectDashboardService
 
             dashboard.MemberContributions.Add(new MemberContribution
             {
+                StudentUserId = member.student_user_id,
                 StudentCode = member.student_user.student_code,
                 FullName = member.student_user.user.full_name ?? "",
                 Commits30d = activityList.Sum(a => a.commits_count),
@@ -131,6 +132,20 @@ public class ProjectDashboardService : IProjectDashboardService
                     $"⚠️ Inactive for {(int)(DateTime.UtcNow.Date - lastActivity.Value.ToDateTime(TimeOnly.MinValue).Date).TotalDays} days" : null
             });
         }
+
+        if (userId.HasValue)
+        {
+            var userContribution = dashboard.MemberContributions.FirstOrDefault(m => m.StudentUserId == userId.Value);
+            if (userContribution != null)
+            {
+                dashboard.UserCommits = userContribution.CommitsCount;
+                dashboard.UserIssues = userContribution.IssuesCount;
+            }
+        }
+
+        dashboard.LastSyncAt = dashboard.GitHubStats?.LastCommitDate > (dashboard.JiraStats?.LastUpdate ?? DateTime.MinValue)
+            ? dashboard.GitHubStats?.LastCommitDate 
+            : dashboard.JiraStats?.LastUpdate;
 
         return dashboard;
     }
