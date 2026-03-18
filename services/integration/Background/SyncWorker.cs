@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -109,10 +109,10 @@ public class SyncWorker : BackgroundService
 
         // Fetch data and release DB connection IMMEDIATELY
         var integrations = await unitOfWork.ProjectIntegrations.Query()
-            .Include(pi => pi.github_repo)
-            .Include(pi => pi.jira_project)
-            .Include(pi => pi.project)
-            .Where(pi => pi.project.status == "ACTIVE")
+            .Include(pi => pi.GithubRepo)
+            .Include(pi => pi.JiraProject)
+            .Include(pi => pi.Project)
+            .Where(pi => pi.Project.Status == "ACTIVE")
             .AsNoTracking() // Optimize Memory
             .ToListAsync(stoppingToken);
             
@@ -126,24 +126,24 @@ public class SyncWorker : BackgroundService
             try
             {
                 // Sync GitHub
-                if (integration.github_repo != null)
+                if (integration.GithubRepo != null)
                 {
-                    _logger.LogDebug("Syncing GitHub for project: {ProjectName}", integration.project.name);
-                    await githubClient.SyncCommitsAsync(integration.github_repo.id, integration.github_repo.owner_login, integration.github_repo.name);
-                    await githubClient.SyncPullRequestsAsync(integration.github_repo.id, integration.github_repo.owner_login, integration.github_repo.name);
+                    _logger.LogDebug("Syncing GitHub for Project: {ProjectName}", integration.Project.Name);
+                    await githubClient.SyncCommitsAsync(integration.GithubRepo.Id, integration.GithubRepo.OwnerLogin, integration.GithubRepo.Name);
+                    await githubClient.SyncPullRequestsAsync(integration.GithubRepo.Id, integration.GithubRepo.OwnerLogin, integration.GithubRepo.Name);
                 }
 
-                if (integration.jira_project != null)
+                if (integration.JiraProject != null)
                 {
-                    _logger.LogDebug("Syncing Jira for project: {ProjectName}", integration.project.name);
-                    await jiraClient.SyncIssuesAsync(integration.jira_project.id, integration.jira_project.jira_project_key, integration.jira_project.jira_url ?? "https://atlassian.net");
+                    _logger.LogDebug("Syncing Jira for Project: {ProjectName}", integration.Project.Name);
+                    await jiraClient.SyncIssuesAsync(integration.JiraProject.Id, integration.JiraProject.JiraProjectKey, integration.JiraProject.JiraUrl ?? "https://atlassian.net");
                 }
                 
-                _logger.LogInformation("Successfully synced integration for project {ProjectName} (ID: {ProjectId})", integration.project.name, integration.project_id);
+                _logger.LogInformation("Successfully synced integration for Project {ProjectName} (ID: {ProjectId})", integration.Project.Name, integration.ProjectId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to sync integration for project {ProjectId}. Will retry in next cycle.", integration.project_id);
+                _logger.LogWarning(ex, "Failed to sync integration for Project {ProjectId}. Will retry in next cycle.", integration.ProjectId);
                 // Continue to next integration instead of stopping
                 continue;
             }
@@ -152,3 +152,4 @@ public class SyncWorker : BackgroundService
         _logger.LogInformation("Sync logic completed at {Time}", DateTime.UtcNow);
     }
 }
+

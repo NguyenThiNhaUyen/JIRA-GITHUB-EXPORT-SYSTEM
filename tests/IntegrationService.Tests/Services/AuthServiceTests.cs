@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,25 +49,25 @@ namespace IntegrationService.Tests.Services
             // Arrange
             using var context = CreateInMemoryDbContext();
             
-            var testUser = new user
+            var testUser = new User
             {
-                id = 1,
-                email = "test@example.com",
-                password = "hashed_password",
-                full_name = "Test User",
-                enabled = true
+                Id = 1,
+                Email = "test@example.com",
+                Password = "hashed_password",
+                FullName = "Test User",
+                Enabled = true
             };
             
-            var testRole = new role { id = 1, role_name = "STUDENT" };
-            testUser.roles.Add(testRole);
+            var testRole = new Role { Id = 1, RoleName = "Student" };
+            testUser.Roles.Add(testRole);
             
-            context.users.Add(testUser);
+            context.Users.Add(testUser);
             await context.SaveChangesAsync();
 
             _mockPasswordHasher.Setup(x => x.VerifyPassword("password123", "hashed_password"))
                                .Returns(true);
                                
-            _mockJwtService.Setup(x => x.GenerateToken(It.IsAny<user>(), It.IsAny<List<string>>()))
+            _mockJwtService.Setup(x => x.GenerateToken(It.IsAny<User>(), It.IsAny<List<string>>()))
                            .Returns("mocked_jwt_token");
 
             var authService = new AuthService(
@@ -92,8 +92,8 @@ namespace IntegrationService.Tests.Services
             Assert.Equal("Bearer", response.TokenType);
             Assert.Equal(3600, response.ExpiresIn);
             Assert.Equal("test@example.com", response.User.Email);
-            Assert.Equal("STUDENT", response.User.Role);
-            Assert.Contains("STUDENT", response.User.Roles);
+            Assert.Equal("Student", response.User.Role);
+            Assert.Contains("Student", response.User.Roles);
         }
 
         [Fact]
@@ -117,7 +117,7 @@ namespace IntegrationService.Tests.Services
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => authService.LoginAsync(request));
-            Assert.Equal("Invalid email or password", ex.Message);
+            Assert.Equal("Invalid Email or Password", ex.Message);
         }
 
         [Fact]
@@ -126,18 +126,18 @@ namespace IntegrationService.Tests.Services
             // Arrange
             using var context = CreateInMemoryDbContext();
             
-            var testUser = new user
+            var testUser = new User
             {
-                id = 1,
-                email = "test@example.com",
-                password = "hashed_password",
-                enabled = true
+                Id = 1,
+                Email = "test@example.com",
+                Password = "hashed_password",
+                Enabled = true
             };
             
-            context.users.Add(testUser);
+            context.Users.Add(testUser);
             await context.SaveChangesAsync();
 
-            // Mock verify password to return false
+            // Mock verify Password to return false
             _mockPasswordHasher.Setup(x => x.VerifyPassword("wrong_password", "hashed_password"))
                                .Returns(false);
 
@@ -156,7 +156,7 @@ namespace IntegrationService.Tests.Services
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => authService.LoginAsync(request));
-            Assert.Equal("Invalid email or password", ex.Message);
+            Assert.Equal("Invalid Email or Password", ex.Message);
         }
 
         [Fact]
@@ -165,15 +165,15 @@ namespace IntegrationService.Tests.Services
             // Arrange
             using var context = CreateInMemoryDbContext();
             
-            var testUser = new user
+            var testUser = new User
             {
-                id = 1,
-                email = "test@example.com",
-                password = "hashed_password",
-                enabled = false // Disabled account
+                Id = 1,
+                Email = "test@example.com",
+                Password = "hashed_password",
+                Enabled = false // Disabled account
             };
             
-            context.users.Add(testUser);
+            context.Users.Add(testUser);
             await context.SaveChangesAsync();
 
             _mockPasswordHasher.Setup(x => x.VerifyPassword("password123", "hashed_password"))
@@ -224,3 +224,4 @@ namespace IntegrationService.Tests.Services
         }
     }
 }
+

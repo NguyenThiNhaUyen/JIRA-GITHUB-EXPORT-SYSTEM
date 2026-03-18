@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -24,75 +24,75 @@ public class SubjectService : ISubjectService
 
     public async Task<SubjectInfo> CreateSubjectAsync(CreateSubjectRequest request)
     {
-        var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.subject_code == request.SubjectCode);
+        var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.SubjectCode == request.SubjectCode);
         if (existing != null)
         {
             throw new BusinessException("Subject code already exists");
         }
 
-        var subject = new subject
+        var Subject = new Subject
         {
-            subject_code = request.SubjectCode,
-            subject_name = request.SubjectName,
-            department = request.Department,
-            description = request.Description,
-            credits = request.Credits,
-            max_students = request.MaxStudents,
-            status = request.Status,
-            created_at = DateTime.UtcNow
+            SubjectCode = request.SubjectCode,
+            SubjectName = request.SubjectName,
+            Department = request.Department,
+            Description = request.Description,
+            Credits = request.Credits,
+            MaxStudents = request.MaxStudents,
+            Status = request.Status,
+            CreatedAt = DateTime.UtcNow
         };
 
-        _unitOfWork.Subjects.Add(subject);
+        _unitOfWork.Subjects.Add(Subject);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<SubjectInfo>(subject);
+        return _mapper.Map<SubjectInfo>(Subject);
     }
 
     public async Task<SubjectInfo> UpdateSubjectAsync(long subjectId, UpdateSubjectRequest request)
     {
-        var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
-        if (subject == null) throw new NotFoundException("Subject not found");
+        var Subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.Id == subjectId);
+        if (Subject == null) throw new NotFoundException("Subject not found");
 
         if (!string.IsNullOrWhiteSpace(request.SubjectCode))
         {
             // Check uniqueness if changed
-            if (subject.subject_code != request.SubjectCode)
+            if (Subject.SubjectCode != request.SubjectCode)
             {
-                var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.subject_code == request.SubjectCode);
+                var existing = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.SubjectCode == request.SubjectCode);
                 if (existing != null) throw new BusinessException("Subject code already exists");
-                subject.subject_code = request.SubjectCode;
+                Subject.SubjectCode = request.SubjectCode;
             }
         }
 
         if (!string.IsNullOrWhiteSpace(request.SubjectName))
-            subject.subject_name = request.SubjectName;
+            Subject.SubjectName = request.SubjectName;
             
         if (!string.IsNullOrWhiteSpace(request.Department))
-            subject.department = request.Department;
+            Subject.Department = request.Department;
             
         if (request.Description != null)
-            subject.description = request.Description;
+            Subject.Description = request.Description;
             
         if (request.Credits.HasValue)
-            subject.credits = request.Credits.Value;
+            Subject.Credits = request.Credits.Value;
             
         if (request.MaxStudents.HasValue)
-            subject.max_students = request.MaxStudents.Value;
+            Subject.MaxStudents = request.MaxStudents.Value;
             
         if (!string.IsNullOrWhiteSpace(request.Status))
-            subject.status = request.Status;
+            Subject.Status = request.Status;
 
-        _unitOfWork.Subjects.Update(subject);
+        _unitOfWork.Subjects.Update(Subject);
         await _unitOfWork.SaveChangesAsync();
-        return _mapper.Map<SubjectInfo>(subject);
+        return _mapper.Map<SubjectInfo>(Subject);
     }
 
     public async Task DeleteSubjectAsync(long subjectId)
     {
-        var subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.id == subjectId);
-        if (subject == null) throw new NotFoundException("Subject not found");
+        var Subject = await _unitOfWork.Subjects.FirstOrDefaultAsync(s => s.Id == subjectId);
+        if (Subject == null) throw new NotFoundException("Subject not found");
 
-        _unitOfWork.Subjects.Remove(subject);
+        _unitOfWork.Subjects.Remove(Subject);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -101,8 +101,8 @@ public class SubjectService : ISubjectService
         var (items, totalItems) = await _unitOfWork.Subjects.GetPagedAsync(
             request.Page, 
             request.PageSize,
-            string.IsNullOrWhiteSpace(request.Q) ? null : s => (s.subject_name ?? "").ToLower().Contains(request.Q.ToLower()) || (s.subject_code ?? "").ToLower().Contains(request.Q.ToLower()),
-            request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.created_at) : q => q.OrderBy(x => x.created_at)
+            string.IsNullOrWhiteSpace(request.Q) ? null : s => (s.SubjectName ?? "").ToLower().Contains(request.Q.ToLower()) || (s.SubjectCode ?? "").ToLower().Contains(request.Q.ToLower()),
+            request.SortDir?.ToLower() == "desc" ? q => q.OrderByDescending(x => x.CreatedAt) : q => q.OrderBy(x => x.CreatedAt)
         );
 
         return new PagedResponse<SubjectInfo>(_mapper.Map<List<SubjectInfo>>(items), totalItems, request.Page, request.PageSize);
@@ -111,9 +111,10 @@ public class SubjectService : ISubjectService
     public async Task<List<SubjectInfo>> GetAllSubjectsAsync()
     {
         var items = await _unitOfWork.Subjects.Query()
-            .OrderBy(s => s.subject_name)
+            .OrderBy(s => s.SubjectName)
             .ToListAsync();
 
         return _mapper.Map<List<SubjectInfo>>(items);
     }
 }
+

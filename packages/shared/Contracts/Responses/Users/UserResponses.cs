@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Users;
+﻿namespace JiraGithubExport.Shared.Contracts.Responses.Users;
 
 public class UserDetailResponse
 {
@@ -16,3 +16,4 @@ public class UserDetailResponse
     public List<string> AssignedCourses { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 }
+

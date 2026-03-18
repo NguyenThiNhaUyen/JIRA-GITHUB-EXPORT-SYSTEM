@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
 import {
@@ -46,20 +46,20 @@ export function useStudentProject(projectId) {
 
     const handleSync = () => {
         syncCommits(projectId, {
-            onSuccess: () => success("Đồng bộ dữ liệu mã nguồn thành công!"),
-            onError: () => showError("Lỗi đồng bộ. Vui lòng kiểm tra lại URL Repo.")
+            onSuccess: () => success("Äá»“ng bá»™ dá»¯ liá»‡u mĂ£ nguá»“n thĂ nh cĂ´ng!"),
+            onError: () => showError("Lá»—i Ä‘á»“ng bá»™. Vui lĂ²ng kiá»ƒm tra láº¡i URL Repo.")
         });
     };
 
     const handleSrsSubmit = () => {
-        if (!uploadFile) return showError("Vui lòng chọn file tài liệu");
+        if (!uploadFile) return showError("Vui lĂ²ng chá»n file tĂ i liá»‡u");
         submitSrs({ projectId, file: uploadFile }, {
             onSuccess: () => {
-                success("Đã nộp SRS thành công!");
+                success("ÄĂ£ ná»™p SRS thĂ nh cĂ´ng!");
                 setIsUploadModalOpen(false);
                 setUploadFile(null);
             },
-            onError: () => showError("Nộp thất bại. Vui lòng thử lại.")
+            onError: () => showError("Ná»™p tháº¥t báº¡i. Vui lĂ²ng thá»­ láº¡i.")
         });
     };
 
@@ -91,9 +91,4 @@ export function useStudentProject(projectId) {
         handleSrsSubmit
     };
 }
-
-
-
-
-
 

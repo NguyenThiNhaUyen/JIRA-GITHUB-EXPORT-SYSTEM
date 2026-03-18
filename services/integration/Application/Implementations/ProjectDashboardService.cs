@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -34,13 +34,13 @@ public class ProjectDashboardService : IProjectDashboardService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[Dashboard] Cache read failed for project {ProjectId}, computing fresh", projectId);
+            _logger.LogWarning(ex, "[Dashboard] Cache read failed for Project {ProjectId}, computing fresh", projectId);
         }
 
         // Bug #4 fix: include nav props for existence check
         var projectExists = await _unitOfWork.Projects.Query()
             .AsNoTracking()
-            .AnyAsync(p => p.id == projectId);
+            .AnyAsync(p => p.Id == projectId);
         if (!projectExists) throw new NotFoundException("Project not found");
 
         var response = await CalculateDashboardMetrics(projectId, userId);
@@ -55,7 +55,7 @@ public class ProjectDashboardService : IProjectDashboardService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[Dashboard] Cache write failed for project {ProjectId}, continuing without cache", projectId);
+            _logger.LogWarning(ex, "[Dashboard] Cache write failed for Project {ProjectId}, continuing without cache", projectId);
         }
 
         return response;
@@ -63,54 +63,54 @@ public class ProjectDashboardService : IProjectDashboardService
 
     private async Task<ProjectDashboardResponse> CalculateDashboardMetrics(long projectId, long? userId)
     {
-        // Bug #2 & #4 fix: load project with all required nav props via explicit query + Include
-        var project = await _unitOfWork.Projects.Query()
+        // Bug #2 & #4 fix: load Project with all required nav props via explicit query + Include
+        var Project = await _unitOfWork.Projects.Query()
             .AsNoTracking()
-            .Include(p => p.team_members)
-                .ThenInclude(tm => tm.student_user)
-                    .ThenInclude(s => s.user)
-            .Include(p => p.project_integration)
-                .ThenInclude(pi => pi.github_repo)
-            .Include(p => p.project_integration)
-                .ThenInclude(pi => pi.jira_project)
-            .Include(p => p.course)
-            .FirstOrDefaultAsync(p => p.id == projectId);
+            .Include(p => p.TeamMembers)
+                .ThenInclude(tm => tm.StudentUser)
+                    .ThenInclude(s => s.User)
+            .Include(p => p.ProjectIntegration)
+                .ThenInclude(pi => pi.GithubRepo)
+            .Include(p => p.ProjectIntegration)
+                .ThenInclude(pi => pi.JiraProject)
+            .Include(p => p.Course)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
 
-        if (project == null) throw new NotFoundException("Project not found");
+        if (Project == null) throw new NotFoundException("Project not found");
 
-        var activeMembers = (project.team_members ?? new List<JiraGithubExport.Shared.Models.team_member>())
-            .Where(tm => tm.participation_status == "ACTIVE").ToList();
-        var leader = activeMembers.FirstOrDefault(tm => tm.team_role == "LEADER");
+        var activeMembers = (Project.TeamMembers ?? new List<JiraGithubExport.Shared.Models.TeamMember>())
+            .Where(tm => tm.ParticipationStatus == "ACTIVE").ToList();
+        var leader = activeMembers.FirstOrDefault(tm => tm.TeamRole == "LEADER");
 
         var dashboard = new ProjectDashboardResponse
         {
             Project = new ProjectSummary
             {
-                Id = project.id,
-                Name = project.name,
-                Status = project.status
+                Id = Project.Id,
+                Name = Project.Name,
+                Status = Project.Status
             },
             TeamSummary = new TeamSummary
             {
                 TotalMembers = activeMembers.Count,
                 ActiveMembers = activeMembers.Count,
-                Leader = leader?.student_user?.user != null
-                    ? $"{leader.student_user.user.full_name} ({leader.student_user.student_code})"
+                Leader = leader?.StudentUser?.User != null
+                    ? $"{leader.StudentUser.User.FullName} ({leader.StudentUser.StudentCode})"
                     : null
             }
         };
 
-        if (project.project_integration?.github_repo_id != null)
+        if (Project.ProjectIntegration.GithubRepoId != null)
         {
             var commits = await _unitOfWork.GitHubCommits.FindAsync(gc =>
-                gc.repo_id == project.project_integration.github_repo_id);
+                gc.RepoId == Project.ProjectIntegration.GithubRepoId);
 
             var prs = await _unitOfWork.GitHubPullRequests.FindAsync(pr =>
-                pr.repo_id == project.project_integration.github_repo_id);
+                pr.RepoId == Project.ProjectIntegration.GithubRepoId);
 
             var commitsList = commits.ToList();
             var prsList = prs.ToList();
-            DateTime? lastCommitDate = commitsList.Any() ? commitsList.Max(c => c.committed_at) : (DateTime?)null;
+            DateTime? lastCommitDate = commitsList.Any() ? commitsList.Max(c => c.CommittedAt) : (DateTime?)null;
 
             dashboard.GitHubStats = new GitHubStats
             {
@@ -122,18 +122,18 @@ public class ProjectDashboardService : IProjectDashboardService
             };
         }
 
-        if (project.project_integration?.jira_project_id != null)
+        if (Project.ProjectIntegration.JiraProjectId != null)
         {
             var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
-                ji.jira_project_id == project.project_integration.jira_project_id);
+                ji.JiraProjectId == Project.ProjectIntegration.JiraProjectId);
 
             var issuesList = issues.ToList();
             dashboard.JiraStats = new JiraStats
             {
                 TotalIssues = issuesList.Count,
-                InProgress = issuesList.Count(i => i.status == "In Progress"),
-                Done = issuesList.Count(i => i.status == "Done"),
-                LastUpdate = issuesList.Any() ? issuesList.Max(i => i.updated_at) : null
+                InProgress = issuesList.Count(i => i.Status == "In Progress"),
+                Done = issuesList.Count(i => i.Status == "Done"),
+                LastUpdate = issuesList.Any() ? issuesList.Max(i => i.UpdatedAt) : null
             };
         }
 
@@ -143,24 +143,24 @@ public class ProjectDashboardService : IProjectDashboardService
         foreach (var member in activeMembers)
         {
             var activities = await _unitOfWork.StudentActivityDailies.FindAsync(sad =>
-                sad.student_user_id == member.student_user_id &&
-                sad.project_id == projectId &&
-                sad.activity_date >= thirtyDaysAgo);
+                sad.StudentUserId == member.StudentUserId &&
+                sad.ProjectId == projectId &&
+                sad.ActivityDate >= thirtyDaysAgo);
 
             var activityList = activities.ToList();
-            DateOnly? lastActivity = activityList.Any() ? activityList.Max(a => a.activity_date) : (DateOnly?)null;
+            DateOnly? lastActivity = activityList.Any() ? activityList.Max(a => a.ActivityDate) : (DateOnly?)null;
             int inactiveDays = lastActivity.HasValue
                 ? (int)(DateTime.UtcNow.Date - lastActivity.Value.ToDateTime(TimeOnly.MinValue).Date).TotalDays
                 : 999;
 
             dashboard.MemberContributions.Add(new MemberContribution
             {
-                StudentUserId = member.student_user_id,
-                StudentCode = member.student_user?.student_code ?? "",
-                FullName = member.student_user?.user?.full_name ?? "",
-                Commits30d = activityList.Sum(a => a.commits_count),
-                PullRequests30d = activityList.Sum(a => a.pull_requests_count),
-                JiraIssuesCompleted30d = activityList.Sum(a => a.issues_completed),
+                StudentUserId = member.StudentUserId,
+                StudentCode = member.StudentUser?.StudentCode ?? "",
+                FullName = member.StudentUser?.User?.FullName ?? "",
+                Commits30d = activityList.Sum(a => a.CommitsCount),
+                PullRequests30d = activityList.Sum(a => a.PullRequestsCount),
+                JiraIssuesCompleted30d = activityList.Sum(a => a.IssuesCompleted),
                 LastActivityDate = lastActivity.HasValue ? lastActivity.Value.ToDateTime(TimeOnly.MinValue) : null,
                 InactiveDays = inactiveDays,
                 Alert = inactiveDays > 14 ? $"⚠️ Inactive for {inactiveDays} days" : null
@@ -185,54 +185,54 @@ public class ProjectDashboardService : IProjectDashboardService
         return dashboard;
     }
 
-    // ── helpers: load project with integration for sub-endpoints ──────────────
+    // ── helpers: load Project with integration for sub-endpoints ──────────────
 
-    private async Task<JiraGithubExport.Shared.Models.project?> LoadProjectWithIntegration(long projectId)
+    private async Task<JiraGithubExport.Shared.Models.Project?> LoadProjectWithIntegration(long projectId)
     {
         return await _unitOfWork.Projects.Query()
             .AsNoTracking()
-            .Include(p => p.project_integration)
-                .ThenInclude(pi => pi!.jira_project)
-            .Include(p => p.project_integration)
-                .ThenInclude(pi => pi!.github_repo)
-            .FirstOrDefaultAsync(p => p.id == projectId);
+            .Include(p => p.ProjectIntegration)
+                .ThenInclude(pi => pi!.JiraProject)
+            .Include(p => p.ProjectIntegration)
+                .ThenInclude(pi => pi!.GithubRepo)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
     }
 
     public async Task<KanbanBoardResponse> GetProjectKanbanAsync(long projectId)
     {
-        var project = await LoadProjectWithIntegration(projectId);
-        if (project == null) throw new NotFoundException("Project not found");
+        var Project = await LoadProjectWithIntegration(projectId);
+        if (Project == null) throw new NotFoundException("Project not found");
 
         var response = new KanbanBoardResponse();
 
-        if (project.project_integration?.jira_project_id != null)
+        if (Project.ProjectIntegration.JiraProjectId != null)
         {
             var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
-                ji.jira_project_id == project.project_integration.jira_project_id);
+                ji.JiraProjectId == Project.ProjectIntegration.JiraProjectId);
 
             foreach (var issue in issues.ToList())
             {
                 var task = new KanbanTask
                 {
-                    Id = issue.jira_issue_key,
-                    Title = issue.title ?? "No Title",
-                    Status = issue.status ?? "To Do",
-                    Priority = issue.priority,
-                    Type = issue.issue_type
+                    Id = issue.JiraIssueKey,
+                    Title = issue.Title ?? "No Title",
+                    Status = issue.Status ?? "To Do",
+                    Priority = issue.Priority,
+                    Type = issue.IssueType
                 };
 
-                if (!string.IsNullOrEmpty(issue.assignee_jira_account_id))
+                if (!string.IsNullOrEmpty(issue.AssigneeJiraAccountId))
                 {
                     var extAccount = await _unitOfWork.ExternalAccounts.FirstOrDefaultAsync(ea =>
-                        ea.provider == "JIRA" && ea.external_user_key == issue.assignee_jira_account_id);
+                        ea.Provider == "JIRA" && ea.ExternalUserKey == issue.AssigneeJiraAccountId);
                     if (extAccount != null)
                     {
-                        var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.id == extAccount.user_id);
-                        task.Assignee = user?.full_name ?? issue.assignee_jira_account_id;
+                        var User = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == extAccount.UserId);
+                        task.Assignee = User?.FullName ?? issue.AssigneeJiraAccountId;
                     }
                     else
                     {
-                        task.Assignee = issue.assignee_jira_account_id;
+                        task.Assignee = issue.AssigneeJiraAccountId;
                     }
                 }
 
@@ -251,22 +251,22 @@ public class ProjectDashboardService : IProjectDashboardService
 
     public async Task<CfdBoardResponse> GetProjectCfdAsync(long projectId)
     {
-        // Only need project existence, no nav props
-        var projectExists = await _unitOfWork.Projects.Query().AnyAsync(p => p.id == projectId);
+        // Only need Project existence, no nav props
+        var projectExists = await _unitOfWork.Projects.Query().AnyAsync(p => p.Id == projectId);
         if (!projectExists) throw new NotFoundException("Project not found");
 
         var response = new CfdBoardResponse();
         var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
         var activity = await _unitOfWork.StudentActivityDailies.FindAsync(a =>
-            a.project_id == projectId && a.activity_date >= startDate);
+            a.ProjectId == projectId && a.ActivityDate >= startDate);
 
-        var groupedByDate = activity.OrderBy(a => a.activity_date)
-            .GroupBy(a => a.activity_date)
+        var groupedByDate = activity.OrderBy(a => a.ActivityDate)
+            .GroupBy(a => a.ActivityDate)
             .Select(g => new
             {
                 Date = g.Key,
-                Created = g.Sum(x => x.issues_created),
-                Completed = g.Sum(x => x.issues_completed)
+                Created = g.Sum(x => x.IssuesCreated),
+                Completed = g.Sum(x => x.IssuesCompleted)
             }).ToList();
 
         int cumulativeCreated = 0, cumulativeCompleted = 0;
@@ -288,25 +288,25 @@ public class ProjectDashboardService : IProjectDashboardService
 
     public async Task<RoadmapResponse> GetProjectRoadmapAsync(long projectId)
     {
-        var project = await LoadProjectWithIntegration(projectId);
-        if (project == null) throw new NotFoundException("Project not found");
+        var Project = await LoadProjectWithIntegration(projectId);
+        if (Project == null) throw new NotFoundException("Project not found");
 
         var response = new RoadmapResponse();
 
-        if (project.project_integration?.jira_project_id != null)
+        if (Project.ProjectIntegration.JiraProjectId != null)
         {
             var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
-                ji.jira_project_id == project.project_integration.jira_project_id);
+                ji.JiraProjectId == Project.ProjectIntegration.JiraProjectId);
 
-            foreach (var issue in issues.OrderByDescending(i => i.updated_at).Take(10))
+            foreach (var issue in issues.OrderByDescending(i => i.UpdatedAt).Take(10))
             {
                 response.Items.Add(new RoadmapItem
                 {
-                    Id = issue.jira_issue_key,
-                    Title = issue.title ?? "Untitled",
-                    Status = issue.status ?? "To Do",
-                    DueDate = issue.updated_at.AddDays(7),
-                    Assignee = issue.assignee_jira_account_id
+                    Id = issue.JiraIssueKey,
+                    Title = issue.Title ?? "Untitled",
+                    Status = issue.Status ?? "To Do",
+                    DueDate = issue.UpdatedAt.AddDays(7),
+                    Assignee = issue.AssigneeJiraAccountId
                 });
             }
         }
@@ -316,26 +316,26 @@ public class ProjectDashboardService : IProjectDashboardService
 
     public async Task<AgingWipResponse> GetProjectAgingWipAsync(long projectId, int limit = 5)
     {
-        var project = await LoadProjectWithIntegration(projectId);
-        if (project == null) throw new NotFoundException("Project not found");
+        var Project = await LoadProjectWithIntegration(projectId);
+        if (Project == null) throw new NotFoundException("Project not found");
 
         var response = new AgingWipResponse();
 
-        if (project.project_integration?.jira_project_id != null)
+        if (Project.ProjectIntegration.JiraProjectId != null)
         {
             var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
-                ji.jira_project_id == project.project_integration.jira_project_id &&
-                (ji.status == "In Progress" || ji.status == "Doing"));
+                ji.JiraProjectId == Project.ProjectIntegration.JiraProjectId &&
+                (ji.Status == "In Progress" || ji.Status == "Doing"));
 
-            foreach (var issue in issues.OrderByDescending(i => (DateTime.UtcNow - i.updated_at).TotalDays).Take(limit))
+            foreach (var issue in issues.OrderByDescending(i => (DateTime.UtcNow - i.UpdatedAt).TotalDays).Take(limit))
             {
                 response.Items.Add(new AgingWipItem
                 {
-                    IssueId = issue.id.ToString(),
-                    Key = issue.jira_issue_key,
-                    Summary = issue.title ?? "No Summary",
-                    DaysInProgress = (int)(DateTime.UtcNow - issue.updated_at).TotalDays,
-                    Assignee = issue.assignee_jira_account_id
+                    IssueId = issue.Id.ToString(),
+                    Key = issue.JiraIssueKey,
+                    Summary = issue.Title ?? "No Summary",
+                    DaysInProgress = (int)(DateTime.UtcNow - issue.UpdatedAt).TotalDays,
+                    Assignee = issue.AssigneeJiraAccountId
                 });
             }
         }
@@ -345,22 +345,22 @@ public class ProjectDashboardService : IProjectDashboardService
 
     public async Task<CycleTimeResponse> GetProjectCycleTimeAsync(long projectId)
     {
-        var project = await LoadProjectWithIntegration(projectId);
-        if (project == null) throw new NotFoundException("Project not found");
+        var Project = await LoadProjectWithIntegration(projectId);
+        if (Project == null) throw new NotFoundException("Project not found");
 
         var response = new CycleTimeResponse();
 
-        if (project.project_integration?.jira_project_id != null)
+        if (Project.ProjectIntegration.JiraProjectId != null)
         {
             var issues = await _unitOfWork.JiraIssues.FindAsync(ji =>
-                ji.jira_project_id == project.project_integration.jira_project_id &&
-                (ji.status == "Done" || ji.status == "Closed"));
+                ji.JiraProjectId == Project.ProjectIntegration.JiraProjectId &&
+                (ji.Status == "Done" || ji.Status == "Closed"));
 
             var completedIssues = issues.ToList();
             if (completedIssues.Any())
             {
                 var cycleTimes = completedIssues
-                    .Select(i => (int)(i.updated_at - i.created_at).TotalDays)
+                    .Select(i => (int)(i.UpdatedAt - i.CreatedAt).TotalDays)
                     .OrderBy(d => d)
                     .ToList();
 
@@ -383,3 +383,4 @@ public class ProjectDashboardService : IProjectDashboardService
         return response;
     }
 }
+

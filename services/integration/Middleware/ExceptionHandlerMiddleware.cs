@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -80,11 +80,4 @@ public static class ExceptionHandlerMiddlewareExtensions
         return builder.UseMiddleware<ExceptionHandlerMiddleware>();
     }
 }
-
-
-
-
-
-
-
 

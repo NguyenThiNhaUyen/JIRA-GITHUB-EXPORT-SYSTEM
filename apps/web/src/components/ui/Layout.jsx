@@ -1,4 +1,4 @@
-// EmptyState Component - Part of UI Kit
+﻿// EmptyState Component - Part of UI Kit
 export function EmptyState({ 
   icon, 
   title, 
@@ -139,9 +139,4 @@ export function SimpleStatCard({
     </div>
   );
 }
-
-
-
-
-
 

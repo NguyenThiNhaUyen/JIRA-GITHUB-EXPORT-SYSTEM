@@ -1,4 +1,4 @@
-import { Github, GitBranch, Clock, ExternalLink, RefreshCw } from"lucide-react";
+﻿import { Github, GitBranch, Clock, ExternalLink, RefreshCw } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -6,20 +6,20 @@ export function CommitHistory({ loadingCommits, myCommits, githubUrl }) {
  return (
  <Card className="border border-gray-100 shadow-sm rounded-[40px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-10 px-12 bg-gray-50/20">
- <CardTitle className="font-display">Dòng thời gian đóng góp trên GitHub</CardTitle>
+ <CardTitle className="font-display">DĂ²ng thá»i gian Ä‘Ă³ng gĂ³p trĂªn GitHub</CardTitle>
  </CardHeader>
  <CardContent className="p-0">
  {loadingCommits ? (
  <div className="py-32 text-center space-y-4">
  <RefreshCw className="mx-auto text-teal-600 animate-spin" size={32} />
- <p className="text-[10px] font-black text-gray-400 animate-pulse">Đang tải lịch sử Git...</p>
+ <p className="text-[10px] font-black text-gray-400 animate-pulse">Äang táº£i lá»‹ch sá»­ Git...</p>
  </div>
  ) : myCommits.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 gap-6">
  <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-200 border border-gray-100 shadow-inner">
  <Github size={32} />
  </div>
- <p className="text-[10px] font-black text-gray-300 text-center leading-relaxed">Chưa có bản ghi commit nào<br/>được ghi nhận cho tài khoản này</p>
+ <p className="text-[10px] font-black text-gray-300 text-center leading-relaxed">ChÆ°a cĂ³ báº£n ghi commit nĂ o<br/>Ä‘Æ°á»£c ghi nháº­n cho tĂ i khoáº£n nĂ y</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -63,9 +63,4 @@ export function CommitHistory({ loadingCommits, myCommits, githubUrl }) {
  </Card>
  );
 }
-
-
-
-
-
 

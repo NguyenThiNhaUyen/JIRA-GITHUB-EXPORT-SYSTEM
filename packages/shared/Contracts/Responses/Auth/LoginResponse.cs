@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Auth;
+﻿namespace JiraGithubExport.Shared.Contracts.Responses.Auth;
 
 public class LoginResponse
 {
@@ -18,10 +18,4 @@ public class UserInfo
     public string? StudentCode { get; set; }
     public string? LecturerCode { get; set; }
 }
-
-
-
-
-
-
 

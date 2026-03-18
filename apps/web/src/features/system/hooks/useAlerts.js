@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAlerts, resolveAlert, sendAlert } from "../api/alertApi.js";
 
 export const ALERT_KEYS = {
@@ -28,9 +28,4 @@ export const useSendAlert = () => {
         mutationFn: (payload) => sendAlert(payload),
     });
 };
-
-
-
-
-
 

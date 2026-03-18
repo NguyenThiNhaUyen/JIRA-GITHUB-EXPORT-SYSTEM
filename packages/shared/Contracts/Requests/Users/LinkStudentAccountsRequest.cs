@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Requests.Users;
+﻿namespace JiraGithubExport.Shared.Contracts.Requests.Users;
 
 public class LinkStudentAccountsRequest
 {
@@ -6,3 +6,4 @@ public class LinkStudentAccountsRequest
     public string? GithubUrl { get; set; }
     public string? JiraUrl { get; set; }
 }
+

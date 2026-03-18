@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
@@ -18,29 +18,29 @@ public class AlertService : IAlertService
 
     public async Task<PagedResponse<AlertResponse>> GetAlertsAsync(long userId, string userRole, PagedRequest request)
     {
-        var query = _context.inactive_alerts
-            .Include(a => a.project)
+        var query = _context.InactiveAlerts
+            .Include(a => a.Project)
             .AsQueryable();
 
-        if (userRole == "LECTURER")
+        if (userRole == "Lecturer")
         {
-            // Lecturer sees alerts for projects in courses they teach
-            var lecturerProjectIds = await _context.projects
-                .Where(p => p.course.lecturer_users.Any(l => l.user_id == userId))
-                .Select(p => p.id)
+            // Lecturer sees alerts for Projects in Courses they teach
+            var lecturerProjectIds = await _context.Projects
+                .Where(p => p.Course.LecturerUsers.Any(l => l.UserId == userId))
+                .Select(p => p.Id)
                 .ToListAsync();
 
-            query = query.Where(a => a.project_id.HasValue && lecturerProjectIds.Contains(a.project_id.Value));
+            query = query.Where(a => lecturerProjectIds.Contains(a.ProjectId));
         }
-        else if (userRole == "STUDENT")
+        else if (userRole == "Student")
         {
-            // Student sees alerts for their own projects
-            var studentProjectIds = await _context.team_members
-                .Where(tm => tm.student_user_id == userId && tm.participation_status == "ACTIVE")
-                .Select(tm => tm.project_id)
+            // Student sees alerts for their own Projects
+            var studentProjectIds = await _context.TeamMembers
+                .Where(tm => tm.StudentUserId == userId && tm.ParticipationStatus == "ACTIVE")
+                .Select(tm => tm.ProjectId)
                 .ToListAsync();
 
-            query = query.Where(a => a.project_id.HasValue && studentProjectIds.Contains(a.project_id.Value));
+            query = query.Where(a => studentProjectIds.Contains(a.ProjectId));
         }
         // ADMIN sees all alerts
 
@@ -49,26 +49,26 @@ public class AlertService : IAlertService
         var total = await query.CountAsync();
 
         var items = await query
-            .OrderByDescending(a => a.created_at)
+            .OrderByDescending(a => a.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
         var mapped = items.Select(a => new AlertResponse
         {
-            Id = a.id,
-            AlertType = a.alert_type,
-            TargetEntityType = a.target_entity_type,
-            TargetEntityId = a.target_entity_id,
-            ProjectId = a.project_id,
-            ProjectName = a.project?.name,
-            Severity = a.severity,
-            Message = a.message,
-            ThresholdDays = a.threshold_days,
-            LastActivityAt = a.last_activity_at,
-            IsResolved = a.is_resolved,
-            ResolvedAt = a.resolved_at,
-            CreatedAt = a.created_at
+            Id = a.Id,
+            AlertType = a.AlertType,
+            TargetEntityType = a.TargetEntityType,
+            TargetEntityId = a.TargetEntityId,
+            ProjectId = a.ProjectId,
+            ProjectName = a.Project?.Name,
+            Severity = a.Severity,
+            Message = a.Message,
+            ThresholdDays = a.ThresholdDays,
+            LastActivityAt = a.LastActivityAt,
+            IsResolved = a.IsResolved,
+            ResolvedAt = a.ResolvedAt,
+            CreatedAt = a.CreatedAt
         }).ToList();
 
         return new PagedResponse<AlertResponse>
@@ -84,34 +84,35 @@ public class AlertService : IAlertService
 
     public async Task ResolveAlertAsync(long alertId, long resolvedByUserId)
     {
-        var alert = await _context.inactive_alerts.FindAsync(alertId)
+        var alert = await _context.InactiveAlerts.FindAsync(alertId)
             ?? throw new NotFoundException($"Alert {alertId} not found");
 
-        alert.is_resolved = true;
-        alert.resolved_at = DateTime.UtcNow;
-        alert.resolved_by_user_id = resolvedByUserId;
+        alert.IsResolved = true;
+        alert.ResolvedAt = DateTime.UtcNow;
+        alert.ResolvedByUserId = resolvedByUserId;
         await _context.SaveChangesAsync();
     }
 
     public async Task SendAlertAsync(long projectId, string message, string severity = "MEDIUM")
     {
-        var project = await _context.projects
-            .Include(p => p.course)
-            .FirstOrDefaultAsync(p => p.id == projectId);
-        if (project == null) throw new NotFoundException($"Project {projectId} not found");
+        var Project = await _context.Projects
+            .Include(p => p.Course)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+        if (Project == null) throw new NotFoundException($"Project {projectId} not found");
 
-        var alert = new inactive_alert
+        var alert = new InactiveAlert
         {
-            alert_type = "MANUAL",
-            target_entity_type = "PROJECT",
-            target_entity_id = projectId,
-            project_id = projectId,
-            severity = severity,
-            message = message,
-            is_resolved = false,
-            created_at = DateTime.UtcNow
+            AlertType = "MANUAL",
+            TargetEntityType = "Project",
+            TargetEntityId = projectId,
+            ProjectId = projectId,
+            Severity = severity,
+            Message = message,
+            IsResolved = false,
+            CreatedAt = DateTime.UtcNow
         };
-        _context.inactive_alerts.Add(alert);
+        _context.InactiveAlerts.Add(alert);
         await _context.SaveChangesAsync();
     }
 }
+

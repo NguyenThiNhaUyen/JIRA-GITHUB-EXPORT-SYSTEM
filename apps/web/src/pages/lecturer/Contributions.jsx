@@ -1,4 +1,4 @@
-import { Download } from"lucide-react";
+﻿import { Download } from"lucide-react";
 
 // Components Shared
 import { PageHeader } from"@/components/shared/PageHeader.jsx";
@@ -34,7 +34,7 @@ export default function Contributions() {
  return (
  <div className="flex flex-col items-center justify-center py-20 gap-4">
  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
- <p className="text-gray-500 font-black text-xs">Đang tải dữ liệu đóng góp...</p>
+ <p className="text-gray-500 font-black text-xs">Äang táº£i dá»¯ liá»‡u Ä‘Ă³ng gĂ³p...</p>
  </div>
  );
  }
@@ -42,12 +42,12 @@ export default function Contributions() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Theo dõi Đóng góp"
- subtitle="Phân tích chi tiết nỗ lực cá nhân của sinh viên qua Commits, Pull Requests và Code Reviews."
- breadcrumb={["Giảng viên","Đóng góp"]}
+ title="Theo dĂµi ÄĂ³ng gĂ³p"
+ subtitle="PhĂ¢n tĂ­ch chi tiáº¿t ná»— lá»±c cĂ¡ nhĂ¢n cá»§a sinh viĂªn qua Commits, Pull Requests vĂ  Code Reviews."
+ breadcrumb={["Giáº£ng viĂªn","ÄĂ³ng gĂ³p"]}
  actions={[
  <Button key="export" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black border-0 shadow-lg shadow-teal-100">
- <Download size={16} className="mr-2" /> Xuất báo cáo
+ <Download size={16} className="mr-2" /> Xuáº¥t bĂ¡o cĂ¡o
  </Button>
  ]}
  />
@@ -65,7 +65,7 @@ export default function Contributions() {
  <div className="lg:col-span-2">
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
- <h3 className="text-sm font-black text-gray-800 leading-none">Chi tiết sinh viên</h3>
+ <h3 className="text-sm font-black text-gray-800 leading-none">Chi tiáº¿t sinh viĂªn</h3>
  <div className="flex items-center gap-3">
  <select
  className="bg-gray-50 border-none rounded-xl px-4 py-2 text-xs font-black text-gray-500 outline-none focus:ring-2 focus:ring-teal-100"
@@ -76,7 +76,7 @@ export default function Contributions() {
  </select>
  <div className="w-64">
  <InputField
- placeholder="Tìm sinh viên, nhóm..."
+ placeholder="TĂ¬m sinh viĂªn, nhĂ³m..."
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  size="sm"
@@ -86,14 +86,14 @@ export default function Contributions() {
  </div>
  <StudentContributionTable
  students={filteredStudents}
- onWarning={(s) => success(`Đã gửi cảnh báo tới ${s.name}`)}
+ onWarning={(s) => success(`ÄĂ£ gá»­i cáº£nh bĂ¡o tá»›i ${s.name}`)}
  />
  </Card>
  </div>
 
  <div className="space-y-8">
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white p-8">
- <h3 className="text-sm font-black text-gray-800 mb-6 leading-none">Hoạt động trong tuần</h3>
+ <h3 className="text-sm font-black text-gray-800 mb-6 leading-none">Hoáº¡t Ä‘á»™ng trong tuáº§n</h3>
  <WeeklyActivityChart weeklyCommits={weeklyCommits} />
  </Card>
 
@@ -103,9 +103,4 @@ export default function Contributions() {
  </div>
  );
 }
-
-
-
-
-
 

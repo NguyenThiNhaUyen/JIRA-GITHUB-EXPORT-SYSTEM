@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
+﻿namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
 
 public class ReviewSrsRequest
 {
@@ -7,3 +7,4 @@ public class ReviewSrsRequest
     public float? Score { get; set; }
     public string? Metadata { get; set; }
 }
+

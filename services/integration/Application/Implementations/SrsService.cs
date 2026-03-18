@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -17,22 +17,21 @@ public class SrsService : ISrsService
     private readonly JiraGithubToolDbContext _context;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<SrsService> _logger;
-    private readonly IAnalyticsService _analyticsService;
+    private readonly INotificationService _notificationService;
 
 
     
-    public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, IAnalyticsService analyticsService)
+    public SrsService(JiraGithubToolDbContext context, IWebHostEnvironment env, ILogger<SrsService> logger, INotificationService notificationService)
     {
         _context = context;
         _env = env;
         _logger = logger;
-        _analyticsService = analyticsService;
-        _analyticsService = analyticsService;
+        _notificationService = notificationService;
     }
 
     public async Task<SrsDocumentResponse> UploadSrsAsync(long projectId, long uploaderUserId, UploadSrsRequest request)
     {
-        var project = await _context.projects.FindAsync(projectId)
+        var Project = await _context.Projects.FindAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found");
 
         if (request.File == null || request.File.Length == 0)
@@ -53,35 +52,35 @@ public class SrsService : ISrsService
 
         var fileUrl = $"/uploads/srs/{uniqueFileName}";
 
-        var currentMaxVersion = await _context.project_documents
-            .Where(d => d.project_id == projectId && d.doc_type == "SRS")
-            .MaxAsync(d => (int?)d.version_no) ?? 0;
+        var currentMaxVersion = await _context.ProjectDocuments
+            .Where(d => d.ProjectId == projectId && d.DocType == "SRS")
+            .MaxAsync(d => (int?)d.VersionNo) ?? 0;
 
-        var srsDoc = new project_document
+        var srsDoc = new ProjectDocument
         {
-            project_id = projectId,
-            doc_type = "SRS",
-            version_no = currentMaxVersion + 1,
-            status = "DRAFT", // DRAFT initially, Lecturer updates to FINAL
-            file_url = fileUrl,
-            submitted_by_user_id = uploaderUserId,
-            submitted_at = DateTime.UtcNow
+            ProjectId = projectId,
+            DocType = "SRS",
+            VersionNo = currentMaxVersion + 1,
+            Status = "DRAFT", // DRAFT initially, Lecturer updates to FINAL
+            FileUrl = fileUrl,
+            SubmittedByUserId = uploaderUserId,
+            SubmittedAt = DateTime.UtcNow
         };
 
-        _context.project_documents.Add(srsDoc);
+        _context.ProjectDocuments.Add(srsDoc);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("User {UserId} uploaded SRS version {Version} for project {ProjectId}", uploaderUserId, srsDoc.version_no, projectId);
+        _logger.LogInformation("User {UserId} uploaded SRS version {Version} for Project {ProjectId}", uploaderUserId, srsDoc.VersionNo, projectId);
 
-        return await GetSrsResponseAsync(srsDoc.id);
+        return await GetSrsResponseAsync(srsDoc.Id);
     }
 
     public async Task<PagedResponse<SrsDocumentResponse>> GetSrsListAsync(long projectId, PagedRequest request)
     {
-        var query = _context.project_documents
-            .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
-            .Where(d => d.project_id == projectId && d.doc_type == "SRS")
+        var query = _context.ProjectDocuments
+            .Include(d => d.SubmittedByUser)
+            .Include(d => d.ReviewerUser)
+            .Where(d => d.ProjectId == projectId && d.DocType == "SRS")
             .AsQueryable();
 
         var total = await query.CountAsync();
@@ -89,7 +88,7 @@ public class SrsService : ISrsService
         var pageSize = request.PageSize > 0 ? request.PageSize : 20;
         
         var items = await query
-            .OrderByDescending(d => d.version_no)
+            .OrderByDescending(d => d.VersionNo)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -108,33 +107,33 @@ public class SrsService : ISrsService
 
     public async Task<SrsDocumentResponse> ReviewSrsStatusAsync(long srsId, long reviewerUserId, ReviewSrsStatusRequest request)
     {
-        var srs = await _context.project_documents
-            .FirstOrDefaultAsync(d => d.id == srsId && d.doc_type == "SRS")
+        var srs = await _context.ProjectDocuments
+            .FirstOrDefaultAsync(d => d.Id == srsId && d.DocType == "SRS")
             ?? throw new NotFoundException($"SRS {srsId} not found");
 
-        srs.status = request.Status;
-        srs.reviewer_user_id = reviewerUserId;
-        srs.reviewed_at = DateTime.UtcNow;
-        srs.score = request.Score;
+        srs.Status = request.Status;
+        srs.ReviewerUserId = reviewerUserId;
+        srs.ReviewedAt = DateTime.UtcNow;
+        srs.Score = request.Score ?? 0m;
         if (!string.IsNullOrEmpty(request.Feedback))
         {
-            srs.feedback = request.Feedback;
+            srs.Feedback = request.Feedback;
         }
 
         await _context.SaveChangesAsync();
 
         // Notify Team Members
-        var teamMembers = await _context.team_members
-            .Where(tm => tm.project_id == srs.project_id)
+        var teamMembers = await _context.TeamMembers
+            .Where(tm => tm.ProjectId == srs.ProjectId)
             .ToListAsync();
 
         foreach (var member in teamMembers)
         {
-            await _analyticsService.BuildNotificationAsync(
-                member.student_user_id,
+            await _notificationService.BuildNotificationAsync(
+                member.StudentUserId,
                 "ALERT",
-                $"Tài liệu SRS của nhóm bạn đã được cập nhật trạng thái: {request.Status}",
-                System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.id, projectId = srs.project_id })
+                $"TĂ i liá»‡u SRS cá»§a nhĂ³m báº¡n Ä‘Ă£ Ä‘Æ°á»£c cáº­p nháº­t tráº¡ng thĂ¡i: {request.Status}",
+                System.Text.Json.JsonSerializer.Serialize(new { srsId = srs.Id, projectId = srs.ProjectId })
             );
         }
         
@@ -146,13 +145,13 @@ public class SrsService : ISrsService
 
     public async Task<SrsDocumentResponse> ProvideSrsFeedbackAsync(long srsId, long reviewerUserId, ReviewSrsFeedbackRequest request)
     {
-        var srs = await _context.project_documents
-            .FirstOrDefaultAsync(d => d.id == srsId && d.doc_type == "SRS")
+        var srs = await _context.ProjectDocuments
+            .FirstOrDefaultAsync(d => d.Id == srsId && d.DocType == "SRS")
             ?? throw new NotFoundException($"SRS {srsId} not found");
 
-        srs.feedback = request.Feedback;
-        srs.reviewer_user_id = reviewerUserId;
-        srs.reviewed_at = DateTime.UtcNow;
+        srs.Feedback = request.Feedback;
+        srs.ReviewerUserId = reviewerUserId;
+        srs.ReviewedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return await GetSrsResponseAsync(srsId);
@@ -160,24 +159,24 @@ public class SrsService : ISrsService
 
     public async Task<PagedResponse<SrsDocumentResponse>> GetSrsListByCourseAsync(long? courseId, long? projectId, string? status, string? milestone, int page, int pageSize)
     {
-        var query = _context.project_documents
-            .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
-            .Include(d => d.project)
-            .Where(d => d.doc_type == "SRS")
+        var query = _context.ProjectDocuments
+            .Include(d => d.SubmittedByUser)
+            .Include(d => d.ReviewerUser)
+            .Include(d => d.Project)
+            .Where(d => d.DocType == "SRS")
             .AsQueryable();
 
         if (courseId.HasValue)
         {
-            query = query.Where(d => d.project.course_id == courseId.Value);
+            query = query.Where(d => d.Project.CourseId == courseId.Value);
         }
         if (projectId.HasValue)
         {
-            query = query.Where(d => d.project_id == projectId.Value);
+            query = query.Where(d => d.ProjectId == projectId.Value);
         }
         if (!string.IsNullOrEmpty(status))
         {
-            query = query.Where(d => d.status == status);
+            query = query.Where(d => d.Status == status);
         }
         
         var total = await query.CountAsync();
@@ -185,7 +184,7 @@ public class SrsService : ISrsService
         pageSize = pageSize > 0 ? pageSize : 20;
 
         var items = await query
-            .OrderByDescending(d => d.submitted_at)
+            .OrderByDescending(d => d.SubmittedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -209,46 +208,46 @@ public class SrsService : ISrsService
 
     public async Task RemindOverdueAsync()
     {
-        // Find active projects that do not have an SRS document yet
-        var activeProjectsWithoutSrs = await _context.projects
-            .Where(p => p.status == "ACTIVE" && !_context.project_documents.Any(pd => pd.project_id == p.id && pd.doc_type == "SRS"))
+        // Find active Projects that do not have an SRS document yet
+        var activeProjectsWithoutSrs = await _context.Projects
+            .Where(p => p.Status == "ACTIVE" && !_context.ProjectDocuments.Any(pd => pd.ProjectId == p.Id && pd.DocType == "SRS"))
             .ToListAsync();
 
-        foreach (var project in activeProjectsWithoutSrs)
+        foreach (var Project in activeProjectsWithoutSrs)
         {
-            // Get all students in the project
-            var teamMembers = await _context.team_members
-                .Where(tm => tm.project_id == project.id && tm.participation_status == "ACTIVE")
+            // Get all Students in the Project
+            var teamMembers = await _context.TeamMembers
+                .Where(tm => tm.ProjectId == Project.Id && tm.ParticipationStatus == "ACTIVE")
                 .ToListAsync();
 
             foreach (var member in teamMembers)
             {
-                await _analyticsService.BuildNotificationAsync(
-                    member.student_user_id,
+                await _notificationService.BuildNotificationAsync(
+                    member.StudentUserId,
                     "WARNING",
-                    $"Nhóm của bạn tại dự án {project.name} chưa nộp tài liệu SRS. Vui lòng nộp sớm để không bị trễ hạn.",
-                    System.Text.Json.JsonSerializer.Serialize(new { projectId = project.id })
+                    $"NhĂ³m cá»§a báº¡n táº¡i dá»± Ă¡n {Project.Name} chÆ°a ná»™p tĂ i liá»‡u SRS. Vui lĂ²ng ná»™p sá»›m Ä‘á»ƒ khĂ´ng bá»‹ trá»… háº¡n.",
+                    System.Text.Json.JsonSerializer.Serialize(new { projectId = Project.Id })
                 );
             }
         }
 
-        _logger.LogInformation("Sent reminders for {Count} projects missing SRS documents", activeProjectsWithoutSrs.Count);
+        _logger.LogInformation("Sent reminders for {Count} Projects missing SRS documents", activeProjectsWithoutSrs.Count);
     }
 
     public async Task DeleteSrsAsync(long srsId, long userId)
     {
-        var srs = await _context.project_documents.FindAsync(srsId)
+        var srs = await _context.ProjectDocuments.FindAsync(srsId)
             ?? throw new NotFoundException($"SRS {srsId} not found");
 
-        if (srs.status == "FINAL")
+        if (srs.Status == "FINAL")
         {
             throw new BusinessException("Cannot delete FINAL SRS document");
         }
 
-        _context.project_documents.Remove(srs);
+        _context.ProjectDocuments.Remove(srs);
         await _context.SaveChangesAsync();
 
-        var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", srs.file_url.TrimStart('/'));
+        var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", srs.FileUrl.TrimStart('/'));
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
@@ -259,33 +258,34 @@ public class SrsService : ISrsService
 
     private async Task<SrsDocumentResponse> GetSrsResponseAsync(long srsId)
     {
-        var srs = await _context.project_documents
-            .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
-            .FirstOrDefaultAsync(d => d.id == srsId)
+        var srs = await _context.ProjectDocuments
+            .Include(d => d.SubmittedByUser)
+            .Include(d => d.ReviewerUser)
+            .FirstOrDefaultAsync(d => d.Id == srsId)
             ?? throw new NotFoundException($"SRS document {srsId} not found");
 
         return MapToResponse(srs);
     }
 
-    private SrsDocumentResponse MapToResponse(project_document d)
+    private SrsDocumentResponse MapToResponse(ProjectDocument d)
     {
         return new SrsDocumentResponse
         {
-            Id = d.id,
-            ProjectId = d.project_id,
-            VersionNo = d.version_no,
-            Status = d.status,
-            FileUrl = d.file_url,
-            SubmittedByUserId = d.submitted_by_user_id,
-            SubmittedByName = d.submitted_by_user?.full_name,
-            SubmittedAt = d.submitted_at,
-            ReviewerUserId = d.reviewer_user_id,
-            ReviewerName = d.reviewer_user?.full_name,
-            Feedback = d.feedback,
-            Score = d.score,
-            Metadata = d.metadata,
-            ReviewedAt = d.reviewed_at
+            Id = d.Id,
+            ProjectId = d.ProjectId,
+            VersionNo = d.VersionNo,
+            Status = d.Status,
+            FileUrl = d.FileUrl,
+            SubmittedByUserId = d.SubmittedByUserId,
+            SubmittedByName = d.SubmittedByUser?.FullName,
+            SubmittedAt = d.SubmittedAt,
+            ReviewerUserId = d.ReviewerUserId,
+            ReviewerName = d.ReviewerUser?.FullName,
+            Feedback = d.Feedback,
+            Score = d.Score,
+            Metadata = d.Metadata,
+            ReviewedAt = d.ReviewedAt
         };
     }
 }
+

@@ -1,4 +1,4 @@
-import { BarChart2, CheckCircle, RefreshCw } from"lucide-react";
+﻿import { BarChart2, CheckCircle, RefreshCw } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 
 export function ProjectKpiSidebar({ metrics, isSyncing }) {
@@ -46,9 +46,4 @@ export function ProjectKpiSidebar({ metrics, isSyncing }) {
  </Card>
  );
 }
-
-
-
-
-
 

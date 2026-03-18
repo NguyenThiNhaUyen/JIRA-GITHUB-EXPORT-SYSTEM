@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Common;
+﻿using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
@@ -15,3 +15,4 @@ public interface IProjectCoreService
     Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>> GetProjectCommitHistoryAsync(long projectId);
     Task<object> SyncProjectCommitsAsync(long projectId);
 }
+

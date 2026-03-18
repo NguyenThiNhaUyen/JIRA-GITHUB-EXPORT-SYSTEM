@@ -1,4 +1,4 @@
-import { Search, UserPlus, CheckCircle, RefreshCw, X, Users } from"lucide-react";
+﻿import { Search, UserPlus, CheckCircle, RefreshCw, X, Users } from"lucide-react";
 import { Modal } from"@/components/ui/Interactive.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -6,17 +6,17 @@ export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents
  const availableStudents = (enrolledData.items || []).filter(s => !groupStudents.find(m => String(m.studentId) === String(s.id)));
 
  return (
- <Modal isOpen={isOpen} onClose={onClose} title="Tìm kiếm & Mời thành viên" size="md">
+ <Modal isOpen={isOpen} onClose={onClose} title="TĂ¬m kiáº¿m & Má»i thĂ nh viĂªn" size="md">
  <div className="space-y-12 p-6 animate-in fade-in zoom-in-95 duration-500">
  <div className="space-y-6">
  <div className="flex items-center justify-between px-4">
  <p className="text-[11px] font-black text-gray-400 tracking-[0.3em] flex items-center gap-3">
  <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
- Sinh viên chưa có nhóm ({availableStudents.length})
+ Sinh viĂªn chÆ°a cĂ³ nhĂ³m ({availableStudents.length})
  </p>
  {inviteSelectedIds.length > 0 && (
  <button onClick={() => setInviteSelectedIds([])} className="text-[9px] font-black text-red-500 hover:text-red-600 flex items-center gap-2 bg-red-50 px-3 py-1.5 rounded-xl transition-all border border-red-100">
- <X size={12} /> Hủy chọn ({inviteSelectedIds.length})
+ <X size={12} /> Há»§y chá»n ({inviteSelectedIds.length})
  </button>
  )}
  </div>
@@ -61,7 +61,7 @@ export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents
  <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mx-auto shadow-inner">
  <Users size={48} className="text-gray-100" />
  </div>
- <p className="text-[11px] font-black text-gray-300 tracking-[0.4em] leading-relaxed">Tất cả sinh viên trong lớp học<br/>đều đã có nhóm dự án.</p>
+ <p className="text-[11px] font-black text-gray-300 tracking-[0.4em] leading-relaxed">Táº¥t cáº£ sinh viĂªn trong lá»›p há»c<br/>Ä‘á»u Ä‘Ă£ cĂ³ nhĂ³m dá»± Ă¡n.</p>
  </div>
  )}
  </div>
@@ -73,23 +73,18 @@ export function InviteMemberModal({ isOpen, onClose, enrolledData, groupStudents
  variant="ghost" 
  className="flex-1 rounded-[32px] h-20 text-[12px] font-black tracking-[0.3em] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all font-display"
  >
- Đóng cửa sổ
+ ÄĂ³ng cá»­a sá»•
  </Button>
  <Button 
  onClick={onInviteSubmit} 
  disabled={isInviting || inviteSelectedIds.length === 0} 
  className="flex-1 bg-slate-900 hover:bg-black text-white rounded-[32px] h-20 text-[12px] font-black tracking-[0.3em] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.15)] transition-all active:scale-95 disabled:opacity-20 border-0 font-display hover:scale-105"
  >
- {isInviting ? <RefreshCw className="animate-spin mr-3" size={24}/> : <UserPlus size={24} className="mr-3" />} Mời {inviteSelectedIds.length} sinh viên
+ {isInviting ? <RefreshCw className="animate-spin mr-3" size={24}/> : <UserPlus size={24} className="mr-3" />} Má»i {inviteSelectedIds.length} sinh viĂªn
  </Button>
  </div>
  </div>
  </Modal>
  );
 }
-
-
-
-
-
 

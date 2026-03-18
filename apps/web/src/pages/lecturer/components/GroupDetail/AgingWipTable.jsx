@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
+﻿import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Clock, Activity } from"lucide-react";
 
 export function AgingWipTable({ agingWipData, loadingAgingWip }) {
@@ -10,14 +10,14 @@ export function AgingWipTable({ agingWipData, loadingAgingWip }) {
  <CardTitle className="text-base font-black text-gray-800">Aging WIP Analysis</CardTitle>
  </div>
  <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-full px-4 py-1.5 border border-blue-100">
- {agingWipData?.items?.length || 0} tasks đang ngâm
+ {agingWipData?.items?.length || 0} tasks Ä‘ang ngĂ¢m
  </span>
  </CardHeader>
  <CardContent className="p-0">
  {loadingAgingWip ? (
- <div className="p-20 text-center"><Activity className="animate-spin inline mr-2 text-blue-600" /> Đang tính toán...</div>
+ <div className="p-20 text-center"><Activity className="animate-spin inline mr-2 text-blue-600" /> Äang tĂ­nh toĂ¡n...</div>
  ) : !agingWipData?.items || agingWipData.items.length === 0 ? (
- <div className="p-20 text-center text-[10px] font-black text-gray-300">Không có task nào bị trễ tiến độ 🎉</div>
+ <div className="p-20 text-center text-[10px] font-black text-gray-300">KhĂ´ng cĂ³ task nĂ o bá»‹ trá»… tiáº¿n Ä‘á»™ đŸ‰</div>
  ) : (
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
@@ -42,7 +42,7 @@ export function AgingWipTable({ agingWipData, loadingAgingWip }) {
  <td className="py-6 px-8 text-center">
  <p className="text-[10px] font-black text-gray-600">{task.assigneeName ||"Unassigned"}</p>
  </td>
- <td className="py-6 px-8 text-right font-black text-red-500 text-sm">{task.agingDays} ngày</td>
+ <td className="py-6 px-8 text-right font-black text-red-500 text-sm">{task.agingDays} ngĂ y</td>
  </tr>
  ))}
  </tbody>
@@ -53,9 +53,4 @@ export function AgingWipTable({ agingWipData, loadingAgingWip }) {
  </Card>
  );
 }
-
-
-
-
-
 

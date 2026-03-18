@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     getProjectSrs,
     submitSrsReport,
@@ -14,7 +14,7 @@ export const SRS_KEYS = {
     reports: (params) => [...SRS_KEYS.all, "reports", params],
 };
 
-/** Lấy danh sách SRS cho giảng viên (load tất cả hoặc theo params) */
+/** Láº¥y danh sĂ¡ch SRS cho giáº£ng viĂªn (load táº¥t cáº£ hoáº·c theo params) */
 export const useSrsReports = (params = {}) => {
     return useQuery({
         queryKey: SRS_KEYS.reports(params),
@@ -22,7 +22,7 @@ export const useSrsReports = (params = {}) => {
     });
 };
 
-/** Lấy danh sách SRS của một project */
+/** Láº¥y danh sĂ¡ch SRS cá»§a má»™t project */
 export const useGetProjectSrs = (projectId) => {
     return useQuery({
         queryKey: SRS_KEYS.list(projectId),
@@ -32,7 +32,7 @@ export const useGetProjectSrs = (projectId) => {
 };
 
 /**
- * Nộp SRS mới — gửi file thật qua FormData (multipart/form-data)
+ * Ná»™p SRS má»›i â€” gá»­i file tháº­t qua FormData (multipart/form-data)
  */
 export const useSubmitSrs = () => {
     const queryClient = useQueryClient();
@@ -47,7 +47,7 @@ export const useSubmitSrs = () => {
 };
 
 /**
- * Cập nhật status SRS (Giảng viên approve/reject)
+ * Cáº­p nháº­t status SRS (Giáº£ng viĂªn approve/reject)
  */
 export const useUpdateSrsStatus = () => {
     const queryClient = useQueryClient();
@@ -61,7 +61,7 @@ export const useUpdateSrsStatus = () => {
 };
 
 /**
- * Đánh giá SRS (Giảng viên)
+ * ÄĂ¡nh giĂ¡ SRS (Giáº£ng viĂªn)
  */
 export const useReviewSrs = () => {
     const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export const useReviewSrs = () => {
 };
 
 /**
- * Gửi feedback cho SRS (Giảng viên)
+ * Gá»­i feedback cho SRS (Giáº£ng viĂªn)
  */
 export const useProvideSrsFeedback = () => {
     const queryClient = useQueryClient();
@@ -88,7 +88,7 @@ export const useProvideSrsFeedback = () => {
 };
 
 /**
- * Xóa SRS Report
+ * XĂ³a SRS Report
  */
 export const useDeleteSrs = () => {
     const queryClient = useQueryClient();
@@ -99,9 +99,4 @@ export const useDeleteSrs = () => {
         },
     });
 };
-
-
-
-
-
 

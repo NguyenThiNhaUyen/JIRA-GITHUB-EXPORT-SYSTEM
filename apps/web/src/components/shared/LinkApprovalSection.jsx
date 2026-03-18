@@ -1,4 +1,4 @@
-import { Button } from"../ui/Button.jsx";
+﻿import { Button } from"../ui/Button.jsx";
 import { StatusBadge } from"./Badge.jsx";
 import { ExternalLink } from"lucide-react";
 
@@ -16,7 +16,7 @@ export function LinkApprovalSection({ icon, label, url, status, onApprove, onRej
  </div>
  <StatusBadge
  status={isApproved ? 'success' : isRejected ? 'danger' : 'warning'}
- label={isApproved ? 'Đã duyệt' : isRejected ? 'Từ chối' : 'Chờ duyệt'}
+ label={isApproved ? 'ÄĂ£ duyá»‡t' : isRejected ? 'Tá»« chá»‘i' : 'Chá» duyá»‡t'}
  />
  </div>
 
@@ -31,23 +31,18 @@ export function LinkApprovalSection({ icon, label, url, status, onApprove, onRej
  </a>
  </>
  ) : (
- <span className="text-[10px] font-black text-gray-300">Chưa cung cấp liên kết</span>
+ <span className="text-[10px] font-black text-gray-300">ChÆ°a cung cáº¥p liĂªn káº¿t</span>
  )}
  </div>
 
  {url && (isPending || isRejected) && (
- <Button onClick={onApprove} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl px-6 h-12 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">Duyệt</Button>
+ <Button onClick={onApprove} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl px-6 h-12 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">Duyá»‡t</Button>
  )}
  {url && (isPending || isApproved) && (
- <Button onClick={onReject} variant="outline" className="bg-white hover:bg-red-50 text-red-600 border border-red-100 hover:border-red-200 rounded-2xl px-6 h-12 text-[10px] font-black shadow-sm transition-all">Từ chối</Button>
+ <Button onClick={onReject} variant="outline" className="bg-white hover:bg-red-50 text-red-600 border border-red-100 hover:border-red-200 rounded-2xl px-6 h-12 text-[10px] font-black shadow-sm transition-all">Tá»« chá»‘i</Button>
  )}
  </div>
  </div>
  );
 }
-
-
-
-
-
 

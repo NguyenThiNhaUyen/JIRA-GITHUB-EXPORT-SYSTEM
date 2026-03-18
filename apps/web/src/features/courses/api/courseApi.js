@@ -1,5 +1,5 @@
-/**
- * courseApi.js — API calls cho Courses
+﻿/**
+ * courseApi.js â€” API calls cho Courses
  */
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
@@ -49,7 +49,7 @@ export async function deleteCourse(id) {
 
 /**
  * POST /api/courses/:id/lecturers  [ADMIN only]
- * Fallback sang API /admin/bulk-assign vì API cũ bị 403 Forbidden bên BE
+ * Fallback sang API /admin/bulk-assign vĂ¬ API cÅ© bá»‹ 403 Forbidden bĂªn BE
  */
 export async function assignLecturer(courseId, lecturerUserId) {
     const res = await client.post(`/admin/bulk-assign`, {
@@ -105,9 +105,4 @@ export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
     return mapUserList(unwrap(res));
 }
-
-
-
-
-
 

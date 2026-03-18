@@ -1,4 +1,4 @@
-import { useNavigate } from"react-router-dom";
+﻿import { useNavigate } from"react-router-dom";
 import { FolderKanban, Users, Activity, Target } from"lucide-react";
 import { useAuth } from"@/context/AuthContext.jsx";
 import { useStudentProjects } from"@/features/dashboard/hooks/useDashboard.js";
@@ -22,9 +22,9 @@ export default function StudentMyProjectPage() {
  return (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <PageHeader 
- title="Dự án của tôi"
- subtitle="Quản lý các nhóm và dự án bạn đang tham gia."
- breadcrumb={["Sinh viên","Dự án"]}
+ title="Dá»± Ă¡n cá»§a tĂ´i"
+ subtitle="Quáº£n lĂ½ cĂ¡c nhĂ³m vĂ  dá»± Ă¡n báº¡n Ä‘ang tham gia."
+ breadcrumb={["Sinh viĂªn","Dá»± Ă¡n"]}
  />
  
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -36,9 +36,9 @@ export default function StudentMyProjectPage() {
  </>
  ) : (
  <>
- <StatsCard label="Dự án tham gia" value={myGroups.length} icon={FolderKanban} variant="indigo" />
- <StatsCard label="Vai trò Leader" value={leaderCount} icon={Users} variant="warning" />
- <StatsCard label="Tiền độ TB" value="--" icon={Activity} variant="success" />
+ <StatsCard label="Dá»± Ă¡n tham gia" value={myGroups.length} icon={FolderKanban} variant="indigo" />
+ <StatsCard label="Vai trĂ² Leader" value={leaderCount} icon={Users} variant="warning" />
+ <StatsCard label="Tiá»n Ä‘á»™ TB" value="--" icon={Activity} variant="success" />
  </>
  )}
  </div>
@@ -52,7 +52,7 @@ export default function StudentMyProjectPage() {
  <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-200">
  <FolderKanban size={40} />
  </div>
- <p className="text-[10px] font-black text-gray-300 tracking-[0.2em]">Bạn chưa tham gia dự án nào</p>
+ <p className="text-[10px] font-black text-gray-300 tracking-[0.2em]">Báº¡n chÆ°a tham gia dá»± Ă¡n nĂ o</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -71,11 +71,11 @@ export default function StudentMyProjectPage() {
  </div>
  <div className="flex gap-10">
  <div className="space-y-1.5">
- <p className="text-[10px] font-black text-gray-300">Lớp học</p>
+ <p className="text-[10px] font-black text-gray-300">Lá»›p há»c</p>
  <p className="text-xs font-black text-gray-700">{p.courseName ||"Software Architecture"}</p>
  </div>
  <div className="space-y-1.5">
- <p className="text-[10px] font-black text-gray-300">Tiến độ</p>
+ <p className="text-[10px] font-black text-gray-300">Tiáº¿n Ä‘á»™</p>
  <p className="text-sm font-black text-teal-600">{p.progressPercent || 0}%</p>
  </div>
  </div>
@@ -84,7 +84,7 @@ export default function StudentMyProjectPage() {
  className="bg-slate-900 hover:bg-black text-white rounded-[24px] h-14 px-10 text-[10px] font-black tracking-[0.2em] border-0 shadow-xl shadow-slate-200 transition-all hover:scale-105 active:scale-95" 
  onClick={() => navigate(`/student/project/${p.id}`)}
  >
- Bảng điều khiển
+ Báº£ng Ä‘iá»u khiá»ƒn
  </Button>
  </CardContent>
  </Card>
@@ -95,9 +95,4 @@ export default function StudentMyProjectPage() {
  </div>
  );
 }
-
-
-
-
-
 

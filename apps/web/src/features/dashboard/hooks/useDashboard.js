@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as studentApi from "../api/studentApi.js";
 import * as lecturerApi from "../api/lecturerApi.js";
 import * as adminApi from "../api/adminApi.js";
 import * as analyticsApi from "../api/analyticsApi.js";
 
-/* ── STUDENT DASHBOARD HOOKS ── */
+/* â”€â”€ STUDENT DASHBOARD HOOKS â”€â”€ */
 
 export function useStudentStats() {
     return useQuery({
@@ -76,7 +76,7 @@ export function useStudentMeCourses(params) {
     });
 }
 
-/* ── LECTURER DASHBOARD HOOKS ── */
+/* â”€â”€ LECTURER DASHBOARD HOOKS â”€â”€ */
 
 export function useMyWorkload() {
     return useQuery({
@@ -109,7 +109,7 @@ export function useLecturerActivityLogs(limit = 5) {
     });
 }
 
-/* ── ADMIN & SHARED ANALYTICS HOOKS ── */
+/* â”€â”€ ADMIN & SHARED ANALYTICS HOOKS â”€â”€ */
 
 export function useAdminStats() {
     return useQuery({
@@ -182,7 +182,7 @@ export function useLecturerAnalyticsCourses() {
     });
 }
 
-/* ── MUTATIONS ── */
+/* â”€â”€ MUTATIONS â”€â”€ */
 
 export function useBulkAssignLecturers() {
     const queryClient = useQueryClient();
@@ -193,9 +193,4 @@ export function useBulkAssignLecturers() {
         }
     });
 }
-
-
-
-
-
 

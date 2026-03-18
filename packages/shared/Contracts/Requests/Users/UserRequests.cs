@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Users;
 
@@ -20,3 +20,4 @@ public class AdminResetPasswordRequest
     [MinLength(8)]
     public string NewPassword { get; set; } = null!;
 }
+

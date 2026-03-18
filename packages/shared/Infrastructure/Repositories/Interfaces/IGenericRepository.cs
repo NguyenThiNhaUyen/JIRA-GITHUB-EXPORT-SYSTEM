@@ -1,14 +1,25 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 
+/// <summary>
+/// Enhanced generic repository interface with performance options.
+/// </summary>
+/// <typeparam name="T">Entity type</typeparam>
 public interface IGenericRepository<T> where T : class
 {
-    IQueryable<T> Query();
+    /// <summary>Get a queryable for the entity. Use asNoTracking=true for optimized read-only queries.</summary>
+    IQueryable<T> Query(bool asNoTracking = false);
+    
+    /// <summary>Query including soft-deleted records (internal/admin use)</summary>
+    IQueryable<T> QueryRaw(bool asNoTracking = false);
+
     Task<T?> GetByIdAsync(long id);
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
+    Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false);
+    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false);
+    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
     
@@ -22,12 +33,7 @@ public interface IGenericRepository<T> where T : class
         int pageNumber,
         int pageSize,
         Expression<Func<T, bool>>? filter = null,
-        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        bool asNoTracking = true);
 }
-
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Responses.Reports;
+﻿using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -69,9 +69,9 @@ public class ReportsController : ControllerBase
     /// Generate commit statistics report
     /// </summary>
     [HttpPost("commit-statistics")]
-    public async Task<IActionResult> GenerateCommitStats([FromQuery] long courseId, [FromQuery] string format = "PDF")
+    public async Task<IActionResult> GenerateCommitStats([FromQuery] long courseId, [FromQuery] string Format = "PDF")
     {
-        var reportId = await _reportService.GenerateCommitStatisticsReportAsync(courseId, format);
+        var reportId = await _reportService.GenerateCommitStatisticsReportAsync(courseId, "N/A");
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Report generation started"));
     }
 
@@ -79,14 +79,14 @@ public class ReportsController : ControllerBase
     /// Generate team roster report
     /// </summary>
     [HttpPost("team-roster")]
-    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
+    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string Format = "PDF")
     {
         if (courseId.HasValue)
         {
-            var reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, format);
+            var reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, "N/A");
             return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide roster generation started"));
         }
-        var reportIdProj = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, format);
+        var reportIdProj = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, "N/A");
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "Report generation started"));
     }
 
@@ -98,9 +98,9 @@ public class ReportsController : ControllerBase
         [FromQuery] long projectId,
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate,
-        [FromQuery] string format = "PDF")
+        [FromQuery] string Format = "PDF")
     {
-        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, format);
+        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, "N/A");
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Activity summary report generation started"));
     }
 
@@ -108,14 +108,14 @@ public class ReportsController : ControllerBase
     /// Generate ISO 29148 SRS report from Jira
     /// </summary>
     [HttpPost("srs")]
-    public async Task<IActionResult> GenerateSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
+    public async Task<IActionResult> GenerateSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string Format = "PDF")
     {
         if (courseId.HasValue)
         {
-            var reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, format);
+            var reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, "N/A");
             return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide SRS generation started"));
         }
-        var reportIdProj = await _reportService.GenerateSrsReportAsync(projectId!.Value, format);
+        var reportIdProj = await _reportService.GenerateSrsReportAsync(projectId!.Value, "N/A");
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "SRS Report generation started"));
     }
 
@@ -130,3 +130,4 @@ public class ReportsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { DownloadUrl = url }));
     }
 }
+

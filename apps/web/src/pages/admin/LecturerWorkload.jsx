@@ -1,4 +1,4 @@
-import { useState, useMemo } from"react";
+﻿import { useState, useMemo } from"react";
 import { 
  Users, 
  BookOpen, 
@@ -85,22 +85,22 @@ export default function LecturerWorkload() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader 
- title="Khối lượng Giảng dạy"
- subtitle="Theo dõi và cân bằng khối lượng công việc, số lượng sinh viên và dự án của đội ngũ giảng viên."
+ title="Khá»‘i lÆ°á»£ng Giáº£ng dáº¡y"
+ subtitle="Theo dĂµi vĂ  cĂ¢n báº±ng khá»‘i lÆ°á»£ng cĂ´ng viá»‡c, sá»‘ lÆ°á»£ng sinh viĂªn vĂ  dá»± Ă¡n cá»§a Ä‘á»™i ngÅ© giáº£ng viĂªn."
  breadcrumb={["Admin","Workload"]}
  />
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <StatsCard label="Trung bình" value={`${avgWorkload} Lớp/GV`} icon={TrendingUp} variant="indigo" />
- <StatsCard label="Tổng giảng viên" value={lecturers.length} icon={UserCheck} variant="success" />
- <StatsCard label="Lớp đang vận hành" value={totalClasses} icon={BookOpen} variant="info" />
+ <StatsCard label="Trung bĂ¬nh" value={`${avgWorkload} Lá»›p/GV`} icon={TrendingUp} variant="indigo" />
+ <StatsCard label="Tá»•ng giáº£ng viĂªn" value={lecturers.length} icon={UserCheck} variant="success" />
+ <StatsCard label="Lá»›p Ä‘ang váº­n hĂ nh" value={totalClasses} icon={BookOpen} variant="info" />
  </div>
 
  <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
  <CardContent className="p-4 flex flex-col md:flex-row gap-4">
  <div className="flex-1">
  <InputField 
- placeholder="Tìm giảng viên..." 
+ placeholder="TĂ¬m giáº£ng viĂªn..." 
  value={search} 
  onChange={e => setSearch(e.target.value)} 
  icon={Search} 
@@ -108,9 +108,9 @@ export default function LecturerWorkload() {
  </div>
  <div className="w-64">
  <SelectField value={filterType} onChange={e => setFilterType(e.target.value)}>
- <option value="all">Tất cả giảng viên</option>
- <option value="high">Khối lượng cao (&ge; 4 lớp)</option>
- <option value="low">Khối lượng thấp (&lt; 2 lớp)</option>
+ <option value="all">Táº¥t cáº£ giáº£ng viĂªn</option>
+ <option value="high">Khá»‘i lÆ°á»£ng cao (&ge; 4 lá»›p)</option>
+ <option value="low">Khá»‘i lÆ°á»£ng tháº¥p (&lt; 2 lá»›p)</option>
  </SelectField>
  </div>
  </CardContent>
@@ -119,18 +119,18 @@ export default function LecturerWorkload() {
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-8 flex flex-row items-center justify-between">
  <CardTitle className="text-base font-black text-gray-800 flex items-center gap-2">
- <BarChart3 size={18} className="text-teal-600" /> Thống kê chi tiết
+ <BarChart3 size={18} className="text-teal-600" /> Thá»‘ng kĂª chi tiáº¿t
  </CardTitle>
  </CardHeader>
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
  <tr className="bg-gray-50/50 border-b border-gray-100">
- <th className="px-8 py-4 text-[10px] font-black text-gray-400">Giảng viên</th>
- <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Số lớp</th>
- <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Sinh viên</th>
- <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Dự án</th>
- <th className="px-8 py-4 text-[10px] font-black text-gray-400">Lớp phụ trách</th>
+ <th className="px-8 py-4 text-[10px] font-black text-gray-400">Giáº£ng viĂªn</th>
+ <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Sá»‘ lá»›p</th>
+ <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Sinh viĂªn</th>
+ <th className="px-8 py-4 text-[10px] font-black text-gray-400 text-center">Dá»± Ă¡n</th>
+ <th className="px-8 py-4 text-[10px] font-black text-gray-400">Lá»›p phá»¥ trĂ¡ch</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -167,7 +167,7 @@ export default function LecturerWorkload() {
  {code}
  </span>
  ))}
- {item.courses.length === 0 && <span className="text-[10px] text-gray-300 italic">Chưa có lớp</span>}
+ {item.courses.length === 0 && <span className="text-[10px] text-gray-300 italic">ChÆ°a cĂ³ lá»›p</span>}
  </div>
  </td>
  </tr>
@@ -175,7 +175,7 @@ export default function LecturerWorkload() {
  {filteredData.length === 0 && (
  <tr>
  <td colSpan={5} className="py-20 text-center text-gray-400 text-xs font-black">
- Không tìm thấy giảng viên nào
+ KhĂ´ng tĂ¬m tháº¥y giáº£ng viĂªn nĂ o
  </td>
  </tr>
  )}
@@ -186,9 +186,4 @@ export default function LecturerWorkload() {
  </div>
  );
 }
-
-
-
-
-
 

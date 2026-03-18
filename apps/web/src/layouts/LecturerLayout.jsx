@@ -1,4 +1,4 @@
-import BaseLayout from "./BaseLayout.jsx";
+﻿import BaseLayout from "./BaseLayout.jsx";
 import {
     LayoutDashboard, GraduationCap, Users,
     BarChart3, AlertTriangle, FileText, Download,
@@ -6,31 +6,31 @@ import {
 
 const NAV = [
     {
-        label: "Tổng quan",
+        label: "Tá»•ng quan",
         items: [
             { to: "/lecturer", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
     {
-        label: "Quản lý",
+        label: "Quáº£n lĂ½",
         items: [
-            { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lớp của tôi" },
-            { to: "/lecturer/groups", icon: Users, label: "Theo dõi nhóm" },
-            { to: "/lecturer/projects", icon: GraduationCap, label: "Tổng quan dự án" },
+            { to: "/lecturer/my-courses", icon: GraduationCap, label: "Lá»›p cá»§a tĂ´i" },
+            { to: "/lecturer/groups", icon: Users, label: "Theo dĂµi nhĂ³m" },
+            { to: "/lecturer/projects", icon: GraduationCap, label: "Tá»•ng quan dá»± Ă¡n" },
         ],
     },
     {
-        label: "Theo dõi",
+        label: "Theo dĂµi",
         items: [
-            { to: "/lecturer/contributions", icon: BarChart3, label: "Đóng góp" },
-            { to: "/lecturer/alerts", icon: AlertTriangle, label: "Cảnh báo" },
+            { to: "/lecturer/contributions", icon: BarChart3, label: "ÄĂ³ng gĂ³p" },
+            { to: "/lecturer/alerts", icon: AlertTriangle, label: "Cáº£nh bĂ¡o" },
         ],
     },
     {
-        label: "Tài liệu",
+        label: "TĂ i liá»‡u",
         items: [
             { to: "/lecturer/srs", icon: FileText, label: "SRS Reports" },
-            { to: "/lecturer/reports", icon: Download, label: "Báo cáo & Export" },
+            { to: "/lecturer/reports", icon: Download, label: "BĂ¡o cĂ¡o & Export" },
         ],
     },
 ];
@@ -38,3 +38,4 @@ const NAV = [
 export default function LecturerLayout({ children }) {
     return <BaseLayout navConfig={NAV}>{children}</BaseLayout>;
 }
+

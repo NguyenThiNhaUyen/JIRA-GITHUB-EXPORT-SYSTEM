@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useGetEnrolledStudents, useGetCourseById } from "@/features/courses/hooks/useCourses.js";
@@ -64,13 +64,13 @@ export function useCourseWorkspace(courseId) {
                     projectId: group.id,
                     studentId: studentId,
                     role: "MEMBER",
-                    responsibility: "Thành viên"
+                    responsibility: "ThĂ nh viĂªn"
                 });
                 successCount++;
             } catch (err) {}
         }
         setIsInviting(false);
-        if (successCount > 0) success(`Đã thêm ${successCount} thành viên!`);
+        if (successCount > 0) success(`ÄĂ£ thĂªm ${successCount} thĂ nh viĂªn!`);
         setShowInviteModal(false);
         setInviteSelectedIds([]);
     };
@@ -89,22 +89,22 @@ export function useCourseWorkspace(courseId) {
                 jiraSiteUrl: "https://atlassian.net"
             }
         }, {
-            onSuccess: () => success("Đã gửi yêu cầu liên kết tích hợp!")
+            onSuccess: () => success("ÄĂ£ gá»­i yĂªu cáº§u liĂªn káº¿t tĂ­ch há»£p!")
         });
     };
 
     const handleSync = () => {
         syncCommitsMutation.mutate(group.id, {
-            onSuccess: () => success("Đã đồng bộ dữ liệu mới nhất từ GitHub/Jira")
+            onSuccess: () => success("ÄĂ£ Ä‘á»“ng bá»™ dá»¯ liá»‡u má»›i nháº¥t tá»« GitHub/Jira")
         });
     };
 
     const handleRemoveMember = async (studentId) => {
         try {
             await removeMemberMutateAsync({ projectId: group.id, studentId });
-            success("Đã xóa thành viên khỏi nhóm");
+            success("ÄĂ£ xĂ³a thĂ nh viĂªn khá»i nhĂ³m");
         } catch (err) {
-            showError(err.message || "Xóa thành viên thất bại");
+            showError(err.message || "XĂ³a thĂ nh viĂªn tháº¥t báº¡i");
         }
     };
 
@@ -139,9 +139,4 @@ export function useCourseWorkspace(courseId) {
         handleRemoveMember
     };
 }
-
-
-
-
-
 

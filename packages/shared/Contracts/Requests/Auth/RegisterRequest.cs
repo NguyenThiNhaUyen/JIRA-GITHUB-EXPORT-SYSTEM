@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Auth;
 
@@ -29,10 +29,4 @@ public class RegisterRequest
     public string? OfficeEmail { get; set; }
     public string? LecturerDepartment { get; set; }
 }
-
-
-
-
-
-
 

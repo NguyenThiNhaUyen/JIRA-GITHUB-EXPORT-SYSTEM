@@ -1,4 +1,4 @@
-// Chart skeleton loader
+﻿// Chart skeleton loader
 import { Skeleton } from "./Skeleton.jsx";
 
 export function ChartSkeleton() {
@@ -14,10 +14,4 @@ export function ChartSkeleton() {
     </div>
   );
 }
-
-
-
-
-
-
 

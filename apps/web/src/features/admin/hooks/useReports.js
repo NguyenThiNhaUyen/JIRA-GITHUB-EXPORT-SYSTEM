@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import {
     generateCommitStats,
     generateTeamRoster,
@@ -11,7 +11,7 @@ import {
 } from "../api/reportApi.js";
 
 /**
- * Hook Mutation cho: TẠO Commit Statistics
+ * Hook Mutation cho: Táº O Commit Statistics
  */
 export function useGenerateCommitStats() {
     return useMutation({
@@ -20,7 +20,7 @@ export function useGenerateCommitStats() {
 }
 
 /**
- * Hook Mutation cho: TẠO Team Roster
+ * Hook Mutation cho: Táº O Team Roster
  */
 export function useGenerateTeamRoster() {
     return useMutation({
@@ -29,7 +29,7 @@ export function useGenerateTeamRoster() {
 }
 
 /**
- * Hook Mutation cho: TẠO Activity Summary
+ * Hook Mutation cho: Táº O Activity Summary
  */
 export function useGenerateActivitySummary() {
     return useMutation({
@@ -38,7 +38,7 @@ export function useGenerateActivitySummary() {
 }
 
 /**
- * Hook Mutation cho: TẠO SRS Report (Iso29148 Jira)
+ * Hook Mutation cho: Táº O SRS Report (Iso29148 Jira)
  */
 export function useGenerateSrs() {
     return useMutation({
@@ -47,7 +47,7 @@ export function useGenerateSrs() {
 }
 
 /**
- * Hook Query cho: Lấy link download
+ * Hook Query cho: Láº¥y link download
  */
 export function useGetReportDownloadLink(reportId, options = {}) {
     return useQuery({
@@ -70,7 +70,7 @@ export function useGetMyReports(options = {}) {
 }
 
 /**
- * Hook Query cho: Lấy danh sách báo cáo hỗ trợ filter
+ * Hook Query cho: Láº¥y danh sĂ¡ch bĂ¡o cĂ¡o há»— trá»£ filter
  */
 export function useGetReports(filters = {}, options = {}) {
     return useQuery({
@@ -97,7 +97,7 @@ export function useUpdateReportStatus() {
 }
 
 /**
- * Hook Queries cho: Get Reports của nhiều Project cùng lúc (Legacy - nên dùng useGetReports)
+ * Hook Queries cho: Get Reports cá»§a nhiá»u Project cĂ¹ng lĂºc (Legacy - nĂªn dĂ¹ng useGetReports)
  */
 export function useCourseProjectReports(projectIds, type) {
     return useQueries({
@@ -108,9 +108,4 @@ export function useCourseProjectReports(projectIds, type) {
         }))
     });
 }
-
-
-
-
-
 

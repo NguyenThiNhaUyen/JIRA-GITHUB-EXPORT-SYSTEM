@@ -1,4 +1,4 @@
-// AppContext: Quản lý state toàn cục (semester, week, repo) - dùng useApp() để truy cập
+﻿// AppContext: Quáº£n lĂ½ state toĂ n cá»¥c (semester, week, repo) - dĂ¹ng useApp() Ä‘á»ƒ truy cáº­p
 import { createContext, useContext, useMemo, useState } from "react";
 import { generateWeeks } from "@/utils/dateRange.js";
 
@@ -16,12 +16,12 @@ const REPOSITORIES = [
   { id: "frontend", name: "Frontend", label: "Frontend" },
 ];
 
-// AppProvider: Wrap app để cung cấp global state (semesterId, weekId, repoId)
+// AppProvider: Wrap app Ä‘á»ƒ cung cáº¥p global state (semesterId, weekId, repoId)
 export function AppProvider({ children }) {
   const [semesterId, setSemesterId] = useState(SEMESTERS[0].id);
   const semester = SEMESTERS.find((s) => s.id === semesterId);
 
-  // Generate danh sách tuần dựa trên semester (chỉ tính lại khi semester thay đổi)
+  // Generate danh sĂ¡ch tuáº§n dá»±a trĂªn semester (chá»‰ tĂ­nh láº¡i khi semester thay Ä‘á»•i)
   const weeks = useMemo(
     () => generateWeeks(semester.start, semester.end),
     [semester.start, semester.end]
@@ -30,7 +30,7 @@ export function AppProvider({ children }) {
   const [weekId, setWeekId] = useState(weeks[0]?.id);
   const [repoId, setRepoId] = useState(REPOSITORIES[0].id);
 
-  // Đổi kì học và reset về tuần đầu tiên
+  // Äá»•i kĂ¬ há»c vĂ  reset vá» tuáº§n Ä‘áº§u tiĂªn
   function changeSemester(id) {
     const s = SEMESTERS.find((x) => x.id === id);
     const w = generateWeeks(s.start, s.end);
@@ -54,15 +54,10 @@ export function AppProvider({ children }) {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-// useApp: Hook để truy cập global state từ bất kỳ component nào
+// useApp: Hook Ä‘á»ƒ truy cáº­p global state tá»« báº¥t ká»³ component nĂ o
 export function useApp() {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
-
-
-
-
-
 

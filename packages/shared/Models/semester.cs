@@ -1,27 +1,22 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class semester
+public partial class Semester : JiraGithubExport.Shared.Interfaces.ISoftDelete
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public string name { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
-    public DateOnly? start_date { get; set; }
+    public DateOnly StartDate { get; set; }
 
-    public DateOnly? end_date { get; set; }
+    public DateOnly EndDate { get; set; }
 
-    public DateTime created_at { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public virtual ICollection<course> courses { get; set; } = new List<course>();
+    public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
+
+    public bool IsDeleted { get; set; }
 }
-
-
-
-
-
-
-
 

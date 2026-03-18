@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
+﻿namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 public class InvitationResponse
 {
@@ -42,3 +42,4 @@ public class InvitationResponse
     public DateTime CreatedAt { get; set; }
     public DateTime? RespondedAt { get; set; }
 }
+

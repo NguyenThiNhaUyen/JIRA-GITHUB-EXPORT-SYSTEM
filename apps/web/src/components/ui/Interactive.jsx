@@ -1,4 +1,4 @@
-// Tabs Component - Part of UI Kit
+﻿// Tabs Component - Part of UI Kit
 import React, { useState, useEffect } from 'react';
 import { Button } from "./Button.jsx";
 
@@ -96,7 +96,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', showDefau
         {title && (
           <div className="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
             <h3 className="text-xl font-black text-gray-800 font-display">{title}</h3>
-            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-200 transition-all">✕</button>
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-200 transition-all">âœ•</button>
           </div>
         )}
         <div className="px-10 py-8">
@@ -105,10 +105,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', showDefau
         {showDefaultFooter && (
           <div className="px-10 py-8 border-t border-gray-50 bg-gray-50/10 flex justify-end gap-3">
             <Button variant="outline" onClick={onClose} className="rounded-2xl h-12 px-8">
-              Hủy
+              Há»§y
             </Button>
             <Button onClick={onClose} className="rounded-2xl h-12 px-8 bg-black text-white hover:bg-zinc-800 border-0">
-              Xác nhận
+              XĂ¡c nháº­n
             </Button>
           </div>
         )}
@@ -161,9 +161,4 @@ export function Alert({ children, variant = 'default', className = '', ...props 
     </div>
   );
 }
-
-
-
-
-
 

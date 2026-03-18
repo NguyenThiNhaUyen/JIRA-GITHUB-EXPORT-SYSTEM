@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
 namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
@@ -25,3 +25,4 @@ public class ReviewSrsFeedbackRequest
     [Required]
     public string Feedback { get; set; } = null!;
 }
+

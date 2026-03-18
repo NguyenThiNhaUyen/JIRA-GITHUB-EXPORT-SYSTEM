@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 
@@ -58,10 +58,4 @@ public class PasswordHasher : IPasswordHasher
         }
     }
 }
-
-
-
-
-
-
 

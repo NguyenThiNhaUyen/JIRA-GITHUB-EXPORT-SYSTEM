@@ -1,4 +1,4 @@
-// GroupRadarChart — So sánh hiệu suất các nhóm trong lớp học
+﻿// GroupRadarChart â€” So sĂ¡nh hiá»‡u suáº¥t cĂ¡c nhĂ³m trong lá»›p há»c
 import {
     RadarChart,
     Radar,
@@ -24,7 +24,7 @@ const GROUP_COLORS = [
  * @param {Array} data - Array of { groupName, commits, srsDone, teamSize, githubLinked, jiraLinked }
  */
 export function GroupRadarChart({ data = [] }) {
-    // Normalise raw values to 0–100 so they are comparable on the same scale
+    // Normalise raw values to 0â€“100 so they are comparable on the same scale
     const maxValues = {
         commits: Math.max(...data.map((d) => d.commits), 1),
         srsDone: Math.max(...data.map((d) => d.srsDone), 1),
@@ -59,7 +59,7 @@ export function GroupRadarChart({ data = [] }) {
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
                 </svg>
-                <p className="text-sm">Chọn lớp học để xem biểu đồ so sánh nhóm</p>
+                <p className="text-sm">Chá»n lá»›p há»c Ä‘á»ƒ xem biá»ƒu Ä‘á»“ so sĂ¡nh nhĂ³m</p>
             </div>
         );
     }
@@ -104,9 +104,4 @@ export function GroupRadarChart({ data = [] }) {
 }
 
 export default GroupRadarChart;
-
-
-
-
-
 

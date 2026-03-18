@@ -1,4 +1,4 @@
-// Chart container wrapper với loading, error, empty states
+﻿// Chart container wrapper vá»›i loading, error, empty states
 export function ChartContainer({
   title,
   subtitle,
@@ -7,7 +7,7 @@ export function ChartContainer({
   isEmpty,
   children,
   className = "",
-  emptyMessage = "Không có dữ liệu",
+  emptyMessage = "KhĂ´ng cĂ³ dá»¯ liá»‡u",
 }) {
   return (
     <div className={`bg-white rounded-2xl shadow-sm border border-blue-100 ${className}`}>
@@ -25,7 +25,7 @@ export function ChartContainer({
         )}
         {isError && (
           <div className="flex items-center justify-center h-64 text-red-600">
-            <p>Đã xảy ra lỗi khi tải dữ liệu</p>
+            <p>ÄĂ£ xáº£y ra lá»—i khi táº£i dá»¯ liá»‡u</p>
           </div>
         )}
         {isEmpty && !isLoading && !isError && (
@@ -38,11 +38,4 @@ export function ChartContainer({
     </div>
   );
 }
-
-
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Requests.Projects;
+﻿using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -10,3 +10,4 @@ public interface IProjectIntegrationService
     Task RejectIntegrationAsync(long projectId, long rejectedByUserId, string? reason);
     Task<IntegrationInfo?> GetIntegrationStatusAsync(long projectId);
 }
+

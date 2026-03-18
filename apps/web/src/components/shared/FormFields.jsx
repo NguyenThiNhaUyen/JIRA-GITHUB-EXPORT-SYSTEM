@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 
 export function SelectField({ label, children, ...props }) {
   return (
@@ -38,9 +38,4 @@ export function InputField({ label, icon: Icon, ...props }) {
     </div>
   );
 }
-
-
-
-
-
 

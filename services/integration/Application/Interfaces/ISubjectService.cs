@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Common;
+﻿using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
 using JiraGithubExport.Shared.Contracts.Responses.Courses;
 
@@ -12,3 +12,4 @@ public interface ISubjectService
     Task<PagedResponse<SubjectInfo>> GetAllSubjectsAsync(PagedRequest request);
     Task<List<SubjectInfo>> GetAllSubjectsAsync();
 }
+

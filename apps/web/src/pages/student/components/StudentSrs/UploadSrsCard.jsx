@@ -1,4 +1,4 @@
-import { Upload } from"lucide-react";
+﻿import { Upload } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 
@@ -13,9 +13,9 @@ export function UploadSrsCard({ onOpenModal }) {
  <Upload size={32} className="text-teal-400" />
  </div>
  <div>
- <h4 className="text-3xl font-black tracking-tighter mb-6 font-display leading-tight">Hoàn tất tài liệu đặc tả SRS?</h4>
+ <h4 className="text-3xl font-black tracking-tighter mb-6 font-display leading-tight">HoĂ n táº¥t tĂ i liá»‡u Ä‘áº·c táº£ SRS?</h4>
  <p className="text-[12px] text-teal-200/80 font-black leading-relaxed mb-12 italic opacity-80">
- Hệ thống Antigravity hỗ trợ định dạng .pdf chuẩn IEEE 29148. <br/>Mọi thay đổi đều được ghi vết và so sánh theo các phiên bản nộp.
+ Há»‡ thá»‘ng Antigravity há»— trá»£ Ä‘á»‹nh dáº¡ng .pdf chuáº©n IEEE 29148. <br/>Má»i thay Ä‘á»•i Ä‘á»u Ä‘Æ°á»£c ghi váº¿t vĂ  so sĂ¡nh theo cĂ¡c phiĂªn báº£n ná»™p.
  </p>
  </div>
  <Button 
@@ -23,7 +23,7 @@ export function UploadSrsCard({ onOpenModal }) {
  onClick={onOpenModal}
  >
  <div className="absolute inset-0 bg-teal-500/10 translate-y-full group-hover/btn:translate-y-0 transition-all" />
- <span className="relative flex items-center justify-center gap-4">Nộp tài liệu ngay <Upload size={20} /></span>
+ <span className="relative flex items-center justify-center gap-4">Ná»™p tĂ i liá»‡u ngay <Upload size={20} /></span>
  </Button>
  </div>
  <style>{`
@@ -36,9 +36,4 @@ export function UploadSrsCard({ onOpenModal }) {
  </Card>
  );
 }
-
-
-
-
-
 

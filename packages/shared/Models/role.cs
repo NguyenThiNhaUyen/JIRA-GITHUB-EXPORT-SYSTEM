@@ -1,21 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class role
+public partial class Role
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public string role_name { get; set; } = null!;
+    public string RoleName { get; set; } = null!;
 
-    public virtual ICollection<user> users { get; set; } = new List<user>();
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }
-
-
-
-
-
-
-
 

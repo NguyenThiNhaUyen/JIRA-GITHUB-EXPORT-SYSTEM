@@ -1,4 +1,4 @@
-import { useMemo } from"react";
+﻿import { useMemo } from"react";
 import { Monitor, Eye, Trash2, PenLine, Users, Target, ShieldCheck, Zap, MoreHorizontal, UserPlus } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -27,11 +27,11 @@ export function GroupListPanel({
  <div className="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-100">
  <Users size={18} className="text-white" />
  </div>
- <CardTitle className="font-display">Danh Sách Nhóm ({visibleGroups.length})</CardTitle>
+ <CardTitle className="font-display">Danh SĂ¡ch NhĂ³m ({visibleGroups.length})</CardTitle>
  </div>
  <div className="flex gap-4 w-full md:w-auto">
  <InputField
- placeholder="Tìm nhóm..."
+ placeholder="TĂ¬m nhĂ³m..."
  value={groupSearch}
  onChange={e => setGroupSearch(e.target.value)}
  className="w-full md:w-56 h-12 text-[10px] bg-white border-gray-100 focus:bg-teal-50/10"
@@ -42,10 +42,10 @@ export function GroupListPanel({
  onChange={e => setGroupFilter(e.target.value)}
  className="w-full md:w-48 h-12 text-[10px] bg-white border-gray-100"
  >
- <option value="all">Tất cả trạng thái</option>
- <option value="healthy">Đang ổn định</option>
- <option value="critical">Rủi ro cao</option>
- <option value="missing-topic">Chưa có đề tài</option>
+ <option value="all">Táº¥t cáº£ tráº¡ng thĂ¡i</option>
+ <option value="healthy">Äang á»•n Ä‘á»‹nh</option>
+ <option value="critical">Rá»§i ro cao</option>
+ <option value="missing-topic">ChÆ°a cĂ³ Ä‘á» tĂ i</option>
  </SelectField>
  </div>
  </CardHeader>
@@ -56,7 +56,7 @@ export function GroupListPanel({
  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 shadow-sm">
  <Users size={24} className="text-gray-200" />
  </div>
- <p className="text-[10px] font-black text-gray-400 tracking-[0.2em]">Không tìm thấy dữ liệu phù hợp</p>
+ <p className="text-[10px] font-black text-gray-400 tracking-[0.2em]">KhĂ´ng tĂ¬m tháº¥y dá»¯ liá»‡u phĂ¹ há»£p</p>
  </div>
  ) : visibleGroups.map((group) => (
  <div key={group.id} className="p-10 hover:bg-teal-50/5 transition-all duration-500 group/item relative overflow-hidden">
@@ -72,7 +72,7 @@ export function GroupListPanel({
  </div>
  <div className="flex items-center gap-2 text-[11px] font-black text-gray-400 bg-gray-50 w-fit px-3 py-1 rounded-full group-hover/item:bg-white transition-colors border border-gray-100">
  <PenLine size={12} className="text-teal-500" /> 
- <span className="line-clamp-1 truncate max-w-[300px]">{group.description ||"Chưa thiết lập đề tài dự án"}</span>
+ <span className="line-clamp-1 truncate max-w-[300px]">{group.description ||"ChÆ°a thiáº¿t láº­p Ä‘á» tĂ i dá»± Ă¡n"}</span>
  </div>
  </div>
  
@@ -82,7 +82,7 @@ export function GroupListPanel({
  className="h-12 px-6 rounded-2xl border-gray-100 hover:border-teal-200 hover:text-teal-600 shadow-sm hover:shadow-md transition-all active:scale-95"
  onClick={() => navigate(`/lecturer/group/${group.id}`)}
  >
- Chi tiết <Eye size={16} className="ml-2" />
+ Chi tiáº¿t <Eye size={16} className="ml-2" />
  </Button>
  <Button
  variant="outline"
@@ -96,17 +96,17 @@ export function GroupListPanel({
  </div>
 
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 relative z-10">
- <MetricCard label="Thành viên" value={`${group.memberCount} SV`} icon={Users} color="teal">
+ <MetricCard label="ThĂ nh viĂªn" value={`${group.memberCount} SV`} icon={Users} color="teal">
  <button 
  onClick={() => handleOpenForceAdd(group.id)}
  className="mt-2 text-[8px] font-black text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1 rounded-lg border border-teal-100 transition-all"
  >
- + Thêm
+ + ThĂªm
  </button>
  </MetricCard>
- <MetricCard label="Tiến độ" value={`${group.progress}%`} icon={Target} color="indigo" />
- <MetricCard label="Nhóm trưởng" value={group.leader ||"Chưa có"} icon={ShieldCheck} color="amber" />
- <MetricCard label="Rủi ro Jira" value={`${group.riskScore}%`} icon={Zap} color={group.riskScore > 50 ? 'red' : 'emerald'} />
+ <MetricCard label="Tiáº¿n Ä‘á»™" value={`${group.progress}%`} icon={Target} color="indigo" />
+ <MetricCard label="NhĂ³m trÆ°á»Ÿng" value={group.leader ||"ChÆ°a cĂ³"} icon={ShieldCheck} color="amber" />
+ <MetricCard label="Rá»§i ro Jira" value={`${group.riskScore}%`} icon={Zap} color={group.riskScore > 50 ? 'red' : 'emerald'} />
  </div>
 
  <div className="space-y-6 relative z-10">
@@ -156,7 +156,7 @@ export function GroupListPanel({
  <h4 className="text-xl font-black text-white tracking-[0.2em] font-display">Data Synchronization</h4>
  </div>
  <p className="text-sm text-gray-400 font-medium leading-relaxed">
- Đồng bộ hóa dữ liệu thời gian thực giữa Jira, GitHub và hệ thống báo cáo học tập. Đảm bảo tính nhất quán của metrics và tiến độ dự án.
+ Äá»“ng bá»™ hĂ³a dá»¯ liá»‡u thá»i gian thá»±c giá»¯a Jira, GitHub vĂ  há»‡ thá»‘ng bĂ¡o cĂ¡o há»c táº­p. Äáº£m báº£o tĂ­nh nháº¥t quĂ¡n cá»§a metrics vĂ  tiáº¿n Ä‘á»™ dá»± Ă¡n.
  </p>
  </div>
  <Button className="bg-white text-gray-900 hover:bg-teal-50 rounded-2xl h-16 px-12 font-black tracking-[0.2em] shadow-2xl shadow-black/20 transition-all hover:scale-105 active:scale-95 border-0 text-[11px] font-display shrink-0">
@@ -187,9 +187,4 @@ function MetricCard({ label, value, icon: Icon, color, children }) {
  </div>
  );
 }
-
-
-
-
-
 

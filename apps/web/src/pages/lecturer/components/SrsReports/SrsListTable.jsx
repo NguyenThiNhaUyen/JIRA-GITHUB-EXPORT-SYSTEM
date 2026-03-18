@@ -1,4 +1,4 @@
-import { Search } from"lucide-react";
+﻿import { Search } from"lucide-react";
 
 export function SrsListTable({ 
  loadingReports, 
@@ -28,7 +28,7 @@ export function SrsListTable({
  <div className="relative flex-1 md:w-80">
  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
  <input
- placeholder="Tìm tên nhóm, leader..."
+ placeholder="TĂ¬m tĂªn nhĂ³m, leader..."
  value={search}
  onChange={e => setSearch(e.target.value)}
  className="w-full h-11 pl-11 pr-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all"
@@ -39,7 +39,7 @@ export function SrsListTable({
  onChange={e => setCourseFilter(e.target.value)}
  className="h-11 px-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black outline-none transition-all cursor-pointer"
  >
- <option value="all">Tất cả lớp</option>
+ <option value="all">Táº¥t cáº£ lá»›p</option>
  {realCourses.map(c => <option key={c.id} value={c.code}>{c.code}</option>)}
  </select>
  </div>
@@ -50,7 +50,7 @@ export function SrsListTable({
  onClick={() => setStatusFilter(status)}
  className={`shrink-0 px-4 py-2.5 rounded-xl text-[9px] font-black border transition-all ${statusFilter === status ? 'bg-teal-600 text-white border-teal-600 shadow-lg shadow-teal-100' : 'bg-white text-gray-400 border-gray-100 hover:border-teal-400 hover:text-teal-600'}`}
  >
- {status === 'all' ? 'Tất cả' : STATUS_META[status]?.label}
+ {status === 'all' ? 'Táº¥t cáº£' : STATUS_META[status]?.label}
  </button>
  ))}
  </div>
@@ -61,11 +61,11 @@ export function SrsListTable({
  <table className="w-full text-left border-collapse">
  <thead className="bg-gray-50/30">
  <tr>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100">Dự án & Nhóm</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100">Dá»± Ă¡n & NhĂ³m</th>
  <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Version</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Trạng thái</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Điểm</th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Thao tác</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Tráº¡ng thĂ¡i</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-center">Äiá»ƒm</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 text-right">Thao tĂ¡c</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -96,7 +96,7 @@ export function SrsListTable({
  </td>
  <td className="py-6 px-8 text-center">
  <div className="inline-flex items-center gap-1 font-black text-sm text-gray-800 bg-gray-50 px-3 py-1 rounded-xl shadow-inner border border-gray-100">
- <Star size={12} className="text-amber-400 fill-amber-400" /> {item.score ? item.score.toFixed(1) : '—'}
+ <Star size={12} className="text-amber-400 fill-amber-400" /> {item.score ? item.score.toFixed(1) : 'â€”'}
  </div>
  </td>
  <td className="py-6 px-8 text-right">
@@ -108,7 +108,7 @@ export function SrsListTable({
  <tr>
  <td colSpan={5} className="py-20 text-center opacity-40">
  <FileText size={48} className="mx-auto mb-4" />
- <p className="text-[11px] font-black text-gray-400">Không tìm thấy yêu cầu nào</p>
+ <p className="text-[11px] font-black text-gray-400">KhĂ´ng tĂ¬m tháº¥y yĂªu cáº§u nĂ o</p>
  </td>
  </tr>
  )}
@@ -120,9 +120,4 @@ export function SrsListTable({
  </div>
  );
 }
-
-
-
-
-
 

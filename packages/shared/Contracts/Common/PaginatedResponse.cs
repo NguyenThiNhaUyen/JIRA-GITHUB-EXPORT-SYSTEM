@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Common;
+﻿namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class PaginatedResponse<T>
 {
@@ -10,10 +10,4 @@ public class PaginatedResponse<T>
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < TotalPages;
 }
-
-
-
-
-
-
 

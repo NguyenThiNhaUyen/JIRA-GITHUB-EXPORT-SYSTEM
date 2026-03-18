@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+﻿import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute.jsx";
 import RoleGuard from "@/components/RoleGuard.jsx";
@@ -20,7 +20,7 @@ const PageLoader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-gray-50/30">
     <div className="flex flex-col items-center gap-4">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-teal-500 border-t-transparent"></div>
-      <p className="text-[10px] font-black text-gray-400 animate-pulse">Đang tải tài nguyên...</p>
+      <p className="text-[10px] font-black text-gray-400 animate-pulse">Äang táº£i tĂ i nguyĂªn...</p>
     </div>
   </div>
 );
@@ -135,9 +135,4 @@ export default function App() {
     </Suspense>
   );
 }
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as notificationApi from "../api/notificationApi.js";
 
 export const NOTIFICATION_KEYS = {
@@ -22,9 +22,4 @@ export function useMarkAsRead() {
         },
     });
 }
-
-
-
-
-
 

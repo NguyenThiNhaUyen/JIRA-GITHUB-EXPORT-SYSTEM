@@ -1,4 +1,4 @@
-import { Flame, Calendar } from"lucide-react";
+﻿import { Flame, Calendar } from"lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from"recharts";
 import CalendarHeatmap from"react-calendar-heatmap";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
@@ -26,10 +26,10 @@ export function ActivityCharts({ commitActivity, heatmapData }) {
  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shadow-inner">
  <Flame size={20} className="text-orange-500 animate-pulse" />
  </div>
- Tần suất hoạt động 14 ngày qua
+ Táº§n suáº¥t hoáº¡t Ä‘á»™ng 14 ngĂ y qua
  </CardTitle>
  </div>
- <Badge className="bg-orange-50 text-orange-600 border-orange-100 px-6 py-2 rounded-full text-[10px] font-black shadow-sm">Streak: 4 Ngày</Badge>
+ <Badge className="bg-orange-50 text-orange-600 border-orange-100 px-6 py-2 rounded-full text-[10px] font-black shadow-sm">Streak: 4 NgĂ y</Badge>
  </CardHeader>
  <CardContent className="p-12">
  <div className="h-72 w-full">
@@ -84,7 +84,7 @@ export function ActivityCharts({ commitActivity, heatmapData }) {
  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shadow-inner">
  <Calendar size={20} className="text-teal-600" />
  </div>
- Contribution Heatmap (6 Tháng)
+ Contribution Heatmap (6 ThĂ¡ng)
  </CardTitle>
  </CardHeader>
  <CardContent className="p-12">
@@ -114,9 +114,4 @@ export function ActivityCharts({ commitActivity, heatmapData }) {
  </div>
  );
 }
-
-
-
-
-
 

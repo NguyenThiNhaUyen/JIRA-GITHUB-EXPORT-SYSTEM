@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+﻿import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import { TopHeader } from "@/components/layout/TopHeader.jsx";
 import { BookOpen, Menu } from "lucide-react";
@@ -11,7 +11,7 @@ export default function BaseLayout({ navConfig, children }) {
 
     return (
         <div className="h-screen flex relative overflow-hidden bg-[#e6f4f1]">
-            {/* ════ SIDEBAR ════ */}
+            {/* â•â•â•â• SIDEBAR â•â•â•â• */}
             <aside className={[
                 "bg-[#255f58] p-4 transition-all duration-300 shadow-xl z-20 flex flex-col relative rounded-r-3xl my-2 ml-2",
                 collapsed ? "w-20" : "w-[260px]",
@@ -67,15 +67,15 @@ export default function BaseLayout({ navConfig, children }) {
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         className="w-full flex items-center justify-center p-3 rounded-xl text-teal-100 hover:bg-teal-800/50 hover:text-white transition-colors"
-                        title={collapsed ? "Mở rộng" : "Thu gọn"}
+                        title={collapsed ? "Má»Ÿ rá»™ng" : "Thu gá»n"}
                     >
                         <Menu size={20} />
-                        {!collapsed && <span className="ml-3 text-sm whitespace-nowrap font-medium">Thu gọn menu</span>}
+                        {!collapsed && <span className="ml-3 text-sm whitespace-nowrap font-medium">Thu gá»n menu</span>}
                     </button>
                 </div>
             </aside>
 
-            {/* ════ CONTENT ════ */}
+            {/* â•â•â•â• CONTENT â•â•â•â• */}
             <div className="flex-1 flex flex-col z-10 overflow-hidden relative">
                 <div className="p-4 md:p-6 lg:p-8 flex-1 flex flex-col h-full overflow-y-auto w-full max-w-[1600px] mx-auto">
                     <div className="bg-white/95 backdrop-blur-md rounded-[32px] shadow-xl flex-1 flex flex-col overflow-hidden border border-white/40">
@@ -89,3 +89,4 @@ export default function BaseLayout({ navConfig, children }) {
         </div>
     );
 }
+

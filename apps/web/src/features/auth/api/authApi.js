@@ -1,10 +1,10 @@
-/**
- * authApi.js — Authentication API calls
+﻿/**
+ * authApi.js â€” Authentication API calls
  */
 import client from "../../../api/client.js";
 
 /**
- * Login bằng email + password
+ * Login báº±ng email + password
  * @param {string} email
  * @param {string} password
  * @returns {Promise<LoginResponse>}
@@ -20,16 +20,11 @@ export async function loginWithCredentials(email, password) {
 }
 
 /**
- * Login bằng Google ID Token
+ * Login báº±ng Google ID Token
  * @param {string} idToken - Google OAuth2 id_token
  * @returns {Promise<LoginResponse>}
  */
 export async function loginWithGoogle(idToken) {
     return client.post("/sessions/google", { idToken, IdToken: idToken });
 }
-
-
-
-
-
 

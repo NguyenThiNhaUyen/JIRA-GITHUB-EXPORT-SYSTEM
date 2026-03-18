@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Auth;
@@ -7,9 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JiraGithubExport.IntegrationService.Controllers;
 
-[ApiController]
-[Route("api")]
-public class AuthController : ControllerBase
+[Route("api/auth")]
+public class AuthController : ApiControllerBase
 {
     private readonly IAuthService _authService;
     private readonly ILogger<AuthController> _logger;
@@ -20,10 +19,7 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Authenticate and create a session
-    /// </summary>
-    [HttpPost("sessions")]
+    [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -31,6 +27,11 @@ public class AuthController : ControllerBase
         try
         {
             var response = await _authService.LoginAsync(request);
+            SetTokenCookie(response.AccessToken);
+            
+            // Optionally remove token from response body for extra security
+            // response.AccessToken = null; 
+            
             return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful"));
         }
         catch (UnauthorizedException ex)
@@ -45,10 +46,7 @@ public class AuthController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Authenticate and create a session via Google SSO
-    /// </summary>
-    [HttpPost("sessions/google")]
+    [HttpPost("login/google")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
@@ -56,6 +54,8 @@ public class AuthController : ControllerBase
         try
         {
             var response = await _authService.GoogleLoginAsync(request);
+            SetTokenCookie(response.AccessToken);
+            
             return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Google login successful"));
         }
         catch (UnauthorizedException ex)
@@ -69,19 +69,36 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Request a password reset token (sent to email; returned in dev mode)
-    /// </summary>
-    [HttpPost("auth/forgot-password")]
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("X-Access-Token");
+        return Ok(ApiResponse.SuccessResponse("Logged out successfully"));
+    }
+
+    private void SetTokenCookie(string token)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true, // Set to true in production (HTTPS)
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddHours(1)
+        };
+        Response.Cookies.Append("X-Access-Token", token, cookieOptions);
+    }
+
+    [HttpPost("forgot-password")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         try
         {
-            var token = await _authService.ForgotPasswordAsync(request.Email);
-            // In production, token is emailed, not returned. Return generic message.
+            // Call service but don't return the token for security (Security P0 fix)
+            await _authService.ForgotPasswordAsync(request.Email);
+            
             return Ok(ApiResponse<object>.SuccessResponse(
-                new { Message = "If this email exists, a reset link has been sent.", ResetToken = token },
+                new { Message = "If this email exists, a reset link has been sent." },
                 "Password reset requested"));
         }
         catch (Exception ex)
@@ -91,10 +108,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Reset password using token received from forgot-password
-    /// </summary>
-    [HttpPost("auth/reset-password")]
+    [HttpPost("reset-password")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
@@ -110,10 +124,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Refresh an expired access token
-    /// </summary>
-    [HttpPost("auth/refresh")]
+    [HttpPost("refresh")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshRequest request)
     {
@@ -133,11 +144,4 @@ public class AuthController : ControllerBase
         }
     }
 }
-
-
-
-
-
-
-
 

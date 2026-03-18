@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Search, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card.jsx";
 
@@ -18,7 +18,7 @@ export function SrsFilters({
   resultCount,
 }) {
   const statusTabs = [
-    { key: "all", label: "Tất cả" },
+    { key: "all", label: "Táº¥t cáº£" },
     { key: "FINAL", label: "Final" },
     { key: "REVIEW", label: "Review" },
     { key: "SUBMITTED", label: "Submitted" },
@@ -40,7 +40,7 @@ export function SrsFilters({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo nhóm, project, leader, môn học..."
+              placeholder="TĂ¬m theo nhĂ³m, project, leader, mĂ´n há»c..."
               className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 pl-10 pr-4 text-sm text-gray-700 outline-none focus:bg-white focus:border-teal-500 transition-all"
             />
           </div>
@@ -51,7 +51,7 @@ export function SrsFilters({
               onChange={(e) => setCourseFilter(e.target.value)}
               className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-3 text-sm text-gray-700 outline-none focus:bg-white focus:border-teal-500 transition-all cursor-pointer"
             >
-              <option value="all">Tất cả môn</option>
+              <option value="all">Táº¥t cáº£ mĂ´n</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.code}>
                   {course.code}
@@ -66,7 +66,7 @@ export function SrsFilters({
               onChange={(e) => setMilestoneFilter(e.target.value)}
               className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-3 text-sm text-gray-700 outline-none focus:bg-white focus:border-teal-500 transition-all cursor-pointer"
             >
-              <option value="all">Tất cả milestone</option>
+              <option value="all">Táº¥t cáº£ milestone</option>
               {milestoneOptions.map((m) => (
                 <option key={m} value={m}>
                   {m}
@@ -81,9 +81,9 @@ export function SrsFilters({
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-3 text-sm text-gray-700 outline-none focus:bg-white focus:border-teal-500 transition-all cursor-pointer"
             >
-              <option value="latest">Mới cập nhật</option>
-              <option value="deadline">Sắp đến hạn</option>
-              <option value="score">Điểm review</option>
+              <option value="latest">Má»›i cáº­p nháº­t</option>
+              <option value="deadline">Sáº¯p Ä‘áº¿n háº¡n</option>
+              <option value="score">Äiá»ƒm review</option>
               <option value="coverage">GitHub coverage</option>
             </select>
           </div>
@@ -91,7 +91,7 @@ export function SrsFilters({
           <div className="xl:col-span-2">
             <div className="h-11 rounded-xl border border-dashed border-teal-200 bg-teal-50/40 flex items-center justify-center gap-2 text-xs font-bold text-teal-700">
               <Filter size={14} />
-              {resultCount} bản ghi
+              {resultCount} báº£n ghi
             </div>
           </div>
         </div>
@@ -115,9 +115,4 @@ export function SrsFilters({
     </Card>
   );
 }
-
-
-
-
-
 

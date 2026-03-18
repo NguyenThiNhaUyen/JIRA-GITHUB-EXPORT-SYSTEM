@@ -1,23 +1,24 @@
-using System;
+﻿using System;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class notification
+public partial class Notification
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public long recipient_user_id { get; set; }
+    public long RecipientUserId { get; set; }
 
-    public string type { get; set; } = "SYSTEM"; // "SYSTEM", "INVITATION", "ALERT"
+    public string Type { get; set; } = "SYSTEM"; // "SYSTEM", "INVITATION", "ALERT"
 
-    public string message { get; set; } = null!;
+    public string Message { get; set; } = null!;
 
-    public bool is_read { get; set; }
+    public bool IsRead { get; set; }
 
-    public DateTime created_at { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public string? metadata { get; set; } // JSON string for extra info like projectId, courseId
+    public string Metadata { get; set; } // JSON string for extra info like projectId, courseId
 
     // Navigation properties
-    public virtual user recipient_user { get; set; } = null!;
+    public virtual User RecipientUser { get; set; } = null!;
 }
+

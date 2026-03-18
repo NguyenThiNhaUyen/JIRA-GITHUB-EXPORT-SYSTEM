@@ -1,4 +1,4 @@
-import BaseLayout from "./BaseLayout.jsx";
+﻿import BaseLayout from "./BaseLayout.jsx";
 import {
     LayoutDashboard, CalendarDays, Library,
     Users, BookOpen, BarChart3,
@@ -6,26 +6,26 @@ import {
 
 const NAV = [
     {
-        label: "Tổng quan",
+        label: "Tá»•ng quan",
         items: [
             { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
-            { to: "/admin/reports", icon: BarChart3, label: "Phân tích hệ thống" },
+            { to: "/admin/reports", icon: BarChart3, label: "PhĂ¢n tĂ­ch há»‡ thá»‘ng" },
         ],
     },
     {
-        label: "Học vụ",
+        label: "Há»c vá»¥",
         items: [
-            { to: "/admin/semesters", icon: CalendarDays, label: "Học kỳ" },
-            { to: "/admin/subjects", icon: Library, label: "Môn học" },
-            { to: "/admin/courses", icon: BookOpen, label: "Lớp học phần" },
-            { to: "/admin/lecturer-assignment", icon: BookOpen, label: "Phân công giảng viên" },
-            { to: "/admin/workload", icon: BarChart3, label: "Khối lượng giảng dạy" },
+            { to: "/admin/semesters", icon: CalendarDays, label: "Há»c ká»³" },
+            { to: "/admin/subjects", icon: Library, label: "MĂ´n há»c" },
+            { to: "/admin/courses", icon: BookOpen, label: "Lá»›p há»c pháº§n" },
+            { to: "/admin/lecturer-assignment", icon: BookOpen, label: "PhĂ¢n cĂ´ng giáº£ng viĂªn" },
+            { to: "/admin/workload", icon: BarChart3, label: "Khá»‘i lÆ°á»£ng giáº£ng dáº¡y" },
         ],
     },
     {
-        label: "Người dùng",
+        label: "NgÆ°á»i dĂ¹ng",
         items: [
-            { to: "/admin/users", icon: Users, label: "Tài khoản" },
+            { to: "/admin/users", icon: Users, label: "TĂ i khoáº£n" },
         ],
     },
 ];
@@ -33,3 +33,4 @@ const NAV = [
 export default function AdminLayout({ children }) {
     return <BaseLayout navConfig={NAV}>{children}</BaseLayout>;
 }
+

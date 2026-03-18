@@ -1,4 +1,4 @@
-import { FileDown, Target } from"lucide-react";
+﻿import { FileDown, Target } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 
@@ -8,8 +8,8 @@ export function SrsTemplatesCard() {
  <div className="flex items-center gap-6 mb-12">
  <div className="w-16 h-16 rounded-[28px] bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-700"><Target size={32}/></div>
  <div>
- <h4 className="font-black text-gray-800 tracking-[0.2em] text-sm font-display leading-tight mb-1">Thư viện Biểu mẫu</h4>
- <p className="text-[10px] text-gray-400 font-bold">Tài nguyên học thuật SRS</p>
+ <h4 className="font-black text-gray-800 tracking-[0.2em] text-sm font-display leading-tight mb-1">ThÆ° viá»‡n Biá»ƒu máº«u</h4>
+ <p className="text-[10px] text-gray-400 font-bold">TĂ i nguyĂªn há»c thuáº­t SRS</p>
  </div>
  </div>
  <ul className="space-y-8">
@@ -31,9 +31,4 @@ export function SrsTemplatesCard() {
  </Card>
  );
 }
-
-
-
-
-
 

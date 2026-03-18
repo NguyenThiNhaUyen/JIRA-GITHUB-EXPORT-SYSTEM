@@ -1,4 +1,4 @@
-import { History, GitBranch, RefreshCw } from"lucide-react";
+﻿import { History, GitBranch, RefreshCw } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 
@@ -10,7 +10,7 @@ export function RecentActivitySidebar({ isLoading, commitsList }) {
  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shadow-inner">
  <History size={18} className="text-teal-600" />
  </div>
- Hoạt động Git mới nhất
+ Hoáº¡t Ä‘á»™ng Git má»›i nháº¥t
  </CardTitle>
  </CardHeader>
  <CardContent className="p-0">
@@ -23,7 +23,7 @@ export function RecentActivitySidebar({ isLoading, commitsList }) {
  ) : commitsList.length === 0 ? (
  <div className="p-16 text-center space-y-6 bg-gray-50/20">
  <RefreshCw size={40} className="text-gray-100 mx-auto" />
- <p className="text-[10px] text-gray-300 font-black italic opacity-60">Chưa có commit nào gần đây 🍃</p>
+ <p className="text-[10px] text-gray-300 font-black italic opacity-60">ChÆ°a cĂ³ commit nĂ o gáº§n Ä‘Ă¢y đŸƒ</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -49,9 +49,4 @@ export function RecentActivitySidebar({ isLoading, commitsList }) {
  </Card>
  );
 }
-
-
-
-
-
 

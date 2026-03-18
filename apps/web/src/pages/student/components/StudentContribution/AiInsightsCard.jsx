@@ -1,4 +1,4 @@
-import { Badge } from"@/components/ui/Badge.jsx";
+﻿import { Badge } from"@/components/ui/Badge.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { Card } from"@/components/ui/Card.jsx";
 import { BrainCircuit, Sparkles, ChevronRight } from"lucide-react";
@@ -25,7 +25,7 @@ export function AiInsightsCard({ stats }) {
  <div className="p-8 bg-white/5 rounded-[40px] border border-white/5 shadow-inner group/advice hover:bg-white/10 transition-colors">
  <div className="flex gap-4 mb-4">
  <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse mt-1.5" />
- <p className="text-[12px] text-slate-300 font-bold leading-relaxed italic opacity-90 group-hover/advice:text-white transition-colors">"Bạn đang có phong độ commit rất tốt vào buổi tối. Tuy nhiên, việc phản hồi Issue trên Jira ({stats?.taskScore || 70}%) đang chậm hơn 20% so với trung bình nhóm. Hãy tập trung xử lý các task tồn đọng!"
+ <p className="text-[12px] text-slate-300 font-bold leading-relaxed italic opacity-90 group-hover/advice:text-white transition-colors">"Báº¡n Ä‘ang cĂ³ phong Ä‘á»™ commit ráº¥t tá»‘t vĂ o buá»•i tá»‘i. Tuy nhiĂªn, viá»‡c pháº£n há»“i Issue trĂªn Jira ({stats?.taskScore || 70}%) Ä‘ang cháº­m hÆ¡n 20% so vá»›i trung bĂ¬nh nhĂ³m. HĂ£y táº­p trung xá»­ lĂ½ cĂ¡c task tá»“n Ä‘á»ng!"
  </p>
  </div>
  </div>
@@ -33,16 +33,11 @@ export function AiInsightsCard({ stats }) {
  <Button className="w-full h-20 bg-teal-500 hover:bg-teal-400 text-white rounded-[32px] font-black tracking-[0.4em] text-[12px] shadow-2xl shadow-teal-500/20 active:scale-95 transition-all relative overflow-hidden group/btn font-display group-hover:scale-[1.02]">
  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-all duration-500" />
  <span className="relative flex items-center justify-center gap-4">
- Xem chi tiết tư vấn <ChevronRight size={20} />
+ Xem chi tiáº¿t tÆ° váº¥n <ChevronRight size={20} />
  </span>
  </Button>
  </div>
  </Card>
  );
 }
-
-
-
-
-
 

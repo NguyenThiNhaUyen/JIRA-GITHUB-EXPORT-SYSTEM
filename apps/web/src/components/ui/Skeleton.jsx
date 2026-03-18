@@ -1,4 +1,4 @@
-// Skeleton loader component
+﻿// Skeleton loader component
 export function Skeleton({ className = "", ...props }) {
   return (
     <div
@@ -7,11 +7,4 @@ export function Skeleton({ className = "", ...props }) {
     />
   );
 }
-
-
-
-
-
-
-
 

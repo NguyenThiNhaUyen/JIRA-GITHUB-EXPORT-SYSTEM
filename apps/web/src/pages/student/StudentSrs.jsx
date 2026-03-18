@@ -1,4 +1,4 @@
-import { FileText } from"lucide-react";
+﻿import { FileText } from"lucide-react";
 
 // Components UI
 import { Card } from"@/components/ui/Card.jsx";
@@ -37,9 +37,9 @@ export default function StudentSrsPage() {
  return (
  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-20">
  <PageHeader 
- title="Quản lý Tài liệu SRS" 
- subtitle="Nộp và theo dõi trạng thái phê duyệt tài liệu Đặc tả Yêu cầu phần mềm (IEEE 29148 Standard)." 
- breadcrumb={["Sinh viên","SRS Center"]} 
+ title="Quáº£n lĂ½ TĂ i liá»‡u SRS" 
+ subtitle="Ná»™p vĂ  theo dĂµi tráº¡ng thĂ¡i phĂª duyá»‡t tĂ i liá»‡u Äáº·c táº£ YĂªu cáº§u pháº§n má»m (IEEE 29148 Standard)." 
+ breadcrumb={["Sinh viĂªn","SRS Center"]} 
  />
 
  <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start">
@@ -54,7 +54,7 @@ export default function StudentSrsPage() {
  <div className="w-32 h-32 bg-gray-50 rounded-[48px] flex items-center justify-center mx-auto mb-12 shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-700">
  <FileText size={64} className="text-gray-200 group-hover:text-teal-400 transition-colors" />
  </div>
- <p className="text-sm font-black text-gray-300 tracking-[0.4em] leading-relaxed group-hover:text-gray-400 transition-colors">Chưa có thông tin dự án <br/>để tải hồ sơ SRS lên hệ thống</p>
+ <p className="text-sm font-black text-gray-300 tracking-[0.4em] leading-relaxed group-hover:text-gray-400 transition-colors">ChÆ°a cĂ³ thĂ´ng tin dá»± Ă¡n <br/>Ä‘á»ƒ táº£i há»“ sÆ¡ SRS lĂªn há»‡ thá»‘ng</p>
  </Card>
  ) : (
  myGroups.map((g, index) => (
@@ -87,9 +87,4 @@ export default function StudentSrsPage() {
  </div>
  );
 }
-
-
-
-
-
 

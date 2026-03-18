@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
@@ -27,42 +27,42 @@ public class UserService : IUserService
 
     public async Task<List<UserDetailResponse>> GetStudentsAsync()
     {
-        var users = await _context.users
-            .Include(u => u.roles)
-            .Include(u => u.student)
-            .Where(u => u.roles.Any(r => r.role_name == "STUDENT"))
+        var Users = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Student)
+            .Where(u => u.Roles.Any(r => r.RoleName == "Student"))
             .ToListAsync();
-        return users.Select(MapToResponse).ToList();
+        return Users.Select(MapToResponse).ToList();
     }
 
     public async Task<List<UserDetailResponse>> GetLecturersAsync()
     {
-        var users = await _context.users
-            .Include(u => u.roles)
-            .Include(u => u.lecturer)
-            .Where(u => u.roles.Any(r => r.role_name == "LECTURER"))
+        var Users = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Lecturer)
+            .Where(u => u.Roles.Any(r => r.RoleName == "Lecturer"))
             .ToListAsync();
-        return users.Select(MapToResponse).ToList();
+        return Users.Select(MapToResponse).ToList();
     }
 
-    public async Task<PagedResponse<UserDetailResponse>> GetAllUsersAsync(string? role, PagedRequest request)
+    public async Task<PagedResponse<UserDetailResponse>> GetAllUsersAsync(string? Role, PagedRequest request)
     {
-        var query = _context.users
-            .Include(u => u.roles)
-            .Include(u => u.student)
-            .Include(u => u.lecturer)
+        var query = _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Student)
+            .Include(u => u.Lecturer)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(role))
+        if (!string.IsNullOrEmpty(Role))
         {
-            query = query.Where(u => u.roles.Any(r => r.role_name == role.ToUpper()));
+            query = query.Where(u => u.Roles.Any(r => r.RoleName == Role.ToUpper()));
         }
 
         var total = await query.CountAsync();
         var page = request.Page > 0 ? request.Page : 1;
         var pageSize = request.PageSize > 0 ? request.PageSize : 20;
         var items = await query
-            .OrderByDescending(u => u.created_at)
+            .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -82,165 +82,166 @@ public class UserService : IUserService
 
     public async Task<UserDetailResponse> GetUserByIdAsync(long userId)
     {
-        var user = await _context.users
-            .Include(u => u.roles)
-            .Include(u => u.student)
-            .Include(u => u.lecturer)
-            .FirstOrDefaultAsync(u => u.id == userId)
+        var User = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Student)
+            .Include(u => u.Lecturer)
+            .FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new NotFoundException($"User {userId} not found");
 
-        return MapToResponse(user);
+        return MapToResponse(User);
     }
 
-    public async Task UpdateUserRoleAsync(long userId, string role)
+    public async Task UpdateUserRoleAsync(long userId, string Role)
     {
-        var user = await _context.users
-            .Include(u => u.roles)
-            .FirstOrDefaultAsync(u => u.id == userId)
+        var User = await _context.Users
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.Id == userId)
             ?? throw new NotFoundException($"User {userId} not found");
 
-        // Remove existing roles and set new role
-        user.roles.Clear();
-        var roleEntity = await _context.roles.FirstOrDefaultAsync(r => r.role_name == role.ToUpper())
-            ?? throw new NotFoundException($"Role '{role}' not found");
-        user.roles.Add(roleEntity);
+        // Remove existing Roles and set new Role
+        User.Roles.Clear();
+        var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == Role.ToUpper())
+            ?? throw new NotFoundException($"Role '{Role}' not found");
+        User.Roles.Add(roleEntity);
 
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateUserStatusAsync(long userId, bool enabled)
+    public async Task UpdateUserStatusAsync(long userId, bool Enabled)
     {
-        var user = await _context.users.FindAsync(userId)
+        var User = await _context.Users.FindAsync(userId)
             ?? throw new NotFoundException($"User {userId} not found");
 
-        user.enabled = enabled;
-        user.updated_at = DateTime.UtcNow;
+        User.Enabled = Enabled;
+        User.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
     public async Task AdminResetPasswordAsync(long userId, string newPassword)
     {
-        var user = await _context.users.FindAsync(userId)
+        var User = await _context.Users.FindAsync(userId)
             ?? throw new NotFoundException($"User {userId} not found");
 
-        user.password = _passwordHasher.HashPassword(newPassword);
-        user.updated_at = DateTime.UtcNow;
+        User.Password = _passwordHasher.HashPassword(newPassword);
+        User.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
-    private static UserDetailResponse MapToResponse(user u) => new()
+    private static UserDetailResponse MapToResponse(User u) => new()
     {
-        Id = u.id,
-        Email = u.email,
-        FullName = u.full_name,
-        Enabled = u.enabled,
-        Roles = u.roles.Select(r => r.role_name).ToList(),
-        Role = u.roles.Any(r => r.role_name.ToUpper() == "ADMIN") ? "ADMIN" : (u.roles.Any(r => r.role_name.ToUpper() == "LECTURER") ? "LECTURER" : "STUDENT"),
-        StudentCode = u.student?.student_code,
-        StudentId = u.student?.student_code,
-        LecturerCode = u.lecturer?.lecturer_code,
-        Department = u.lecturer?.department ?? u.student?.department,
-        AssignedCourses = u.lecturer?.courses?.Select(c => c.course_code).ToList() ?? new List<string>(),
-        CreatedAt = u.created_at
+        Id = u.Id,
+        Email = u.Email,
+        FullName = u.FullName,
+        Enabled = u.Enabled,
+        Roles = u.Roles.Select(r => r.RoleName).ToList(),
+        Role = u.Roles.Any(r => r.RoleName.ToUpper() == "ADMIN") ? "ADMIN" : (u.Roles.Any(r => r.RoleName.ToUpper() == "Lecturer") ? "Lecturer" : "Student"),
+        StudentCode = u.Student?.StudentCode,
+        StudentId = u.Student?.StudentCode,
+        LecturerCode = u.Lecturer?.LecturerCode,
+        Department = u.Lecturer?.Department ?? u.Student?.Department,
+        AssignedCourses = u.Lecturer?.Courses?.Select(c => c.CourseCode).ToList() ?? new List<string>(),
+        CreatedAt = u.CreatedAt
     };
 
     public async Task<UserDetailResponse> CreateUserAsync(CreateUserRequest request)
     {
-        var existingUser = await _context.users.FirstOrDefaultAsync(u => u.email == request.Email);
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (existingUser != null)
         {
-            throw new BusinessException($"User with email {request.Email} already exists.");
+            throw new BusinessException($"User with Email {request.Email} already exists.");
         }
 
-        var roleName = request.Role?.ToUpper() ?? "STUDENT";
-        var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == roleName);
-        if (role == null)
+        var roleName = request.Role?.ToUpper() ?? "Student";
+        var Role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == roleName);
+        if (Role == null)
         {
-            role = new role { role_name = roleName };
-            _context.roles.Add(role);
+            Role = new Role { RoleName = roleName };
+            _context.Roles.Add(Role);
         }
 
-        var user = new user
+        var User = new User
         {
-            email = request.Email,
-            full_name = request.FullName,
-            password = _passwordHasher.HashPassword("Admin@123"),
-            enabled = true,
-            created_at = DateTime.UtcNow,
-            updated_at = DateTime.UtcNow
+            Email = request.Email,
+            FullName = request.FullName,
+            Password = _passwordHasher.HashPassword("Admin@123"),
+            Enabled = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        user.roles.Add(role);
+        User.Roles.Add(Role);
 
-        if (roleName == "STUDENT")
+        if (roleName == "Student")
         {
-            user.student = new student
+            User.Student = new Student
             {
-                student_code = request.Code ?? "UNKNOWN",
-                created_at = DateTime.UtcNow,
-                updated_at = DateTime.UtcNow
+                StudentCode = request.Code ?? "UNKNOWN",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
         }
-        else if (roleName == "LECTURER")
+        else if (roleName == "Lecturer")
         {
-            user.lecturer = new lecturer
+            User.Lecturer = new Lecturer
             {
-                lecturer_code = request.Code ?? "UNKNOWN",
-                created_at = DateTime.UtcNow,
-                updated_at = DateTime.UtcNow
+                LecturerCode = request.Code ?? "UNKNOWN",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
         }
 
-        _context.users.Add(user);
+        _context.Users.Add(User);
         await _context.SaveChangesAsync();
 
-        return MapToResponse(user);
+        return MapToResponse(User);
     }
 
     public async Task<StudentLinksResponse> GetStudentLinksAsync(long studentId)
     {
-        var github = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "GITHUB");
-        var jira = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "JIRA");
+        var github = await _context.ExternalAccounts.FirstOrDefaultAsync(e => e.UserId == studentId && e.Provider == "GITHUB");
+        var jira = await _context.ExternalAccounts.FirstOrDefaultAsync(e => e.UserId == studentId && e.Provider == "JIRA");
 
         return new StudentLinksResponse
         {
-            GithubUrl = github?.username,
-            JiraUrl = jira?.username
+            GithubUrl = github?.Username,
+            JiraUrl = jira?.Username
         };
     }
 
     public async Task<StudentLinksResponse> LinkStudentAccountsAsync(long studentId, LinkStudentAccountsRequest request)
     {
-        var user = await _context.users.FindAsync(studentId)
+        var User = await _context.Users.FindAsync(studentId)
             ?? throw new NotFoundException($"User {studentId} not found");
 
         if (!string.IsNullOrWhiteSpace(request.GithubUrl))
         {
-            var gh = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "GITHUB");
+            var gh = await _context.ExternalAccounts.FirstOrDefaultAsync(e => e.UserId == studentId && e.Provider == "GITHUB");
             if (gh == null)
             {
-                gh = new external_account { user_id = studentId, provider = "GITHUB", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-                _context.external_accounts.Add(gh);
+                gh = new ExternalAccount { UserId = studentId, Provider = "GITHUB", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+                _context.ExternalAccounts.Add(gh);
             }
-            gh.username = request.GithubUrl;
-            gh.external_user_key = request.GithubUrl;
-            gh.updated_at = DateTime.UtcNow;
+            gh.Username = request.GithubUrl;
+            gh.ExternalUserKey = request.GithubUrl;
+            gh.UpdatedAt = DateTime.UtcNow;
         }
 
         if (!string.IsNullOrWhiteSpace(request.JiraUrl))
         {
-            var jira = await _context.external_accounts.FirstOrDefaultAsync(e => e.user_id == studentId && e.provider == "JIRA");
+            var jira = await _context.ExternalAccounts.FirstOrDefaultAsync(e => e.UserId == studentId && e.Provider == "JIRA");
             if (jira == null)
             {
-                jira = new external_account { user_id = studentId, provider = "JIRA", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-                _context.external_accounts.Add(jira);
+                jira = new ExternalAccount { UserId = studentId, Provider = "JIRA", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+                _context.ExternalAccounts.Add(jira);
             }
-            jira.username = request.JiraUrl;
-            jira.external_user_key = request.JiraUrl;
-            jira.updated_at = DateTime.UtcNow;
+            jira.Username = request.JiraUrl;
+            jira.ExternalUserKey = request.JiraUrl;
+            jira.UpdatedAt = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync();
         return await GetStudentLinksAsync(studentId);
     }
 }
+

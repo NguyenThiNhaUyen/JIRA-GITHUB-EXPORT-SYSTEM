@@ -1,4 +1,4 @@
-// UI Theme System for Project-Based Learning Management
+﻿// UI Theme System for Project-Based Learning Management
 export const theme = {
   colors: {
     primary: {
@@ -146,9 +146,4 @@ export const getColor = (colorPath) => {
 export const getSpacing = (size) => theme.spacing[size];
 export const getBorderRadius = (size) => theme.borderRadius[size];
 export const getShadow = (size) => theme.shadows[size];
-
-
-
-
-
 

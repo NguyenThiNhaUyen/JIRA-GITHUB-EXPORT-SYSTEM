@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
+﻿import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { LinkApprovalSection } from"@/components/shared/LinkApprovalSection.jsx";
 import { Shield, GitBranch, BookOpen } from"lucide-react";
 
@@ -8,7 +8,7 @@ export function GroupIntegrations({ group, handleApproveLink, handleRejectLink }
  <CardHeader className="border-b border-gray-50 py-5 px-8">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm"><Shield size={20} /></div>
- <CardTitle className="text-base font-black text-gray-800">Tích hợp Kỹ thuật</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">TĂ­ch há»£p Ká»¹ thuáº­t</CardTitle>
  </div>
  </CardHeader>
  <CardContent className="p-8 space-y-8">
@@ -25,7 +25,7 @@ export function GroupIntegrations({ group, handleApproveLink, handleRejectLink }
 
  <LinkApprovalSection
  icon={<BookOpen size={16} className="text-gray-400" />}
- label="Dự án Jira Software"
+ label="Dá»± Ă¡n Jira Software"
  url={group.integration?.jiraUrl}
  status={group.integration?.jiraStatus}
  onApprove={handleApproveLink}
@@ -35,9 +35,4 @@ export function GroupIntegrations({ group, handleApproveLink, handleRejectLink }
  </Card>
  );
 }
-
-
-
-
-
 

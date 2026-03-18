@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
+﻿using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.Shared.Models;
 using QuestPDF.Infrastructure;
@@ -6,27 +6,27 @@ using QuestPDF.Infrastructure;
 // Required by QuestPDF
 QuestPDF.Settings.License = LicenseType.Community;
 
-Console.WriteLine("🔧 Building sample SRS data...");
+Console.WriteLine("đŸ”§ Building sample SRS data...");
 
-// ── Sample project ──
-var project = new project
+// â”€â”€ Sample Project â”€â”€
+var Project = new Project
 {
-    id   = 1,
+    Id = 1,
     name = "JIRA-GITHUB Export System",
-    description = "A system to monitor and export student project data from Jira and GitHub.",
+    description = "A system to monitor and export Student Project data from Jira and GitHub.",
     status = "ACTIVE",
-    team_members = new List<team_member>
+    TeamMembers = new List<TeamMember>
     {
-        new team_member { team_role = "LEADER",  student_user = new student { student_code = "SE171234", user = new user { full_name = "Nguyen Thi Nha Uyen" } } },
-        new team_member { team_role = "MEMBER",  student_user = new student { student_code = "SE171235", user = new user { full_name = "Tran Van Phat" } } },
-        new team_member { team_role = "MEMBER",  student_user = new student { student_code = "SE171236", user = new user { full_name = "Le Thi Mai" } } },
+        new TeamMember { TeamRole = "LEADER",  StudentUser = new Student { StudentCode = "SE171234", User = new User { FullName = "Nguyen Thi Nha Uyen" } } },
+        new TeamMember { TeamRole = "MEMBER",  StudentUser = new Student { StudentCode = "SE171235", User = new User { FullName = "Tran Van Phat" } } },
+        new TeamMember { TeamRole = "MEMBER",  StudentUser = new Student { StudentCode = "SE171236", User = new User { FullName = "Le Thi Mai" } } },
     }
 };
 
-// ── Sample SrsReportData ──
+// â”€â”€ Sample SrsReportData â”€â”€
 var data = new SrsReportData
 {
-    Project            = project,
+    Project            = Project,
     JiraProjectKey     = "JGES",
     JiraSiteUrl        = "https://myteam.atlassian.net",
     GithubRepoUrl      = "https://github.com/myorg/JIRA-GITHUB-EXPORT-SYSTEM",
@@ -37,9 +37,9 @@ var data = new SrsReportData
 
     TeamMembers = new List<string>
     {
-        "Nguyen Thi Nha Uyen [SE171234] — LEADER",
-        "Tran Van Phat [SE171235] — MEMBER",
-        "Le Thi Mai [SE171236] — MEMBER",
+        "Nguyen Thi Nha Uyen [SE171234] â€” LEADER",
+        "Tran Van Phat [SE171235] â€” MEMBER",
+        "Le Thi Mai [SE171236] â€” MEMBER",
     },
 
     SystemFeatures = new List<SrsFeature>
@@ -48,35 +48,35 @@ var data = new SrsReportData
         {
             IssueKey    = "JGES-1",
             Title       = "Authentication & Authorization",
-            Description = "Users must be able to register, log in with email/password, and authenticate via Google SSO. Role-based access control (ADMIN, LECTURER, STUDENT) must be enforced.",
+            Description = "Users must be able to register, log in with Email/Password, and authenticate via Google SSO. Role-based access control (ADMIN, Lecturer, Student) must be enforced.",
             IssueType   = "EPIC",
             Status      = "In Progress",
             SubTasks    = new List<SrsIssueRow>
             {
                 new SrsIssueRow { IssueKey = "JGES-11", Title = "Implement JWT login endpoint", Priority = "High", Status = "Done" },
                 new SrsIssueRow { IssueKey = "JGES-12", Title = "Implement Google SSO callback", Priority = "High", Status = "In Progress" },
-                new SrsIssueRow { IssueKey = "JGES-13", Title = "Implement role-based middleware", Priority = "Medium", Status = "Done" },
+                new SrsIssueRow { IssueKey = "JGES-13", Title = "Implement Role-based middleware", Priority = "Medium", Status = "Done" },
             }
         },
         new SrsFeature
         {
             IssueKey    = "JGES-2",
             Title       = "Project Jira/GitHub Integration",
-            Description = "Team Leaders can submit GitHub repository URLs and Jira project keys for their project. Lecturers must approve or reject the submission before synchronisation begins.",
+            Description = "Team Leaders can submit GitHub repository URLs and Jira Project keys for their Project. Lecturers must approve or reject the submission before synchronisation begins.",
             IssueType   = "EPIC",
             Status      = "In Progress",
             SubTasks    = new List<SrsIssueRow>
             {
-                new SrsIssueRow { IssueKey = "JGES-21", Title = "POST /api/projects/{id}/integrations endpoint", Priority = "High", Status = "Done" },
-                new SrsIssueRow { IssueKey = "JGES-22", Title = "POST /api/projects/{id}/integrations/approve", Priority = "High", Status = "Done" },
-                new SrsIssueRow { IssueKey = "JGES-23", Title = "POST /api/projects/{id}/integrations/reject", Priority = "Medium", Status = "Done" },
+                new SrsIssueRow { IssueKey = "JGES-21", Title = "POST /api/Projects/{id}/integrations endpoint", Priority = "High", Status = "Done" },
+                new SrsIssueRow { IssueKey = "JGES-22", Title = "POST /api/Projects/{id}/integrations/approve", Priority = "High", Status = "Done" },
+                new SrsIssueRow { IssueKey = "JGES-23", Title = "POST /api/Projects/{id}/integrations/reject", Priority = "Medium", Status = "Done" },
             }
         },
         new SrsFeature
         {
             IssueKey    = "JGES-3",
             Title       = "Automatic Data Synchronisation",
-            Description = "The system periodically syncs Jira issues and GitHub commits/pull requests using a background worker. Sync only runs for approved project integrations.",
+            Description = "The system periodically syncs Jira issues and GitHub commits/pull requests using a background worker. Sync only runs for approved Project integrations.",
             IssueType   = "STORY",
             Status      = "To Do",
             SubTasks    = new List<SrsIssueRow>
@@ -104,31 +104,32 @@ var data = new SrsReportData
 
     NonFunctionalRequirements = new List<SrsIssueRow>
     {
-        new SrsIssueRow { IssueKey = "JGES-NFR-01", Title = "API response time ≤ 500ms under normal load", Priority = "High",   Status = "To Do" },
-        new SrsIssueRow { IssueKey = "JGES-NFR-02", Title = "System uptime ≥ 99% (excluding maintenance)",  Priority = "High",   Status = "To Do" },
+        new SrsIssueRow { IssueKey = "JGES-NFR-01", Title = "API response time â‰¤ 500ms under normal load", Priority = "High",   Status = "To Do" },
+        new SrsIssueRow { IssueKey = "JGES-NFR-02", Title = "System uptime â‰¥ 99% (excluding maintenance)",  Priority = "High",   Status = "To Do" },
         new SrsIssueRow { IssueKey = "JGES-NFR-03", Title = "All passwords hashed using BCrypt",              Priority = "High",   Status = "Done" },
         new SrsIssueRow { IssueKey = "JGES-NFR-04", Title = "HTTPS mandatory for all communication",         Priority = "High",   Status = "Done" },
     },
 
     ExternalInterfaces = new List<SrsIssueRow>
     {
-        new SrsIssueRow { IssueKey = "JGES-INT-01", Title = "Jira REST API v3 – fetch issues and worklogs",  Priority = "High", Status = "Done" },
-        new SrsIssueRow { IssueKey = "JGES-INT-02", Title = "GitHub REST API v3 – fetch commits and PRs",    Priority = "High", Status = "Done" },
-        new SrsIssueRow { IssueKey = "JGES-INT-03", Title = "Google OAuth2 – SSO login for students",        Priority = "Medium", Status = "In Progress" },
+        new SrsIssueRow { IssueKey = "JGES-INT-01", Title = "Jira REST API v3 â€“ fetch issues and worklogs",  Priority = "High", Status = "Done" },
+        new SrsIssueRow { IssueKey = "JGES-INT-02", Title = "GitHub REST API v3 â€“ fetch commits and PRs",    Priority = "High", Status = "Done" },
+        new SrsIssueRow { IssueKey = "JGES-INT-03", Title = "Google OAuth2 â€“ SSO login for Students",        Priority = "Medium", Status = "In Progress" },
     },
 };
 
-// ── Generate PDF ──
-Console.WriteLine("📄 Generating ISO/IEEE 29148 SRS PDF...");
+// â”€â”€ Generate PDF â”€â”€
+Console.WriteLine("đŸ“„ Generating ISO/IEEE 29148 SRS PDF...");
 var generator = new PdfReportGenerator();
 var pdfBytes  = generator.GenerateSrsReportPdf(data);
 
-// ── Save to Desktop ──
+// â”€â”€ Save to Desktop â”€â”€
 var outputPath = Path.Combine(
     Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
     $"SRS_Sample_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
 await File.WriteAllBytesAsync(outputPath, pdfBytes);
 
-Console.WriteLine($"✅ PDF saved to: {outputPath}");
-Console.WriteLine("🎉 Open the file to review the SRS report!");
+Console.WriteLine($"âœ… PDF saved to: {outputPath}");
+Console.WriteLine("đŸ‰ Open the file to review the SRS report!");
+

@@ -1,4 +1,4 @@
-// Login page - Admin Teal theme with glassmorphism and cut-out layout
+﻿// Login page - Admin Teal theme with glassmorphism and cut-out layout
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
@@ -21,13 +21,13 @@ export default function Login() {
     if (result.success) {
       navigate(result.redirectPath);
     } else {
-      setError(result.error || "Đăng nhập thất bại");
+      setError(result.error || "ÄÄƒng nháº­p tháº¥t báº¡i");
     }
   };
 
   const quickLogin = async (role) => {
     setError("");
-    // Tài khoản mặc định BE seed — xem Program.cs
+    // TĂ i khoáº£n máº·c Ä‘á»‹nh BE seed â€” xem Program.cs
     const QUICK_CREDS = {
       admin: { email: "admin@truonghoc.com", password: "Admin@123" },
       lecturer: { email: "gv@fpt.edu.vn", password: "Lecturer@123" },
@@ -38,7 +38,7 @@ export default function Login() {
     if (result.success) {
       navigate(result.redirectPath);
     } else {
-      setError(result.error || "Đăng nhập thất bại");
+      setError(result.error || "ÄÄƒng nháº­p tháº¥t báº¡i");
     }
   };
 
@@ -64,8 +64,8 @@ export default function Login() {
           </div>
 
           <div className="max-w-[400px] w-full mx-auto mt-10 text-gray-900">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Chào mừng</h1>
-            <p className="text-gray-500 mb-8 text-sm">Vui lòng nhập thông tin tài khoản của bạn</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">ChĂ o má»«ng</h1>
+            <p className="text-gray-500 mb-8 text-sm">Vui lĂ²ng nháº­p thĂ´ng tin tĂ i khoáº£n cá»§a báº¡n</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -76,7 +76,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Nhập email của bạn"
+                  placeholder="Nháº­p email cá»§a báº¡n"
                   required
                   disabled={loading}
                   className="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm"
@@ -84,13 +84,13 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Máº­t kháº©u</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu của bạn"
+                    placeholder="Nháº­p máº­t kháº©u cá»§a báº¡n"
                     required
                     disabled={loading}
                     className="w-full px-5 py-3.5 pr-12 bg-gray-50/50 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all text-sm"
@@ -115,13 +115,13 @@ export default function Login() {
               <div className="flex items-center justify-between px-2 pt-2 pb-4">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trì đăng nhập</span>
+                  <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trĂ¬ Ä‘Äƒng nháº­p</span>
                 </label>
                 <Link
                   to="/forgot-password"
                   className="text-sm text-teal-600 hover:text-teal-700 font-semibold transition-colors"
                 >
-                  Quên mật khẩu?
+                  QuĂªn máº­t kháº©u?
                 </Link>
               </div>
 
@@ -130,14 +130,14 @@ export default function Login() {
                 disabled={loading}
                 className="w-full bg-[#46867d] hover:bg-[#386d65] text-white font-bold py-4 rounded-md shadow-md hover:shadow-lg transition-all text-sm"
               >
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                {loading ? "Äang Ä‘Äƒng nháº­p..." : "ÄÄƒng nháº­p"}
               </Button>
             </form>
 
             <div className="mt-8">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px bg-gray-100 flex-1"></div>
-                <span className="text-xs text-gray-400 font-bold">Đăng nhập nhanh</span>
+                <span className="text-xs text-gray-400 font-bold">ÄÄƒng nháº­p nhanh</span>
                 <div className="h-px bg-gray-100 flex-1"></div>
               </div>
 
@@ -146,7 +146,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("admin")}
                   disabled={loading}
-                  title="Admin — admin@truonghoc.com"
+                  title="Admin â€” admin@truonghoc.com"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <Shield size={18} />
@@ -155,7 +155,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("lecturer")}
                   disabled={loading}
-                  title="Giảng viên"
+                  title="Giáº£ng viĂªn"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <BookOpen size={18} />
@@ -164,7 +164,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("student")}
                   disabled={loading}
-                  title="Sinh viên"
+                  title="Sinh viĂªn"
                   className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 hover:shadow-sm transition-all shadow-sm"
                 >
                   <GraduationCap size={18} />
@@ -179,7 +179,7 @@ export default function Login() {
 
           <div className="relative z-10 max-w-lg mt-10">
             <h2 className="text-4xl lg:text-5xl font-bold leading-snug mb-8">
-              Hệ thống quản lý<br />dự án học tập
+              Há»‡ thá»‘ng quáº£n lĂ½<br />dá»± Ă¡n há»c táº­p
             </h2>
           </div>
 
@@ -188,7 +188,7 @@ export default function Login() {
               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
             </svg>
             <p className="text-xl text-teal-50/90 font-medium leading-relaxed max-w-[90%]">
-              "Trải nghiệm phương thức hiện đại, tối ưu và hiệu quả cao để quản lý các lớp học và theo dõi tiến trình giáo dục của bạn."
+              "Tráº£i nghiá»‡m phÆ°Æ¡ng thá»©c hiá»‡n Ä‘áº¡i, tá»‘i Æ°u vĂ  hiá»‡u quáº£ cao Ä‘á»ƒ quáº£n lĂ½ cĂ¡c lá»›p há»c vĂ  theo dĂµi tiáº¿n trĂ¬nh giĂ¡o dá»¥c cá»§a báº¡n."
             </p>
           </div>
 
@@ -206,7 +206,7 @@ export default function Login() {
               <div className="min-w-0">
                 <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Education Management System</h3>
                 <p className="text-[10px] text-gray-500 mt-1 font-medium truncate">
-                  Nền tảng Quản lý Giáo dục
+                  Ná»n táº£ng Quáº£n lĂ½ GiĂ¡o dá»¥c
                 </p>
               </div>
             </div>
@@ -216,9 +216,4 @@ export default function Login() {
     </div>
   );
 }
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-import { Target, Github, Link2, RefreshCw, Clock, AlertTriangle, CheckCircle, ShieldAlert, Clock3, GitCommit } from"lucide-react";
+﻿import { Target, Github, Link2, RefreshCw, Clock, AlertTriangle, CheckCircle, ShieldAlert, Clock3, GitCommit } from"lucide-react";
 import { Card, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
@@ -15,7 +15,7 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center shadow-inner">
  <Target size={16} className="text-teal-600" />
  </div>
- <span>Tóm tắt dự án</span>
+ <span>TĂ³m táº¯t dá»± Ă¡n</span>
  </CardTitle>
 
  <div className="space-y-12">
@@ -37,7 +37,7 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  </div>
  <div className="text-center">
  <p className="text-[9px] font-black text-gray-400 mb-3 opacity-60">GitHub status</p>
- <StatusBadge status={project.integration?.githubStatus === 'ACTIVE' || project.integration?.githubStatus === 'APPROVED' ? 'success' : 'warning'} label={project.integration?.githubStatus ||"CHƯA LIÊN KẾT"} />
+ <StatusBadge status={project.integration?.githubStatus === 'ACTIVE' || project.integration?.githubStatus === 'APPROVED' ? 'success' : 'warning'} label={project.integration?.githubStatus ||"CHÆ¯A LIĂN Káº¾T"} />
  </div>
  </div>
  <div className="p-8 rounded-[36px] bg-gray-50/50 border border-gray-100 flex flex-col items-center justify-center gap-6 transition-all hover:bg-white hover:shadow-2xl hover:border-indigo-100 group/item hover:-translate-y-2">
@@ -46,7 +46,7 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  </div>
  <div className="text-center">
  <p className="text-[9px] font-black text-gray-400 mb-3 opacity-60">Jira status</p>
- <StatusBadge status={project.integration?.jiraStatus === 'ACTIVE' || project.integration?.jiraStatus === 'APPROVED' ? 'success' : 'warning'} label={project.integration?.jiraStatus ||"CHƯA LIÊN KẾT"} />
+ <StatusBadge status={project.integration?.jiraStatus === 'ACTIVE' || project.integration?.jiraStatus === 'APPROVED' ? 'success' : 'warning'} label={project.integration?.jiraStatus ||"CHÆ¯A LIĂN Káº¾T"} />
  </div>
  </div>
  </>
@@ -57,11 +57,11 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  <div className="space-y-6">
  <p className="text-[11px] font-black text-gray-400 tracking-[0.2em] ml-2 flex items-center gap-2">
  <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
- Thông tin đề tài
+ ThĂ´ng tin Ä‘á» tĂ i
  </p>
  <div className="p-10 bg-teal-50/20 rounded-[40px] border border-teal-100/50 relative overflow-hidden group/desc">
  <div className="absolute top-0 left-0 w-2 h-full bg-teal-500 transition-all group-hover/desc:w-3" />
- <p className="text-sm font-bold text-teal-800 tracking-tight leading-relaxed italic opacity-80">{project?.description ||"Dự án đang trong quá trình thiết lập mục tiêu và phạm vi đề tài."}</p>
+ <p className="text-sm font-bold text-teal-800 tracking-tight leading-relaxed italic opacity-80">{project?.description ||"Dá»± Ă¡n Ä‘ang trong quĂ¡ trĂ¬nh thiáº¿t láº­p má»¥c tiĂªu vĂ  pháº¡m vi Ä‘á» tĂ i."}</p>
  </div>
  </div>
 
@@ -86,7 +86,7 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center shadow-inner">
  <AlertTriangle size={16} className="text-indigo-600" />
  </div>
- <span>Lộ trình học thuật</span>
+ <span>Lá»™ trĂ¬nh há»c thuáº­t</span>
  </CardTitle>
  
  <div className="space-y-4">
@@ -103,16 +103,16 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  </div>
  <p className="text-[10px] text-gray-400 font-bold flex items-center gap-2">
  <Clock size={12} className="text-gray-300" />
- {item.dueDate ? `Hạn chót: ${new Date(item.dueDate).toLocaleDateString("vi-VN")}` :"Xem chi tiết trên Jira"}
+ {item.dueDate ? `Háº¡n chĂ³t: ${new Date(item.dueDate).toLocaleDateString("vi-VN")}` :"Xem chi tiáº¿t trĂªn Jira"}
  </p>
  </div>
  </div>
  ))
  ) : (
  [
- { title:"Nộp SRS Final", due:"Chỉ còn 3 ngày", status:"Critical", icon: ShieldAlert, color:"text-red-500" },
- { title:"Review Iteration 2", due:"Tuần sau", status:"Upcoming", icon: Clock3, color:"text-amber-500" },
- { title:"Đóng Sprint 3", due:"Cuối tháng này", status:"Active", icon: GitCommit, color:"text-blue-500" }
+ { title:"Ná»™p SRS Final", due:"Chá»‰ cĂ²n 3 ngĂ y", status:"Critical", icon: ShieldAlert, color:"text-red-500" },
+ { title:"Review Iteration 2", due:"Tuáº§n sau", status:"Upcoming", icon: Clock3, color:"text-amber-500" },
+ { title:"ÄĂ³ng Sprint 3", due:"Cuá»‘i thĂ¡ng nĂ y", status:"Active", icon: GitCommit, color:"text-blue-500" }
  ].map((d, i) => (
  <div key={i} className="flex gap-8 p-8 rounded-[32px] hover:bg-gray-50/50 transition-all border border-transparent hover:border-gray-50 group hover:-translate-x-1">
  <div className="w-14 h-14 rounded-2xl bg-white border border-gray-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-all shadow-sm">
@@ -133,9 +133,4 @@ export function ProjectSummarySidebar({ loadingProject, project, onSync, isSynci
  </div>
  );
 }
-
-
-
-
-
 

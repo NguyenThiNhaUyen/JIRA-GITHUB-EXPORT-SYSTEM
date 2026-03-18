@@ -1,4 +1,4 @@
-import { Plus, BarChart2, FileText, ExternalLink } from"lucide-react";
+﻿import { Plus, BarChart2, FileText, ExternalLink } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
@@ -18,12 +18,12 @@ export function SrsSidebar({ groupSrs = [], loadingSrs, onSrsCenterNavigate }) {
  {loadingSrs ? (
  <div className="py-20 text-center opacity-40">
  <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
- <p className="text-[10px] font-black">Đang tải...</p>
+ <p className="text-[10px] font-black">Äang táº£i...</p>
  </div>
  ) : groupSrs.length === 0 ? (
  <div className="py-20 text-center space-y-6 bg-white/5 rounded-[40px] border border-white/5">
  <FileText size={48} className="text-white/10 mx-auto" />
- <p className="text-[11px] text-slate-500 font-bold tracking-[0.2em] px-10 italic leading-relaxed opacity-60">Chưa có bản nộp SRS nào được ghi nhận cho dự án này</p>
+ <p className="text-[11px] text-slate-500 font-bold tracking-[0.2em] px-10 italic leading-relaxed opacity-60">ChÆ°a cĂ³ báº£n ná»™p SRS nĂ o Ä‘Æ°á»£c ghi nháº­n cho dá»± Ă¡n nĂ y</p>
  </div>
  ) : (
  groupSrs.slice(0, 3).map((srs, idx) => (
@@ -41,7 +41,7 @@ export function SrsSidebar({ groupSrs = [], loadingSrs, onSrsCenterNavigate }) {
  </div>
  </div>
  <div className="flex items-center gap-4">
- <StatusBadge status={srs.status === 'FINAL' ? 'success' : 'warning'} label={srs.status === 'FINAL' ? 'Duyệt' : 'Draft'} />
+ <StatusBadge status={srs.status === 'FINAL' ? 'success' : 'warning'} label={srs.status === 'FINAL' ? 'Duyá»‡t' : 'Draft'} />
  <ExternalLink size={16} className="text-white/20 group-hover/item:text-white/60 transition-colors" />
  </div>
  </div>
@@ -55,15 +55,10 @@ export function SrsSidebar({ groupSrs = [], loadingSrs, onSrsCenterNavigate }) {
  >
  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/manage:translate-y-0 transition-all duration-500" />
  <span className="relative flex items-center justify-center gap-4">
- <Plus size={24} className="grow-0" /> Quản lý SRS Center
+ <Plus size={24} className="grow-0" /> Quáº£n lĂ½ SRS Center
  </span>
  </Button>
  </Card>
  );
 }
-
-
-
-
-
 

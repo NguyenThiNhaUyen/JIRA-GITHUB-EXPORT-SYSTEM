@@ -1,45 +1,43 @@
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+﻿using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 using JiraGithubExport.Shared.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {
-    IGenericRepository<user> Users { get; }
-    IGenericRepository<student> Students { get; }
-    IGenericRepository<lecturer> Lecturers { get; }
-    IGenericRepository<role> Roles { get; }
-    IGenericRepository<semester> Semesters { get; }
-    IGenericRepository<subject> Subjects { get; }
+    IGenericRepository<User> Users { get; }
+    IGenericRepository<Student> Students { get; }
+    IGenericRepository<Lecturer> Lecturers { get; }
+    IGenericRepository<Role> Roles { get; }
+    IGenericRepository<Semester> Semesters { get; }
+    IGenericRepository<Subject> Subjects { get; }
     ICourseRepository Courses { get; }
-    IGenericRepository<course_enrollment> CourseEnrollments { get; }
+    IGenericRepository<CourseEnrollment> CourseEnrollments { get; }
     IProjectRepository Projects { get; }
-    IGenericRepository<team_member> TeamMembers { get; }
-    IGenericRepository<project_integration> ProjectIntegrations { get; }
-    IGenericRepository<project_document> ProjectDocuments { get; }
-    IGenericRepository<github_repository> GitHubRepositories { get; }
-    IGenericRepository<github_commit> GitHubCommits { get; }
-    IGenericRepository<github_pull_request> GitHubPullRequests { get; }
-    IGenericRepository<github_user> GitHubUsers { get; }
-    IGenericRepository<jira_project> JiraProjects { get; }
-    IGenericRepository<jira_issue> JiraIssues { get; }
-    IGenericRepository<student_activity_daily> StudentActivityDailies { get; }
-    IGenericRepository<inactive_alert> InactiveAlerts { get; }
-    IGenericRepository<report_export> ReportExports { get; }
-    IGenericRepository<audit_log> AuditLogs { get; }
-    IGenericRepository<team_invitation> TeamInvitations { get; }
-    IGenericRepository<external_account> ExternalAccounts { get; }
-    IGenericRepository<notification> Notifications { get; }
+    IGenericRepository<TeamMember> TeamMembers { get; }
+    IGenericRepository<ProjectIntegration> ProjectIntegrations { get; }
+    IGenericRepository<ProjectDocument> ProjectDocuments { get; }
+    IGenericRepository<GithubRepository> GitHubRepositories { get; }
+    IGenericRepository<GithubCommit> GitHubCommits { get; }
+    IGenericRepository<GithubPullRequest> GitHubPullRequests { get; }
+    IGenericRepository<GithubUser> GitHubUsers { get; }
+    IGenericRepository<JiraProject> JiraProjects { get; }
+    IGenericRepository<JiraIssue> JiraIssues { get; }
+    IGenericRepository<StudentActivityDaily> StudentActivityDailies { get; }
+    IGenericRepository<InactiveAlert> InactiveAlerts { get; }
+    IGenericRepository<ReportExport> ReportExports { get; }
+    IGenericRepository<AuditLog> AuditLogs { get; }
+    IGenericRepository<TeamInvitation> TeamInvitations { get; }
+    IGenericRepository<ExternalAccount> ExternalAccounts { get; }
+    IGenericRepository<Notification> Notifications { get; }
+
+    IGenericRepository<T> Repository<T>() where T : class;
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
 }
-
-
-
-
-
-
 

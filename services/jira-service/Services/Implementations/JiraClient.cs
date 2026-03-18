@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using JiraGithubExport.JiraService.DTOs;
@@ -41,13 +41,13 @@ public class JiraClient : IJiraClient
     {
         try
         {
-            var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/project/{projectKey}";
+            var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/Project/{projectKey}";
             var response = await _httpClient.GetAsync(url);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to validate Jira project {ProjectKey}", projectKey);
+            _logger.LogError(ex, "Failed to validate Jira Project {ProjectKey}", projectKey);
             return false;
         }
     }
@@ -56,7 +56,7 @@ public class JiraClient : IJiraClient
     {
         try
         {
-            _logger.LogInformation("Syncing issues for Jira project {ProjectKey}", projectKey);
+            _logger.LogInformation("Syncing issues for Jira Project {ProjectKey}", projectKey);
             
             // Validate URL format
             if (string.IsNullOrWhiteSpace(siteUrl) || siteUrl.Contains("example.com"))
@@ -65,7 +65,7 @@ public class JiraClient : IJiraClient
                 return;
             }
 
-            var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql=project={projectKey}&maxResults=100";
+            var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql=Project={projectKey}&maxResults=100";
             var response = await _httpClient.GetAsync(url);
             
             if (!response.IsSuccessStatusCode)
@@ -82,37 +82,37 @@ public class JiraClient : IJiraClient
 
             foreach (var jiraIssue in searchResult.Issues)
             {
-                var existing = await unitOfWork.JiraIssues.FirstOrDefaultAsync(i => i.jira_issue_key == jiraIssue.Key);
+                var existing = await unitOfWork.JiraIssues.FirstOrDefaultAsync(i => i.JiraIssueKey == jiraIssue.Key);
                 
                 if (existing != null)
                 {
                     // Update existing issue
-                    existing.title = jiraIssue.Fields.Summary;
-                    existing.status = jiraIssue.Fields.Status.Name;
-                    existing.priority = jiraIssue.Fields.Priority?.Name;
-                    existing.updated_at = jiraIssue.Fields.Updated;
+                    existing.Title = jiraIssue.Fields.Summary;
+                    existing.Status = jiraIssue.Fields.Status.Name;
+                    existing.Priority = jiraIssue.Fields.Priority?.Name;
+                    existing.UpdatedAt = jiraIssue.Fields.Updated;
                     unitOfWork.JiraIssues.Update(existing);
                 }
                 else
                 {
                     // Create new issue
-                    var issue = new jira_issue
+                    var issue = new JiraIssue
                     {
-                        jira_project_id = jiraProjectId,
-                        jira_issue_key = jiraIssue.Key,
-                        title = jiraIssue.Fields.Summary,
-                        issue_type = jiraIssue.Fields.Issuetype.Name,
-                        status = jiraIssue.Fields.Status.Name,
-                        priority = jiraIssue.Fields.Priority?.Name,
-                        created_at = jiraIssue.Fields.Created,
-                        updated_at = jiraIssue.Fields.Updated
+                        JiraProjectId = jiraProjectId,
+                        JiraIssueKey = jiraIssue.Key,
+                        Title = jiraIssue.Fields.Summary,
+                        IssueType = jiraIssue.Fields.Issuetype.Name,
+                        Status = jiraIssue.Fields.Status.Name,
+                        Priority = jiraIssue.Fields.Priority?.Name,
+                        CreatedAt = jiraIssue.Fields.Created,
+                        UpdatedAt = jiraIssue.Fields.Updated
                     };
                     unitOfWork.JiraIssues.Add(issue);
                 }
             }
 
             await unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Successfully synced {Count} issues for Jira project {ProjectKey}", searchResult.Issues.Count, projectKey);
+            _logger.LogInformation("Successfully synced {Count} issues for Jira Project {ProjectKey}", searchResult.Issues.Count, projectKey);
         }
         catch (System.Net.Sockets.SocketException ex)
         {
@@ -120,7 +120,7 @@ public class JiraClient : IJiraClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError("HTTP request error for Jira project {ProjectKey}: {Message}. Please check your Jira URL and credentials.", projectKey, ex.Message);
+            _logger.LogError("HTTP request error for Jira Project {ProjectKey}: {Message}. Please check your Jira URL and credentials.", projectKey, ex.Message);
         }
         catch (Exception ex)
         {
@@ -133,7 +133,7 @@ public class JiraClient : IJiraClient
     {
         try
         {
-            var jql = $"project={projectKey} AND status='{status}'";
+            var jql = $"Project={projectKey} AND status='{status}'";
             var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql={Uri.EscapeDataString(jql)}&maxResults=0";
             var response = await _httpClient.GetAsync(url);
             
@@ -155,7 +155,7 @@ public class JiraClient : IJiraClient
     {
         try
         {
-            var jql = $"project={projectKey} ORDER BY updated DESC";
+            var jql = $"Project={projectKey} ORDER BY updated DESC";
             var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql={Uri.EscapeDataString(jql)}&maxResults=1";
             var response = await _httpClient.GetAsync(url);
             
@@ -178,7 +178,7 @@ public class JiraClient : IJiraClient
         var boards = new List<JiraBoardResponse>();
         try
         {
-            // Jira Agile API returns boards associated with a project if queried correctly
+            // Jira Agile API returns boards associated with a Project if queried correctly
             var url = $"{siteUrl.TrimEnd('/')}/rest/agile/1.0/board?projectKeyOrId={projectKey.Trim()}";
             var response = await _httpClient.GetAsync(url);
             
@@ -241,3 +241,4 @@ public class JiraClient : IJiraClient
         return sprints;
     }
 }
+

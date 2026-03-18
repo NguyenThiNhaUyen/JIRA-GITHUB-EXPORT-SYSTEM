@@ -1,4 +1,4 @@
-// Badge/Chip Component - Part of UI Kit
+﻿// Badge/Chip Component - Part of UI Kit
 export function Badge({ children, variant = 'default', size = 'md', className = '', ...props }) {
   const variants = {
     default: 'bg-secondary-100 text-secondary-800 border border-secondary-200',
@@ -53,9 +53,4 @@ export function Chip({ children, color = 'default', removable = false, onRemove,
     </div>
   );
 }
-
-
-
-
-
 

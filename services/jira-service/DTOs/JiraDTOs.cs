@@ -1,4 +1,4 @@
-namespace JiraGithubExport.JiraService.DTOs;
+﻿namespace JiraGithubExport.JiraService.DTOs;
 
 /// <summary>
 /// Jira Issue Response from API
@@ -61,3 +61,4 @@ public class JiraProjectResponse
     public string Key { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
 }
+

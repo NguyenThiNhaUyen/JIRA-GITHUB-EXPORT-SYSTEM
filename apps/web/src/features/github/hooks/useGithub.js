@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProjectCommits, syncGithubCommits, getCommitsStats } from "../api/githubApi.js";
 
 export const GITHUB_KEYS = {
@@ -28,18 +28,13 @@ export const useSyncCommits = () => {
     return useMutation({
         mutationFn: (projectId) => syncGithubCommits(projectId),
         onSuccess: (_, projectId) => {
-            // Reload danh sách commits của project sau khi sync
+            // Reload danh sĂ¡ch commits cá»§a project sau khi sync
             queryClient.invalidateQueries({ queryKey: GITHUB_KEYS.commits(projectId) });
 
-            // Bonus: Reload lại query của module Project để cập nhật badge thời gian sync mới nhất
-            // => Khả năng Inter-module caching vĩ đại của React Query!
+            // Bonus: Reload láº¡i query cá»§a module Project Ä‘á»ƒ cáº­p nháº­t badge thá»i gian sync má»›i nháº¥t
+            // => Kháº£ nÄƒng Inter-module caching vÄ© Ä‘áº¡i cá»§a React Query!
             queryClient.invalidateQueries({ queryKey: ["projects", "detail", projectId] });
         },
     });
 };
-
-
-
-
-
 

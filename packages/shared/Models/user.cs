@@ -1,45 +1,40 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class user
+public partial class User : JiraGithubExport.Shared.Interfaces.ISoftDelete
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public string email { get; set; } = null!;
+    public string Email { get; set; } = null!;
 
-    public string password { get; set; } = null!;
+    public string Password { get; set; } = null!;
 
-    public string? full_name { get; set; }
+    public string FullName { get; set; }
 
-    public bool enabled { get; set; }
+    public bool Enabled { get; set; }
 
-    public string? password_reset_token { get; set; }
+    public string PasswordResetToken { get; set; }
 
-    public DateTime? password_reset_token_expires_at { get; set; }
+    public DateTime? PasswordResetTokenExpiresAt { get; set; }
 
-    public DateTime created_at { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime updated_at { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
-    public virtual ICollection<course> courses { get; set; } = new List<course>();
+    public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
 
-    public virtual ICollection<external_account> external_accounts { get; set; } = new List<external_account>();
+    public virtual ICollection<ExternalAccount> ExternalAccounts { get; set; } = new List<ExternalAccount>();
 
-    public virtual lecturer? lecturer { get; set; }
+    public virtual Lecturer? Lecturer { get; set; }
 
-    public virtual ICollection<project_document> project_documents { get; set; } = new List<project_document>();
+    public virtual ICollection<ProjectDocument> ProjectDocuments { get; set; } = new List<ProjectDocument>();
 
-    public virtual student? student { get; set; }
+    public virtual Student? Student { get; set; }
 
-    public virtual ICollection<role> roles { get; set; } = new List<role>();
+    public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+
+    public bool IsDeleted { get; set; }
 }
-
-
-
-
-
-
-
 

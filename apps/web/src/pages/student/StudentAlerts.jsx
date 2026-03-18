@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Activity, Clock } from"lucide-react";
+﻿import { AlertTriangle, CheckCircle, Activity, Clock } from"lucide-react";
 import { useAuth } from"@/context/AuthContext.jsx";
 import { useGetAlerts } from"@/features/system/hooks/useAlerts.js";
 
@@ -15,9 +15,9 @@ export default function StudentAlertsPage() {
  return (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <PageHeader 
- title="Thông báo & Cảnh báo" 
- subtitle="Các nhắc nhở về tiến độ từ hệ thống và Giảng viên hướng dẫn." 
- breadcrumb={["Sinh viên","Cảnh báo"]} 
+ title="ThĂ´ng bĂ¡o & Cáº£nh bĂ¡o" 
+ subtitle="CĂ¡c nháº¯c nhá»Ÿ vá» tiáº¿n Ä‘á»™ tá»« há»‡ thá»‘ng vĂ  Giáº£ng viĂªn hÆ°á»›ng dáº«n." 
+ breadcrumb={["Sinh viĂªn","Cáº£nh bĂ¡o"]} 
  />
  
  <Card className="rounded-[48px] border-0 bg-white overflow-hidden shadow-2xl shadow-slate-200/50">
@@ -39,8 +39,8 @@ export default function StudentAlertsPage() {
  <div className="w-24 h-24 rounded-[40px] bg-emerald-50 flex items-center justify-center text-emerald-500 mx-auto mb-8 shadow-inner">
  <CheckCircle size={40}/>
  </div>
- <h4 className="font-black text-gray-800 text-xl tracking-tighter mb-2">Hệ thống an toàn!</h4>
- <p className="text-[10px] text-gray-400 font-black tracking-[0.2em] opacity-60">Không có cảnh báo nào cho bạn trong lúc này.</p>
+ <h4 className="font-black text-gray-800 text-xl tracking-tighter mb-2">Há»‡ thá»‘ng an toĂ n!</h4>
+ <p className="text-[10px] text-gray-400 font-black tracking-[0.2em] opacity-60">KhĂ´ng cĂ³ cáº£nh bĂ¡o nĂ o cho báº¡n trong lĂºc nĂ y.</p>
  </div>
  ) : (
  alerts.map((a, i) => (
@@ -50,7 +50,7 @@ export default function StudentAlertsPage() {
  </div>
  <div className="flex-1 min-w-0 space-y-4">
  <div className="flex items-center gap-6">
- <h4 className="font-black text-gray-800 text-lg">{a.severity === 'HIGH' ? 'Cảnh báo rủi ro' : 'Nhắc nhở nhẹ'}</h4>
+ <h4 className="font-black text-gray-800 text-lg">{a.severity === 'HIGH' ? 'Cáº£nh bĂ¡o rá»§i ro' : 'Nháº¯c nhá»Ÿ nháº¹'}</h4>
  <div className="flex items-center gap-2 text-[10px] font-black text-gray-300 leading-none">
  <Clock size={12} /> {new Date(a.createdAt).toLocaleString("vi-VN")}
  </div>
@@ -58,7 +58,7 @@ export default function StudentAlertsPage() {
  <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-3xl opacity-80">{a.message}</p>
  <div className="flex items-center gap-3">
  <div className="h-1.5 w-1.5 rounded-full bg-teal-500" />
- <p className="text-[10px] font-black text-teal-600 tracking-[0.15em]">Dự án: {a.groupName ||"Phát triển hệ thống"}</p>
+ <p className="text-[10px] font-black text-teal-600 tracking-[0.15em]">Dá»± Ă¡n: {a.groupName ||"PhĂ¡t triá»ƒn há»‡ thá»‘ng"}</p>
  </div>
  </div>
  </div>
@@ -69,9 +69,4 @@ export default function StudentAlertsPage() {
  </div>
  );
 }
-
-
-
-
-
 

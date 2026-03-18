@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using JiraGithubExport.IntegrationService.Application.Implementations;
@@ -81,62 +81,63 @@ namespace IntegrationService.Tests.Services
         public async Task LinkIntegrationAsync_InvalidGithubUrl_ThrowsValidationException()
         {
             // Arrange
-            var project = new project { name = "Test Project", status = "ACTIVE", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-            _context.projects.Add(project);
+            var Project = new Project { Name = "Test Project", Status = "ACTIVE", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            _context.Projects.Add(Project);
             await _context.SaveChangesAsync();
 
             var request = new LinkIntegrationRequest { GithubRepoUrl = "invalidurl" };
 
             // Act & Assert
-            await Assert.ThrowsAsync<ValidationException>(() => _service.LinkIntegrationAsync(project.id, 1L, request));
+            await Assert.ThrowsAsync<ValidationException>(() => _service.LinkIntegrationAsync(Project.Id, 1L, request));
         }
 
         [Fact]
         public async Task LinkIntegrationAsync_ValidNewGithubIntegration_AddsIntegration()
         {
             // Arrange
-            var project = new project { name = "Test Project", status = "ACTIVE", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-            _context.projects.Add(project);
+            var Project = new Project { Name = "Test Project", Status = "ACTIVE", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            _context.Projects.Add(Project);
             await _context.SaveChangesAsync();
 
             var request = new LinkIntegrationRequest { GithubRepoUrl = "https://github.com/owner/repo" };
 
             // Act
-            await _service.LinkIntegrationAsync(project.id, 1L, request);
+            await _service.LinkIntegrationAsync(Project.Id, 1L, request);
 
             // Assert
-            var githubRepo = await _context.github_repositories.FirstOrDefaultAsync(r => r.owner_login == "owner" && r.name == "repo");
+            var githubRepo = await _context.GithubRepositories.FirstOrDefaultAsync(r => r.OwnerLogin == "owner" && r.Name == "repo");
             Assert.NotNull(githubRepo);
 
-            var integration = await _context.project_integrations.FirstOrDefaultAsync(i => i.project_id == project.id);
+            var integration = await _context.ProjectIntegrations.FirstOrDefaultAsync(i => i.ProjectId == Project.Id);
             Assert.NotNull(integration);
-            Assert.Equal(githubRepo.id, integration.github_repo_id);
+            Assert.Equal(githubRepo.Id, integration.GithubRepoId);
         }
 
         [Fact]
         public async Task LinkIntegrationAsync_ExistingIntegration_UpdatesIntegration()
         {
             // Arrange
-            var project = new project { name = "Test Project", status = "ACTIVE", created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-            _context.projects.Add(project);
+            var Project = new Project { Name = "Test Project", Status = "ACTIVE", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            _context.Projects.Add(Project);
             await _context.SaveChangesAsync();
 
-            var existingIntegration = new project_integration { project_id = project.id, created_at = DateTime.UtcNow, updated_at = DateTime.UtcNow };
-            _context.project_integrations.Add(existingIntegration);
+            var existingIntegration = new ProjectIntegration { ProjectId = Project.Id, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            _context.ProjectIntegrations.Add(existingIntegration);
             await _context.SaveChangesAsync();
 
             var request = new LinkIntegrationRequest { JiraProjectKey = "TEST" };
 
             // Act
-            await _service.LinkIntegrationAsync(project.id, 1L, request);
+            await _service.LinkIntegrationAsync(Project.Id, 1L, request);
 
             // Assert
-            var jiraProject = await _context.jira_projects.FirstOrDefaultAsync(p => p.jira_project_key == "TEST");
+            var jiraProject = await _context.JiraProjects.FirstOrDefaultAsync(p => p.JiraProjectKey == "TEST");
             Assert.NotNull(jiraProject);
 
-            var integration = await _context.project_integrations.FirstOrDefaultAsync(i => i.project_id == project.id);
+            var integration = await _context.ProjectIntegrations.FirstOrDefaultAsync(i => i.ProjectId == Project.Id);
             Assert.NotNull(integration);
-            Assert.Equal(jiraProject.id, integration.jira_project_id);
+            Assert.Equal(jiraProject.Id, integration.JiraProjectId);
         }
     }
 }
+

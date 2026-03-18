@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
+﻿using JiraGithubExport.Shared.Contracts.Responses.Projects;
 namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
@@ -125,3 +125,4 @@ public class LecturerCourseStatResponse
     public List<EnrollmentInfo> Enrollments { get; set; } = new();
     public List<int> CommitTrends { get; set; } = new(); 
 }
+

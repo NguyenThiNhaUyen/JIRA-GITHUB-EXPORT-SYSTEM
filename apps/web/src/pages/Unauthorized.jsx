@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, ArrowLeft, Home, Lock } from 'lucide-react';
 import { Button } from "@/components/ui/Button.jsx";
@@ -28,7 +28,7 @@ export default function Unauthorized() {
                     </h1>
 
                     <p className="text-gray-500 text-lg font-medium leading-relaxed mb-12 max-w-sm mx-auto">
-                        Ops! Bạn không có quyền truy cập vào khu vực này. Vui lòng liên hệ Admin nếu bạn tin đây là một sai sót.
+                        Ops! Báº¡n khĂ´ng cĂ³ quyá»n truy cáº­p vĂ o khu vá»±c nĂ y. Vui lĂ²ng liĂªn há»‡ Admin náº¿u báº¡n tin Ä‘Ă¢y lĂ  má»™t sai sĂ³t.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -36,14 +36,14 @@ export default function Unauthorized() {
                             onClick={() => navigate(-1)}
                             className="w-full sm:w-auto h-14 px-10 rounded-2xl bg-white border border-gray-100 text-gray-800 font-black text-[10px] shadow-sm hover:bg-gray-50 transition-all active:scale-95"
                         >
-                            <ArrowLeft size={16} className="mr-3" /> Quay lại
+                            <ArrowLeft size={16} className="mr-3" /> Quay láº¡i
                         </Button>
 
                         <Button
                             onClick={() => navigate('/')}
                             className="w-full sm:w-auto h-14 px-12 rounded-2xl bg-slate-900 border-0 text-white font-black text-[10px] shadow-xl shadow-slate-200 hover:bg-black transition-all active:scale-95"
                         >
-                            <Home size={16} className="mr-3" /> Về Trang chủ
+                            <Home size={16} className="mr-3" /> Vá» Trang chá»§
                         </Button>
                     </div>
 
@@ -61,9 +61,4 @@ export default function Unauthorized() {
         </div>
     );
 }
-
-
-
-
-
 

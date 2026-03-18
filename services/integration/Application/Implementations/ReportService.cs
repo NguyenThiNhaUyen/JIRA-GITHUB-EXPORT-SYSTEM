@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Responses.Reports;
+﻿using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using System.Security.Claims;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
@@ -40,7 +40,7 @@ public class ReportService : IReportService
     private long GetCurrentUserId()
     {
         var claim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return long.TryParse(claim, out var id) ? id : 0;
+        return long.TryParse(claim, out var Id) ? Id : 0;
     }
 
     private string GetReportDirectory()
@@ -58,52 +58,52 @@ public class ReportService : IReportService
     {
         try
         {
-            var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-            if (course == null) throw new NotFoundException("Course not found");
+            var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+            if (Course == null) throw new NotFoundException("Course not found");
 
             string fileName = $"course_{courseId}_commits_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type = "COMMIT_STATISTICS",
-                scope = "COURSE",
-                scope_entity_id = courseId,
-                format = format,
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                ReportType = "COMMIT_STATISTICS",
+                Scope = "Course",
+                ScopeEntityId = courseId,
+                Format = format,
+                Status = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
 
-            var projects = await _unitOfWork.Projects.Query()
-                .Include(p => p.team_members)
-                    .ThenInclude(tm => tm.student_user)
-                        .ThenInclude(s => s.user)
-                .Where(p => p.course_id == courseId)
+            var Projects = await _unitOfWork.Projects.Query()
+                .Include(p => p.TeamMembers)
+                    .ThenInclude(tm => tm.StudentUser)
+                        .ThenInclude(s => s.User)
+                .Where(p => p.CourseId == courseId)
                 .ToListAsync();
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects);
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(Course.CourseName ?? "Unknown Course", Projects);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects);
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(Course.CourseName ?? "Unknown Course", Projects);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
-            _logger.LogInformation("Generated commit stats for course {CourseName} at {FilePath}", course.course_name, filePath);
+            _logger.LogInformation("Generated commit stats for Course {CourseName} at {FilePath}", Course.CourseName, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
 
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate commit statistics report for course {CourseId}", courseId);
+            _logger.LogError(ex, "Failed to generate commit statistics report for Course {CourseId}", courseId);
             throw;
         }
     }
@@ -112,51 +112,51 @@ public class ReportService : IReportService
     {
         try
         {
-            var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-            if (course == null) throw new NotFoundException("Course not found");
+            var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+            if (Course == null) throw new NotFoundException("Course not found");
 
-            var projects = await _unitOfWork.Projects.Query()
-                .Include(p => p.team_members)
-                    .ThenInclude(tm => tm.student_user)
-                        .ThenInclude(s => s.user)
-                .Where(p => p.course_id == courseId)
+            var Projects = await _unitOfWork.Projects.Query()
+                .Include(p => p.TeamMembers)
+                    .ThenInclude(tm => tm.StudentUser)
+                        .ThenInclude(s => s.User)
+                .Where(p => p.CourseId == courseId)
                 .ToListAsync();
 
             string fileName = $"course_{courseId}_rosters_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type = "TEAM_ROSTER",
-                scope = "COURSE",
-                scope_entity_id = courseId,
-                format = format,
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                ReportType = "TEAM_ROSTER",
+                Scope = "Course",
+                ScopeEntityId = courseId,
+                Format = format,
+                Status = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
 
-            // Simplified: Use the first project for now or combined logic if I had a course-wide generator
+            // Simplified: Use the first Project for now or combined logic if I had a Course-wide generator
             // To make it functional, we'll just use the mock logic to create a valid file entry
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = projects.Any() ? _excelReportGenerator.GenerateTeamRosterReport(projects.First()) : new byte[0];
+                var fileBytes = Projects.Any() ? _excelReportGenerator.GenerateTeamRosterReport(Projects.First()) : new byte[0];
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = projects.Any() ? _pdfReportGenerator.GenerateTeamRosterPdf(projects.First()) : new byte[0];
+                var fileBytes = Projects.Any() ? _pdfReportGenerator.GenerateTeamRosterPdf(Projects.First()) : new byte[0];
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate course team roster for {CourseId}", courseId);
+            _logger.LogError(ex, "Failed to generate Course team roster for {CourseId}", courseId);
             throw;
         }
     }
@@ -171,24 +171,24 @@ public class ReportService : IReportService
             string filePath = Path.Combine(GetReportDirectory(), fileName);
             await File.WriteAllBytesAsync(filePath, new byte[0]); 
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type = "SRS_ISO29148",
-                scope = "COURSE",
-                scope_entity_id = courseId,
-                format = format,
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                ReportType = "SRS_ISO29148",
+                Scope = "Course",
+                ScopeEntityId = courseId,
+                Format = format,
+                Status = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-             _logger.LogError(ex, "Failed course SRS for {CourseId}", courseId);
+             _logger.LogError(ex, "Failed Course SRS for {CourseId}", courseId);
              throw;
         }
     }
@@ -197,49 +197,49 @@ public class ReportService : IReportService
     {
         try
         {
-            var project = await _unitOfWork.Projects.Query()
-                .Include(p => p.team_members)
-                    .ThenInclude(tm => tm.student_user)
-                        .ThenInclude(s => s.user)
-                .FirstOrDefaultAsync(p => p.id == projectId);
-            if (project == null) throw new NotFoundException("Project not found");
+            var Project = await _unitOfWork.Projects.Query()
+                .Include(p => p.TeamMembers)
+                    .ThenInclude(tm => tm.StudentUser)
+                        .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
+            if (Project == null) throw new NotFoundException("Project not found");
 
             string fileName = $"project_{projectId}_roster_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type = "TEAM_ROSTER",
-                scope = "PROJECT",
-                scope_entity_id = projectId,
-                format = format,
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                ReportType = "TEAM_ROSTER",
+                Scope = "Project",
+                ScopeEntityId = projectId,
+                Format = format,
+                Status = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateTeamRosterReport(project);
+                var fileBytes = _excelReportGenerator.GenerateTeamRosterReport(Project);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(project);
+                var fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(Project);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
-            _logger.LogInformation("Generated team roster for project {ProjectName} at {FilePath}", project.name, filePath);
+            _logger.LogInformation("Generated team roster for Project {ProjectName} at {FilePath}", Project.Name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
 
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate team roster report for project {ProjectId}", projectId);
+            _logger.LogError(ex, "Failed to generate team roster report for Project {ProjectId}", projectId);
             throw;
         }
     }
@@ -248,62 +248,62 @@ public class ReportService : IReportService
     {
         try
         {
-            var project = await _unitOfWork.Projects.Query()
-                .Include(p => p.team_members)
-                    .ThenInclude(tm => tm.student_user)
-                        .ThenInclude(s => s.user)
-                .FirstOrDefaultAsync(p => p.id == projectId);
-            if (project == null) throw new NotFoundException("Project not found");
+            var Project = await _unitOfWork.Projects.Query()
+                .Include(p => p.TeamMembers)
+                    .ThenInclude(tm => tm.StudentUser)
+                        .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
+            if (Project == null) throw new NotFoundException("Project not found");
 
             string fileName = $"project_{projectId}_activity_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower())}";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type = "ACTIVITY_SUMMARY",
-                scope = "PROJECT",
-                scope_entity_id = projectId,
-                format = format,
-                status = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at = DateTime.UtcNow,
-                file_url = $"/reports/{fileName}"
+                ReportType = "ACTIVITY_SUMMARY",
+                Scope = "Project",
+                ScopeEntityId = projectId,
+                Format = format,
+                Status = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
 
             var activities = await _unitOfWork.StudentActivityDailies.FindAsync(sad =>
-                sad.project_id == projectId &&
-                sad.activity_date >= DateOnly.FromDateTime(startDate) &&
-                sad.activity_date <= DateOnly.FromDateTime(endDate));
+                sad.ProjectId == projectId &&
+                sad.ActivityDate >= DateOnly.FromDateTime(startDate) &&
+                sad.ActivityDate <= DateOnly.FromDateTime(endDate));
 
-            var activityList = activities.GroupBy(a => a.student_user_id)
+            var activityList = activities.GroupBy(a => a.StudentUserId)
                 .Select(g => new { 
                     StudentId = g.Key, 
-                    Commits = g.Sum(x => x.commits_count), 
-                    PRs = g.Sum(x => x.pull_requests_count), 
-                    Issues = g.Sum(x => x.issues_completed) 
+                    Commits = g.Sum(x => x.CommitsCount), 
+                    PRs = g.Sum(x => x.PullRequestsCount), 
+                    Issues = g.Sum(x => x.IssuesCompleted) 
                 }).ToList();
 
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(project, activityList.Cast<dynamic>().ToList());
+                var fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(Project, activityList.Cast<dynamic>().ToList());
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(project, activityList.Cast<dynamic>().ToList());
+                var fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(Project, activityList.Cast<dynamic>().ToList());
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 
-            _logger.LogInformation("Generated activity summary for project {ProjectName} at {FilePath}", project.name, filePath);
+            _logger.LogInformation("Generated activity summary for Project {ProjectName} at {FilePath}", Project.Name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
 
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate activity summary for project {ProjectId}", projectId);
+            _logger.LogError(ex, "Failed to generate activity summary for Project {ProjectId}", projectId);
             throw;
         }
     }
@@ -312,45 +312,45 @@ public class ReportService : IReportService
     {
         var report = await _unitOfWork.ReportExports.GetByIdAsync(reportExportId);
         
-        if (report == null || report.status != "COMPLETED")
+        if (report == null || report.Status != "COMPLETED")
         {
             return null;
         }
 
         // Check if expired
-        if (report.expires_at.HasValue && report.expires_at.Value < DateTime.UtcNow)
+        if (report.ExpiresAt < DateTime.UtcNow)
         {
             return null;
         }
 
-        return report.file_url;
+        return report.FileUrl;
     }
 
     public async Task<List<ReportExportResponse>> GetUserReportsAsync(long userId)
     {
-        var reports = await _unitOfWork.ReportExports.FindAsync(r => r.requested_by_user_id == userId);
+        var reports = await _unitOfWork.ReportExports.FindAsync(r => r.RequestedByUserId == userId);
         
         // Get request base URL for absolute file paths
         var request = _httpContextAccessor.HttpContext?.Request;
         string baseUrl = request != null ? $"{request.Scheme}://{request.Host}" : "";
 
-        return reports.OrderByDescending(r => r.requested_at)
+        return reports.OrderByDescending(r => r.RequestedAt)
             .Select(r => new ReportExportResponse
             {
-                Id = r.id,
-                Type = r.report_type switch {
+                Id = r.Id,
+                Type = r.ReportType switch {
                     "COMMIT_STATISTICS" => "Thống kê Commit",
                     "TEAM_ROSTER" => "Danh sách Nhóm",
                     "ACTIVITY_SUMMARY" => "Tổng kết Hoạt động",
                     "SRS_ISO29148" => "Tài liệu SRS (ISO 29148)",
-                    _ => r.report_type
+                    _ => r.ReportType
                 },
-                Format = r.format.ToUpper(),
-                Status = r.status,
-                FileUrl = string.IsNullOrEmpty(r.file_url) ? null : (r.file_url.StartsWith("http") ? r.file_url : $"{baseUrl}{r.file_url}"),
-                FileName = string.IsNullOrEmpty(r.file_url) ? null : Path.GetFileName(r.file_url),
-                CreatedAt = r.requested_at,
-                ErrorMessage = r.error_message
+                Format = r.Format.ToUpper(),
+                Status = r.Status,
+                FileUrl = string.IsNullOrEmpty(r.FileUrl) ? null : (r.FileUrl.StartsWith("http") ? r.FileUrl : $"{baseUrl}{r.FileUrl}"),
+                FileName = string.IsNullOrEmpty(r.FileUrl) ? null : Path.GetFileName(r.FileUrl),
+                CreatedAt = r.RequestedAt,
+                ErrorMessage = r.ErrorMessage
             }).ToList();
     }
 
@@ -358,108 +358,108 @@ public class ReportService : IReportService
     {
         try
         {
-            // Load project with team, Jira, and GitHub data
-            var project = await _unitOfWork.Projects.Query()
-                .Include(p => p.course)
-                .Include(p => p.team_members)
-                    .ThenInclude(tm => tm.student_user)
-                        .ThenInclude(s => s.user)
-                .Include(p => p.project_integration)
-                    .ThenInclude(pi => pi!.jira_project)
-                        .ThenInclude(jp => jp!.jira_issues)
-                            .ThenInclude(i => i.jira_issue_linkparent_issues)
-                                .ThenInclude(cl => cl.child_issue)
-                .Include(p => p.project_integration)
-                    .ThenInclude(pi => pi!.github_repo)
-                .FirstOrDefaultAsync(p => p.id == projectId);
+            // Load Project with team, Jira, and GitHub data
+            var Project = await _unitOfWork.Projects.Query()
+                .Include(p => p.Course)
+                .Include(p => p.TeamMembers)
+                    .ThenInclude(tm => tm.StudentUser)
+                        .ThenInclude(s => s.User)
+                .Include(p => p.ProjectIntegration)
+                    .ThenInclude(pi => pi!.JiraProject)
+                        .ThenInclude(jp => jp!.JiraIssues)
+                            .ThenInclude(i => i.JiraIssueLinkparentIssues)
+                                .ThenInclude(cl => cl.ChildIssue)
+                .Include(p => p.ProjectIntegration)
+                    .ThenInclude(pi => pi!.GithubRepo)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
 
-            if (project == null) throw new NotFoundException("Project not found");
+            if (Project == null) throw new NotFoundException("Project not found");
 
-            var integration = project.project_integration;
-            if (integration == null || integration.jira_project == null)
+            var integration = Project.ProjectIntegration;
+            if (integration == null || integration.JiraProject == null)
                 throw new BusinessException("Project is not integrated with Jira. SRS cannot be generated.");
 
-            var jiraProject  = integration.jira_project;
-            var githubRepo   = integration.github_repo;
-            var allIssues    = jiraProject.jira_issues ?? new List<jira_issue>();
+            var jiraProject  = integration.JiraProject;
+            var githubRepo   = integration.GithubRepo;
+            var allIssues    = jiraProject.JiraIssues ?? new List<JiraIssue>();
 
             // GitHub stats
             int totalCommits = 0, totalPRs = 0;
-            string? defaultBranch = githubRepo?.default_branch;
+            string? defaultBranch = githubRepo?.DefaultBranch;
             if (githubRepo != null)
             {
                 totalCommits = await _unitOfWork.GitHubCommits.Query()
-                    .CountAsync(c => c.repo_id == githubRepo.id);
+                    .CountAsync(c => c.RepoId == githubRepo.Id);
                 totalPRs = await _unitOfWork.GitHubPullRequests.Query()
-                    .CountAsync(pr => pr.repo_id == githubRepo.id);
+                    .CountAsync(pr => pr.RepoId == githubRepo.Id);
             }
 
             // Classify issues
-            var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
+            var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "User STORY" };
             var taskTypes         = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
             var nfrKeywords       = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
             var interfaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
 
             var systemFeatures = allIssues
-                .Where(i => i.issue_type != null && epicAndStoryTypes.Contains(i.issue_type))
-                .OrderBy(i => i.issue_type).ThenBy(i => i.jira_issue_key)
+                .Where(i => i.IssueType != null && epicAndStoryTypes.Contains(i.IssueType))
+                .OrderBy(i => i.IssueType).ThenBy(i => i.JiraIssueKey)
                 .Select(i => new SrsFeature
                 {
-                    IssueKey    = i.jira_issue_key,
-                    Title       = i.title ?? "(no title)",
-                    Description = i.description,
-                    IssueType   = i.issue_type ?? "",
-                    Status      = i.status,
+                    IssueKey    = i.JiraIssueKey,
+                    Title       = i.Title ?? "(no title)",
+                    Description = i.Description,
+                    IssueType   = i.IssueType ?? "",
+                    Status      = i.Status,
                     SubTasks    = allIssues
-                        .Where(sub => sub.issue_type != null && taskTypes.Contains(sub.issue_type)
-                            && i.jira_issue_linkparent_issues != null
-                            && i.jira_issue_linkparent_issues.Any(cl => cl.child_issue_id == sub.id))
+                        .Where(sub => sub.IssueType != null && taskTypes.Contains(sub.IssueType)
+                            && i.JiraIssueLinkparentIssues != null
+                            && i.JiraIssueLinkparentIssues.Any(cl => cl.ChildIssueId == sub.Id))
                         .Select(sub => new SrsIssueRow
                         {
-                            IssueKey    = sub.jira_issue_key,
-                            Title       = sub.title ?? "",
-                            Description = sub.description,
-                            Priority    = sub.priority,
-                            Status      = sub.status
+                            IssueKey    = sub.JiraIssueKey,
+                            Title       = sub.Title ?? "",
+                            Description = sub.Description,
+                            Priority    = sub.Priority,
+                            Status      = sub.Status
                         }).ToList()
                 }).ToList();
 
             var nfrs = allIssues
-                .Where(i => i.issue_type?.ToUpper() == "NFR"
-                    || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                .Where(i => i.IssueType?.ToUpper() == "NFR"
+                    || nfrKeywords.Any(kw => i.Title != null && i.Title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
                 .Select(i => new SrsIssueRow
                 {
-                    IssueKey    = i.jira_issue_key,
-                    Title       = i.title ?? "",
-                    Description = i.description,
-                    Priority    = i.priority,
-                    Status      = i.status
+                    IssueKey    = i.JiraIssueKey,
+                    Title       = i.Title ?? "",
+                    Description = i.Description,
+                    Priority    = i.Priority,
+                    Status      = i.Status
                 }).ToList();
 
             var externalInterfaces = allIssues
                 .Where(i => interfaceKeywords.Any(kw =>
-                    (i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase))
-                    || (i.description != null && i.description.Contains(kw, StringComparison.OrdinalIgnoreCase))))
-                .Where(i => nfrs.All(n => n.IssueKey != i.jira_issue_key))
+                    (i.Title != null && i.Title.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                    || (i.Description != null && i.Description.Contains(kw, StringComparison.OrdinalIgnoreCase))))
+                .Where(i => nfrs.All(n => n.IssueKey != i.JiraIssueKey))
                 .Select(i => new SrsIssueRow
                 {
-                    IssueKey    = i.jira_issue_key,
-                    Title       = i.title ?? "",
-                    Description = i.description,
-                    Priority    = i.priority,
-                    Status      = i.status
+                    IssueKey    = i.JiraIssueKey,
+                    Title       = i.Title ?? "",
+                    Description = i.Description,
+                    Priority    = i.Priority,
+                    Status      = i.Status
                 }).ToList();
 
-            var teamMembers = project.team_members
-                ?.Select(tm => $"{tm.student_user?.user?.full_name ?? "Unknown"} [{tm.student_user?.student_code ?? ""}] — {tm.team_role}")
+            var teamMembers = Project.TeamMembers
+                ?.Select(tm => $"{tm.StudentUser?.User?.FullName ?? "Unknown"} [{tm.StudentUser?.StudentCode ?? ""}] — {tm.TeamRole}")
                 .ToList() ?? new List<string>();
 
             var srsData = new SrsReportData
             {
-                Project                  = project,
-                JiraProjectKey           = jiraProject.jira_project_key,
-                JiraSiteUrl              = jiraProject.jira_url ?? "",
-                GithubRepoUrl            = githubRepo?.repo_url ?? "",
+                Project                  = Project,
+                JiraProjectKey           = jiraProject.JiraProjectKey,
+                JiraSiteUrl              = jiraProject.JiraUrl ?? "",
+                GithubRepoUrl            = githubRepo?.RepoUrl ?? "",
                 GithubDefaultBranch      = defaultBranch,
                 GithubTotalCommits       = totalCommits,
                 GithubTotalPRs           = totalPRs,
@@ -476,16 +476,16 @@ public class ReportService : IReportService
             var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(srsData);
             await File.WriteAllBytesAsync(filePath, fileBytes);
 
-            var reportExport = new report_export
+            var reportExport = new ReportExport
             {
-                report_type          = "SRS_ISO29148",
-                scope                = "PROJECT",
-                scope_entity_id      = projectId,
-                format               = "pdf",
-                status               = "COMPLETED",
-                requested_by_user_id = GetCurrentUserId(),
-                requested_at         = DateTime.UtcNow,
-                file_url             = $"/reports/{fileName}"
+                ReportType = "SRS_ISO29148",
+                Scope                = "Project",
+                ScopeEntityId = projectId,
+                Format               = "pdf",
+                Status               = "COMPLETED",
+                RequestedByUserId = GetCurrentUserId(),
+                RequestedAt = DateTime.UtcNow,
+                FileUrl = $"/reports/{fileName}"
             };
 
             _unitOfWork.ReportExports.Add(reportExport);
@@ -493,14 +493,15 @@ public class ReportService : IReportService
 
             _logger.LogInformation(
                 "Generated ISO/IEEE 29148 SRS for Project {ProjectName}: {Features} features, {Nfrs} NFRs",
-                project.name, systemFeatures.Count, nfrs.Count);
+                Project.Name, systemFeatures.Count, nfrs.Count);
 
-            return reportExport.id;
+            return reportExport.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate SRS report for project {ProjectId}", projectId);
+            _logger.LogError(ex, "Failed to generate SRS report for Project {ProjectId}", projectId);
             throw;
         }
     }
 }
+

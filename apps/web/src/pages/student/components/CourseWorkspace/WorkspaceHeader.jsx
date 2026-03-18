@@ -1,4 +1,4 @@
-import { Crown, RefreshCw, Users, MapPin } from"lucide-react";
+﻿import { Crown, RefreshCw, Users, MapPin } from"lucide-react";
 import { Card, CardContent } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -11,8 +11,8 @@ export function WorkspaceHeader({ course, group, isLeader, onSync, isSyncing, on
  onClick={onBack} 
  className="flex items-center gap-3 text-[10px] font-black tracking-[0.3em] text-teal-600 hover:text-teal-700 transition-all group font-display"
  >
- <div className="w-6 h-6 rounded-lg bg-teal-50 flex items-center justify-center group-hover:-translate-x-1 transition-transform">←</div>
- Danh sách khóa học của tôi
+ <div className="w-6 h-6 rounded-lg bg-teal-50 flex items-center justify-center group-hover:-translate-x-1 transition-transform">â†</div>
+ Danh sĂ¡ch khĂ³a há»c cá»§a tĂ´i
  </button>
 
  <Card className="border border-gray-100 shadow-xl shadow-teal-900/5 rounded-[44px] overflow-hidden bg-white group hover:shadow-2xl transition-all duration-500 glass-card">
@@ -35,11 +35,11 @@ export function WorkspaceHeader({ course, group, isLeader, onSync, isSyncing, on
  <h3 className="text-3xl font-black text-gray-800 tracking-tighter leading-none mb-3 font-display">{group?.name ||"Member Workspace"}</h3>
  <div className="flex items-center gap-6">
  <p className="text-[10px] text-gray-400 font-bold tracking-[0.2em] flex items-center gap-2.5">
- <Users size={14} className="text-gray-300" /> Giảng viên: <span className="text-gray-600">{course.lecturerNames?.join(",") ||"N/A"}</span>
+ <Users size={14} className="text-gray-300" /> Giáº£ng viĂªn: <span className="text-gray-600">{course.lecturerNames?.join(",") ||"N/A"}</span>
  </p>
  <div className="w-1 h-1 rounded-full bg-gray-200" />
  <p className="text-[10px] text-gray-400 font-bold tracking-[0.2em] flex items-center gap-2.5">
- <MapPin size={14} className="text-gray-300" /> {course.semesterName ||"Học kỳ hiện tại"}
+ <MapPin size={14} className="text-gray-300" /> {course.semesterName ||"Há»c ká»³ hiá»‡n táº¡i"}
  </p>
  </div>
  </div>
@@ -62,9 +62,4 @@ export function WorkspaceHeader({ course, group, isLeader, onSync, isSyncing, on
  </div>
  );
 }
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-import { PieChart as PieChartIcon } from"lucide-react";
+﻿import { PieChart as PieChartIcon } from"lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from"recharts";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 
@@ -13,8 +13,8 @@ export function JiraTaskDistribution({ jiraData, integrationStats }) {
  <PieChartIcon size={22} className="text-amber-600" />
  </div>
  <div>
- <CardTitle className="text-lg font-black text-gray-800 leading-none">Phân bổ Jira</CardTitle>
- <p className="text-[10px] font-bold text-gray-400 mt-2 opacity-70">Tỷ lệ hoàn thành công việc</p>
+ <CardTitle className="text-lg font-black text-gray-800 leading-none">PhĂ¢n bá»• Jira</CardTitle>
+ <p className="text-[10px] font-bold text-gray-400 mt-2 opacity-70">Tá»· lá»‡ hoĂ n thĂ nh cĂ´ng viá»‡c</p>
  </div>
  </div>
  </CardHeader>
@@ -55,9 +55,4 @@ export function JiraTaskDistribution({ jiraData, integrationStats }) {
  </Card>
  );
 }
-
-
-
-
-
 

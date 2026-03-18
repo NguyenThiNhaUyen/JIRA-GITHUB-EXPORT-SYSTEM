@@ -1,4 +1,4 @@
-import { Target } from"lucide-react";
+﻿import { Target } from"lucide-react";
 import { Card } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -33,19 +33,14 @@ export function TopContributors({ students }) {
  ))}
  {topStudents.length === 0 && (
  <p className="text-center text-[10px] font-black text-gray-400 py-4">
- Không có dữ liệu
+ KhĂ´ng cĂ³ dá»¯ liá»‡u
  </p>
  )}
  </div>
  <Button className="w-full mt-8 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl h-11 text-xs font-black border-0">
- Xem tất cả
+ Xem táº¥t cáº£
  </Button>
  </Card>
  );
 }
-
-
-
-
-
 

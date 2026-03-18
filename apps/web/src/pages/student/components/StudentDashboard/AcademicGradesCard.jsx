@@ -1,4 +1,4 @@
-import { Target, Star } from"lucide-react";
+﻿import { Target, Star } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 
@@ -10,7 +10,7 @@ export function AcademicGradesCard({ isLoading, grades }) {
  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shadow-inner">
  <Target size={18} className="text-orange-500" />
  </div>
- Kết quả học tập mới nhất
+ Káº¿t quáº£ há»c táº­p má»›i nháº¥t
  </CardTitle>
  </CardHeader>
  <CardContent className="p-0">
@@ -22,7 +22,7 @@ export function AcademicGradesCard({ isLoading, grades }) {
  ) : grades.length === 0 ? (
  <div className="p-16 text-center space-y-6 bg-gray-50/10">
  <Star size={40} className="text-gray-100 mx-auto" />
- <p className="text-[10px] text-gray-300 font-black italic opacity-60">Chưa có bảng điểm 🏆</p>
+ <p className="text-[10px] text-gray-300 font-black italic opacity-60">ChÆ°a cĂ³ báº£ng Ä‘iá»ƒm đŸ†</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -51,9 +51,4 @@ export function AcademicGradesCard({ isLoading, grades }) {
  </Card>
  );
 }
-
-
-
-
-
 

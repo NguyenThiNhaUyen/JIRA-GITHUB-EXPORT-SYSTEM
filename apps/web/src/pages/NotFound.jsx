@@ -1,4 +1,4 @@
-// Not Found Page - 404 error page
+﻿// Not Found Page - 404 error page
 import { Button } from "@/components/ui/Button.jsx";
 import { useNavigate } from "react-router-dom";
 
@@ -15,33 +15,28 @@ export default function NotFound() {
             </svg>
           </div>
           <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">Trang không tìm thấy</h2>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-2">Trang khĂ´ng tĂ¬m tháº¥y</h2>
           <p className="text-gray-500 mb-8 max-w-md mx-auto">
-            Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
+            Trang báº¡n Ä‘ang tĂ¬m kiáº¿m khĂ´ng tá»“n táº¡i hoáº·c Ä‘Ă£ Ä‘Æ°á»£c di chuyá»ƒn.
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button onClick={() => navigate(-1)} variant="outline">
-              Quay lại
+              Quay láº¡i
             </Button>
             <Button onClick={() => navigate("/")}>
-              Về trang chủ
+              Vá» trang chá»§
             </Button>
           </div>
           
           <div className="text-sm text-gray-500">
-            <p>Nếu bạn nghĩ đây là lỗi, vui lòng liên hệ quản trị viên.</p>
+            <p>Náº¿u báº¡n nghÄ© Ä‘Ă¢y lĂ  lá»—i, vui lĂ²ng liĂªn há»‡ quáº£n trá»‹ viĂªn.</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
 

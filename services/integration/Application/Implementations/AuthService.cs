@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Auth;
 using JiraGithubExport.Shared.Contracts.Responses.Auth;
@@ -37,38 +37,38 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        // Find user by email
-        var user = await _context.users
-            .Include(u => u.roles)
-            .Include(u => u.student)
-            .Include(u => u.lecturer)
-            .FirstOrDefaultAsync(u => u.email == request.Email);
+        // Find User by Email
+        var User = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Student)
+            .Include(u => u.Lecturer)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        if (user == null)
+        if (User == null)
         {
             _logger.LogWarning("Login failed: User not found - {Email}", request.Email);
-            throw new UnauthorizedException("Invalid email or password");
+            throw new UnauthorizedException("Invalid Email or Password");
         }
 
-        // Verify password
-        if (!_passwordHasher.VerifyPassword(request.Password, user.password))
+        // Verify Password
+        if (!_passwordHasher.VerifyPassword(request.Password, User.Password))
         {
-            _logger.LogWarning("Login failed: Invalid password - {Email}", request.Email);
-            throw new UnauthorizedException("Invalid email or password");
+            _logger.LogWarning("Login failed: Invalid Password - {Email}", request.Email);
+            throw new UnauthorizedException("Invalid Email or Password");
         }
 
-        // Check if user is enabled
-        if (!user.enabled)
+        // Check if User is Enabled
+        if (!User.Enabled)
         {
             _logger.LogWarning("Login failed: Account disabled - {Email}", request.Email);
             throw new UnauthorizedException("Account is disabled");
         }
 
-        // Get roles
-        var roles = user.roles.Select(r => r.role_name).ToList();
+        // Get Roles
+        var Roles = User.Roles.Select(r => r.RoleName).ToList();
 
         // Generate JWT token
-        var token = _jwtService.GenerateToken(user, roles);
+        var token = _jwtService.GenerateToken(User, Roles);
 
         return new LoginResponse
         {
@@ -77,13 +77,13 @@ public class AuthService : IAuthService
             ExpiresIn = 3600, // 1 hour
             User = new UserInfo
             {
-                Id = user.id,
-                Email = user.email,
-                FullName = user.full_name ?? user.email,
-                Role = GetPrimaryRole(roles),
-                Roles = roles,
-                StudentCode = user.student?.student_code,
-                LecturerCode = user.lecturer?.lecturer_code
+                Id = User.Id,
+                Email = User.Email,
+                FullName = User.FullName ?? User.Email,
+                Role = GetPrimaryRole(Roles),
+                Roles = Roles,
+                StudentCode = User.Student?.StudentCode,
+                LecturerCode = User.Lecturer?.LecturerCode
             }
         };
     }
@@ -112,55 +112,55 @@ public class AuthService : IAuthService
                 throw new UnauthorizedException("Invalid Google ID Token");
             }
 
-            // Check if user exists by email
-            string email = payload.Email;
-            var user = await _context.users
-                .Include(u => u.roles)
-                .Include(u => u.student)
-                .Include(u => u.lecturer)
-                .FirstOrDefaultAsync(u => u.email == email);
+            // Check if User exists by Email
+            string Email = payload.Email;
+            var User = await _context.Users
+                .Include(u => u.Roles)
+                .Include(u => u.Student)
+                .Include(u => u.Lecturer)
+                .FirstOrDefaultAsync(u => u.Email == Email);
 
-            if (user == null)
+            if (User == null)
             {
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try 
                 {
-                    // Create a new user if not exists
-                    user = new user
+                    // Create a new User if not exists
+                    User = new User
                     {
-                        email = email,
-                        full_name = payload.Name,
-                        enabled = true,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow,
-                        password = _passwordHasher.HashPassword(Guid.NewGuid().ToString()) // Random password for SSO users
+                        Email = Email,
+                        FullName = payload.Name,
+                        Enabled = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        Password = _passwordHasher.HashPassword(Guid.NewGuid().ToString()) // Random Password for SSO Users
                     };
 
-                    _context.users.Add(user);
+                    _context.Users.Add(User);
                     await _context.SaveChangesAsync();
 
                     // Role selection handling (Demo/Testing Only)
-                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "STUDENT" : request.Role.ToUpper();
-                    var validRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
+                    string requestedRole = string.IsNullOrWhiteSpace(request.Role) ? "Student" : request.Role.ToUpper();
+                    var validRoles = new[] { "ADMIN", "Lecturer", "Student" };
                     
                     if (!validRoles.Contains(requestedRole))
                     {
-                        requestedRole = "STUDENT";
+                        requestedRole = "Student";
                     }
 
-                    var role = await _context.roles.FirstOrDefaultAsync(r => r.role_name == requestedRole);
-                    if (role == null)
+                    var Role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == requestedRole);
+                    if (Role == null)
                     {
-                        role = new role { role_name = requestedRole };
-                        _context.roles.Add(role);
+                        Role = new Role { RoleName = requestedRole };
+                        _context.Roles.Add(Role);
                         await _context.SaveChangesAsync();
                     }
 
-                    user.roles.Add(role);
+                    User.Roles.Add(Role);
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    _logger.LogInformation("New user registered via Google SSO: {Email}", email);
+                    _logger.LogInformation("New User registered via Google SSO: {Email}", Email);
                 } 
                 catch 
                 {
@@ -168,19 +168,19 @@ public class AuthService : IAuthService
                     throw;
                 }
             }
-            else if (!user.enabled)
+            else if (!User.Enabled)
             {
-                _logger.LogWarning("Google Login failed: Account disabled - {Email}", email);
+                _logger.LogWarning("Google Login failed: Account disabled - {Email}", Email);
                 throw new UnauthorizedException("Your account has been disabled");
             }
 
-            // Get roles
-            var roles = user.roles.Select(r => r.role_name).ToList();
+            // Get Roles
+            var Roles = User.Roles.Select(r => r.RoleName).ToList();
 
             // Generate JWT Token exactly like standard login
-            var token = _jwtService.GenerateToken(user, roles);
+            var token = _jwtService.GenerateToken(User, Roles);
             
-            _logger.LogInformation("User logged in successfully via Google SSO: {Email}", email);
+            _logger.LogInformation("User logged in successfully via Google SSO: {Email}", Email);
 
             return new LoginResponse
             {
@@ -189,13 +189,13 @@ public class AuthService : IAuthService
                 ExpiresIn = 3600, // 1 hour
                 User = new UserInfo
                 {
-                    Id = user.id,
-                    Email = user.email,
-                    FullName = user.full_name ?? user.email,
-                    Role = GetPrimaryRole(roles),
-                    Roles = roles,
-                    StudentCode = user.student?.student_code,
-                    LecturerCode = user.lecturer?.lecturer_code
+                    Id = User.Id,
+                    Email = User.Email,
+                    FullName = User.FullName ?? User.Email,
+                    Role = GetPrimaryRole(Roles),
+                    Roles = Roles,
+                    StudentCode = User.Student?.StudentCode,
+                    LecturerCode = User.Lecturer?.LecturerCode
                 }
             };
         }
@@ -206,43 +206,43 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<string> ForgotPasswordAsync(string email)
+    public async Task<string> ForgotPasswordAsync(string Email)
     {
         // Silently ignore unknown emails for security
-        var user = await _context.users.FirstOrDefaultAsync(u => u.email == email.ToLower());
-        if (user == null) return "If this email exists, a reset link has been sent.";
+        var User = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email.ToLower());
+        if (User == null) return "If this Email exists, a reset link has been sent.";
 
         var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Replace("=", "").Replace("/", "").Replace("+", "");
-        user.password_reset_token = token;
-        user.password_reset_token_expires_at = DateTime.UtcNow.AddHours(1);
-        user.updated_at = DateTime.UtcNow;
+        User.PasswordResetToken = token;
+        User.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+        User.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // In production: send email. In dev mode: return token directly.
-        _logger.LogInformation("Password reset token for {Email}: {Token}", email, token);
+        // In production: send Email. In dev mode: return token directly.
+        _logger.LogInformation("Password reset token for {Email}: {Token}", Email, token);
         return token;
     }
 
     public async Task ResetPasswordAsync(string token, string newPassword)
     {
-        var user = await _context.users.FirstOrDefaultAsync(u =>
-            u.password_reset_token == token &&
-            u.password_reset_token_expires_at > DateTime.UtcNow)
+        var User = await _context.Users.FirstOrDefaultAsync(u =>
+            u.PasswordResetToken == token &&
+            u.PasswordResetTokenExpiresAt > DateTime.UtcNow)
             ?? throw new BusinessException("Invalid or expired reset token.");
 
-        user.password = _passwordHasher.HashPassword(newPassword);
-        user.password_reset_token = null;
-        user.password_reset_token_expires_at = null;
-        user.updated_at = DateTime.UtcNow;
+        User.Password = _passwordHasher.HashPassword(newPassword);
+        User.PasswordResetToken = null;
+        User.PasswordResetTokenExpiresAt = null;
+        User.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
-    private static string GetPrimaryRole(List<string> roles)
+    private static string GetPrimaryRole(List<string> Roles)
     {
-        var upperRoles = roles.Select(r => r.ToUpper()).ToList();
+        var upperRoles = Roles.Select(r => r.ToUpper()).ToList();
         if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN")) return "ADMIN";
-        if (upperRoles.Contains("LECTURER")) return "LECTURER";
-        return roles.FirstOrDefault()?.ToUpper() ?? "STUDENT";
+        if (upperRoles.Contains("Lecturer")) return "Lecturer";
+        return Roles.FirstOrDefault()?.ToUpper() ?? "Student";
     }
 
     public async Task<LoginResponse> RefreshTokenAsync(RefreshRequest request)
@@ -259,19 +259,19 @@ public class AuthService : IAuthService
             throw new UnauthorizedException("Invalid token claims");
         }
 
-        var user = await _context.users
-            .Include(u => u.roles)
-            .Include(u => u.student)
-            .Include(u => u.lecturer)
-            .FirstOrDefaultAsync(u => u.id == userId);
+        var User = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.Student)
+            .Include(u => u.Lecturer)
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (user == null || !user.enabled)
+        if (User == null || !User.Enabled)
         {
             throw new UnauthorizedException("User not found or disabled");
         }
 
-        var roles = user.roles.Select(r => r.role_name).ToList();
-        var token = _jwtService.GenerateToken(user, roles);
+        var Roles = User.Roles.Select(r => r.RoleName).ToList();
+        var token = _jwtService.GenerateToken(User, Roles);
 
         return new LoginResponse
         {
@@ -280,14 +280,15 @@ public class AuthService : IAuthService
             ExpiresIn = 3600, // 1 hour
             User = new UserInfo
             {
-                Id = user.id,
-                Email = user.email,
-                FullName = user.full_name ?? user.email,
-                Role = GetPrimaryRole(roles),
-                Roles = roles,
-                StudentCode = user.student?.student_code,
-                LecturerCode = user.lecturer?.lecturer_code
+                Id = User.Id,
+                Email = User.Email,
+                FullName = User.FullName ?? User.Email,
+                Role = GetPrimaryRole(Roles),
+                Roles = Roles,
+                StudentCode = User.Student?.StudentCode,
+                LecturerCode = User.Lecturer?.LecturerCode
             }
         };
     }
 }
+

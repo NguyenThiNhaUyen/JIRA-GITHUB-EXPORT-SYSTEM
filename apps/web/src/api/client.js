@@ -1,11 +1,11 @@
-/**
- * Axios client — kết nối Backend ASP.NET Core
+﻿/**
+ * Axios client â€” káº¿t ná»‘i Backend ASP.NET Core
  *
  * baseURL = VITE_API_URL + "/api"
- *   → Đảm bảo KHÔNG bao giờ có /api/api double-prefix
+ *   â†’ Äáº£m báº£o KHĂ”NG bao giá» cĂ³ /api/api double-prefix
  *
- * Để dùng local BE:
- *   Tạo .env.local và thêm: VITE_API_URL=http://localhost:5000
+ * Äá»ƒ dĂ¹ng local BE:
+ *   Táº¡o .env.local vĂ  thĂªm: VITE_API_URL=http://localhost:5000
  */
 import axios from "axios";
 
@@ -14,13 +14,15 @@ const BASE_URL = import.meta.env.VITE_API_URL || "https://jira-github-export-sys
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
     timeout: 60_000,
-    // Axios tự detect Content-Type: JSON -> application/json, FormData -> multipart/form-data
+    withCredentials: true, // Required for HttpOnly cookies
 });
 
-/* ── Request Interceptor: Tự đính kèm JWT từ localStorage ── */
 client.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("accessToken");
+        // Primary access token check (sessionStorage for better security)
+        const token = sessionStorage.getItem("accessToken") || 
+                      localStorage.getItem("accessToken") || 
+                      localStorage.getItem("token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -29,9 +31,9 @@ client.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-/* ── Response Interceptor: Bóc tách wrapper ApiResponse<T> ── */
-// BE luôn trả về: { success, message, data: T }
-// Interceptor này trả về response.data (ApiResponse object) để FE xử lý
+/* â”€â”€ Response Interceptor: BĂ³c tĂ¡ch wrapper ApiResponse<T> â”€â”€ */
+// BE luĂ´n tráº£ vá»: { success, message, data: T }
+// Interceptor nĂ y tráº£ vá» response.data (ApiResponse object) Ä‘á»ƒ FE xá»­ lĂ½
 client.interceptors.response.use(
     (response) => {
         return response.data;
@@ -42,6 +44,7 @@ client.interceptors.response.use(
 
         if (status === 401 || status === 403) {
             // Clear all auth related storage
+            sessionStorage.removeItem("accessToken");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
@@ -57,9 +60,4 @@ client.interceptors.response.use(
 );
 
 export default client;
-
-
-
-
-
 

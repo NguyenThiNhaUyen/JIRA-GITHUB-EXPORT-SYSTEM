@@ -1,4 +1,4 @@
-import { useState, useMemo } from"react";
+﻿import { useState, useMemo } from"react";
 import { useNavigate } from"react-router-dom";
 import { 
  Users, 
@@ -43,8 +43,8 @@ import {
 
 const ROLE_MAP = {
  ADMIN: { label:"Admin", variant:"danger", icon: Shield },
- LECTURER: { label:"Giảng viên", variant:"indigo", icon: UserCog },
- STUDENT: { label:"Sinh viên", variant:"info", icon: GraduationCap },
+ LECTURER: { label:"Giáº£ng viĂªn", variant:"indigo", icon: UserCog },
+ STUDENT: { label:"Sinh viĂªn", variant:"info", icon: GraduationCap },
 };
 
 export default function UserManagement() {
@@ -115,17 +115,17 @@ export default function UserManagement() {
  try {
  if (action === 'role') {
  await roleMutation.mutateAsync({ id: userId, role: data });
- success(`Đã cập nhật vai trò người dùng thành ${data}`);
+ success(`ÄĂ£ cáº­p nháº­t vai trĂ² ngÆ°á»i dĂ¹ng thĂ nh ${data}`);
  } else if (action === 'status') {
  await statusMutation.mutateAsync({ id: userId, enabled: data });
- success("Đã cập nhật trạng thái tài khoản");
+ success("ÄĂ£ cáº­p nháº­t tráº¡ng thĂ¡i tĂ i khoáº£n");
  } else if (action === 'reset') {
  await passMutation.mutateAsync({ id: userId });
- success("Đã gửi yêu cầu đặt lại mật khẩu đến email người dùng");
+ success("ÄĂ£ gá»­i yĂªu cáº§u Ä‘áº·t láº¡i máº­t kháº©u Ä‘áº¿n email ngÆ°á»i dĂ¹ng");
  }
  setActionMenu(null);
  } catch (err) {
- showError(err.message ||"Thao tác thất bại");
+ showError(err.message ||"Thao tĂ¡c tháº¥t báº¡i");
  }
  };
 
@@ -138,7 +138,7 @@ export default function UserManagement() {
  <div className="flex h-screen items-center justify-center p-8 bg-gray-50/50">
  <div className="text-center">
  <Users className="animate-pulse text-teal-600 mx-auto mb-4" size={48} /> 
- <span className="text-gray-500 font-black text-[10px]">Đang đồng bộ danh sách tài khoản...</span>
+ <span className="text-gray-500 font-black text-[10px]">Äang Ä‘á»“ng bá»™ danh sĂ¡ch tĂ i khoáº£n...</span>
  </div>
  </div>
  );
@@ -146,29 +146,29 @@ export default function UserManagement() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500" onClick={() => setActionMenu(null)}>
  <PageHeader 
- title="Quản lý Tài khoản"
- subtitle="Điều chỉnh quyền hạn, trạng thái bảo mật và quyền truy cập cho toàn bộ người dùng hệ thống."
- breadcrumb={["Admin","Người dùng","Danh sách"]}
+ title="Quáº£n lĂ½ TĂ i khoáº£n"
+ subtitle="Äiá»u chá»‰nh quyá»n háº¡n, tráº¡ng thĂ¡i báº£o máº­t vĂ  quyá»n truy cáº­p cho toĂ n bá»™ ngÆ°á»i dĂ¹ng há»‡ thá»‘ng."
+ breadcrumb={["Admin","NgÆ°á»i dĂ¹ng","Danh sĂ¡ch"]}
  actions={[
  <Button key="invite" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-8 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">
- <Mail size={16} className="mr-2" /> Gửi lời mời hệ thống
+ <Mail size={16} className="mr-2" /> Gá»­i lá»i má»i há»‡ thá»‘ng
  </Button>
  ]}
  />
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
- <StatsCard label="Tổng tài khoản" value={users.length} icon={Users} variant="indigo" />
- <StatsCard label="Quản trị viên" value={users.filter(u => u.role === 'ADMIN').length} icon={Shield} variant="danger" />
- <StatsCard label="Giảng viên" value={users.filter(u => u.role === 'LECTURER').length} icon={UserCog} variant="success" />
- <StatsCard label="Sinh viên" value={users.filter(u => u.role === 'STUDENT').length} icon={GraduationCap} variant="info" />
+ <StatsCard label="Tá»•ng tĂ i khoáº£n" value={users.length} icon={Users} variant="indigo" />
+ <StatsCard label="Quáº£n trá»‹ viĂªn" value={users.filter(u => u.role === 'ADMIN').length} icon={Shield} variant="danger" />
+ <StatsCard label="Giáº£ng viĂªn" value={users.filter(u => u.role === 'LECTURER').length} icon={UserCog} variant="success" />
+ <StatsCard label="Sinh viĂªn" value={users.filter(u => u.role === 'STUDENT').length} icon={GraduationCap} variant="info" />
  </div>
 
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-6 px-8 flex flex-col md:flex-row justify-between items-center gap-4">
- <CardTitle className="text-base font-black text-gray-800 leading-none">Cơ sở dữ liệu người dùng</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800 leading-none">CÆ¡ sá»Ÿ dá»¯ liá»‡u ngÆ°á»i dĂ¹ng</CardTitle>
  <div className="flex gap-3 w-full md:w-auto items-center">
  <div className="flex-1 md:w-80">
- <InputField placeholder="Tìm tên, email hoặc mã số..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} icon={Search} />
+ <InputField placeholder="TĂ¬m tĂªn, email hoáº·c mĂ£ sá»‘..." value={search} onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} icon={Search} />
  </div>
  <div className="flex items-center gap-2">
  <Filter size={14} className="text-gray-300" />
@@ -181,7 +181,7 @@ export default function UserManagement() {
  :"bg-white text-gray-400 border-gray-100 hover:border-teal-400 hover:text-teal-600"
  }`}
  >
- {r ==="all" ?"Tất cả" : ROLE_MAP[r]?.label}
+ {r ==="all" ?"Táº¥t cáº£" : ROLE_MAP[r]?.label}
  </button>
  ))}
  </div>
@@ -196,21 +196,21 @@ export default function UserManagement() {
  className="py-5 px-8 text-[10px] font-black text-gray-400 border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
  onClick={() => handleSort("name")}
  >
- <div className="flex items-center">Họ và tên / Email <SortIcon column="name" /></div>
+ <div className="flex items-center">Há» vĂ  tĂªn / Email <SortIcon column="name" /></div>
  </th>
  <th 
  className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
  onClick={() => handleSort("role")}
  >
- <div className="flex items-center justify-center">Vai trò chính <SortIcon column="role" /></div>
+ <div className="flex items-center justify-center">Vai trĂ² chĂ­nh <SortIcon column="role" /></div>
  </th>
  <th 
  className="py-5 px-8 text-[10px] font-black text-gray-400 text-center border-b border-gray-100 cursor-pointer hover:text-teal-600 transition-colors"
  onClick={() => handleSort("status")}
  >
- <div className="flex items-center justify-center">Trạng thái <SortIcon column="status" /></div>
+ <div className="flex items-center justify-center">Tráº¡ng thĂ¡i <SortIcon column="status" /></div>
  </th>
- <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-right border-b border-gray-100">Thao tác hồ sơ</th>
+ <th className="py-5 px-8 text-[10px] font-black text-gray-400 text-right border-b border-gray-100">Thao tĂ¡c há»“ sÆ¡</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -272,14 +272,14 @@ export default function UserManagement() {
  {actionMenu === u.id && (
  <div className="absolute right-0 top-12 z-50 bg-white border border-gray-100 rounded-[24px] shadow-2xl py-3 w-60 animate-in zoom-in duration-200">
  <div className="px-5 py-2 border-b border-gray-50 mb-2">
- <p className="text-[10px] font-black text-gray-300">Hiệu chỉnh tài khoản</p>
+ <p className="text-[10px] font-black text-gray-300">Hiá»‡u chá»‰nh tĂ i khoáº£n</p>
  </div>
  <div className="px-5 py-2 space-y-3">
- <p className="text-[9px] font-black text-gray-400 tracking-tighter">Phân quyền vai trò</p>
+ <p className="text-[9px] font-black text-gray-400 tracking-tighter">PhĂ¢n quyá»n vai trĂ²</p>
  {["ADMIN","LECTURER","STUDENT"].filter(r => r !== u.role).map(r => (
  <button key={r} onClick={() => handleAction(u.id, 'role', r)} className="w-full text-left p-2 hover:bg-teal-50 rounded-xl flex items-center gap-3 transition-colors group/btn">
  <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/btn:bg-white group-hover/btn:text-teal-600 shadow-none group-hover/btn:shadow-sm"><Shield size={12}/></div>
- <span className="text-[11px] font-black text-gray-600 tracking-wide">Lên cấp {ROLE_MAP[r]?.label}</span>
+ <span className="text-[11px] font-black text-gray-600 tracking-wide">LĂªn cáº¥p {ROLE_MAP[r]?.label}</span>
  </button>
  ))}
  </div>
@@ -287,7 +287,7 @@ export default function UserManagement() {
  <div className="px-5 pb-2 pt-1 space-y-1">
  <button onClick={() => handleAction(u.id, 'status', !isActive)} className={`w-full text-left p-2 rounded-xl flex items-center gap-3 transition-colors ${isActive ? 'hover:bg-red-50 text-red-500' : 'hover:bg-emerald-50 text-emerald-600'}`}>
  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isActive ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>{isActive ? <UserX size={12}/> : <UserCheck size={12}/>}</div>
- <span className="text-[11px] font-black tracking-wide">{isActive ?"Vô hiệu hóa" :"Kích hoạt"}</span>
+ <span className="text-[11px] font-black tracking-wide">{isActive ?"VĂ´ hiá»‡u hĂ³a" :"KĂ­ch hoáº¡t"}</span>
  </button>
  <button onClick={() => handleAction(u.id, 'reset')} className="w-full text-left p-2 hover:bg-amber-50 rounded-xl flex items-center gap-3 transition-colors text-amber-600">
  <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600"><Key size={12}/></div>
@@ -305,7 +305,7 @@ export default function UserManagement() {
  <tr>
  <td colSpan={4} className="py-20 text-center">
  <Search size={48} className="text-gray-100 mx-auto mb-4" />
- <p className="text-[10px] font-black text-gray-300">Không tìm thấy tài khoản tương ứng</p>
+ <p className="text-[10px] font-black text-gray-300">KhĂ´ng tĂ¬m tháº¥y tĂ i khoáº£n tÆ°Æ¡ng á»©ng</p>
  </td>
  </tr>
  )}
@@ -324,7 +324,7 @@ export default function UserManagement() {
  disabled={currentPage === 1}
  variant="outline" className="h-9 px-4 rounded-xl text-[10px] font-black"
  >
- Trước
+ TrÆ°á»›c
  </Button>
  <Button
  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -340,9 +340,4 @@ export default function UserManagement() {
  </div>
  );
 }
-
-
-
-
-
 

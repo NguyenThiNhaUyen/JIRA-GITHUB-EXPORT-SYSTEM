@@ -1,4 +1,4 @@
-// User Management - ADMIN user management page
+﻿// User Management - ADMIN user management page
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Interactive.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
@@ -23,10 +23,10 @@ export default function UserManagement() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Quản lý Người dùng</h1>
-              <p className="text-gray-600">Quản lý giảng viên và sinh viên trong hệ thống</p>
+              <h1 className="text-2xl font-bold text-gray-900">Quáº£n lĂ½ NgÆ°á»i dĂ¹ng</h1>
+              <p className="text-gray-600">Quáº£n lĂ½ giáº£ng viĂªn vĂ  sinh viĂªn trong há»‡ thá»‘ng</p>
             </div>
-            <Button>Thêm người dùng</Button>
+            <Button>ThĂªm ngÆ°á»i dĂ¹ng</Button>
           </div>
         </div>
       </div>
@@ -34,29 +34,29 @@ export default function UserManagement() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="lecturers" activeTab={activeTab} setActiveTab={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="lecturers">Giảng viên ({loadingLecturers ? '...' : lecturers.length})</TabsTrigger>
-            <TabsTrigger value="students">Sinh viên ({loadingStudents ? '...' : students.length})</TabsTrigger>
+            <TabsTrigger value="lecturers">Giáº£ng viĂªn ({loadingLecturers ? '...' : lecturers.length})</TabsTrigger>
+            <TabsTrigger value="students">Sinh viĂªn ({loadingStudents ? '...' : students.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="lecturers">
             <Card>
               <CardHeader>
-                <CardTitle>Danh sách Giảng viên</CardTitle>
+                <CardTitle>Danh sĂ¡ch Giáº£ng viĂªn</CardTitle>
               </CardHeader>
               <CardContent>
                 {loadingLecturers ? (
-                  <div className="text-center py-8">Đang tải...</div>
+                  <div className="text-center py-8">Äang táº£i...</div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Mã GV</TableHead>
-                        <TableHead>Họ tên</TableHead>
+                        <TableHead>MĂ£ GV</TableHead>
+                        <TableHead>Há» tĂªn</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Khoa</TableHead>
-                        <TableHead>Số Course</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                        <TableHead>Thao tác</TableHead>
+                        <TableHead>Sá»‘ Course</TableHead>
+                        <TableHead>Tráº¡ng thĂ¡i</TableHead>
+                        <TableHead>Thao tĂ¡c</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -65,18 +65,18 @@ export default function UserManagement() {
                           <TableCell className="font-medium">{lecturer.userName || lecturer.id}</TableCell>
                           <TableCell>{lecturer.fullName || lecturer.name}</TableCell>
                           <TableCell>{lecturer.email}</TableCell>
-                          <TableCell>{lecturer.department || "Khác"}</TableCell>
+                          <TableCell>{lecturer.department || "KhĂ¡c"}</TableCell>
                           <TableCell>{lecturer.courses?.length || 0}</TableCell>
                           <TableCell>
-                            <Badge variant="success">Đang hoạt động</Badge>
+                            <Badge variant="success">Äang hoáº¡t Ä‘á»™ng</Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
                               <Button size="sm" variant="outline">
-                                Sửa
+                                Sá»­a
                               </Button>
                               <Button size="sm" variant="ghost">
-                                Chi tiết
+                                Chi tiáº¿t
                               </Button>
                             </div>
                           </TableCell>
@@ -84,7 +84,7 @@ export default function UserManagement() {
                       ))}
                       {lecturers.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">Không có giảng viên nào.</TableCell>
+                          <TableCell colSpan={7} className="text-center py-4">KhĂ´ng cĂ³ giáº£ng viĂªn nĂ o.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -97,23 +97,23 @@ export default function UserManagement() {
           <TabsContent value="students">
             <Card>
               <CardHeader>
-                <CardTitle>Danh sách Sinh viên</CardTitle>
+                <CardTitle>Danh sĂ¡ch Sinh viĂªn</CardTitle>
               </CardHeader>
               <CardContent>
                 {loadingStudents ? (
-                  <div className="text-center py-8">Đang tải...</div>
+                  <div className="text-center py-8">Äang táº£i...</div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Mã SV</TableHead>
-                        <TableHead>Họ tên</TableHead>
+                        <TableHead>MĂ£ SV</TableHead>
+                        <TableHead>Há» tĂªn</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Khoa</TableHead>
-                        <TableHead>Khóa</TableHead>
-                        <TableHead>Số Course</TableHead>
-                        <TableHead>Số Project</TableHead>
-                        <TableHead>Thao tác</TableHead>
+                        <TableHead>KhĂ³a</TableHead>
+                        <TableHead>Sá»‘ Course</TableHead>
+                        <TableHead>Sá»‘ Project</TableHead>
+                        <TableHead>Thao tĂ¡c</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -122,17 +122,17 @@ export default function UserManagement() {
                           <TableCell className="font-medium">{student.studentCode || student.userName || student.id}</TableCell>
                           <TableCell>{student.fullName || student.name}</TableCell>
                           <TableCell>{student.email}</TableCell>
-                          <TableCell>{student.department || "Khác"}</TableCell>
-                          <TableCell>{student.batch || "Khác"}</TableCell>
+                          <TableCell>{student.department || "KhĂ¡c"}</TableCell>
+                          <TableCell>{student.batch || "KhĂ¡c"}</TableCell>
                           <TableCell>{student.courses?.length || 0}</TableCell>
                           <TableCell>{student.projects?.length || 0}</TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
                               <Button size="sm" variant="outline">
-                                Sửa
+                                Sá»­a
                               </Button>
                               <Button size="sm" variant="ghost">
-                                Chi tiết
+                                Chi tiáº¿t
                               </Button>
                             </div>
                           </TableCell>
@@ -140,7 +140,7 @@ export default function UserManagement() {
                       ))}
                       {students.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-4">Không có sinh viên nào.</TableCell>
+                          <TableCell colSpan={8} className="text-center py-4">KhĂ´ng cĂ³ sinh viĂªn nĂ o.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -154,9 +154,4 @@ export default function UserManagement() {
     </div>
   );
 }
-
-
-
-
-
 

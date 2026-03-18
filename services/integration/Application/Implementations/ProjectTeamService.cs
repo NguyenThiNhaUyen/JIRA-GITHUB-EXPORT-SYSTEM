@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
@@ -20,41 +20,41 @@ public class ProjectTeamService : IProjectTeamService
 
     public async Task AddTeamMemberAsync(long projectId, AddTeamMemberRequest request)
     {
-        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
-        if (project == null)
+        var Project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (Project == null)
         {
             _logger.LogWarning("Project not found: {ProjectId}", projectId);
             throw new NotFoundException("Project not found");
         }
 
-        var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == request.StudentUserId);
-        if (student == null) throw new NotFoundException("Student not found");
+        var Student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.UserId == request.StudentUserId);
+        if (Student == null) throw new NotFoundException("Student not found");
 
         var enrollment = await _unitOfWork.CourseEnrollments.FirstOrDefaultAsync(e =>
-            e.course_id == project.course_id && e.student_user_id == request.StudentUserId && e.status == "ACTIVE");
+            e.CourseId == Project.CourseId && e.StudentUserId == request.StudentUserId && e.Status == "ACTIVE");
 
-        if (enrollment == null) throw new BusinessException("Student is not enrolled in this course");
+        if (enrollment == null) throw new BusinessException("Student is not enrolled in this Course");
 
         var existingMember = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
-            tm.project_id == projectId && tm.student_user_id == request.StudentUserId && tm.participation_status == "ACTIVE");
+            tm.ProjectId == projectId && tm.StudentUserId == request.StudentUserId && tm.ParticipationStatus == "ACTIVE");
 
         if (existingMember != null) throw new BusinessException("Student is already a team member");
 
         var activeProjectsInCourse = await _unitOfWork.TeamMembers.FindAsync(tm =>
-            tm.student_user_id == request.StudentUserId &&
-            tm.participation_status == "ACTIVE" &&
-            tm.project.course_id == project.course_id);
+            tm.StudentUserId == request.StudentUserId &&
+            tm.ParticipationStatus == "ACTIVE" &&
+            tm.Project.CourseId == Project.CourseId);
 
-        if (activeProjectsInCourse.Any()) throw new BusinessException("Student is already in another project in this course");
+        if (activeProjectsInCourse.Any()) throw new BusinessException("Student is already in another Project in this Course");
 
-        var teamMember = new team_member
+        var teamMember = new TeamMember
         {
-            project_id = projectId,
-            student_user_id = request.StudentUserId,
-            team_role = request.TeamRole,
-            responsibility = request.Responsibility,
-            participation_status = "ACTIVE",
-            joined_at = DateTime.UtcNow
+            ProjectId = projectId,
+            StudentUserId = request.StudentUserId,
+            TeamRole = request.TeamRole,
+            Responsibility = request.Responsibility,
+            ParticipationStatus = "ACTIVE",
+            JoinedAt = DateTime.UtcNow
         };
 
         _unitOfWork.TeamMembers.Add(teamMember);
@@ -64,28 +64,29 @@ public class ProjectTeamService : IProjectTeamService
     public async Task RemoveTeamMemberAsync(long projectId, long studentUserId)
     {
         var teamMember = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
-            tm.project_id == projectId && tm.student_user_id == studentUserId && tm.participation_status == "ACTIVE");
+            tm.ProjectId == projectId && tm.StudentUserId == studentUserId && tm.ParticipationStatus == "ACTIVE");
 
         if (teamMember == null) throw new NotFoundException("Team member not found");
 
-        teamMember.participation_status = "LEFT";
-        teamMember.left_at = DateTime.UtcNow;
+        teamMember.ParticipationStatus = "LEFT";
+        teamMember.LeftAt = DateTime.UtcNow;
 
         _unitOfWork.TeamMembers.Update(teamMember);
         await _unitOfWork.SaveChangesAsync();
 
-        _logger.LogInformation("Student {StudentId} removed from project {ProjectId}", studentUserId, projectId);
+        _logger.LogInformation("Student {StudentId} removed from Project {ProjectId}", studentUserId, projectId);
     }
 
     public async Task UpdateContributionScoreAsync(long projectId, long memberStudentUserId, decimal? score)
     {
         var teamMember = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
-            tm.project_id == projectId && tm.student_user_id == memberStudentUserId && tm.participation_status == "ACTIVE");
+            tm.ProjectId == projectId && tm.StudentUserId == memberStudentUserId && tm.ParticipationStatus == "ACTIVE");
 
         if (teamMember == null) throw new NotFoundException("Team member not found");
 
-        teamMember.contribution_score = score;
+        teamMember.ContributionScore = score ?? 0m;
         _unitOfWork.TeamMembers.Update(teamMember);
         await _unitOfWork.SaveChangesAsync();
     }
 }
+

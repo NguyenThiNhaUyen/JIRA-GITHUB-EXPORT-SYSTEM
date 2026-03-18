@@ -1,4 +1,4 @@
-import {
+﻿import {
  FileText,
  Eye,
  MessageSquare,
@@ -48,24 +48,24 @@ export default function SrsReports() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Quản lý Tài liệu SRS"
- subtitle="Review, đánh giá và phản hồi các bản đặc tả yêu cầu phần mềm từ sinh viên."
- breadcrumb={["Giảng viên","Báo cáo","SRS"]}
+ title="Quáº£n lĂ½ TĂ i liá»‡u SRS"
+ subtitle="Review, Ä‘Ă¡nh giĂ¡ vĂ  pháº£n há»“i cĂ¡c báº£n Ä‘áº·c táº£ yĂªu cáº§u pháº§n má»m tá»« sinh viĂªn."
+ breadcrumb={["Giáº£ng viĂªn","BĂ¡o cĂ¡o","SRS"]}
  actions={[
  <Button key="alert" onClick={handleSyncAlerts} disabled={isSendingAlert} variant="outline" className="rounded-2xl border-orange-200 text-orange-600 hover:bg-orange-50 h-11 px-6 text-[10px] font-black transition-all">
- <MessageSquare size={14} className="mr-2" /> Nhắc nhóm trễ hạn
+ <MessageSquare size={14} className="mr-2" /> Nháº¯c nhĂ³m trá»… háº¡n
  </Button>,
  <Button key="export" onClick={handleExportCsv} className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-8 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">
- <Download size={16} className="mr-2" /> Xuất bảng điểm
+ <Download size={16} className="mr-2" /> Xuáº¥t báº£ng Ä‘iá»ƒm
  </Button>
  ]}
  />
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
- <StatsCard label="Tổng bản nộp" value={srsList.length} icon={FileText} variant="indigo" />
- <StatsCard label="Đang Review" value={srsList.filter(s => s.status === 'REVIEW' || s.status === 'SUBMITTED').length} icon={Eye} variant="info" />
- <StatsCard label="Cần chỉnh sửa" value={srsList.filter(s => s.status === 'NEED_REVISION').length} icon={RefreshCcw} variant="warning" />
- <StatsCard label="Đã hoàn tất" value={srsList.filter(s => s.status === 'FINAL' || s.status === 'APPROVED').length} icon={CheckCheck} variant="success" />
+ <StatsCard label="Tá»•ng báº£n ná»™p" value={srsList.length} icon={FileText} variant="indigo" />
+ <StatsCard label="Äang Review" value={srsList.filter(s => s.status === 'REVIEW' || s.status === 'SUBMITTED').length} icon={Eye} variant="info" />
+ <StatsCard label="Cáº§n chá»‰nh sá»­a" value={srsList.filter(s => s.status === 'NEED_REVISION').length} icon={RefreshCcw} variant="warning" />
+ <StatsCard label="ÄĂ£ hoĂ n táº¥t" value={srsList.filter(s => s.status === 'FINAL' || s.status === 'APPROVED').length} icon={CheckCheck} variant="success" />
  </div>
 
  <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
@@ -103,9 +103,4 @@ export default function SrsReports() {
  </div>
  );
 }
-
-
-
-
-
 

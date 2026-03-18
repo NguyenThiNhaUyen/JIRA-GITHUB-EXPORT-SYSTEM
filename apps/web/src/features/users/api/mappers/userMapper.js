@@ -1,5 +1,5 @@
-/**
- * userMapper.js — BE UserDetailResponse → FE user shape
+﻿/**
+ * userMapper.js â€” BE UserDetailResponse â†’ FE user shape
  */
 
 export function mapUser(beUser) {
@@ -49,9 +49,4 @@ export function mapUserList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
-
-
-
-
-
 

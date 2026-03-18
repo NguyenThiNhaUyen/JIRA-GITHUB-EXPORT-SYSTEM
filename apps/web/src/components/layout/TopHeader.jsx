@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { HubConnectionBuilder, LogLevel, HttpTransportType } from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -57,20 +57,20 @@ export function TopHeader() {
   const handleAccept = (invitationId, notificationId) => {
     acceptMutate(invitationId, {
       onSuccess: () => {
-        success("Đã chấp nhận lời mời nhóm");
+        success("ÄĂ£ cháº¥p nháº­n lá»i má»i nhĂ³m");
         markAsReadMutate(notificationId);
       },
-      onError: () => error("Không thể chấp nhận lời mời")
+      onError: () => error("KhĂ´ng thá»ƒ cháº¥p nháº­n lá»i má»i")
     });
   };
 
   const handleDecline = (invitationId, notificationId) => {
     rejectMutate(invitationId, {
       onSuccess: () => {
-        success("Đã từ chối lời mời");
+        success("ÄĂ£ tá»« chá»‘i lá»i má»i");
         markAsReadMutate(notificationId);
       },
-      onError: () => error("Không thể từ chối lời mời")
+      onError: () => error("KhĂ´ng thá»ƒ tá»« chá»‘i lá»i má»i")
     });
   };
 
@@ -107,7 +107,7 @@ export function TopHeader() {
 
         connection.on("ReceiveNotification", (notification) => {
           if (!isMounted) return;
-          info?.(notification.message || "Bạn có thông báo mới", { title: "Thông báo" });
+          info?.(notification.message || "Báº¡n cĂ³ thĂ´ng bĂ¡o má»›i", { title: "ThĂ´ng bĂ¡o" });
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         });
 
@@ -149,32 +149,32 @@ export function TopHeader() {
     const path = location.pathname;
     const PAGE_TITLES = [
       // Admin
-      { match: "/admin/courses", title: "Quản lý Lớp học" },
-      { match: "/admin/semesters", title: "Quản lý Học kỳ" },
-      { match: "/admin/subjects", title: "Quản lý Môn học" },
-      { match: "/admin/reports", title: "Báo cáo Admin" },
-      { match: "/admin/lecturer-assignment", title: "Phân công Giảng viên" },
-      { match: "/admin/workload", title: "Khối lượng Giảng dạy" },
-      { match: "/admin/users", title: "Quản lý Tài khoản" },
-      { match: "/admin", title: "Tổng quan Quản trị" },
+      { match: "/admin/courses", title: "Quáº£n lĂ½ Lá»›p há»c" },
+      { match: "/admin/semesters", title: "Quáº£n lĂ½ Há»c ká»³" },
+      { match: "/admin/subjects", title: "Quáº£n lĂ½ MĂ´n há»c" },
+      { match: "/admin/reports", title: "BĂ¡o cĂ¡o Admin" },
+      { match: "/admin/lecturer-assignment", title: "PhĂ¢n cĂ´ng Giáº£ng viĂªn" },
+      { match: "/admin/workload", title: "Khá»‘i lÆ°á»£ng Giáº£ng dáº¡y" },
+      { match: "/admin/users", title: "Quáº£n lĂ½ TĂ i khoáº£n" },
+      { match: "/admin", title: "Tá»•ng quan Quáº£n trá»‹" },
 
       // Lecturer
-      { match: "/lecturer/group/", title: "Chi tiết Nhóm" },
-      { match: "/lecturer/course/", title: "Quản lý Nhóm" },
-      { match: "/lecturer/srs", title: "Báo cáo SRS" },
-      { match: "/lecturer/analytics", title: "Phân tích Lớp" },
-      { match: "/lecturer/contributions", title: "Theo dõi Đóng góp" },
-      { match: "/lecturer/reports", title: "Trung tâm Báo cáo" },
-      { match: "/lecturer", title: "Tổng quan Giảng viên" },
+      { match: "/lecturer/group/", title: "Chi tiáº¿t NhĂ³m" },
+      { match: "/lecturer/course/", title: "Quáº£n lĂ½ NhĂ³m" },
+      { match: "/lecturer/srs", title: "BĂ¡o cĂ¡o SRS" },
+      { match: "/lecturer/analytics", title: "PhĂ¢n tĂ­ch Lá»›p" },
+      { match: "/lecturer/contributions", title: "Theo dĂµi ÄĂ³ng gĂ³p" },
+      { match: "/lecturer/reports", title: "Trung tĂ¢m BĂ¡o cĂ¡o" },
+      { match: "/lecturer", title: "Tá»•ng quan Giáº£ng viĂªn" },
 
       // Student
-      { match: "/student/course", title: "Khóa học của tôi" },
-      { match: "/student/my-project", title: "Dự án của tôi" },
-      { match: "/student/project/", title: "Chi tiết Dự án" },
-      { match: "/student/contribution", title: "Đóng góp cá nhân" },
-      { match: "/student/alerts", title: "Thông báo & Cảnh báo" },
-      { match: "/student/srs", title: "Tài liệu SRS" },
-      { match: "/student", title: "Tổng quan Sinh viên" },
+      { match: "/student/course", title: "KhĂ³a há»c cá»§a tĂ´i" },
+      { match: "/student/my-project", title: "Dá»± Ă¡n cá»§a tĂ´i" },
+      { match: "/student/project/", title: "Chi tiáº¿t Dá»± Ă¡n" },
+      { match: "/student/contribution", title: "ÄĂ³ng gĂ³p cĂ¡ nhĂ¢n" },
+      { match: "/student/alerts", title: "ThĂ´ng bĂ¡o & Cáº£nh bĂ¡o" },
+      { match: "/student/srs", title: "TĂ i liá»‡u SRS" },
+      { match: "/student", title: "Tá»•ng quan Sinh viĂªn" },
     ];
 
     return PAGE_TITLES.find(p => path.includes(p.match))?.title ?? "Dashboard";
@@ -188,9 +188,9 @@ export function TopHeader() {
     if (!dateStr) return "";
     const diff = Date.now() - new Date(dateStr).getTime();
     const h = Math.floor(diff / 3600000);
-    if (h < 1) return "Vừa xong";
-    if (h < 24) return `${h} giờ trước`;
-    return `${Math.floor(h / 24)} ngày trước`;
+    if (h < 1) return "Vá»«a xong";
+    if (h < 24) return `${h} giá» trÆ°á»›c`;
+    return `${Math.floor(h / 24)} ngĂ y trÆ°á»›c`;
   };
 
   return (
@@ -218,7 +218,7 @@ export function TopHeader() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm..."
+            placeholder="TĂ¬m kiáº¿m..."
             className="w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-2xl text-sm text-gray-600 placeholder-gray-300 focus:bg-white focus:border-teal-200 focus:ring-2 focus:ring-teal-50 outline-none transition-all"
           />
         </div>
@@ -240,13 +240,13 @@ export function TopHeader() {
           {showNotifications && (
             <div className="absolute right-0 mt-3 w-[380px] bg-white rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100 z-40 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
-                <span className="text-sm font-semibold text-gray-700">Thông báo</span>
-                {unreadCount > 0 && <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{unreadCount} chưa đọc</span>}
+                <span className="text-sm font-semibold text-gray-700">ThĂ´ng bĂ¡o</span>
+                {unreadCount > 0 && <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">{unreadCount} chÆ°a Ä‘á»c</span>}
               </div>
 
               <div className="max-h-[420px] overflow-y-auto divide-y divide-gray-50">
                 {isLoading && (
-                  <div className="py-10 text-center text-gray-400 text-sm">Đang tải...</div>
+                  <div className="py-10 text-center text-gray-400 text-sm">Äang táº£i...</div>
                 )}
                 {notifications.map((notif, idx) => (
                   <div 
@@ -264,7 +264,7 @@ export function TopHeader() {
                     {notif.projectName && (
                       <div className="flex items-center gap-1.5 mt-2 bg-white border border-gray-100 px-2.5 py-1 rounded-lg inline-flex w-fit">
                           <Check size={10} className="text-teal-500"/>
-                          <span className="text-xs text-gray-400">Dự án: {notif.projectName}</span>
+                          <span className="text-xs text-gray-400">Dá»± Ă¡n: {notif.projectName}</span>
                       </div>
                     )}
 
@@ -274,13 +274,13 @@ export function TopHeader() {
                           onClick={(e) => { e.stopPropagation(); handleAccept(notif.invitationId, notif.id); }}
                           className="text-xs font-semibold bg-teal-600 text-white px-3.5 py-1.5 rounded-xl hover:bg-teal-700 transition-all"
                         >
-                          Chấp nhận
+                          Cháº¥p nháº­n
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDecline(notif.invitationId, notif.id); }}
                           className="text-xs font-semibold bg-white border border-gray-200 text-gray-500 px-3.5 py-1.5 rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
                         >
-                          Từ chối
+                          Tá»« chá»‘i
                         </button>
                       </div>
                     )}
@@ -289,7 +289,7 @@ export function TopHeader() {
                 {notifications.length === 0 && !isLoading && (
                   <div className="py-14 text-center">
                       <Bell size={28} className="mx-auto text-gray-200 mb-3"/>
-                      <p className="text-sm text-gray-400">Không có thông báo mới</p>
+                      <p className="text-sm text-gray-400">KhĂ´ng cĂ³ thĂ´ng bĂ¡o má»›i</p>
                   </div>
                 )}
               </div>
@@ -307,7 +307,7 @@ export function TopHeader() {
               {(user?.name || "U").charAt(0).toUpperCase()}
             </div>
             <div className="hidden lg:block text-left">
-                <p className="text-sm font-semibold text-gray-800 leading-none">{user?.name || "Tài khoản"}</p>
+                <p className="text-sm font-semibold text-gray-800 leading-none">{user?.name || "TĂ i khoáº£n"}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{user?.role}</p>
             </div>
             <ChevronDown size={14} className={`text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
@@ -321,13 +321,13 @@ export function TopHeader() {
               </div>
               <div className="p-2">
                   <button className="flex items-center gap-2.5 w-full px-4 py-3 hover:bg-gray-50 rounded-2xl text-sm text-gray-600 transition-all">
-                    <Settings size={15} /> Cài đặt hồ sơ
+                    <Settings size={15} /> CĂ i Ä‘áº·t há»“ sÆ¡
                   </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2.5 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl text-sm transition-all"
                   >
-                    <LogOut size={15} /> Đăng xuất
+                    <LogOut size={15} /> ÄÄƒng xuáº¥t
                   </button>
               </div>
             </div>
@@ -337,10 +337,4 @@ export function TopHeader() {
     </header>
   );
 }
-
-
-
-
-
-
 

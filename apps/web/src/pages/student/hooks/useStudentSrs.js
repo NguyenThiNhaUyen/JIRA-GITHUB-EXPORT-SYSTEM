@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useToast } from "@/components/ui/Toast.jsx";
 import { useStudentProjects } from "@/features/dashboard/hooks/useDashboard.js";
@@ -19,8 +19,8 @@ export function useStudentSrs() {
     const submitSrsMutation = useSubmitSrs();
 
     const handleUpload = () => {
-        if (!selectedProject) return showError("Vui lòng chọn dự án");
-        if (!file) return showError("Vui lòng chọn file tài liệu");
+        if (!selectedProject) return showError("Vui lĂ²ng chá»n dá»± Ă¡n");
+        if (!file) return showError("Vui lĂ²ng chá»n file tĂ i liá»‡u");
 
         submitSrsMutation.mutate({ 
             projectId: selectedProject, 
@@ -29,14 +29,14 @@ export function useStudentSrs() {
             isFinal
         }, {
             onSuccess: () => {
-                success("Đã nộp tài liệu SRS thành công!");
+                success("ÄĂ£ ná»™p tĂ i liá»‡u SRS thĂ nh cĂ´ng!");
                 setIsModalOpen(false);
                 setFile(null);
                 setSelectedProject("");
                 setVersion("1.0.0");
                 setIsFinal(false);
             },
-            onError: () => showError("Nộp thất bại. Vui lòng thử lại.")
+            onError: () => showError("Ná»™p tháº¥t báº¡i. Vui lĂ²ng thá»­ láº¡i.")
         });
     };
 
@@ -58,9 +58,4 @@ export function useStudentSrs() {
         handleUpload
     };
 }
-
-
-
-
-
 

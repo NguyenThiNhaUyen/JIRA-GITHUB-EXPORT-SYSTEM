@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Common;
+﻿namespace JiraGithubExport.Shared.Common;
 
 public class JwtSettings
 {
@@ -7,10 +7,4 @@ public class JwtSettings
     public string Audience { get; set; } = null!;
     public int ExpirationMinutes { get; set; } = 60;
 }
-
-
-
-
-
-
 

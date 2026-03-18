@@ -1,10 +1,17 @@
+﻿using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
 
+/// <summary>
+/// Enhanced generic repository implementation with performance options and soft-delete handling.
+/// </summary>
+/// <typeparam name="T">Entity type</typeparam>
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly JiraGithubToolDbContext _context;
@@ -16,9 +23,18 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public virtual IQueryable<T> Query()
+    /// <summary>Standard repository query (filtered by soft-delete in DbContext)</summary>
+    public virtual IQueryable<T> Query(bool asNoTracking = false)
     {
-        return _dbSet;
+        IQueryable<T> query = _dbSet;
+        return asNoTracking ? query.AsNoTracking() : query;
+    }
+
+    /// <summary>Query including soft-deleted records (bypassing DbContext query filter)</summary>
+    public virtual IQueryable<T> QueryRaw(bool asNoTracking = false)
+    {
+        IQueryable<T> query = _dbSet.IgnoreQueryFilters();
+        return asNoTracking ? query.AsNoTracking() : query;
     }
 
     public virtual async Task<T?> GetByIdAsync(long id)
@@ -26,19 +42,19 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.FindAsync(id);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false)
     {
-        return await _dbSet.ToListAsync();
+        return await Query(asNoTracking).ToListAsync();
     }
 
-    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false)
     {
-        return await _dbSet.Where(predicate).ToListAsync();
+        return await Query(asNoTracking).Where(predicate).ToListAsync();
     }
 
-    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false)
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate);
+        return await Query(asNoTracking).FirstOrDefaultAsync(predicate);
     }
 
     public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
@@ -83,9 +99,10 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         int pageNumber,
         int pageSize,
         Expression<Func<T, bool>>? filter = null,
-        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        bool asNoTracking = true)
     {
-        IQueryable<T> query = _dbSet;
+        IQueryable<T> query = Query(asNoTracking);
 
         if (filter != null)
             query = query.Where(filter);
@@ -103,10 +120,4 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return (items, totalCount);
     }
 }
-
-
-
-
-
-
 

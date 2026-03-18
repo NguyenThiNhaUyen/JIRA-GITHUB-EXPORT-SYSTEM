@@ -1,4 +1,4 @@
-// Create Course Modal - For Admin
+﻿// Create Course Modal - For Admin
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from "@/components/ui/Interactive.jsx";
@@ -256,9 +256,4 @@ export function CreateCourseModal({ isOpen, onClose, onSuccess }) {
     </Modal>
   );
 }
-
-
-
-
-
 

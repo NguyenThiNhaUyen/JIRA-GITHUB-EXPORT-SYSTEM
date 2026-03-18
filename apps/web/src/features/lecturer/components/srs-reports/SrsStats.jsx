@@ -1,29 +1,29 @@
-import React from "react";
+﻿import React from "react";
 import { Users, Upload, Eye, RefreshCcw, CheckCheck, AlertTriangle } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
 export function SrsStats({ stats }) {
   const items = [
     {
-      label: "Tổng nhóm",
+      label: "Tá»•ng nhĂ³m",
       value: stats.totalGroups,
       icon: Users,
       variant: "default",
     },
     {
-      label: "Đã nộp",
+      label: "ÄĂ£ ná»™p",
       value: stats.submitted,
       icon: Upload,
       variant: "info",
     },
     {
-      label: "Đang review",
+      label: "Äang review",
       value: stats.review,
       icon: Eye,
       variant: "indigo",
     },
     {
-      label: "Cần chỉnh sửa",
+      label: "Cáº§n chá»‰nh sá»­a",
       value: stats.revision,
       icon: RefreshCcw,
       variant: "warning",
@@ -35,7 +35,7 @@ export function SrsStats({ stats }) {
       variant: "success",
     },
     {
-      label: "Quá hạn",
+      label: "QuĂ¡ háº¡n",
       value: stats.overdue,
       icon: AlertTriangle,
       variant: "danger",
@@ -56,9 +56,4 @@ export function SrsStats({ stats }) {
     </div>
   );
 }
-
-
-
-
-
 

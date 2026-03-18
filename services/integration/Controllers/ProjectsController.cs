@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Contracts.Responses.Projects;
@@ -12,7 +12,7 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 [ApiController]
 [Route("api/projects")]
 [Authorize]
-public class ProjectsController : ControllerBase
+public class ProjectsController : ApiControllerBase
 {
     private readonly IProjectCoreService _coreService;
     private readonly IProjectTeamService _teamService;
@@ -34,11 +34,7 @@ public class ProjectsController : ControllerBase
         _logger = logger;
     }
 
-    private long GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return long.Parse(userIdClaim!);
-    }
+
 
     /// <summary>
     /// Create a new project
@@ -130,11 +126,7 @@ public class ProjectsController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Team member removed successfully"));
     }
 
-    /// <summary>
-    /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
-    /// </summary>
     [HttpPost("{projectId}/integrations")]
-    [HttpPut("{projectId}/integration")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
@@ -143,11 +135,7 @@ public class ProjectsController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Integration submitted. Awaiting lecturer approval."));
     }
 
-    /// <summary>
-    /// Approve integration (Lecturer only)
-    /// </summary>
     [HttpPost("{projectId}/integrations/approve")]
-    [HttpPut("{projectId}/approve-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveIntegration(long projectId)
@@ -157,11 +145,7 @@ public class ProjectsController : ControllerBase
         return Ok(ApiResponse.SuccessResponse("Integration approved. Sync will begin shortly."));
     }
 
-    /// <summary>
-    /// Reject integration (Lecturer only)
-    /// </summary>
     [HttpPost("{projectId}/integrations/reject")]
-    [HttpPut("{projectId}/reject-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectIntegration(long projectId, [FromBody] RejectIntegrationRequest request)
@@ -271,15 +255,5 @@ public class ProjectsController : ControllerBase
         var result = await _dashboardService.GetProjectAgingWipAsync(projectId, limit);
         return Ok(ApiResponse<AgingWipResponse>.SuccessResponse(result));
     }
-
-    /// <summary>
-    /// Get project cycle time metrics
-    /// </summary>
-    [HttpGet("{projectId}/cycle-time")]
-    [ProducesResponseType(typeof(ApiResponse<CycleTimeResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProjectCycleTime(long projectId)
-    {
-        var result = await _dashboardService.GetProjectCycleTimeAsync(projectId);
-        return Ok(ApiResponse<CycleTimeResponse>.SuccessResponse(result));
-    }
 }
+

@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Common.Exceptions;
+﻿namespace JiraGithubExport.Shared.Common.Exceptions;
 
 public class BusinessException : Exception
 {
@@ -35,10 +35,4 @@ public class ValidationException : Exception
         Errors = new List<string> { error };
     }
 }
-
-
-
-
-
-
 

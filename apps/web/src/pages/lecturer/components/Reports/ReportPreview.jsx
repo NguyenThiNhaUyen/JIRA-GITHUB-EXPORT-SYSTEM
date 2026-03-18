@@ -1,4 +1,4 @@
-import { Eye, Download } from"lucide-react";
+﻿import { Eye, Download } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 import { StatusBadge } from"@/components/shared/Badge.jsx";
@@ -31,7 +31,7 @@ export function ReportPreview({ selectedConfig, previewData, handleExport }) {
  </div>
 
  <div className="space-y-4">
- <p className="text-[10px] font-black text-gray-400">Danh sách nhóm rủi ro</p>
+ <p className="text-[10px] font-black text-gray-400">Danh sĂ¡ch nhĂ³m rá»§i ro</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {previewData.teams.filter(t => t.riskLevel === 'High' || t.riskLevel === 'Medium').map(t => (
  <div key={t.id} className="p-5 rounded-2xl border border-gray-100 bg-gray-50/30 flex justify-between items-center group hover:border-red-200 hover:bg-white transition-all">
@@ -43,7 +43,7 @@ export function ReportPreview({ selectedConfig, previewData, handleExport }) {
  </div>
  ))}
  {previewData.teams.filter(t => t.riskLevel === 'High' || t.riskLevel === 'Medium').length === 0 && (
- <p className="text-xs text-gray-400 italic">Không có nhóm rủi ro nào</p>
+ <p className="text-xs text-gray-400 italic">KhĂ´ng cĂ³ nhĂ³m rá»§i ro nĂ o</p>
  )}
  </div>
  </div>
@@ -51,9 +51,4 @@ export function ReportPreview({ selectedConfig, previewData, handleExport }) {
  </Card>
  );
 }
-
-
-
-
-
 

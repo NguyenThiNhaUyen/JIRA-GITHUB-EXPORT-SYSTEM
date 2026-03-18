@@ -1,4 +1,4 @@
-import client from "../../../api/client.js";
+﻿import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapProject, mapProjectList, mapProjectMetrics } from "./mappers/projectMapper.js";
 
@@ -111,9 +111,4 @@ export async function getProjectCycleTime(projectId) {
     const res = await client.get(`/projects/${projectId}/cycle-time`);
     return unwrap(res);
 }
-
-
-
-
-
 

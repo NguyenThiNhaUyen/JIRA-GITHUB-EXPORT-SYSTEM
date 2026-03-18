@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getGroupById, approveGroupLink, rejectGroupLink, updateStudentScore } from "../api/groupApi.js";
 
 export const GROUP_KEYS = {
@@ -21,7 +21,7 @@ export const useApproveLink = () => {
     return useMutation({
         mutationFn: ({ groupId, linkType }) => approveGroupLink(groupId, linkType),
         onSuccess: (_, variables) => {
-            // Ảo thuật nằm đây: Gọi API OK -> Xoá Cache báo React tải lại giao diện Nhóm đó lập tức
+            // áº¢o thuáº­t náº±m Ä‘Ă¢y: Gá»i API OK -> XoĂ¡ Cache bĂ¡o React táº£i láº¡i giao diá»‡n NhĂ³m Ä‘Ă³ láº­p tá»©c
             queryClient.invalidateQueries({ queryKey: GROUP_KEYS.detail(variables.groupId) });
         },
     });
@@ -46,9 +46,4 @@ export const useUpdateStudentScore = () => {
         },
     });
 };
-
-
-
-
-
 

@@ -1,5 +1,5 @@
-/**
- * notificationMapper.js — BE NotificationResponse → FE shape
+﻿/**
+ * notificationMapper.js â€” BE NotificationResponse â†’ FE shape
  */
 
 export function mapNotification(beNotif) {
@@ -8,11 +8,11 @@ export function mapNotification(beNotif) {
     return {
         id: beNotif.id || beNotif.Id || "",
         content: beNotif.message || beNotif.Message || beNotif.content || beNotif.Content || "",
-        title: beNotif.title || beNotif.Title || (beNotif.type === 'INVITATION' || beNotif.Type === 'INVITATION' ? 'Lời mời nhóm' : 'Thông báo hệ thống'),
+        title: beNotif.title || beNotif.Title || (beNotif.type === 'INVITATION' || beNotif.Type === 'INVITATION' ? 'Lá»i má»i nhĂ³m' : 'ThĂ´ng bĂ¡o há»‡ thá»‘ng'),
         type: (beNotif.type || beNotif.Type || "SYSTEM").toUpperCase(),
         isRead: beNotif.isRead ?? beNotif.IsRead ?? false,
         createdAt: beNotif.timestamp || beNotif.Timestamp || beNotif.createdAt || beNotif.CreatedAt || null,
-        // Dữ liệu mở rộng cho lời mời nhóm
+        // Dá»¯ liá»‡u má»Ÿ rá»™ng cho lá»i má»i nhĂ³m
         projectName: beNotif.projectName || beNotif.ProjectName || null,
         invitedByName: beNotif.invitedByName || beNotif.InvitedByName || null,
         invitationId: beNotif.invitationId || beNotif.InvitationId || null
@@ -43,9 +43,4 @@ export function mapNotificationList(beData) {
 
     return { items: [], totalCount: 0, page: 1, pageSize: 0 };
 }
-
-
-
-
-
 

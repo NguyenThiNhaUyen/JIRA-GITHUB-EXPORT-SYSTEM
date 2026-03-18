@@ -1,4 +1,4 @@
-import {
+﻿import {
  Download,
  AlertTriangle,
  ShieldAlert,
@@ -60,12 +60,12 @@ export default function Reports() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Trung tâm Báo cáo"
- subtitle="Trích xuất dữ liệu học thuật, đối chiếu tiến độ Jira/GitHub và đánh giá rủi ro."
- breadcrumb={["Giảng viên","Báo cáo"]}
+ title="Trung tĂ¢m BĂ¡o cĂ¡o"
+ subtitle="TrĂ­ch xuáº¥t dá»¯ liá»‡u há»c thuáº­t, Ä‘á»‘i chiáº¿u tiáº¿n Ä‘á»™ Jira/GitHub vĂ  Ä‘Ă¡nh giĂ¡ rá»§i ro."
+ breadcrumb={["Giáº£ng viĂªn","BĂ¡o cĂ¡o"]}
  actions={[
  <Button key="custom" variant="outline" className="rounded-2xl border-gray-100 h-11 px-6 text-xs font-black hover:bg-gray-50 transition-all">
- <Filter size={16} className="mr-4" /> Tùy chỉnh
+ <Filter size={16} className="mr-4" /> TĂ¹y chá»‰nh
  </Button>,
  <Button key="export" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black border-0 shadow-lg shadow-teal-100" onClick={() => handleExport('PDF', 'Export nhanh', 'Export nhanh')}>
  <Download size={16} className="mr-4" /> Export nhanh
@@ -75,10 +75,10 @@ export default function Reports() {
 
  {/* Top Stats */}
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
- <StatsCard label="Tổng báo cáo" value={statsRecords.totalExports} icon={FileBarChart2} variant="default" />
- <StatsCard label="Xuất tuần này" value={statsRecords.thisWeek} icon={Download} variant="success" />
- <StatsCard label="Nhóm rủi ro" value={statsRecords.risky} icon={AlertTriangle} variant="danger" />
- <StatsCard label="SV cần chú ý" value={statsRecords.alertSV} icon={ShieldAlert} variant="warning" />
+ <StatsCard label="Tá»•ng bĂ¡o cĂ¡o" value={statsRecords.totalExports} icon={FileBarChart2} variant="default" />
+ <StatsCard label="Xuáº¥t tuáº§n nĂ y" value={statsRecords.thisWeek} icon={Download} variant="success" />
+ <StatsCard label="NhĂ³m rá»§i ro" value={statsRecords.risky} icon={AlertTriangle} variant="danger" />
+ <StatsCard label="SV cáº§n chĂº Ă½" value={statsRecords.alertSV} icon={ShieldAlert} variant="warning" />
  <StatsCard label="Overdue tasks" value={statsRecords.overdue} icon={Clock3} variant="info" />
  <StatsCard label="TB Sprint" value={`${statsRecords.avgSprint}%`} icon={CheckCircle2} variant="indigo" />
  </div>
@@ -86,22 +86,22 @@ export default function Reports() {
  {/* Filters */}
  <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
  <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
- <InputField placeholder="Tìm nhóm, dự án..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
+ <InputField placeholder="TĂ¬m nhĂ³m, dá»± Ă¡n..." value={search} onChange={e => setSearch(e.target.value)} icon={Search} />
  <SelectField value={courseFilter} onChange={e => setCourseFilter(e.target.value)}>
- <option value="all">Tất cả lớp học</option>
+ <option value="all">Táº¥t cáº£ lá»›p há»c</option>
  {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
  </SelectField>
  <SelectField value={teamFilter} onChange={e => setTeamFilter(e.target.value)}>
- <option value="all">Tất cả nhóm</option>
+ <option value="all">Táº¥t cáº£ nhĂ³m</option>
  {projects.map(t => <option key={t.id} value={t.id}>{t.teamName || t.name}</option>)}
  </SelectField>
  <div className="flex items-center justify-center bg-teal-50 rounded-xl text-[10px] font-black text-teal-700 border border-teal-100">
- Tìm thấy {previewData.teams.length} mục
+ TĂ¬m tháº¥y {previewData.teams.length} má»¥c
  </div>
  </CardContent>
  </Card>
 
- {/* Báo cáo Types */}
+ {/* BĂ¡o cĂ¡o Types */}
  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
  {EXPORT_TYPES.map(et => (
  <div
@@ -140,9 +140,4 @@ export default function Reports() {
  </div>
  );
 }
-
-
-
-
-
 

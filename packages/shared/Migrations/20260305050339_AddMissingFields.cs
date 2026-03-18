@@ -13,31 +13,31 @@ namespace JiraGithubExport.Shared.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "password_reset_token",
-                table: "users",
+                table: "Users",
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "password_reset_token_expires_at",
-                table: "users",
+                table: "Users",
                 type: "timestamp with time zone",
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "contribution_score",
-                table: "team_members",
+                table: "TeamMembers",
                 type: "numeric",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "max_students",
-                table: "courses",
+                table: "Courses",
                 type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "status",
-                table: "courses",
+                table: "Courses",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -48,23 +48,24 @@ namespace JiraGithubExport.Shared.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "password_reset_token",
-                table: "users");
+                table: "Users");
 
             migrationBuilder.DropColumn(
                 name: "password_reset_token_expires_at",
-                table: "users");
+                table: "Users");
 
             migrationBuilder.DropColumn(
                 name: "contribution_score",
-                table: "team_members");
+                table: "TeamMembers");
 
             migrationBuilder.DropColumn(
                 name: "max_students",
-                table: "courses");
+                table: "Courses");
 
             migrationBuilder.DropColumn(
                 name: "status",
-                table: "courses");
+                table: "Courses");
         }
     }
 }
+

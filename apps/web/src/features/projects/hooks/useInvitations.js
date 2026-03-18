@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
@@ -7,7 +7,7 @@ export const INVITATION_KEYS = {
     myPending: () => [...INVITATION_KEYS.all, "my-pending"],
 };
 
-/** Lấy danh sách lời mời nhóm (STUDENT) */
+/** Láº¥y danh sĂ¡ch lá»i má»i nhĂ³m (STUDENT) */
 export const useGetMyPendingInvitations = () => {
     return useQuery({
         queryKey: INVITATION_KEYS.myPending(),
@@ -19,7 +19,7 @@ export const useGetMyPendingInvitations = () => {
     });
 };
 
-/** Đồng ý lời mời nhóm */
+/** Äá»“ng Ă½ lá»i má»i nhĂ³m */
 export const useAcceptInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -34,13 +34,13 @@ export const useAcceptInvitation = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: INVITATION_KEYS.all });
-            // Cần invalidate luôn projects/groups vì đã vào nhóm mới
+            // Cáº§n invalidate luĂ´n projects/groups vĂ¬ Ä‘Ă£ vĂ o nhĂ³m má»›i
             queryClient.invalidateQueries({ queryKey: ["projects"] });
         },
     });
 };
 
-/** Từ chối/Decline lời mời nhóm */
+/** Tá»« chá»‘i/Decline lá»i má»i nhĂ³m */
 export const useRejectInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -60,7 +60,7 @@ export const useRejectInvitation = () => {
     });
 };
 
-/** Gửi lời mời gia nhập nhóm */
+/** Gá»­i lá»i má»i gia nháº­p nhĂ³m */
 export const useCreateInvitation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -73,9 +73,4 @@ export const useCreateInvitation = () => {
         },
     });
 };
-
-
-
-
-
 

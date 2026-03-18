@@ -1,4 +1,4 @@
-import { AlertTriangle } from"lucide-react";
+﻿import { AlertTriangle } from"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
@@ -7,11 +7,11 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
  return (
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-6">
- <CardTitle className="text-base font-black text-gray-800">Phân tích rủi ro</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">PhĂ¢n tĂ­ch rá»§i ro</CardTitle>
  </CardHeader>
  <CardContent className="p-8 flex items-center justify-center min-h-[300px]">
  <div className="text-center text-gray-300 font-bold text-xs">
- Vui lòng chọn cảnh báo
+ Vui lĂ²ng chá»n cáº£nh bĂ¡o
  </div>
  </CardContent>
  </Card>
@@ -21,7 +21,7 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
  return (
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
  <CardHeader className="border-b border-gray-50 py-5 px-6">
- <CardTitle className="text-base font-black text-gray-800">Phân tích rủi ro</CardTitle>
+ <CardTitle className="text-base font-black text-gray-800">PhĂ¢n tĂ­ch rá»§i ro</CardTitle>
  </CardHeader>
  <CardContent className="p-8 space-y-8">
  <div className="text-center">
@@ -34,8 +34,8 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
 
  <div className="space-y-4">
  <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
- <p className="text-[10px] font-black text-gray-400 mb-2">Đề xuất xử lý</p>
- <p className="text-xs text-gray-700 font-medium leading-relaxed">{selectedAlert.suggestion ||"Nên liên hệ trực tiếp để xác minh lý do tham gia kém và cập nhật lại phân chia công việc."}</p>
+ <p className="text-[10px] font-black text-gray-400 mb-2">Äá» xuáº¥t xá»­ lĂ½</p>
+ <p className="text-xs text-gray-700 font-medium leading-relaxed">{selectedAlert.suggestion ||"NĂªn liĂªn há»‡ trá»±c tiáº¿p Ä‘á»ƒ xĂ¡c minh lĂ½ do tham gia kĂ©m vĂ  cáº­p nháº­t láº¡i phĂ¢n chia cĂ´ng viá»‡c."}</p>
  </div>
 
  <div className="grid grid-cols-2 gap-3">
@@ -44,7 +44,7 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
  <p className="text-xl font-black text-gray-800">{selectedAlert.metrics?.score || 0}</p>
  </div>
  <div className="p-4 rounded-2xl border border-gray-100">
- <p className="text-[9px] font-black text-gray-400 mb-1">Thời điểm</p>
+ <p className="text-[9px] font-black text-gray-400 mb-1">Thá»i Ä‘iá»ƒm</p>
  <p className="text-[10px] font-black text-gray-800 mt-2">
  {new Date(selectedAlert.createdAt).toLocaleDateString('vi-VN')}
  </p>
@@ -58,16 +58,11 @@ export function AlertRiskAnalysis({ selectedAlert, onRemind, remindedIds = new S
  onClick={() => onRemind(selectedAlert)}
  disabled={remindedIds.has(selectedAlert?.id)}
  >
- {remindedIds.has(selectedAlert?.id) ?"Đã gửi nhắc nhở" :"Gửi mail thông báo"}
+ {remindedIds.has(selectedAlert?.id) ?"ÄĂ£ gá»­i nháº¯c nhá»Ÿ" :"Gá»­i mail thĂ´ng bĂ¡o"}
  </Button>
  </div>
  </CardContent>
  </Card>
  );
 }
-
-
-
-
-
 

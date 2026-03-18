@@ -1,4 +1,4 @@
-import { useToast } from "@/components/ui/Toast.jsx";
+﻿import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useApproveIntegration,
     useRejectIntegration,
@@ -20,17 +20,17 @@ export function useGroupActions(groupId) {
 
     const handleApproveLink = () => {
         approveMutation.mutate(groupId, {
-            onSuccess: () => success(`Đã duyệt tích hợp cho nhóm`)
+            onSuccess: () => success(`ÄĂ£ duyá»‡t tĂ­ch há»£p cho nhĂ³m`)
         });
     };
 
     const handleRejectLink = () => {
-        const reason = prompt("Nhập lý do từ chối:");
+        const reason = prompt("Nháº­p lĂ½ do tá»« chá»‘i:");
         if (reason === null) return;
         rejectMutation.mutate(
             { projectId: groupId, reason },
             {
-                onSuccess: () => success(`Đã từ chối tích hợp cho nhóm`)
+                onSuccess: () => success(`ÄĂ£ tá»« chá»‘i tĂ­ch há»£p cho nhĂ³m`)
             }
         );
     };
@@ -38,21 +38,21 @@ export function useGroupActions(groupId) {
     const handleUpdateScore = (studentId, score) => {
         const numScore = parseInt(score, 10);
         if (isNaN(numScore) || numScore < 0 || numScore > 100) {
-            showError("Điểm phải từ 0 đến 100");
+            showError("Äiá»ƒm pháº£i tá»« 0 Ä‘áº¿n 100");
             return;
         }
 
         updateMemberMutation.mutate(
             { projectId: groupId, studentId, contributionScore: numScore },
             {
-                onSuccess: () => success(`Đã lưu điểm ${numScore} cho sinh viên`)
+                onSuccess: () => success(`ÄĂ£ lÆ°u Ä‘iá»ƒm ${numScore} cho sinh viĂªn`)
             }
         );
     };
 
     const handleExportCsv = (group, students) => {
         try {
-            const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp"];
+            const headers = ["MSSV", "Há» TĂªn", "Vai TrĂ²", "Äiá»ƒm ÄĂ³ng GĂ³p"];
             const rows = students.map(student => {
                 return [
                     student.studentCode,
@@ -71,27 +71,27 @@ export function useGroupActions(groupId) {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            success("Đã xuất danh sách thành viên thành công!");
+            success("ÄĂ£ xuáº¥t danh sĂ¡ch thĂ nh viĂªn thĂ nh cĂ´ng!");
         } catch (err) {
-            showError("Lỗi khi xuất file");
+            showError("Lá»—i khi xuáº¥t file");
         }
     };
 
     const handleExportSrs = async (group) => {
         try {
-            success("Đang tổng hợp dữ liệu từ Jira & GitHub...");
+            success("Äang tá»•ng há»£p dá»¯ liá»‡u tá»« Jira & GitHub...");
 
             // 1. Trigger the backend API to generate SRS
             const res = await generateSrsMutation.mutateAsync({ projectId: groupId, format: "PDF" });
             const reportId = res?.reportId || res?.data?.reportId;
 
             if (!reportId) {
-                showError("Không nhận được mã báo cáo từ server.");
+                showError("KhĂ´ng nháº­n Ä‘Æ°á»£c mĂ£ bĂ¡o cĂ¡o tá»« server.");
                 return;
             }
 
             // 2. Poll the download URL (in a real app, you can use the polling hook, but here we manually retry)
-            success("Đang tạo PDF, vui lòng chờ trong giây lát...");
+            success("Äang táº¡o PDF, vui lĂ²ng chá» trong giĂ¢y lĂ¡t...");
 
             let downloadUrl = null;
             let attempts = 0;
@@ -119,12 +119,12 @@ export function useGroupActions(groupId) {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                success("Đã tải xuống báo cáo SRS thành công!");
+                success("ÄĂ£ táº£i xuá»‘ng bĂ¡o cĂ¡o SRS thĂ nh cĂ´ng!");
             } else {
-                showError("Quá trình tạo file đang bị chậm, vui lòng thử lại sau.");
+                showError("QuĂ¡ trĂ¬nh táº¡o file Ä‘ang bá»‹ cháº­m, vui lĂ²ng thá»­ láº¡i sau.");
             }
         } catch (err) {
-            showError(err?.message || "Lỗi khi xuất báo cáo SRS");
+            showError(err?.message || "Lá»—i khi xuáº¥t bĂ¡o cĂ¡o SRS");
         }
     };
 
@@ -132,8 +132,8 @@ export function useGroupActions(groupId) {
         sendAlert(
             { groupId: Number(groupId), message, severity },
             {
-                onSuccess: () => success("Đã gửi cảnh báo đến nhóm"),
-                onError: (err) => showError("Lỗi khi gửi cảnh báo: " + err.message)
+                onSuccess: () => success("ÄĂ£ gá»­i cáº£nh bĂ¡o Ä‘áº¿n nhĂ³m"),
+                onError: (err) => showError("Lá»—i khi gá»­i cáº£nh bĂ¡o: " + err.message)
             }
         );
     };
@@ -149,9 +149,4 @@ export function useGroupActions(groupId) {
         isSendingAlert
     };
 }
-
-
-
-
-
 

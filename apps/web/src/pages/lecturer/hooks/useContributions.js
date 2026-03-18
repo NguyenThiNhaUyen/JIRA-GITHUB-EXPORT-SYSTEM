@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
 import { getCourseContributions } from "@/features/analytics/api/analyticsApi.js";
@@ -40,7 +40,7 @@ export function useContributions() {
         jiraDone: s.jiraDone,
         activeDays: s.activeDays,
         score: s.score,
-        status: (s.status === 'Cần chú ý' || s.status === 'Chưa commit') ? 'warning' : 'stable',
+        status: (s.status === 'Cáº§n chĂº Ă½' || s.status === 'ChÆ°a commit') ? 'warning' : 'stable',
         statusText: s.status,
         dailyActivity: s.dailyActivity
       };
@@ -93,9 +93,4 @@ export function useContributions() {
     refetch
   };
 }
-
-
-
-
-
 

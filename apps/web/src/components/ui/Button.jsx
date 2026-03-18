@@ -1,4 +1,4 @@
-// Button Component - Part of UI Kit
+﻿// Button Component - Part of UI Kit
 import { theme } from "@/lib/uiTheme.js";
 
 const buttonVariants = {
@@ -43,11 +43,4 @@ export function Button({
     </button>
   );
 }
-
-
-
-
-
-
-
 

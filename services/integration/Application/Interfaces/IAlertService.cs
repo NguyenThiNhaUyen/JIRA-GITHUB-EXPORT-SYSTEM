@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Common;
+﻿using JiraGithubExport.Shared.Contracts.Common;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
@@ -28,3 +28,4 @@ public class AlertResponse
     public string Status => IsResolved ? "RESOLVED" : "OPEN";
     public DateTime CreatedAt { get; set; }
 }
+

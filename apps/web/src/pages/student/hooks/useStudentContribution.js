@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { 
     useStudentStats, 
     useStudentHeatmap, 
@@ -39,9 +39,4 @@ export function useStudentContribution() {
         handleRefresh
     };
 }
-
-
-
-
-
 

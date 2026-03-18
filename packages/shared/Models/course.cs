@@ -1,47 +1,42 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class course
+public partial class Course : JiraGithubExport.Shared.Interfaces.ISoftDelete
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public long semester_id { get; set; }
+    public long SemesterId { get; set; }
 
-    public long subject_id { get; set; }
+    public long SubjectId { get; set; }
 
-    public string course_code { get; set; } = null!;
+    public string CourseCode { get; set; } = null!;
 
-    public string? course_name { get; set; }
+    public string CourseName { get; set; }
 
-    public long created_by_user_id { get; set; }
+    public long CreatedByUserId { get; set; }
 
-    public int? max_students { get; set; }
+    public int MaxStudents { get; set; }
 
-    public string status { get; set; } = "ACTIVE"; // ACTIVE | INACTIVE
+    public string Status { get; set; } = "ACTIVE"; // ACTIVE | INACTIVE
 
-    public DateTime created_at { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime updated_at { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
-    public virtual ICollection<course_enrollment> course_enrollments { get; set; } = new List<course_enrollment>();
+    public virtual ICollection<CourseEnrollment> CourseEnrollments { get; set; } = new List<CourseEnrollment>();
 
-    public virtual user created_by_user { get; set; } = null!;
+    public virtual User CreatedByUser { get; set; } = null!;
 
-    public virtual ICollection<project> projects { get; set; } = new List<project>();
+    public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
 
-    public virtual semester semester { get; set; } = null!;
+    public virtual Semester Semester { get; set; } = null!;
 
-    public virtual subject subject { get; set; } = null!;
+    public virtual Subject Subject { get; set; } = null!;
 
-    public virtual ICollection<lecturer> lecturer_users { get; set; } = new List<lecturer>();
+    public virtual ICollection<Lecturer> LecturerUsers { get; set; } = new List<Lecturer>();
+
+    public bool IsDeleted { get; set; }
 }
-
-
-
-
-
-
-
 

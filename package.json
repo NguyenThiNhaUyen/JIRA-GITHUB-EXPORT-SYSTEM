@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "jira-github-export-system",
   "private": true,
   "workspaces": [
@@ -10,3 +10,4 @@
     "dev:web": "npm --prefix apps/web run dev"
   }
 }
+

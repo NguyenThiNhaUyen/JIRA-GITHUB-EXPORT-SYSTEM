@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { BookOpen, Users, GitBranch, AlertTriangle } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
@@ -6,13 +6,13 @@ export function LecturerStats({ stats }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatsCard
-        label="Lớp học"
+        label="Lá»›p há»c"
         value={stats.courses}
         icon={BookOpen}
         variant="indigo"
       />
       <StatsCard
-        label="Sinh viên"
+        label="Sinh viĂªn"
         value={stats.students}
         icon={Users}
         variant="info"
@@ -24,7 +24,7 @@ export function LecturerStats({ stats }) {
         variant="success"
       />
       <StatsCard
-        label="Cần chú ý"
+        label="Cáº§n chĂº Ă½"
         value={stats.alerts}
         icon={AlertTriangle}
         variant="warning"
@@ -32,9 +32,4 @@ export function LecturerStats({ stats }) {
     </div>
   );
 }
-
-
-
-
-
 

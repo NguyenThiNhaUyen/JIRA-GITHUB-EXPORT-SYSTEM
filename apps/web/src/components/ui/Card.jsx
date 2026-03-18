@@ -1,4 +1,4 @@
-export function Card({ children, className = '', hover = false, ...props }) {
+﻿export function Card({ children, className = '', hover = false, ...props }) {
   const baseClasses = 'bg-white rounded-[32px] border border-gray-100 shadow-sm transition-all duration-500 overflow-hidden';
   const hoverClasses = hover ? 'hover:shadow-premium hover:-translate-y-1' : '';
 
@@ -43,11 +43,4 @@ export function CardFooter({ children, className = '', ...props }) {
     </div>
   );
 }
-
-
-
-
-
-
-
 

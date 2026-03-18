@@ -1,10 +1,10 @@
-import client from "../../../api/client.js";
+﻿import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapAnalyticsStats, mapHeatmapData, mapRadarData } from "./mappers/analyticsMapper.js";
 
 /**
  * GET /api/analytics/stats
- * Thống kê tổng quan cho Admin Dashboard
+ * Thá»‘ng kĂª tá»•ng quan cho Admin Dashboard
  */
 export async function getAnalyticsStats() {
     const res = await client.get("/analytics/stats");
@@ -13,7 +13,7 @@ export async function getAnalyticsStats() {
 
 /**
  * GET /api/analytics/integration-stats
- * Thống kê tích hợp GitHub/Jira
+ * Thá»‘ng kĂª tĂ­ch há»£p GitHub/Jira
  */
 export async function getIntegrationStats() {
     const res = await client.get("/analytics/integration-stats");
@@ -22,7 +22,7 @@ export async function getIntegrationStats() {
 
 /**
  * GET /api/analytics/commit-trends
- * Xu hướng commit theo ngày (ADMIN, LECTURER)
+ * Xu hÆ°á»›ng commit theo ngĂ y (ADMIN, LECTURER)
  */
 export async function getCommitTrends(days = 7) {
     const res = await client.get("/analytics/commit-trends", { params: { days } });
@@ -31,7 +31,7 @@ export async function getCommitTrends(days = 7) {
 
 /**
  * GET /api/analytics/heatmap
- * Dữ liệu bản đồ nhiệt Commit (ADMIN, LECTURER)
+ * Dá»¯ liá»‡u báº£n Ä‘á»“ nhiá»‡t Commit (ADMIN, LECTURER)
  */
 export async function getAnalyticsHeatmap(days = 90) {
     const res = await client.get("/analytics/heatmap", { params: { days } });
@@ -40,7 +40,7 @@ export async function getAnalyticsHeatmap(days = 90) {
 
 /**
  * GET /api/analytics/radar
- * Biểu đồ Radar so sánh các nhóm (ADMIN, LECTURER)
+ * Biá»ƒu Ä‘á»“ Radar so sĂ¡nh cĂ¡c nhĂ³m (ADMIN, LECTURER)
  */
 export async function getAnalyticsRadar(courseId) {
     const res = await client.get("/analytics/radar", { params: { courseId } });
@@ -49,7 +49,7 @@ export async function getAnalyticsRadar(courseId) {
 
 /**
  * GET /api/analytics/team-rankings
- * Xếp hạng Top Teams theo commits
+ * Xáº¿p háº¡ng Top Teams theo commits
  */
 export async function getTeamRankings(limit = 4) {
     const res = await client.get("/analytics/team-rankings", { params: { limit } });
@@ -58,7 +58,7 @@ export async function getTeamRankings(limit = 4) {
 
 /**
  * GET /api/analytics/inactive-teams
- * Danh sách nhóm không hoạt động
+ * Danh sĂ¡ch nhĂ³m khĂ´ng hoáº¡t Ä‘á»™ng
  */
 export async function getInactiveTeams() {
     const res = await client.get("/analytics/inactive-teams");
@@ -67,7 +67,7 @@ export async function getInactiveTeams() {
 
 /**
  * GET /api/analytics/team-activities
- * Hoạt động các nhóm
+ * Hoáº¡t Ä‘á»™ng cĂ¡c nhĂ³m
  */
 export async function getTeamActivities() {
     const res = await client.get("/analytics/team-activities");
@@ -76,7 +76,7 @@ export async function getTeamActivities() {
 
 /**
  * GET /api/analytics/activity-log
- * Lịch sử hoạt động hệ thống (ADMIN, LECTURER)
+ * Lá»‹ch sá»­ hoáº¡t Ä‘á»™ng há»‡ thá»‘ng (ADMIN, LECTURER)
  */
 export async function getActivityLog(limit = 10) {
     const res = await client.get("/analytics/activity-log", { params: { limit } });
@@ -85,15 +85,10 @@ export async function getActivityLog(limit = 10) {
 
 /**
  * GET /api/analytics/lecturer/courses
- * Danh sách lớp của giảng viên (LECTURER, ADMIN)
+ * Danh sĂ¡ch lá»›p cá»§a giáº£ng viĂªn (LECTURER, ADMIN)
  */
 export async function getLecturerCourses() {
     const res = await client.get("/analytics/lecturer/courses");
     return unwrap(res);
 }
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-// Cycle Time Histogram
+﻿// Cycle Time Histogram
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -31,11 +31,4 @@ export function CycleTimeChart({ data = {}, isLoading, isError }) {
     </ChartContainer>
   );
 }
-
-
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-import client from "../../../api/client.js";
+﻿import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapUser, mapUserList } from "./mappers/userMapper.js";
 
@@ -56,9 +56,4 @@ export async function linkStudentAccounts(studentId, courseId, githubUrl, jiraUr
     const res = await client.post(`/users/student/${studentId}/links`, { courseId, githubUrl, jiraUrl });
     return unwrap(res);
 }
-
-
-
-
-
 

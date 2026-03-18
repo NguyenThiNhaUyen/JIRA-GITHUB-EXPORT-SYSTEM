@@ -1,4 +1,4 @@
-import { Layers, ChevronRight, LayoutGrid } from"lucide-react";
+﻿import { Layers, ChevronRight, LayoutGrid } from"lucide-react";
 import { Button } from"@/components/ui/Button.jsx";
 
 export function ProjectsTable({ projects, onNavigate }) {
@@ -7,11 +7,11 @@ export function ProjectsTable({ projects, onNavigate }) {
  <table className="w-full text-left border-collapse">
  <thead>
  <tr className="bg-gray-50/30 border-b border-gray-50">
- <th className="px-8 py-5 text-[10px] font-black text-gray-400">Dự án & Nhóm</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400">Dá»± Ă¡n & NhĂ³m</th>
  <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-center">GitHub</th>
  <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-center">Jira</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-center">Thành viên</th>
- <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-right">Chi tiết</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-center">ThĂ nh viĂªn</th>
+ <th className="px-8 py-5 text-[10px] font-black text-gray-400 text-right">Chi tiáº¿t</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -24,7 +24,7 @@ export function ProjectsTable({ projects, onNavigate }) {
  </div>
  <div className="min-w-0">
  <p className="font-black text-gray-800 tracking-tight text-sm truncate">{project.name}</p>
- <p className="text-[10px] font-bold text-gray-400 mt-1 line-clamp-1 max-w-xs">{project.description || 'Chưa thiết lập đề tài'}</p>
+ <p className="text-[10px] font-bold text-gray-400 mt-1 line-clamp-1 max-w-xs">{project.description || 'ChÆ°a thiáº¿t láº­p Ä‘á» tĂ i'}</p>
  </div>
  </div>
  </td>
@@ -59,7 +59,7 @@ export function ProjectsTable({ projects, onNavigate }) {
  <div className="w-20 h-20 rounded-[32px] bg-gray-50 flex items-center justify-center mx-auto mb-6 shadow-inner border border-gray-100 opacity-50">
  <LayoutGrid size={32} className="text-gray-300" />
  </div>
- <p className="text-[10px] font-black tracking-[0.2em] text-gray-400">Không tìm thấy dự án nào hợp lệ</p>
+ <p className="text-[10px] font-black tracking-[0.2em] text-gray-400">KhĂ´ng tĂ¬m tháº¥y dá»± Ă¡n nĂ o há»£p lá»‡</p>
  </div>
  )}
  </div>
@@ -79,9 +79,4 @@ function StatusPill({ status, label }) {
  </span>
  );
 }
-
-
-
-
-
 

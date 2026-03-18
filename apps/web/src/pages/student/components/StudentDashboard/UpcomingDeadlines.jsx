@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronRight, CheckCircle } from"lucide-react";
+﻿import { CalendarClock, ChevronRight, CheckCircle } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
 import { Button } from"@/components/ui/Button.jsx";
@@ -24,7 +24,7 @@ export function UpcomingDeadlines({ isLoading, upcomingDeadlines, onSeeAll }) {
  <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto shadow-inner border border-emerald-50">
  <CheckCircle size={40} className="text-emerald-500" />
  </div>
- <p className="text-[10px] text-gray-300 font-black italic opacity-60">Không có deadline sắp tới ✔️</p>
+ <p className="text-[10px] text-gray-300 font-black italic opacity-60">KhĂ´ng cĂ³ deadline sáº¯p tá»›i âœ”ï¸</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -49,15 +49,10 @@ export function UpcomingDeadlines({ isLoading, upcomingDeadlines, onSeeAll }) {
  className="w-full h-16 rounded-none text-[10px] font-black tracking-[0.3em] text-gray-400 hover:text-teal-600 hover:bg-teal-50/30 border-t border-gray-50 group font-display transition-all" 
  onClick={onSeeAll}
  >
- Xem tất cả SRS Center <ChevronRight size={14} className="ml-2 group-hover:translate-x-2 transition-transform" />
+ Xem táº¥t cáº£ SRS Center <ChevronRight size={14} className="ml-2 group-hover:translate-x-2 transition-transform" />
  </Button>
  </CardContent>
  </Card>
  );
 }
-
-
-
-
-
 

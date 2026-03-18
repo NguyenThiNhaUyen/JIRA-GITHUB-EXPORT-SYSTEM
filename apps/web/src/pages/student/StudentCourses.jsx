@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { BookOpen, Target, Users, Activity, FolderKanban, ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { useGetCourses } from "@/features/courses/hooks/useCourses.js";
@@ -24,9 +24,9 @@ export default function StudentCoursesPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <PageHeader 
-                title="Khóa học của tôi"
-                subtitle="Danh sách các lớp học phần bạn đang tham gia trong học kỳ này."
-                breadcrumb={["Sinh viên", "Lớp học"]}
+                title="KhĂ³a há»c cá»§a tĂ´i"
+                subtitle="Danh sĂ¡ch cĂ¡c lá»›p há»c pháº§n báº¡n Ä‘ang tham gia trong há»c ká»³ nĂ y."
+                breadcrumb={["Sinh viĂªn", "Lá»›p há»c"]}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -38,9 +38,9 @@ export default function StudentCoursesPage() {
                     </>
                 ) : (
                     <>
-                        <StatsCard label="Tổng số lớp" value={coursesList.length} icon={BookOpen} variant="info" />
-                        <StatsCard label="Đang hoạt động" value={coursesList.filter(c => c.status === 'ACTIVE').length} icon={Target} variant="success" />
-                        <StatsCard label="Dự án nhóm" value={projectsList.length} icon={Users} variant="warning" />
+                        <StatsCard label="Tá»•ng sá»‘ lá»›p" value={coursesList.length} icon={BookOpen} variant="info" />
+                        <StatsCard label="Äang hoáº¡t Ä‘á»™ng" value={coursesList.filter(c => c.status === 'ACTIVE').length} icon={Target} variant="success" />
+                        <StatsCard label="Dá»± Ă¡n nhĂ³m" value={projectsList.length} icon={Users} variant="warning" />
                     </>
                 )}
             </div>
@@ -54,7 +54,7 @@ export default function StudentCoursesPage() {
                     <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-200">
                         <BookOpen size={40} />
                     </div>
-                    <p className="text-[10px] font-black text-gray-300">Bạn chưa được đăng ký lớp nào</p>
+                    <p className="text-[10px] font-black text-gray-300">Báº¡n chÆ°a Ä‘Æ°á»£c Ä‘Äƒng kĂ½ lá»›p nĂ o</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,7 +73,7 @@ export default function StudentCoursesPage() {
                                         <p className="text-[10px] font-black text-teal-600 bg-teal-50 px-4 py-1.5 rounded-full inline-block">{c.subject?.code || c.code || "SWD392"}</p>
                                         <h4 className="font-black text-gray-800 text-xl group-hover:text-teal-600 transition-colors leading-tight">{c.name}</h4>
                                         <p className="text-[10px] text-gray-400 font-bold flex items-center gap-2">
-                                            <Users size={12} /> GV: {c.lecturerNames?.join(", ") || "Chưa có GV"}
+                                            <Users size={12} /> GV: {c.lecturerNames?.join(", ") || "ChÆ°a cĂ³ GV"}
                                         </p>
                                     </div>
                                     
@@ -90,7 +90,7 @@ export default function StudentCoursesPage() {
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between opacity-40">
-                                                <p className="text-[10px] font-black text-gray-300 italic">Chưa phân nhóm</p>
+                                                <p className="text-[10px] font-black text-gray-300 italic">ChÆ°a phĂ¢n nhĂ³m</p>
                                                 <ChevronRight size={14} className="text-gray-300" />
                                             </div>
                                         )}
@@ -104,9 +104,4 @@ export default function StudentCoursesPage() {
         </div>
     );
 }
-
-
-
-
-
 

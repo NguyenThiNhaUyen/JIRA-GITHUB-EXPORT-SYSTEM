@@ -1,10 +1,10 @@
-import client from "../../../api/client.js";
+﻿import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
  * GET /api/courses/{courseId}/groups/{groupId}
- * Lấy thông tin chi tiết nhóm theo ID.
- * Nếu BE không có endpoint riêng cho group, dùng project endpoint thay thế.
+ * Láº¥y thĂ´ng tin chi tiáº¿t nhĂ³m theo ID.
+ * Náº¿u BE khĂ´ng cĂ³ endpoint riĂªng cho group, dĂ¹ng project endpoint thay tháº¿.
  */
 export async function getGroupById(groupId) {
     const res = await client.get(`/projects/${groupId}`);
@@ -13,7 +13,7 @@ export async function getGroupById(groupId) {
 
 /**
  * POST /api/projects/{projectId}/github/approve
- * Approve liên kết GitHub cho nhóm
+ * Approve liĂªn káº¿t GitHub cho nhĂ³m
  */
 export async function approveGroupLink(groupId, linkType) {
     const res = await client.post(`/projects/${groupId}/links/${linkType}/approve`);
@@ -22,7 +22,7 @@ export async function approveGroupLink(groupId, linkType) {
 
 /**
  * POST /api/projects/{projectId}/github/reject
- * Reject liên kết GitHub/Jira cho nhóm
+ * Reject liĂªn káº¿t GitHub/Jira cho nhĂ³m
  */
 export async function rejectGroupLink(groupId, linkType) {
     const res = await client.post(`/projects/${groupId}/links/${linkType}/reject`);
@@ -31,15 +31,10 @@ export async function rejectGroupLink(groupId, linkType) {
 
 /**
  * PATCH /api/projects/{projectId}/members/{studentId}/score
- * Cập nhật điểm sinh viên trong nhóm (nếu BE hỗ trợ)
+ * Cáº­p nháº­t Ä‘iá»ƒm sinh viĂªn trong nhĂ³m (náº¿u BE há»— trá»£)
  */
 export async function updateStudentScore(groupId, studentId, score) {
     const res = await client.put(`/projects/${groupId}/students/${studentId}/score`, { score });
     return unwrap(res);
 }
-
-
-
-
-
 

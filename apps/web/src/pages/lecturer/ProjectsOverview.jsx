@@ -1,4 +1,4 @@
-import {
+﻿import {
  GitBranch,
  Activity,
  Search,
@@ -49,9 +49,9 @@ export default function ProjectsOverview() {
  return (
  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
- title="Tổng quan Dự án"
- subtitle="Quản lý tiến độ, tích hợp và hoạt động của tất cả các nhóm dự án."
- breadcrumb={["Giảng viên","Dự án"]}
+ title="Tá»•ng quan Dá»± Ă¡n"
+ subtitle="Quáº£n lĂ½ tiáº¿n Ä‘á»™, tĂ­ch há»£p vĂ  hoáº¡t Ä‘á»™ng cá»§a táº¥t cáº£ cĂ¡c nhĂ³m dá»± Ă¡n."
+ breadcrumb={["Giáº£ng viĂªn","Dá»± Ă¡n"]}
  actions={[
  <Button
  key="refresh"
@@ -59,16 +59,16 @@ export default function ProjectsOverview() {
  className="rounded-2xl border-gray-200 h-11 px-6 text-[10px] font-black hover:bg-gray-50 shadow-sm"
  onClick={() => refetch()}
  >
- <RefreshCw size={14} className="mr-2" /> Làm mới dữ liệu
+ <RefreshCw size={14} className="mr-2" /> LĂ m má»›i dá»¯ liá»‡u
  </Button>
  ]}
  />
 
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
- <StatsCard label="Tổng nhóm" value={stats.total} icon={Users} variant="info" />
- <StatsCard label="Sync thành công" value={stats.success} icon={GitBranch} variant="success" />
- <StatsCard label="Lỗi kết nối" value={stats.error} icon={AlertTriangle} variant="danger" />
- <StatsCard label="Đang hoạt động" value={stats.active} icon={Activity} variant="indigo" />
+ <StatsCard label="Tá»•ng nhĂ³m" value={stats.total} icon={Users} variant="info" />
+ <StatsCard label="Sync thĂ nh cĂ´ng" value={stats.success} icon={GitBranch} variant="success" />
+ <StatsCard label="Lá»—i káº¿t ná»‘i" value={stats.error} icon={AlertTriangle} variant="danger" />
+ <StatsCard label="Äang hoáº¡t Ä‘á»™ng" value={stats.active} icon={Activity} variant="indigo" />
  </div>
 
  <Card className="border border-gray-100 shadow-sm rounded-[32px] overflow-hidden bg-white">
@@ -76,7 +76,7 @@ export default function ProjectsOverview() {
  <div className="relative w-full md:w-96">
  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
  <input
- placeholder="Tìm kiếm dự án, nhóm..."
+ placeholder="TĂ¬m kiáº¿m dá»± Ă¡n, nhĂ³m..."
  value={search}
  onChange={e => setSearch(e.target.value)}
  className="w-full h-11 pl-11 pr-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 outline-none transition-all shadow-sm"
@@ -84,9 +84,9 @@ export default function ProjectsOverview() {
  </div>
  <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 font-sans">
  {[
- { id: 'all', label: 'Tất cả' },
- { id: 'error', label: 'Lỗi đồng bộ' },
- { id: 'active', label: 'Đang chạy' }
+ { id: 'all', label: 'Táº¥t cáº£' },
+ { id: 'error', label: 'Lá»—i Ä‘á»“ng bá»™' },
+ { id: 'active', label: 'Äang cháº¡y' }
  ].map(f => (
  <button
  key={f.id}
@@ -110,9 +110,4 @@ export default function ProjectsOverview() {
  </div>
  );
 }
-
-
-
-
-
 

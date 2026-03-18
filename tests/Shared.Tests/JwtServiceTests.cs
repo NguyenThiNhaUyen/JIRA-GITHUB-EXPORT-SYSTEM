@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -34,16 +34,16 @@ namespace Shared.Tests.Identity
         public void GenerateToken_ValidUser_ReturnsValidJwtString()
         {
             // Arrange
-            var testUser = new user
+            var testUser = new User
             {
-                id = 1,
-                email = "test@example.com",
-                full_name = "Test User"
+                Id = 1,
+                Email = "test@example.com",
+                FullName = "Test User"
             };
-            var roles = new List<string> { "Admin", "User" };
+            var Roles = new List<string> { "Admin", "User" };
 
             // Act
-            var tokenString = _jwtService.GenerateToken(testUser, roles);
+            var tokenString = _jwtService.GenerateToken(testUser, Roles);
 
             // Assert
             Assert.False(string.IsNullOrEmpty(tokenString));
@@ -54,7 +54,7 @@ namespace Shared.Tests.Identity
             var token = handler.ReadJwtToken(tokenString);
             Assert.Equal(_jwtSettings.Issuer, token.Issuer);
             Assert.Equal(_jwtSettings.Audience, token.Audiences.First());
-            Assert.Contains(token.Claims, c => c.Type == "email" && c.Value == testUser.email);
+            Assert.Contains(token.Claims, c => c.Type == "Email" && c.Value == testUser.Email);
             Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "ADMIN");
         }
 
@@ -62,13 +62,13 @@ namespace Shared.Tests.Identity
         public void ValidateToken_WithValidToken_ReturnsClaimsPrincipal()
         {
             // Arrange
-            var testUser = new user
+            var testUser = new User
             {
-                id = 1,
-                email = "test@example.com"
+                Id = 1,
+                Email = "test@example.com"
             };
-            var roles = new List<string> { "User" };
-            var tokenString = _jwtService.GenerateToken(testUser, roles);
+            var Roles = new List<string> { "User" };
+            var tokenString = _jwtService.GenerateToken(testUser, Roles);
 
             // Act
             var principal = _jwtService.ValidateToken(tokenString);
@@ -76,7 +76,7 @@ namespace Shared.Tests.Identity
             // Assert
             Assert.NotNull(principal);
             Assert.True(principal.Identity?.IsAuthenticated);
-            Assert.Equal(testUser.email, principal.FindFirst(ClaimTypes.Email)?.Value);
+            Assert.Equal(testUser.Email, principal.FindFirst(ClaimTypes.Email)?.Value);
         }
 
         [Fact]
@@ -105,7 +105,7 @@ namespace Shared.Tests.Identity
             };
             var expiredJwtService = new JwtService(Options.Create(expiredSettings));
             
-            var testUser = new user { id = 1, email = "test@example.com" };
+            var testUser = new User { Id = 1, Email = "test@example.com" };
             var tokenString = expiredJwtService.GenerateToken(testUser, new List<string>());
 
             // Act
@@ -116,3 +116,4 @@ namespace Shared.Tests.Identity
         }
     }
 }
+

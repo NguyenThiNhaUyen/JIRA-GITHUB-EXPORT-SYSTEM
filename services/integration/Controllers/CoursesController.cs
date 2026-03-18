@@ -1,4 +1,4 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
+﻿using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
 using JiraGithubExport.Shared.Contracts.Common;
 using JiraGithubExport.Shared.Contracts.Requests.Courses;
@@ -12,7 +12,7 @@ namespace JiraGithubExport.IntegrationService.Controllers;
 [ApiController]
 [Route("api/courses")]
 [Authorize]
-public class CoursesController : ControllerBase
+public class CoursesController : ApiControllerBase
 {
     private readonly ICourseService _courseService;
     private readonly ILogger<CoursesController> _logger;
@@ -23,21 +23,14 @@ public class CoursesController : ControllerBase
         _logger = logger;
     }
 
-    private long GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return long.Parse(userIdClaim!);
-    }
 
-    /// <summary>
-    /// Get all courses (Filtered by role: Admin gets all, others get theirs)
-    /// </summary>
+
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<CourseDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] PagedRequest request)
     {
         var userId = GetCurrentUserId();
-        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+        var userRole = GetCurrentUserRole();
 
         PagedResponse<CourseDetailResponse> result;
 
@@ -155,7 +148,7 @@ public class CoursesController : ControllerBase
         {
             var errorMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             _logger.LogError(ex, "[Import] FAILED for course {CourseId}: {Message} | Inner: {InnerMessage}", id, ex.Message, errorMessage);
-            return StatusCode(500, new { error = ex.GetType().Name, message = errorMessage, detail = ex.StackTrace });
+            return StatusCode(500, ApiResponse.ErrorResponse(errorMessage));
         }
     }
 
@@ -195,3 +188,4 @@ public class CoursesController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { }, "Student removed from course"));
     }
 }
+

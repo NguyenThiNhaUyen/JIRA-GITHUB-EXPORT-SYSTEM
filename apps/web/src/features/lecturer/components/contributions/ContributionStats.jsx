@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { GitBranch, Users, Target, GitPullRequest, ShieldAlert } from "lucide-react";
 import { StatsCard } from "@/components/shared/StatsCard.jsx";
 
@@ -13,19 +13,19 @@ export function ContributionStats({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
       <StatsCard
-        label="Tổng commits"
+        label="Tá»•ng commits"
         value={totalCommits}
         icon={GitBranch}
         variant="indigo"
       />
       <StatsCard
-        label="Sinh viên tích cực"
+        label="Sinh viĂªn tĂ­ch cá»±c"
         value={activeStudents}
         icon={Users}
         variant="success"
       />
       <StatsCard
-        label="Điểm trung bình"
+        label="Äiá»ƒm trung bĂ¬nh"
         value={`${avgScore}/100`}
         icon={Target}
         variant="info"
@@ -38,7 +38,7 @@ export function ContributionStats({
         trend={Math.round((totalReviews / (totalPRs || 1)) * 100)}
       />
       <StatsCard
-        label="Nhóm rủi ro"
+        label="NhĂ³m rá»§i ro"
         value={riskGroupsCount}
         icon={ShieldAlert}
         variant="warning"
@@ -46,9 +46,4 @@ export function ContributionStats({
     </div>
   );
 }
-
-
-
-
-
 

@@ -1,39 +1,53 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using JiraGithubExport.Shared.Infrastructure.Persistence;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
 using JiraGithubExport.Shared.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
 
-public class CourseRepository : GenericRepository<course>, ICourseRepository
+public class CourseRepository : GenericRepository<Course>, ICourseRepository
 {
     public CourseRepository(JiraGithubToolDbContext context) : base(context)
     {
     }
 
-    public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesAsync(string? keyword, string? sortDir, int page, int pageSize)
+    private IQueryable<Course> CreatePagedQuery(string? keyword, bool asNoTracking)
     {
-        var query = _dbSet.AsQueryable();
+        var query = Query(asNoTracking);
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => (c.course_name ?? "").ToLower().Contains(lowerKeyword) || 
-                                     (c.course_code ?? "").ToLower().Contains(lowerKeyword));
+            query = query.Where(c => (c.CourseName ?? "").ToLower().Contains(lowerKeyword) || 
+                                     (c.CourseCode ?? "").ToLower().Contains(lowerKeyword));
         }
+        
+        return query;
+    }
 
-        if (sortDir?.ToLower() == "desc")
-            query = query.OrderByDescending(x => x.created_at);
-        else
-            query = query.OrderBy(x => x.created_at);
+    private IQueryable<Course> ApplySorting(IQueryable<Course> query, string? sortDir)
+    {
+        return sortDir?.ToLower() == "desc" 
+            ? query.OrderByDescending(x => x.CreatedAt) 
+            : query.OrderBy(x => x.CreatedAt);
+    }
+
+    public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedCoursesAsync(string? keyword, string? sortDir, int page, int pageSize, bool asNoTracking = true)
+    {
+        var query = CreatePagedQuery(keyword, asNoTracking);
+        query = ApplySorting(query, sortDir);
 
         var totalItems = await query.CountAsync();
         var items = await query
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects)
-            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+            .Include(c => c.Subject)
+            .Include(c => c.Semester)
+            .Include(c => c.LecturerUsers).ThenInclude(l => l.User)
+            .Include(c => c.Projects)
+            .Include(c => c.CourseEnrollments).ThenInclude(e => e.StudentUser).ThenInclude(s => s.User)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -41,29 +55,20 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         return (items, totalItems);
     }
 
-    public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesByLecturerAsync(long lecturerUserId, string? keyword, string? sortDir, int page, int pageSize)
+    public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedCoursesByLecturerAsync(long lecturerUserId, string? keyword, string? sortDir, int page, int pageSize, bool asNoTracking = true)
     {
-        var query = _dbSet.Where(c => c.lecturer_users.Any(l => l.user_id == lecturerUserId));
+        var query = CreatePagedQuery(keyword, asNoTracking)
+            .Where(c => c.LecturerUsers.Any(l => l.UserId == lecturerUserId));
 
-        if (!string.IsNullOrWhiteSpace(keyword))
-        {
-            var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => (c.course_name ?? "").ToLower().Contains(lowerKeyword) || 
-                                     (c.course_code ?? "").ToLower().Contains(lowerKeyword));
-        }
-
-        if (sortDir?.ToLower() == "desc")
-            query = query.OrderByDescending(x => x.created_at);
-        else
-            query = query.OrderBy(x => x.created_at);
+        query = ApplySorting(query, sortDir);
 
         var totalItems = await query.CountAsync();
         var items = await query
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects)
-            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+            .Include(c => c.Subject)
+            .Include(c => c.Semester)
+            .Include(c => c.LecturerUsers).ThenInclude(l => l.User)
+            .Include(c => c.Projects)
+            .Include(c => c.CourseEnrollments).ThenInclude(e => e.StudentUser).ThenInclude(s => s.User)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -71,29 +76,20 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         return (items, totalItems);
     }
 
-    public async Task<(IEnumerable<course> Items, int TotalCount)> GetPagedCoursesByStudentAsync(long studentUserId, string? keyword, string? sortDir, int page, int pageSize)
+    public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedCoursesByStudentAsync(long studentUserId, string? keyword, string? sortDir, int page, int pageSize, bool asNoTracking = true)
     {
-        var query = _dbSet.Where(c => c.course_enrollments.Any(e => e.student_user_id == studentUserId && e.status == "ACTIVE"));
+        var query = CreatePagedQuery(keyword, asNoTracking)
+            .Where(c => c.CourseEnrollments.Any(e => e.StudentUserId == studentUserId && e.Status == "ACTIVE"));
 
-        if (!string.IsNullOrWhiteSpace(keyword))
-        {
-            var lowerKeyword = keyword.ToLower();
-            query = query.Where(c => (c.course_name ?? "").ToLower().Contains(lowerKeyword) || 
-                                     (c.course_code ?? "").ToLower().Contains(lowerKeyword));
-        }
-
-        if (sortDir?.ToLower() == "desc")
-            query = query.OrderByDescending(x => x.created_at);
-        else
-            query = query.OrderBy(x => x.created_at);
+        query = ApplySorting(query, sortDir);
 
         var totalItems = await query.CountAsync();
         var items = await query
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects)
-            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+            .Include(c => c.Subject)
+            .Include(c => c.Semester)
+            .Include(c => c.LecturerUsers).ThenInclude(l => l.User)
+            .Include(c => c.Projects)
+            .Include(c => c.CourseEnrollments).ThenInclude(e => e.StudentUser).ThenInclude(s => s.User)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -101,3 +97,4 @@ public class CourseRepository : GenericRepository<course>, ICourseRepository
         return (items, totalItems);
     }
 }
+

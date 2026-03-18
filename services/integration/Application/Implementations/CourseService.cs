@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
@@ -22,7 +22,7 @@ public class CourseService : ICourseService
     private readonly ILogger<CourseService> _logger;
     private readonly JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher _passwordHasher;
     private readonly IHubContext<NotificationHub> _hubContext;
-    private readonly IAnalyticsService _analyticsService;
+    private readonly INotificationService _notificationService;
 
     public CourseService(
         IUnitOfWork unitOfWork, 
@@ -30,120 +30,120 @@ public class CourseService : ICourseService
         ILogger<CourseService> logger,
         JiraGithubExport.Shared.Infrastructure.Identity.Interfaces.IPasswordHasher passwordHasher,
         IHubContext<NotificationHub> hubContext,
-        IAnalyticsService analyticsService)
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _passwordHasher = passwordHasher;
         _hubContext = hubContext;
-        _analyticsService = analyticsService;
+        _notificationService = notificationService;
     }
 
 
     // ============================================
-    // COURSE
+    // Course
     // ============================================
 
     public async Task<CourseDetailResponse> CreateCourseAsync(CreateCourseRequest request, long createdByUserId)
     {
-        // Validate semester exists
-        var semester = await _unitOfWork.Semesters.GetByIdAsync(request.SemesterId);
-        if (semester == null)
+        // Validate Semester exists
+        var Semester = await _unitOfWork.Semesters.GetByIdAsync(request.SemesterId);
+        if (Semester == null)
         {
             throw new NotFoundException("Semester not found");
         }
 
-        // Validate subject exists
-        var subject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
-        if (subject == null)
+        // Validate Subject exists
+        var Subject = await _unitOfWork.Subjects.GetByIdAsync(request.SubjectId);
+        if (Subject == null)
         {
             throw new NotFoundException("Subject not found");
         }
 
-        // Check duplicate course code in same semester and subject
+        // Check duplicate Course code in same Semester and Subject
         var existing = await _unitOfWork.Courses.FirstOrDefaultAsync(c =>
-            c.semester_id == request.SemesterId &&
-            c.subject_id == request.SubjectId &&
-            c.course_code == request.CourseCode);
+            c.SemesterId == request.SemesterId &&
+            c.SubjectId == request.SubjectId &&
+            c.CourseCode == request.CourseCode);
 
         if (existing != null)
         {
-            throw new BusinessException("Course with this code already exists in the selected semester and subject");
+            throw new BusinessException("Course with this code already exists in the selected Semester and Subject");
         }
 
-        var course = new course
+        var Course = new Course
         {
-            subject_id = request.SubjectId,
-            semester_id = request.SemesterId,
-            course_code = request.CourseCode,
-            course_name = request.CourseName,
-            max_students = request.MaxStudents,
-            status = request.Status,
-            created_by_user_id = createdByUserId,
-            created_at = DateTime.UtcNow,
-            updated_at = DateTime.UtcNow
+            SubjectId = request.SubjectId,
+            SemesterId = request.SemesterId,
+            CourseCode = request.CourseCode,
+            CourseName = request.CourseName,
+            MaxStudents = request.MaxStudents ?? 0,
+            Status = request.Status,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        _unitOfWork.Courses.Add(course);
+        _unitOfWork.Courses.Add(Course);
         await _unitOfWork.SaveChangesAsync();
 
         // Reload with navigation properties
         var createdCourse = await _unitOfWork.Courses
-            .FirstOrDefaultAsync(c => c.id == course.id);
+            .FirstOrDefaultAsync(c => c.Id == Course.Id);
 
         return _mapper.Map<CourseDetailResponse>(createdCourse);
     }
 
     public async Task<CourseDetailResponse> UpdateCourseAsync(long courseId, UpdateCourseRequest request)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-        if (course == null) throw new NotFoundException("Course not found");
+        var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+        if (Course == null) throw new NotFoundException("Course not found");
 
-        course.course_name = request.CourseName;
-        course.updated_at = DateTime.UtcNow;
+        Course.CourseName = request.CourseName;
+        Course.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Courses.Update(course);
+        _unitOfWork.Courses.Update(Course);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<CourseDetailResponse>(course);
+        return _mapper.Map<CourseDetailResponse>(Course);
     }
 
     public async Task DeleteCourseAsync(long courseId)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-        if (course == null) throw new NotFoundException("Course not found");
+        var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+        if (Course == null) throw new NotFoundException("Course not found");
 
         // Consider real cascade delete if needed or validation before delete
-        _unitOfWork.Courses.Remove(course);
+        _unitOfWork.Courses.Remove(Course);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
-        var course = await _unitOfWork.Courses.Query()
+        var Course = await _unitOfWork.Courses.Query()
             .AsNoTracking()
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects).ThenInclude(p => p.project_integration)
-            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
-            .FirstOrDefaultAsync(c => c.id == courseId);
+            .Include(c => c.Subject)
+            .Include(c => c.Semester)
+            .Include(c => c.LecturerUsers).ThenInclude(l => l.User)
+            .Include(c => c.Projects).ThenInclude(p => p.ProjectIntegration)
+            .Include(c => c.CourseEnrollments).ThenInclude(e => e.StudentUser).ThenInclude(s => s.User)
+            .FirstOrDefaultAsync(c => c.Id == courseId);
 
-        if (course == null)
+        if (Course == null)
         {
             throw new NotFoundException("Course not found");
         }
 
-        var response = _mapper.Map<CourseDetailResponse>(course);
+        var response = _mapper.Map<CourseDetailResponse>(Course);
         
         // Manual mapping for groups with clear status
-        response.Groups = (course.projects ?? new List<project>()).Select(p => new CourseGroupInfo
+        response.Groups = (Course.Projects ?? new List<Project>()).Select(p => new CourseGroupInfo
         {
-            Id = p.id,
-            Name = p.name,
-            GithubStatus = p.project_integration?.approval_status ?? "NONE",
-            JiraStatus = p.project_integration?.approval_status ?? "NONE"
+            Id = p.Id,
+            Name = p.Name,
+            GithubStatus = p.ProjectIntegration?.ApprovalStatus ?? "NONE",
+            JiraStatus = p.ProjectIntegration?.ApprovalStatus ?? "NONE"
         }).ToList();
 
         return response;
@@ -164,14 +164,14 @@ public class CourseService : ICourseService
 
     public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request)
     {
-        var lecturer = await _unitOfWork.Lecturers.Query()
-            .Include(l => l.courses)
-            .FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
+        var Lecturer = await _unitOfWork.Lecturers.Query()
+            .Include(l => l.Courses)
+            .FirstOrDefaultAsync(l => l.UserId == lecturerUserId);
 
-        // Return empty list instead of 404/500 if lecturer profile not created yet
-        if (lecturer == null)
+        // Return empty list instead of 404/500 if Lecturer profile not created yet
+        if (Lecturer == null)
         {
-            _logger.LogWarning("No lecturer profile found for user {UserId}. Returning empty list.", lecturerUserId);
+            _logger.LogWarning("No Lecturer profile found for User {UserId}. Returning empty list.", lecturerUserId);
             return new PagedResponse<CourseDetailResponse>(new List<CourseDetailResponse>(), 0, request.Page, request.PageSize);
         }
 
@@ -189,11 +189,11 @@ public class CourseService : ICourseService
 
     public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request)
     {
-        var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == studentUserId);
-        // Return empty list instead of 404/500 if student profile not created yet
-        if (student == null)
+        var Student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.UserId == studentUserId);
+        // Return empty list instead of 404/500 if Student profile not created yet
+        if (Student == null)
         {
-            _logger.LogWarning("No student profile found for user {UserId}. Returning empty list.", studentUserId);
+            _logger.LogWarning("No Student profile found for User {UserId}. Returning empty list.", studentUserId);
             return new PagedResponse<CourseDetailResponse>(new List<CourseDetailResponse>(), 0, request.Page, request.PageSize);
         }
 
@@ -210,89 +210,89 @@ public class CourseService : ICourseService
     }
 
     // ============================================
-    // ASSIGN LECTURER
+    // ASSIGN Lecturer
     // ============================================
 
     public async Task AssignLecturerAsync(long courseId, long lecturerUserId)
     {
-        var course = await _unitOfWork.Courses.Query()
-            .Include(c => c.lecturer_users)
-            .FirstOrDefaultAsync(c => c.id == courseId);
+        var Course = await _unitOfWork.Courses.Query()
+            .Include(c => c.LecturerUsers)
+            .FirstOrDefaultAsync(c => c.Id == courseId);
 
-        if (course == null)
+        if (Course == null)
         {
             throw new NotFoundException("Course not found");
         }
 
-        var lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
-        if (lecturer == null)
+        var Lecturer = await _unitOfWork.Lecturers.FirstOrDefaultAsync(l => l.UserId == lecturerUserId);
+        if (Lecturer == null)
         {
-            throw new NotFoundException($"Lecturer with UserID {lecturerUserId} not found in lecturers table");
+            throw new NotFoundException($"Lecturer with UserID {lecturerUserId} not found in Lecturers table");
         }
 
         // Check if already assigned
-        if (course.lecturer_users.Any(l => l.user_id == lecturerUserId))
+        if (Course.LecturerUsers.Any(l => l.UserId == lecturerUserId))
         {
-            throw new BusinessException("Lecturer already assigned to this course");
+            throw new BusinessException("Lecturer already assigned to this Course");
         }
 
-        course.lecturer_users.Add(lecturer);
+        Course.LecturerUsers.Add(Lecturer);
         
-        // Add Audit Log for notification bell
-        var auditLog = new audit_log
+        // Add Audit Log for Notification bell
+        var auditLog = new AuditLog
         {
-            performed_by_user_id = lecturerUserId, // Technically performed by Admin, but we associate with Lecturer to show in their bell
-            entity_type = "COURSE",
-            entity_id = courseId,
-            action = "ASSIGN_LECTURER",
-            timestamp = DateTime.UtcNow
+            PerformedByUserId = lecturerUserId, // Technically performed by Admin, but we associate with Lecturer to show in their bell
+            EntityType = "Course",
+            EntityId = courseId,
+            Action = "ASSIGN_LECTURER",
+            Timestamp = DateTime.UtcNow
         };
         _unitOfWork.AuditLogs.Add(auditLog);
         
         await _unitOfWork.SaveChangesAsync();
 
-        // Send Real-time notification via NEW system
+        // Send Real-time Notification via NEW system
         try
         {
-            await _analyticsService.BuildNotificationAsync(
+            await _notificationService.BuildNotificationAsync(
                 lecturerUserId, 
                 "SYSTEM", 
-                $"Bạn đã được phân công vào lớp học {course.course_code} - {course.course_name}",
-                System.Text.Json.JsonSerializer.Serialize(new { entityId = courseId, entityType = "COURSE" })
+                $"Bạn đã được phân công vào lớp học {Course.CourseCode} - {Course.CourseName}",
+                System.Text.Json.JsonSerializer.Serialize(new { entityId = courseId, entityType = "Course" })
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send real-time notification to lecturer {LecturerId}", lecturerUserId);
+            _logger.LogError(ex, "Failed to send real-time Notification to Lecturer {LecturerId}", lecturerUserId);
         }
 
-        _logger.LogInformation("Lecturer {LecturerId} assigned to course {CourseId}", lecturerUserId, courseId);
+        _logger.LogInformation("Lecturer {LecturerId} assigned to Course {CourseId}", lecturerUserId, courseId);
     }
 
     public async Task RemoveLecturerAsync(long courseId, long lecturerUserId)
     {
-        var course = await _unitOfWork.Courses.Query()
-            .Include(c => c.lecturer_users)
-            .FirstOrDefaultAsync(c => c.id == courseId);
+        var Course = await _unitOfWork.Courses.Query()
+            .Include(c => c.LecturerUsers)
+            .FirstOrDefaultAsync(c => c.Id == courseId);
             
-        if (course == null) throw new NotFoundException("Course not found");
+        if (Course == null) throw new NotFoundException("Course not found");
 
-        var lecturer = course.lecturer_users.FirstOrDefault(l => l.user_id == lecturerUserId);
-        if (lecturer == null) throw new NotFoundException("Lecturer is not assigned to this course");
+        var Lecturer = Course.LecturerUsers.FirstOrDefault(l => l.UserId == lecturerUserId);
+        if (Lecturer == null) throw new NotFoundException("Lecturer is not assigned to this Course");
 
-        course.lecturer_users.Remove(lecturer);
+        Course.LecturerUsers.Remove(Lecturer);
         await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Lecturer {LecturerId} removed from course {CourseId}", lecturerUserId, courseId);
+        _logger.LogInformation("Lecturer {LecturerId} removed from Course {CourseId}", lecturerUserId, courseId);
     }
 
     // ============================================
-    // ENROLL STUDENTS
+    // ENROLL Students
     // ============================================
 
     public async Task<EnrollmentResult> EnrollStudentsAsync(long courseId, List<long> studentUserIds)
     {
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-        if (course == null)
+        var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+        if (Course == null)
         {
             throw new NotFoundException("Course not found");
         }
@@ -303,23 +303,23 @@ public class CourseService : ICourseService
             Failed = new List<EnrollmentFailure>()
         };
 
-        // Fetch students in bulk
+        // Fetch Students in bulk
         var studentsMap = await _unitOfWork.Students.Query()
-            .Where(s => studentUserIds.Contains(s.user_id))
-            .ToDictionaryAsync(s => s.user_id, s => s);
+            .Where(s => studentUserIds.Contains(s.UserId))
+            .ToDictionaryAsync(s => s.UserId, s => s);
 
         // Fetch existing enrollments in bulk
         var existingEnrollmentsMap = await _unitOfWork.CourseEnrollments.Query()
-            .Where(e => e.course_id == courseId && studentUserIds.Contains(e.student_user_id))
-            .ToDictionaryAsync(e => e.student_user_id, e => e);
+            .Where(e => e.CourseId == courseId && studentUserIds.Contains(e.StudentUserId))
+            .ToDictionaryAsync(e => e.StudentUserId, e => e);
 
         foreach (var studentUserId in studentUserIds)
         {
             try
             {
-                // Check if student exists in bulk memory map or missing
-                var student = studentsMap.GetValueOrDefault(studentUserId);
-                if (student == null)
+                // Check if Student exists in bulk memory map or missing
+                var Student = studentsMap.GetValueOrDefault(studentUserId);
+                if (Student == null)
                 {
                     result.Failed.Add(new EnrollmentFailure
                     {
@@ -334,32 +334,32 @@ public class CourseService : ICourseService
 
                 if (existingEnrollment != null)
                 {
-                    if (existingEnrollment.status == "ACTIVE")
+                    if (existingEnrollment.Status == "ACTIVE")
                     {
                         result.Failed.Add(new EnrollmentFailure
                         {
                             StudentUserId = studentUserId,
-                            Reason = "Student already enrolled in this course"
+                            Reason = "Student already enrolled in this Course"
                         });
                         continue;
                     }
                     else
                     {
                         // Reactivate enrollment
-                        existingEnrollment.status = "ACTIVE";
-                        existingEnrollment.enrolled_at = DateTime.UtcNow;
+                        existingEnrollment.Status = "ACTIVE";
+                        existingEnrollment.EnrolledAt = DateTime.UtcNow;
                         _unitOfWork.CourseEnrollments.Update(existingEnrollment);
                     }
                 }
                 else
                 {
                     // Create new enrollment
-                    var enrollment = new course_enrollment
+                    var enrollment = new CourseEnrollment
                     {
-                        course_id = courseId,
-                        student_user_id = studentUserId,
-                        status = "ACTIVE",
-                        enrolled_at = DateTime.UtcNow
+                        CourseId = courseId,
+                        StudentUserId = studentUserId,
+                        Status = "ACTIVE",
+                        EnrolledAt = DateTime.UtcNow
                     };
 
                     _unitOfWork.CourseEnrollments.Add(enrollment);
@@ -369,7 +369,7 @@ public class CourseService : ICourseService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to enroll student {StudentId} to course {CourseId}", studentUserId, courseId);
+                _logger.LogError(ex, "Failed to enroll Student {StudentId} to Course {CourseId}", studentUserId, courseId);
                 result.Failed.Add(new EnrollmentFailure
                 {
                     StudentUserId = studentUserId,
@@ -386,20 +386,20 @@ public class CourseService : ICourseService
     public async Task RemoveStudentAsync(long courseId, long studentUserId)
     {
         var enrollment = await _unitOfWork.CourseEnrollments.Query()
-            .FirstOrDefaultAsync(e => e.course_id == courseId && e.student_user_id == studentUserId);
+            .FirstOrDefaultAsync(e => e.CourseId == courseId && e.StudentUserId == studentUserId);
 
-        if (enrollment == null || enrollment.status != "ACTIVE")
+        if (enrollment == null || enrollment.Status != "ACTIVE")
         {
-            throw new NotFoundException("Active enrollment not found for this student in this course");
+            throw new NotFoundException("Active enrollment not found for this Student in this Course");
         }
 
-        enrollment.status = "DROPPED";
+        enrollment.Status = "DROPPED";
         _unitOfWork.CourseEnrollments.Update(enrollment);
         
-        // Optionally remove from projects in this course if needed, but keeping history is usually better
+        // Optionally remove from Projects in this Course if needed, but keeping history is usually better
         var teamMemberships = await _unitOfWork.TeamMembers.Query()
-            .Include(tm => tm.project)
-            .Where(tm => tm.student_user_id == studentUserId && tm.project.course_id == courseId)
+            .Include(tm => tm.Project)
+            .Where(tm => tm.StudentUserId == studentUserId && tm.Project.CourseId == courseId)
             .ToListAsync();
             
         foreach (var membership in teamMemberships)
@@ -408,23 +408,23 @@ public class CourseService : ICourseService
         }
 
         await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Student {StudentId} removed from course {CourseId}", studentUserId, courseId);
+        _logger.LogInformation("Student {StudentId} removed from Course {CourseId}", studentUserId, courseId);
     }
 
     public async Task<object> GetPendingIntegrationsAsync(long courseId)
     {
         var pendingProjects = await _unitOfWork.Courses.Query()
-            .Where(c => c.id == courseId)
-            .SelectMany(c => c.projects)
-            .Where(p => p.project_integration != null && p.project_integration.approval_status == "PENDING")
+            .Where(c => c.Id == courseId)
+            .SelectMany(c => c.Projects)
+            .Where(p => p.ProjectIntegration != null && p.ProjectIntegration.ApprovalStatus == "PENDING")
             .Select(p => new
             {
-                ProjectId = p.id,
-                ProjectName = p.name,
-                p.project_integration!.approval_status,
-                SubmittedAt = p.project_integration.submitted_at,
-                GithubRepoUrl = p.project_integration.github_repo != null ? p.project_integration.github_repo.repo_url : null,
-                JiraProjectKey = p.project_integration.jira_project != null ? p.project_integration.jira_project.jira_project_key : null
+                ProjectId = p.Id,
+                ProjectName = p.Name,
+                p.ProjectIntegration!.ApprovalStatus,
+                SubmittedAt = p.ProjectIntegration.SubmittedAt,
+                GithubRepoUrl = p.ProjectIntegration.GithubRepo != null ? p.ProjectIntegration.GithubRepo.RepoUrl : null,
+                JiraProjectKey = p.ProjectIntegration.JiraProject != null ? p.ProjectIntegration.JiraProject.JiraProjectKey : null
             })
             .ToListAsync();
 
@@ -434,26 +434,27 @@ public class CourseService : ICourseService
     public async Task<PagedResponse<EnrollmentInfo>> GetCourseStudentsAsync(long courseId, int page, int pageSize)
     {
         var query = _unitOfWork.CourseEnrollments.Query()
-            .Include(e => e.student_user).ThenInclude(s => s.user)
-            .Where(e => e.course_id == courseId && e.status == "ACTIVE");
+            .Include(e => e.StudentUser).ThenInclude(s => s.User)
+            .Where(e => e.CourseId == courseId && e.Status == "ACTIVE");
 
         var total = await query.CountAsync();
         page = page > 0 ? page : 1;
         pageSize = pageSize > 0 ? pageSize : 50;
 
         var items = await query
-            .OrderBy(e => e.student_user.user.full_name)
+            .OrderBy(e => e.StudentUser != null && e.StudentUser.User != null ? e.StudentUser.User.FullName : "")
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(e => new EnrollmentInfo
             {
-                UserId = e.student_user_id,
-                FullName = e.student_user.user.full_name,
-                Email = e.student_user.user.email,
-                StudentCode = e.student_user.student_code,
-                StudentId = e.student_user.student_code
+                UserId = e.StudentUserId,
+                FullName = e.StudentUser != null && e.StudentUser.User != null ? e.StudentUser.User.FullName : "N/A",
+                Email = e.StudentUser != null && e.StudentUser.User != null ? e.StudentUser.User.Email : "N/A",
+                StudentCode = e.StudentUser != null ? e.StudentUser.StudentCode : "N/A",
+                StudentId = e.StudentUser != null ? e.StudentUser.StudentCode : "N/A"
             })
             .ToListAsync();
+
 
         return new PagedResponse<EnrollmentInfo>
         {
@@ -470,8 +471,8 @@ public class CourseService : ICourseService
         if (file == null || file.Length == 0)
             throw new BusinessException("No file uploaded");
 
-        var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
-        if (course == null) throw new NotFoundException("Course not found");
+        var Course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
+        if (Course == null) throw new NotFoundException("Course not found");
 
         // ─── BƯỚC 1: ĐỌC FILE EXCEL ─────────────────────────────────────────
         var studentInfos = new List<(string Code, string Name, string Email)>();
@@ -485,99 +486,99 @@ public class CourseService : ICourseService
                 foreach (var row in range.RowsUsed().Skip(1))
                 {
                     var code = row.Cell(1).GetString()?.Trim();
-                    var name = row.Cell(2).GetString()?.Trim();
-                    var email = row.Cell(3).GetString()?.Trim();
-                    if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(email))
-                        studentInfos.Add((code, name ?? "Sinh viên mới", email));
+                    var Name = row.Cell(2).GetString()?.Trim();
+                    var Email = row.Cell(3).GetString()?.Trim();
+                    if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(Email))
+                        studentInfos.Add((code, Name ?? "Sinh viên mới", Email));
                 }
             }
 
             if (!studentInfos.Any())
-                throw new BusinessException("No valid student rows found. Excel must have columns: [StudentCode, FullName, Email]");
+                throw new BusinessException("No valid Student rows found. Excel must have columns: [StudentCode, FullName, Email]");
 
-            var studentRoleId = (await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.role_name == "STUDENT")
-                ?? throw new NotFoundException("Role 'STUDENT' not found")).id;
+            var studentRoleId = (await _unitOfWork.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student")
+                ?? throw new NotFoundException("Role 'Student' not found")).Id;
 
-            // ─── BƯỚC 2: TÌM CÁC USER VÀ STUDENT ĐÃ TỒN TẠI (DỰA TRÊN EMAIL VÀ CODE) ─────────
+            // ─── BƯỚC 2: TÌM CÁC User VÀ Student ĐÃ TỒN TẠI (DỰA TRÊN Email VÀ CODE) ─────────
             var emailsLower = studentInfos.Select(i => i.Email.ToLower()).ToList();
             var studentCodes = studentInfos.Select(i => i.Code).ToList();
 
             var existingUsers = await _unitOfWork.Users.Query()
-                .Include(u => u.student)
-                .Where(u => emailsLower.Contains(u.email.ToLower()))
+                .Include(u => u.Student)
+                .Where(u => emailsLower.Contains(u.Email.ToLower()))
                 .ToListAsync();
 
             var existingStudentsByCode = await _unitOfWork.Students.Query()
-                .Where(s => studentCodes.Contains(s.student_code))
+                .Where(s => studentCodes.Contains(s.StudentCode))
                 .ToListAsync();
 
-            var existingEmailToId = existingUsers.ToDictionary(u => u.email.ToLower(), u => u.id);
-            var existingCodesSet = existingStudentsByCode.Select(s => s.student_code).ToHashSet();
+            var existingEmailToId = existingUsers.ToDictionary(u => u.Email.ToLower(), u => u.Id);
+            var existingCodesSet = existingStudentsByCode.Select(s => s.StudentCode).ToHashSet();
 
             // Những sinh viên CẦN tạo tài khoản mới: Email chưa tồn tại VÀ Student Code cũng chưa tồn tại
             var newUsersToCreate = studentInfos
                 .Where(i => !existingEmailToId.ContainsKey(i.Email.ToLower()) && !existingCodesSet.Contains(i.Code))
                 .ToList();
 
-            // ─── BƯỚC 3: TẠO USER MỚI (không gán role, không gán student) ───────
+            // ─── BƯỚC 3: TẠO User MỚI (không gán Role, không gán Student) ───────
             if (newUsersToCreate.Any())
             {
                 foreach (var info in newUsersToCreate)
                 {
-                    var newUser = new user
+                    var newUser = new User
                     {
-                        email = info.Email,
-                        password = _passwordHasher.HashPassword("Student@123"),
-                        full_name = info.Name,
-                        enabled = true,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
+                        Email = info.Email,
+                        Password = _passwordHasher.HashPassword("Student@123"),
+                        FullName = info.Name,
+                        Enabled = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     };
                     _unitOfWork.Users.Add(newUser);
                 }
 
-                await _unitOfWork.SaveChangesAsync(); // → users.id được sinh ra
+                await _unitOfWork.SaveChangesAsync(); // → Users.Id được sinh ra
 
-                // Lấy lại id của user vừa tạo (chính xác những email vừa nằm trong danh sách tạo mới)
+                // Lấy lại id của User vừa tạo (chính xác những Email vừa nằm trong danh sách tạo mới)
                 var createEmailsList = newUsersToCreate.Select(i => i.Email.ToLower()).ToList();
                 var newlyCreatedUsers = await _unitOfWork.Users.Query()
-                    .Where(u => createEmailsList.Contains(u.email.ToLower()))
+                    .Where(u => createEmailsList.Contains(u.Email.ToLower()))
                     .ToListAsync();
 
                 var roleEntity = await _unitOfWork.Roles.GetByIdAsync(studentRoleId);
 
                 foreach (var createdUser in newlyCreatedUsers)
                 {
-                    if (roleEntity != null) createdUser.roles.Add(roleEntity);
+                    if (roleEntity != null) createdUser.Roles.Add(roleEntity);
 
-                    var info = newUsersToCreate.First(i => i.Email.ToLower() == createdUser.email.ToLower());
-                    _unitOfWork.Students.Add(new student
+                    var info = newUsersToCreate.First(i => i.Email.ToLower() == createdUser.Email.ToLower());
+                    _unitOfWork.Students.Add(new Student
                     {
-                        user_id = createdUser.id,
-                        student_code = info.Code,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
+                        UserId = createdUser.Id,
+                        StudentCode = info.Code,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     });
 
-                    existingEmailToId[createdUser.email.ToLower()] = createdUser.id;
+                    existingEmailToId[createdUser.Email.ToLower()] = createdUser.Id;
                 }
 
-                await _unitOfWork.SaveChangesAsync(); // → lưu roles + students
+                await _unitOfWork.SaveChangesAsync(); // → lưu Roles + Students
             }
 
-            // ─── BƯỚC 4: ĐẢM BẢO USER CŨ CÓ STUDENT RECORD (nếu CHƯA có mã trùng) ────────
-            foreach (var existing in existingUsers.Where(u => u.student == null))
+            // ─── BƯỚC 4: ĐẢM BẢO User CŨ CÓ Student RECORD (nếu CHƯA có mã trùng) ────────
+            foreach (var existing in existingUsers.Where(u => u.Student == null))
             {
-                var info = studentInfos.FirstOrDefault(i => i.Email.ToLower() == existing.email.ToLower());
+                var info = studentInfos.FirstOrDefault(i => i.Email.ToLower() == existing.Email.ToLower());
                 if (info != default && !existingCodesSet.Contains(info.Code))
                 {
-                    // Chỉ tạo student nếu mã số sinh viên này chưa tồn tại ở tài khoản nào khác
-                    _unitOfWork.Students.Add(new student
+                    // Chỉ tạo Student nếu mã số sinh viên này chưa tồn tại ở tài khoản nào khác
+                    _unitOfWork.Students.Add(new Student
                     {
-                        user_id = existing.id,
-                        student_code = info.Code,
-                        created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
+                        UserId = existing.Id,
+                        StudentCode = info.Code,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     });
 
                     // Cập nhật existingCodesSet để tránh bị trùng lặp trong đợt lặp này
@@ -585,15 +586,15 @@ public class CourseService : ICourseService
                 }
             }
 
-            if (existingUsers.Any(u => u.student == null) || newUsersToCreate.Any())
+            if (existingUsers.Any(u => u.Student == null) || newUsersToCreate.Any())
                 await _unitOfWork.SaveChangesAsync();
 
             // ─── BƯỚC 5: GHI DANH VÀO LỚP ──────────────────────────────────────
-            // Lấy Id của cả những user đã có sẵn (khớp qua email) 
-            // VÀ cả những student đã có sẵn trong bảng student (khớp qua code nhưng không khớp email - trường hợp dị biệt)
+            // Lấy Id của cả những User đã có sẵn (khớp qua Email) 
+            // VÀ cả những Student đã có sẵn trong bảng Student (khớp qua code nhưng không khớp Email - trường hợp dị biệt)
             var finalUserIds = new HashSet<long>();
 
-            // Thêm ID từ email matching
+            // Thêm ID từ Email matching
             foreach (var e in emailsLower)
             {
                 if (existingEmailToId.TryGetValue(e, out var id)) finalUserIds.Add(id);
@@ -602,14 +603,15 @@ public class CourseService : ICourseService
             // Thêm ID từ code matching (những người có student_code tồn tại)
             foreach (var c in studentCodes)
             {
-                var studentId = existingStudentsByCode.FirstOrDefault(s => s.student_code == c)?.user_id;
+                var studentId = existingStudentsByCode.FirstOrDefault(s => s.StudentCode == c)?.UserId;
                 if (studentId.HasValue) finalUserIds.Add(studentId.Value);
             }
 
             var finalUserIdsList = finalUserIds.ToList();
 
-            _logger.LogInformation("[Import] Enrolling {Count} students to course {CourseId}", finalUserIdsList.Count, courseId);
+            _logger.LogInformation("[Import] Enrolling {Count} Students to Course {CourseId}", finalUserIdsList.Count, courseId);
             return await EnrollStudentsAsync(courseId, finalUserIdsList);
         }
     }
 }
+

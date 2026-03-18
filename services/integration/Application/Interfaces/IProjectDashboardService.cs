@@ -1,4 +1,4 @@
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
+﻿using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
 namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
@@ -24,3 +24,4 @@ public class CycleTimeBucket
     public string Range { get; set; } = null!;
     public int Count { get; set; }
 }
+

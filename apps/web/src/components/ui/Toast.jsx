@@ -1,4 +1,4 @@
-// Toast Component - For notifications
+﻿// Toast Component - For notifications
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const ToastContext = createContext();
@@ -173,9 +173,4 @@ function ToastItem({ toast, onRemove }) {
     </div>
   );
 }
-
-
-
-
-
 

@@ -1,4 +1,4 @@
-// Commit Frequency Chart - Bar chart
+﻿// Commit Frequency Chart - Bar chart
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer } from "./ChartContainer.jsx";
 
@@ -8,7 +8,7 @@ export function CommitFrequencyChart({ data = [], isLoading, isError }) {
   return (
     <ChartContainer
       title="Commit Frequency"
-      subtitle="Số lượng commits theo ngày"
+      subtitle="Sá»‘ lÆ°á»£ng commits theo ngĂ y"
       isLoading={isLoading}
       isError={isError}
       isEmpty={isEmpty}
@@ -31,11 +31,4 @@ export function CommitFrequencyChart({ data = [], isLoading, isError }) {
     </ChartContainer>
   );
 }
-
-
-
-
-
-
-
 

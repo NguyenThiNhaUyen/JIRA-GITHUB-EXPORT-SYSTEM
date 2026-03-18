@@ -1,8 +1,8 @@
-import client from "../../../api/client.js";
+﻿import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
 /**
- * Tạo báo cáo Commit Statistics
+ * Táº¡o bĂ¡o cĂ¡o Commit Statistics
  */
 export async function generateCommitStats(courseId, format = "PDF") {
     const res = await client.post(`/reports/commit-statistics`, null, {
@@ -12,7 +12,7 @@ export async function generateCommitStats(courseId, format = "PDF") {
 }
 
 /**
- * Tạo báo cáo Team Roster
+ * Táº¡o bĂ¡o cĂ¡o Team Roster
  */
 export async function generateTeamRoster({ projectId, courseId, format = "PDF" }) {
     const res = await client.post(`/reports/team-roster`, null, {
@@ -22,7 +22,7 @@ export async function generateTeamRoster({ projectId, courseId, format = "PDF" }
 }
 
 /**
- * Tạo báo cáo Activity Summary
+ * Táº¡o bĂ¡o cĂ¡o Activity Summary
  */
 export async function generateActivitySummary(projectId, startDate, endDate, format = "PDF") {
     const res = await client.post(`/reports/activity-summary`, null, {
@@ -32,7 +32,7 @@ export async function generateActivitySummary(projectId, startDate, endDate, for
 }
 
 /**
- * Tạo báo cáo SRS
+ * Táº¡o bĂ¡o cĂ¡o SRS
  */
 export async function generateSrs({ projectId, courseId, format = "PDF" }) {
     const res = await client.post(`/reports/srs`, null, {
@@ -42,7 +42,7 @@ export async function generateSrs({ projectId, courseId, format = "PDF" }) {
 }
 
 /**
- * Lấy link tải báo cáo
+ * Láº¥y link táº£i bĂ¡o cĂ¡o
  */
 export async function getReportDownloadLink(reportId) {
     const res = await client.get(`/reports/${reportId}/download-link`);
@@ -50,7 +50,7 @@ export async function getReportDownloadLink(reportId) {
 }
 
 /**
- * Lấy danh sách báo cáo của tôi
+ * Láº¥y danh sĂ¡ch bĂ¡o cĂ¡o cá»§a tĂ´i
  */
 export async function getMyReports() {
     const res = await client.get(`/reports`);
@@ -58,7 +58,7 @@ export async function getMyReports() {
 }
 
 /**
- * Láy báo cáo theo Project/Course và Type
+ * LĂ¡y bĂ¡o cĂ¡o theo Project/Course vĂ  Type
  */
 export async function getReports({ projectId, courseId, type, status, milestone, page = 1, pageSize = 50 }) {
     const res = await client.get(`/reports`, {
@@ -68,15 +68,10 @@ export async function getReports({ projectId, courseId, type, status, milestone,
 }
 
 /**
- * Cập nhật trạng thái báo cáo
+ * Cáº­p nháº­t tráº¡ng thĂ¡i bĂ¡o cĂ¡o
  */
 export async function updateReportStatus(reportId, status) {
     const res = await client.put(`/reports/${reportId}/status`, { status });
     return unwrap(res);
 }
-
-
-
-
-
 

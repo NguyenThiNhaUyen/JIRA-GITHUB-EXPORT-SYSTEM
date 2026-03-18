@@ -1,35 +1,30 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace JiraGithubExport.Shared.Models;
 
-public partial class subject
+public partial class Subject : JiraGithubExport.Shared.Interfaces.ISoftDelete
 {
-    public long id { get; set; }
+    public long Id { get; set; }
 
-    public string subject_code { get; set; } = null!;
+    public string SubjectCode { get; set; } = null!;
 
-    public string subject_name { get; set; } = null!;
+    public string SubjectName { get; set; } = null!;
 
-    public string department { get; set; } = null!;
+    public string Department { get; set; } = null!;
 
-    public string? description { get; set; }
+    public string Description { get; set; }
 
-    public int credits { get; set; } = 3;
+    public int Credits { get; set; } = 3;
 
-    public int max_students { get; set; } = 40;
+    public int MaxStudents { get; set; } = 40;
 
-    public string status { get; set; } = "ACTIVE";
+    public string Status { get; set; } = "ACTIVE";
 
-    public DateTime created_at { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public virtual ICollection<course> courses { get; set; } = new List<course>();
+    public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
+
+    public bool IsDeleted { get; set; }
 }
-
-
-
-
-
-
-
 

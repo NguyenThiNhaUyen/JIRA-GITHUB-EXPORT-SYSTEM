@@ -1,4 +1,4 @@
-import { TrendingUp } from"lucide-react";
+﻿import { TrendingUp } from"lucide-react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from"recharts";
 import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.jsx";
 
@@ -11,8 +11,8 @@ export function ContributionTrends({ chartData }) {
  <TrendingUp size={22} className="text-indigo-600" />
  </div>
  <div>
- <CardTitle className="text-lg font-black text-gray-800 leading-none">Xu hướng Đóng góp</CardTitle>
- <p className="text-[10px] font-bold text-gray-400 mt-2 opacity-70">Thống kê commit theo thời gian thức</p>
+ <CardTitle className="text-lg font-black text-gray-800 leading-none">Xu hÆ°á»›ng ÄĂ³ng gĂ³p</CardTitle>
+ <p className="text-[10px] font-bold text-gray-400 mt-2 opacity-70">Thá»‘ng kĂª commit theo thá»i gian thá»©c</p>
  </div>
  </div>
  </CardHeader>
@@ -47,9 +47,4 @@ export function ContributionTrends({ chartData }) {
  </Card>
  );
 }
-
-
-
-
-
 

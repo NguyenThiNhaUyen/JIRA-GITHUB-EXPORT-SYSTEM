@@ -1,33 +1,33 @@
-import { RefreshCw, Check, Upload, X } from"lucide-react";
+﻿import { RefreshCw, Check, Upload, X } from"lucide-react";
 import { Modal } from"@/components/ui/Interactive.jsx";
 import { InputField, SelectField } from"@/components/shared/FormFields.jsx";
 import { Button } from"@/components/ui/Button.jsx";
 
 export function SubmitSrsModal({ isOpen, onClose, myGroups, selectedProject, setSelectedProject, version, setVersion, isFinal, setIsFinal, file, setFile, isSubmitting, onUpload }) {
  return (
- <Modal isOpen={isOpen} onClose={onClose} title="Nộp Bản đặc tả SRS mới" size="md">
+ <Modal isOpen={isOpen} onClose={onClose} title="Ná»™p Báº£n Ä‘áº·c táº£ SRS má»›i" size="md">
  <div className="space-y-10 p-8 animate-in fade-in zoom-in-95 duration-500">
  <div className="space-y-8">
  <SelectField 
- label="Dự án nhận bản nộp" 
+ label="Dá»± Ă¡n nháº­n báº£n ná»™p" 
  value={selectedProject} 
  onChange={e => setSelectedProject(e.target.value)}
  className="rounded-3xl h-16 text-sm font-bold border-2 border-gray-100 focus:border-teal-500 transition-all shadow-sm"
  >
- <option value="">-- Chọn dự án --</option>
+ <option value="">-- Chá»n dá»± Ă¡n --</option>
  {myGroups.map(p => <option key={p.id} value={p.id}>{p.name} - {p.course?.code}</option>)}
  </SelectField>
 
  <div className="grid grid-cols-2 gap-8">
- <InputField label="Mã phiên bản" value={version} onChange={e => setVersion(e.target.value)} placeholder="VD: 1.0.0" className="rounded-3xl h-16 font-bold" />
+ <InputField label="MĂ£ phiĂªn báº£n" value={version} onChange={e => setVersion(e.target.value)} placeholder="VD: 1.0.0" className="rounded-3xl h-16 font-bold" />
  <SelectField 
- label="Chế độ nộp bài" 
+ label="Cháº¿ Ä‘á»™ ná»™p bĂ i" 
  value={isFinal ?"final" :"draft"} 
  onChange={e => setIsFinal(e.target.value ==="final")}
  className="rounded-3xl h-16 font-bold bg-gray-50/50"
  >
- <option value="draft">Bản nháp (Drafting)</option>
- <option value="final">Chính thức (Finalized)</option>
+ <option value="draft">Báº£n nhĂ¡p (Drafting)</option>
+ <option value="final">ChĂ­nh thá»©c (Finalized)</option>
  </SelectField>
  </div>
 
@@ -43,14 +43,14 @@ export function SubmitSrsModal({ isOpen, onClose, myGroups, selectedProject, set
  {file ? <Check size={32} className="animate-in zoom-in spin-in-45 duration-500"/> : <Upload size={32}/>}
  </div>
  
- <p className="text-xl font-black text-gray-800 tracking-tighter mb-2 font-display">{file ? file.name :"Kéo thả hoặc Chọn file .PDF"}</p>
+ <p className="text-xl font-black text-gray-800 tracking-tighter mb-2 font-display">{file ? file.name :"KĂ©o tháº£ hoáº·c Chá»n file .PDF"}</p>
  <p className="text-[11px] text-gray-400 font-black tracking-[0.3em] opacity-60 flex items-center justify-center gap-3">
  {file ? (
  <>
  <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
  SIze: {(file.size / 1024 / 1024).toFixed(2)} MB
  </>
- ) :"(CHỈ HỖ TRỢ ĐỊNH DẠNG PDF TỐI ĐA 15MB)"}
+ ) :"(CHá»ˆ Há»– TRá»¢ Äá»NH Dáº NG PDF Tá»I ÄA 15MB)"}
  </p>
  </div>
  </div>
@@ -61,23 +61,18 @@ export function SubmitSrsModal({ isOpen, onClose, myGroups, selectedProject, set
  variant="ghost" 
  className="flex-1 rounded-[32px] h-20 text-[12px] font-black tracking-[0.3em] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all font-display"
  >
- Hủy bỏ
+ Há»§y bá»
  </Button>
  <Button 
  onClick={onUpload} 
  disabled={isSubmitting || !file || !selectedProject} 
  className="flex-1 bg-slate-900 hover:bg-black text-white rounded-[32px] h-20 text-[12px] font-black tracking-[0.3em] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.15)] transition-all active:scale-95 disabled:opacity-20 border-0 font-display hover:scale-105"
  >
- {isSubmitting ? <RefreshCw className="animate-spin mr-3" size={24}/> : <Upload size={24} className="mr-3" />} Gửi bản nộp
+ {isSubmitting ? <RefreshCw className="animate-spin mr-3" size={24}/> : <Upload size={24} className="mr-3" />} Gá»­i báº£n ná»™p
  </Button>
  </div>
  </div>
  </Modal>
  );
 }
-
-
-
-
-
 

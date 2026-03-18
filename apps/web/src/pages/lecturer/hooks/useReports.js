@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast.jsx";
 import {
     useGetMyReports,
@@ -19,11 +19,11 @@ import {
 } from "lucide-react";
 
 const EXPORT_TYPES = [
-    { id: "by-course", icon: FileSpreadsheet, color: "bg-teal-500", title: "Báo cáo theo Lớp", desc: "Tổng hợp tiến độ tất cả nhóm trong một lớp học. Bao gồm: số nhóm, trạng thái GitHub/Jira, cảnh báo.", formats: ["PDF", "Excel"] },
-    { id: "by-group", icon: FileText, color: "bg-blue-500", title: "Báo cáo theo Nhóm", desc: "Chi tiết hoạt động từng nhóm: commit, issue, member, deadline.", formats: ["PDF", "Excel"] },
-    { id: "by-student", icon: CheckSquare, color: "bg-indigo-500", title: "Báo cáo theo Sinh viên", desc: "Đóng góp cá nhân: commits, issues, sprint coverage. Phù hợp dùng cho bảng điểm quá trình.", formats: ["PDF", "CSV"] },
-    { id: "by-warning", icon: AlertTriangle, color: "bg-amber-500", title: "Báo cáo Cảnh báo", desc: "Nhóm/SV có rủi ro cao dựa trên phân tích AI/Hệ thống.", formats: ["PDF", "Excel"] },
-    { id: "by-sync", icon: GitBranch, color: "bg-violet-500", title: "Đối chiếu Jira/GH", desc: "Phân tích khớp dữ liệu giữa Task Jira và Code Commits.", formats: ["PDF", "Excel"] }
+    { id: "by-course", icon: FileSpreadsheet, color: "bg-teal-500", title: "BĂ¡o cĂ¡o theo Lá»›p", desc: "Tá»•ng há»£p tiáº¿n Ä‘á»™ táº¥t cáº£ nhĂ³m trong má»™t lá»›p há»c. Bao gá»“m: sá»‘ nhĂ³m, tráº¡ng thĂ¡i GitHub/Jira, cáº£nh bĂ¡o.", formats: ["PDF", "Excel"] },
+    { id: "by-group", icon: FileText, color: "bg-blue-500", title: "BĂ¡o cĂ¡o theo NhĂ³m", desc: "Chi tiáº¿t hoáº¡t Ä‘á»™ng tá»«ng nhĂ³m: commit, issue, member, deadline.", formats: ["PDF", "Excel"] },
+    { id: "by-student", icon: CheckSquare, color: "bg-indigo-500", title: "BĂ¡o cĂ¡o theo Sinh viĂªn", desc: "ÄĂ³ng gĂ³p cĂ¡ nhĂ¢n: commits, issues, sprint coverage. PhĂ¹ há»£p dĂ¹ng cho báº£ng Ä‘iá»ƒm quĂ¡ trĂ¬nh.", formats: ["PDF", "CSV"] },
+    { id: "by-warning", icon: AlertTriangle, color: "bg-amber-500", title: "BĂ¡o cĂ¡o Cáº£nh bĂ¡o", desc: "NhĂ³m/SV cĂ³ rá»§i ro cao dá»±a trĂªn phĂ¢n tĂ­ch AI/Há»‡ thá»‘ng.", formats: ["PDF", "Excel"] },
+    { id: "by-sync", icon: GitBranch, color: "bg-violet-500", title: "Äá»‘i chiáº¿u Jira/GH", desc: "PhĂ¢n tĂ­ch khá»›p dá»¯ liá»‡u giá»¯a Task Jira vĂ  Code Commits.", formats: ["PDF", "Excel"] }
 ];
 
 export function useReports() {
@@ -84,27 +84,27 @@ export function useReports() {
 
     const handleExport = async (format, typeId, typeTitle) => {
         try {
-            info(`Đang yêu cầu tạo file ${format} cho "${typeTitle}"...`);
+            info(`Äang yĂªu cáº§u táº¡o file ${format} cho "${typeTitle}"...`);
             let res;
             if (typeId === "by-course") {
-                if (courseFilter === "all") throw new Error("Vui lòng chọn một lớp cụ thể để xuất báo cáo lớp.");
+                if (courseFilter === "all") throw new Error("Vui lĂ²ng chá»n má»™t lá»›p cá»¥ thá»ƒ Ä‘á»ƒ xuáº¥t bĂ¡o cĂ¡o lá»›p.");
                 res = await commitStatsMutation.mutateAsync({ courseId: courseFilter, format });
             } else if (typeId === "by-group") {
-                if (teamFilter === "all") throw new Error("Vui lòng chọn một nhóm cụ thể để xuất báo cáo nhóm.");
+                if (teamFilter === "all") throw new Error("Vui lĂ²ng chá»n má»™t nhĂ³m cá»¥ thá»ƒ Ä‘á»ƒ xuáº¥t bĂ¡o cĂ¡o nhĂ³m.");
                 res = await teamRosterMutation.mutateAsync({ projectId: teamFilter, format });
             } else if (typeId === "by-sync") {
-                if (teamFilter === "all") throw new Error("Vui lòng chọn một nhóm để đối chiếu.");
+                if (teamFilter === "all") throw new Error("Vui lĂ²ng chá»n má»™t nhĂ³m Ä‘á»ƒ Ä‘á»‘i chiáº¿u.");
                 res = await srsMutation.mutateAsync({ projectId: teamFilter, format });
             } else {
-                success(`Tính năng xuất "${typeTitle}" sẽ sớm khả dụng.`);
+                success(`TĂ­nh nÄƒng xuáº¥t "${typeTitle}" sáº½ sá»›m kháº£ dá»¥ng.`);
                 return;
             }
 
             if (res?.reportId) {
-                success(`Yêu cầu tạo "${typeTitle}" đã được ghi nhận (ID: ${res.reportId}). Vui lòng chờ trong giây lát.`);
+                success(`YĂªu cáº§u táº¡o "${typeTitle}" Ä‘Ă£ Ä‘Æ°á»£c ghi nháº­n (ID: ${res.reportId}). Vui lĂ²ng chá» trong giĂ¢y lĂ¡t.`);
             }
         } catch (err) {
-            showError(err.message || "Lỗi khi tạo báo cáo");
+            showError(err.message || "Lá»—i khi táº¡o bĂ¡o cĂ¡o");
         }
     };
 
@@ -124,9 +124,4 @@ export function useReports() {
         EXPORT_TYPES
     };
 }
-
-
-
-
-
 

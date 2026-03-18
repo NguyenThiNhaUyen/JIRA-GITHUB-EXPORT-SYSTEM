@@ -1,11 +1,11 @@
-import { Target, BookOpen, FolderKanban, BarChart3, FileText, ChevronRight } from"lucide-react";
+﻿import { Target, BookOpen, FolderKanban, BarChart3, FileText, ChevronRight } from"lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from"@/components/ui/Card.jsx";
 
 export function QuickAccessPanel({ onNavigate }) {
  const items = [
- { icon: BookOpen, label:"Lớp học", to:"/student/courses", color:"text-teal-600", bg:"bg-teal-50" },
- { icon: FolderKanban, label:"Dự án", to:"/student/my-project", color:"text-indigo-600", bg:"bg-indigo-50" },
- { icon: BarChart3, label:"Đóng góp", to:"/student/contribution", color:"text-orange-600", bg:"bg-orange-50" },
+ { icon: BookOpen, label:"Lá»›p há»c", to:"/student/courses", color:"text-teal-600", bg:"bg-teal-50" },
+ { icon: FolderKanban, label:"Dá»± Ă¡n", to:"/student/my-project", color:"text-indigo-600", bg:"bg-indigo-50" },
+ { icon: BarChart3, label:"ÄĂ³ng gĂ³p", to:"/student/contribution", color:"text-orange-600", bg:"bg-orange-50" },
  { icon: FileText, label:"SRS Docs", to:"/student/srs", color:"text-emerald-600", bg:"bg-emerald-50" }
  ];
 
@@ -16,7 +16,7 @@ export function QuickAccessPanel({ onNavigate }) {
  <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center shadow-inner">
  <Target size={16} className="text-gray-300" />
  </div>
- Truy cập nhanh
+ Truy cáº­p nhanh
  </CardTitle>
  </CardHeader>
  <CardContent className="p-10">
@@ -43,9 +43,4 @@ export function QuickAccessPanel({ onNavigate }) {
  </Card>
  );
 }
-
-
-
-
-
 

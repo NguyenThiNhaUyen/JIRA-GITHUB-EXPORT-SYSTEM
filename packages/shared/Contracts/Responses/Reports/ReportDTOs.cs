@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Reports;
+﻿namespace JiraGithubExport.Shared.Contracts.Responses.Reports;
 
 public class CommitStatistics
 {
@@ -57,3 +57,4 @@ public class ReportExportResponse
     public DateTime CreatedAt { get; set; } // From requested_at
     public string? ErrorMessage { get; set; }
 }
+
