@@ -116,14 +116,14 @@ export default function StudentProject() {
                     <>
                         <StatsCard 
                             label="Commits của tôi" 
-                            value={myCommits.length} 
+                            value={myCommits[0]?.commits ?? myCommits[0]?.totalCommits ?? 0} 
                             icon={GitCommit} 
                             variant="success" 
                             description="TỔNG SỐ COMMIT CÁ NHÂN"
                         />
                         <StatsCard 
-                            label="Issues Hoàn thành" 
-                            value={metrics?.totalIssues ?? 0} 
+                            label="Issues Hoàn thành (Nhóm)" 
+                            value={metrics?.issuesDone ?? 0} 
                             icon={CheckSquare} 
                             variant="info" 
                             description="TỔNG TASKS (DONE) TRÊN JIRA"

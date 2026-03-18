@@ -39,8 +39,8 @@ export function useCourseWorkspace(courseId) {
     // Initial state setup when data loads
     useEffect(() => {
         if (group?.integration) {
-            setGithubInput(group.integration.githubRepo || "");
-            setJiraInput(group.integration.jiraKey || "");
+            setGithubInput(group.integration.githubRepoUrl || group.integration.githubUrl || "");
+            setJiraInput(group.integration.jiraProjectKey || group.integration.jiraUrl || "");
         }
     }, [group]);
 
@@ -76,9 +76,18 @@ export function useCourseWorkspace(courseId) {
     };
 
     const handleLinkSubmit = () => {
+        // Ensure github input is a full URL for the backend to parse
+        const githubUrl = githubInput.includes("github.com") 
+            ? (githubInput.startsWith("http") ? githubInput : `https://${githubInput}`)
+            : `https://github.com/${githubInput}`;
+
         linkIntegrationMutation.mutate({
             projectId: group.id,
-            body: { githubRepo: githubInput, jiraKey: jiraInput }
+            body: { 
+                githubRepoUrl: githubUrl, 
+                jiraProjectKey: jiraInput,
+                jiraSiteUrl: "https://atlassian.net"
+            }
         }, {
             onSuccess: () => success("Đã gửi yêu cầu liên kết tích hợp!")
         });
