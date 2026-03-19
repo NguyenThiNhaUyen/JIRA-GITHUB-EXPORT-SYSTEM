@@ -8,12 +8,13 @@ export const mapProject = (project) => {
         courseId: project.courseId || project.CourseId || null,
         courseName: project.course_name || project.courseName || project.CourseName || "",
         team: (project.members || project.teamMembers || project.team || []).map(member => ({
-            studentId: String(member.studentUserId || member.user_id || member.Id || ""),
-            studentName: member.studentName || member.full_name || member.FullName || "",
-            studentCode: member.studentCode || member.student_code || member.StudentCode || "",
-            role: member.role || member.team_role || "MEMBER",
-            participationStatus: member.participationStatus || member.participation_status || "ACTIVE",
-            contributionScore: member.contributionScore || member.contribution_score || 0
+            // BE ProjectDetailResponse: UserId, FullName, StudentCode, TeamRole
+            studentId: String(member.userId || member.UserId || member.studentUserId || member.user_id || ""),
+            studentName: member.fullName || member.FullName || member.studentName || member.full_name || "",
+            studentCode: member.studentCode || member.StudentCode || member.student_code || "",
+            role: member.teamRole || member.TeamRole || member.role || member.team_role || "MEMBER",
+            participationStatus: member.participationStatus || member.ParticipationStatus || member.participation_status || "ACTIVE",
+            contributionScore: member.contributionScore || member.ContributionScore || member.contribution_score || 0
         })),
         integration: project.integration ? {
             githubUrl: project.githubRepoUrl || project.github_repo_url || project.integration.githubUrl || "",
@@ -61,15 +62,19 @@ export const mapProjectList = (beData) => {
 export const mapProjectMetrics = (metrics) => {
     if (!metrics) return null;
     return {
-        totalCommits: metrics.totalCommits || 0,
-        totalIssues: metrics.totalIssues || 0,
-        myCommits: metrics.userCommits || 0,
-        myIssues: metrics.userIssues || 0,
-        lastSyncAt: metrics.lastSyncAt,
-        contributions: (metrics.memberContributions || []).map(m => ({
-            studentId: m.studentUserId,
-            commits: m.commitsCount || 0,
-            issues: m.issuesCount || 0
+        totalCommits: metrics.totalCommits || metrics.TotalCommits || 0,
+        totalIssues: metrics.totalIssues || metrics.TotalIssues || 0,
+        // BE ProjectDashboardResponse fields — fallback to multiple spellings
+        myCommits: metrics.myCommits || metrics.userCommits || metrics.MyCommits || 0,
+        myIssues: metrics.myIssues || metrics.userIssues || metrics.MyIssues || 0,
+        lastSyncAt: metrics.lastSyncAt || metrics.LastSyncAt || null,
+        // MemberContributionSummary: StudentCode, FullName, Commits, PullRequests, IssuesCompleted
+        contributions: (metrics.memberContributions || metrics.MemberContributions || metrics.contributions || []).map(m => ({
+            studentId: m.studentUserId || m.userId || m.UserId || m.StudentCode || "",
+            studentName: m.fullName || m.FullName || m.studentName || "",
+            commits: m.commits || m.Commits || m.commitsCount || 0,
+            pullRequests: m.pullRequests || m.PullRequests || 0,
+            issues: m.issuesCompleted || m.IssuesCompleted || m.issuesCount || m.issues || 0
         }))
     };
 };

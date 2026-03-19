@@ -53,7 +53,7 @@ const EXPORT_TYPES = [
 
 
 export default function Reports() {
-    const { success, info } = useToast();
+    const { success, info, error } = useToast();
     const [selectedType, setSelectedType] = useState("by-course");
     const [courseFilter, setCourseFilter] = useState("all");
     const [teamFilter, setTeamFilter] = useState("all");
@@ -158,7 +158,7 @@ export default function Reports() {
                     <Button key="custom" variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
                         <Filter size={16} className="mr-4" /> Tùy chỉnh
                     </Button>,
-                    <Button key="export" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black uppercase tracking-widest border-0 shadow-lg shadow-teal-100" onClick={() => handleExport('PDF', 'Export nhanh')}>
+                    <Button key="export" className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl h-11 px-6 text-xs font-black uppercase tracking-widest border-0 shadow-lg shadow-teal-100" onClick={() => handleExport('PDF', selectedType, selectedConfig?.title || 'Export')}>
                         <Download size={16} className="mr-4" /> Export nhanh
                     </Button>
                 ]}
@@ -228,7 +228,7 @@ export default function Reports() {
                             </div>
                          </div>
                          <div className="flex gap-2">
-                             {selectedConfig?.formats.map(fmt => <Button key={fmt} variant="outline" size="sm" className="rounded-xl border-gray-100 text-[10px] font-black uppercase tracking-widest h-9" onClick={() => handleExport(fmt, selectedConfig.title)}><Download size={14} className="mr-2" />{fmt}</Button>)}
+                             {selectedConfig?.formats.map(fmt => <Button key={fmt} variant="outline" size="sm" className="rounded-xl border-gray-100 text-[10px] font-black uppercase tracking-widest h-9" onClick={() => handleExport(fmt, selectedConfig.id, selectedConfig.title)}><Download size={14} className="mr-2" />{fmt}</Button>)}
                          </div>
                     </CardHeader>
                     <CardContent className="p-8">

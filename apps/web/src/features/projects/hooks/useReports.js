@@ -1,21 +1,48 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
-    generateSrsReport, 
+    generateSrsReport,
+    generateSrsReportForCourse,
     getDownloadUrl, 
     generateCommitStatisticsReport, 
-    generateTeamRosterReport, 
-    generateActivitySummaryReport 
+    generateTeamRosterReport,
+    generateTeamRosterForCourse,
+    generateActivitySummaryReport,
+    getReports,
+    reviewSrsStatus
 } from '../api/reportApi.js';
 
 export const REPORT_KEYS = {
     all: ['reports'],
+    list: (params) => [...REPORT_KEYS.all, 'list', params],
     srs: (projectId) => [...REPORT_KEYS.all, 'srs', projectId],
     download: (reportId) => [...REPORT_KEYS.all, 'download', reportId],
 }
 
+/**
+ * GET /api/reports?type=SRS&courseId=X hoặc tất cả reports của user
+ * params: { projectId?, courseId?, type?, status?, milestone?, page?, pageSize? }
+ */
+export const useGetReports = (params = {}) => {
+    return useQuery({
+        queryKey: REPORT_KEYS.list(params),
+        queryFn: () => getReports(params),
+        staleTime: 30000,
+    });
+};
+
 export const useGenerateSrsReport = () => {
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ projectId, format }) => generateSrsReport(projectId, format),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: REPORT_KEYS.all }),
+    });
+};
+
+export const useGenerateSrsReportForCourse = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ courseId, format }) => generateSrsReportForCourse(courseId, format),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: REPORT_KEYS.all }),
     });
 };
 
@@ -31,9 +58,26 @@ export const useGenerateTeamRoster = () => {
     });
 };
 
+export const useGenerateTeamRosterForCourse = () => {
+    return useMutation({
+        mutationFn: ({ courseId, format }) => generateTeamRosterForCourse(courseId, format),
+    });
+};
+
 export const useGenerateActivitySummary = () => {
     return useMutation({
         mutationFn: ({ projectId, startDate, endDate, format }) => generateActivitySummaryReport(projectId, startDate, endDate, format),
+    });
+};
+
+/**
+ * PUT /api/reports/{id}/status — Review SRS status (Lecturer/Admin)
+ */
+export const useReviewSrsStatus = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ reportId, status, feedback }) => reviewSrsStatus(reportId, status, feedback),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: REPORT_KEYS.all }),
     });
 };
 

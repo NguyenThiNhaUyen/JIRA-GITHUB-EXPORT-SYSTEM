@@ -86,7 +86,8 @@ export default function ManageGroups() {
     return new Set(
       groups.flatMap((group) =>
         (group.team || []).map((member) =>
-          Number(member.studentId || member.studentUserId)
+          // mapEnrollmentList trả về id (string), member từ projectMapper cũng là studentId (string)
+          String(member.studentId || member.studentUserId || member.userId || "")
         )
       )
     );
@@ -94,7 +95,8 @@ export default function ManageGroups() {
 
   const availableStudents = useMemo(() => {
     return students.filter(
-      (student) => !assignedStudentIds.has(Number(student.id))
+      // mapEnrollmentList trả về { id, name, studentCode, email }
+      (student) => !assignedStudentIds.has(String(student.id))
     );
   }, [students, assignedStudentIds]);
 
@@ -103,12 +105,13 @@ export default function ManageGroups() {
   if (!keyword) return availableStudents;
 
   return availableStudents.filter((student) => {
+    // mapEnrollmentList: { id, name, studentCode, email }
     const name = student.name?.toLowerCase() || "";
-    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
+    const code = String(student.studentCode || student.id || "").toLowerCase();
 
       return (
         name.includes(keyword) ||
-        studentId.includes(keyword)
+        code.includes(keyword)
       );
     });
   }, [availableStudents, studentSearch]);
@@ -125,13 +128,13 @@ export default function ManageGroups() {
       });
 
       for (let i = 0; i < selectedStudents.length; i += 1) {
-        const studentId = Number(selectedStudents[i]);
-
+        // selectedStudents chứa student.id (string) từ mapEnrollmentList
+        const studentUserId = Number(selectedStudents[i]);
         await addTeamMemberMutation.mutateAsync({
-  projectId: project.id,
-  studentId: studentId,
-  role: i === 0 ? "LEADER" : "MEMBER",
-});
+          projectId: project.id,
+          studentId: studentUserId,
+          role: i === 0 ? "LEADER" : "MEMBER",
+        });
       }
       
       success(`Tạo nhóm "${project.name}" thành công`);
@@ -336,12 +339,13 @@ export default function ManageGroups() {
   if (!keyword) return availableStudents;
 
   return availableStudents.filter((student) => {
+    // mapEnrollmentList: { id, name, studentCode }
     const name = student.name?.toLowerCase() || "";
-    const studentId = String(student.studentId || student.studentCode || "").toLowerCase();
+    const code = String(student.studentCode || student.id || "").toLowerCase();
 
       return (
         name.includes(keyword) ||
-        studentId.includes(keyword)
+        code.includes(keyword)
       );
     });
   }, [availableStudents, forceAddSearch]);

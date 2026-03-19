@@ -12,28 +12,33 @@ export async function getGroupById(groupId) {
 }
 
 /**
- * POST /api/projects/{projectId}/github/approve
- * Approve liên kết GitHub cho nhóm
+ * POST /api/projects/{projectId}/integrations/approve
+ * Approve liên kết GitHub/Jira cho nhóm (Lecturer/Admin)
+ * BE: ProjectsController → ApproveIntegration(projectId)
  */
-export async function approveGroupLink(groupId, linkType, lecturerId) {
-    const res = await client.post(`/projects/${groupId}/links/${linkType}/approve`, { lecturerId });
+export async function approveGroupLink(groupId) {
+    const res = await client.post(`/projects/${groupId}/integrations/approve`);
     return unwrap(res);
 }
 
 /**
- * POST /api/projects/{projectId}/github/reject
- * Reject liên kết GitHub/Jira cho nhóm
+ * POST /api/projects/{projectId}/integrations/reject
+ * Reject liên kết GitHub/Jira cho nhóm (Lecturer/Admin)
+ * BE: ProjectsController → RejectIntegration(projectId, { reason })
  */
-export async function rejectGroupLink(groupId, linkType, lecturerId) {
-    const res = await client.post(`/projects/${groupId}/links/${linkType}/reject`, { lecturerId });
+export async function rejectGroupLink(groupId, reason = "") {
+    const res = await client.post(`/projects/${groupId}/integrations/reject`, { reason });
     return unwrap(res);
 }
 
 /**
- * PATCH /api/projects/{projectId}/members/{studentId}/score
- * Cập nhật điểm sinh viên trong nhóm (nếu BE hỗ trợ)
+ * PATCH /api/projects/{projectId}/members/{memberId}/contribution
+ * Cập nhật contribution score của thành viên trong nhóm (Lecturer/Admin)
+ * BE: ProjectsController → UpdateContribution(projectId, memberId, { contributionScore })
  */
 export async function updateStudentScore(groupId, studentId, score) {
-    const res = await client.put(`/projects/${groupId}/students/${studentId}/score`, { score });
+    const res = await client.patch(`/projects/${groupId}/members/${studentId}/contribution`, {
+        contributionScore: score
+    });
     return unwrap(res);
 }

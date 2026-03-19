@@ -147,11 +147,20 @@ export default function CourseManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        courseCode: formData.code,
+        courseName: formData.name,
+        subjectId: Number(formData.subjectId),
+        semesterId: Number(formData.semesterId),
+        maxStudents: formData.maxStudents,
+        status: formData.status
+      };
+
       if (editingCourse) {
-        await updateMutation.mutateAsync({ id: editingCourse.id, ...formData });
+        await updateMutation.mutateAsync({ id: editingCourse.id, ...payload });
         success("Cập nhật lớp học thành công");
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(payload);
         success("Tạo lớp học mới thành công");
       }
       setShowModal(false);

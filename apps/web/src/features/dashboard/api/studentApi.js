@@ -41,3 +41,56 @@ export async function getStudentProjects(params = {}) {
     return unwrap(res);
 }
 
+/**
+ * GET /api/student/me/courses?page=1&pageSize=20
+ * Danh sách các lớp học của sinh viên
+ */
+export async function getStudentCourses(params = {}) {
+    const res = await client.get("/student/me/courses", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/commits?page=1&pageSize=50
+ * Danh sách commits của sinh viên
+ */
+export async function getStudentCommits(params = {}) {
+    const res = await client.get("/student/me/commits", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/tasks?page=1&pageSize=50
+ * Danh sách Jira tasks của sinh viên
+ */
+export async function getStudentTasks(params = {}) {
+    const res = await client.get("/student/me/tasks", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/grades
+ * Điểm số của sinh viên
+ */
+export async function getStudentGrades(params = {}) {
+    const res = await client.get("/student/me/grades", { params });
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/warnings
+ * Cảnh báo (inactive, commit it,...) cho sinh viên
+ */
+export async function getStudentWarnings() {
+    const res = await client.get("/student/me/warnings");
+    return unwrap(res);
+}
+
+/**
+ * GET /api/student/me/invitations?page=1&pageSize=20
+ * Danh sách lời mời tham gia nhóm
+ */
+export async function getStudentInvitations(params = {}) {
+    const res = await client.get("/student/me/invitations", { params });
+    return unwrap(res);
+}

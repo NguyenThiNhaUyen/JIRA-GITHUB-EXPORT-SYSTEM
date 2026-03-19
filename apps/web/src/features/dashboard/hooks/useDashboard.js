@@ -41,6 +41,48 @@ export function useStudentProjects(params) {
     });
 }
 
+export function useStudentCourses(params) {
+    return useQuery({
+        queryKey: ["student", "courses", params],
+        queryFn: () => studentApi.getStudentCourses(params)
+    });
+}
+
+export function useStudentCommits(params) {
+    return useQuery({
+        queryKey: ["student", "commits", params],
+        queryFn: () => studentApi.getStudentCommits(params)
+    });
+}
+
+export function useStudentTasks(params) {
+    return useQuery({
+        queryKey: ["student", "tasks", params],
+        queryFn: () => studentApi.getStudentTasks(params)
+    });
+}
+
+export function useStudentGrades(params) {
+    return useQuery({
+        queryKey: ["student", "grades", params],
+        queryFn: () => studentApi.getStudentGrades(params)
+    });
+}
+
+export function useStudentWarnings() {
+    return useQuery({
+        queryKey: ["student", "warnings"],
+        queryFn: studentApi.getStudentWarnings
+    });
+}
+
+export function useStudentInvitations(params) {
+    return useQuery({
+        queryKey: ["student", "invitations", params],
+        queryFn: () => studentApi.getStudentInvitations(params)
+    });
+}
+
 /* ── LECTURER DASHBOARD HOOKS ── */
 
 export function useLecturerWorkload(lecturerId) {

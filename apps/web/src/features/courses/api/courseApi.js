@@ -4,7 +4,34 @@
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 import { mapCourse, mapCourseList } from "./mappers/courseMapper.js";
-import { mapUserList } from "../../users/api/mappers/userMapper.js";
+
+/**
+ * Map PagedResponse<EnrollmentInfo> từ BE sang FE student shape
+ * EnrollmentInfo: { UserId, FullName, StudentCode, StudentId, Email }
+ * FE shape: { id, name, studentCode, email }
+ */
+function mapEnrollmentList(beData) {
+    const mapOne = (e) => ({
+        id: String(e.userId || e.UserId || e.id || ""),
+        name: e.fullName || e.FullName || e.studentName || "",
+        studentCode: e.studentCode || e.StudentCode || e.StudentId || "",
+        email: e.email || e.Email || "",
+    });
+    // PagedResponse shape
+    if (beData && (beData.items !== undefined || beData.Items !== undefined || beData.results !== undefined)) {
+        const rows = beData.items ?? beData.Items ?? beData.results ?? beData.Results ?? [];
+        return {
+            items: rows.map(mapOne),
+            totalCount: beData.totalCount ?? beData.TotalCount ?? rows.length,
+            page: beData.page ?? beData.Page ?? 1,
+            pageSize: beData.pageSize ?? beData.PageSize ?? rows.length,
+        };
+    }
+    if (Array.isArray(beData)) {
+        return { items: beData.map(mapOne), totalCount: beData.length, page: 1, pageSize: beData.length };
+    }
+    return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+}
 
 /**
  * GET /api/courses
@@ -100,8 +127,9 @@ export async function unenrollStudent(courseId, studentUserId) {
 
 /**
  * GET /api/courses/:id/students
+ * BE trả về PagedResponse<EnrollmentInfo>: { UserId, FullName, StudentCode, StudentId, Email }
  */
 export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
-    return mapUserList(unwrap(res));
+    return mapEnrollmentList(unwrap(res));
 }
