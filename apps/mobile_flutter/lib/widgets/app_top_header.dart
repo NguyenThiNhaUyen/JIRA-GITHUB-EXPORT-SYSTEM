@@ -304,7 +304,7 @@ class _AppTopHeaderState extends State<AppTopHeader> {
       },
       // ── Custom trigger button ─────────────────────────────
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
           color: Colors.white,

@@ -338,20 +338,28 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Dashboard Giảng viên', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx)),
-                  Text('Chào mừng trở lại, ${_currentUser?.fullName ?? "Giảng viên"}!', style: const TextStyle(fontSize: 13, color: kTxtSx)),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Dashboard Giảng viên', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx)),
+                Text('Chào mừng trở lại, ${_currentUser?.fullName ?? "Giảng viên"}!', style: const TextStyle(fontSize: 13, color: kTxtSx)),
+              ],
             ),
-            _circleAction(Icons.notifications_none_rounded, () => context.go('/lecturer/alerts'), badge: _alerts.isNotEmpty),
-            const SizedBox(width: 12),
-            _actionBtn(Icons.shield_outlined, 'Phát cảnh báo', _showSendAlert, color: Colors.redAccent),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _circleAction(Icons.notifications_none_rounded, () => context.go('/lecturer/alerts'), badge: _alerts.isNotEmpty),
+                const SizedBox(width: 12),
+                _actionBtn(Icons.shield_outlined, 'Phát cảnh báo', _showSendAlert, color: Colors.redAccent),
+              ],
+            ),
           ],
         )
       ],
@@ -601,7 +609,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         Container(width: 44, height: 44, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: Colors.white, size: 20)),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(val, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx, height: 1.1)),
+          Text(val, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx, height: 1.1), overflow: TextOverflow.ellipsis, maxLines: 1),
           Text(lbl, style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
         ]))
       ]));
@@ -628,12 +636,26 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(a['msg'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: kTxtPx)),
           const SizedBox(height: 6),
-          Row(children: [
-            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: kBdr)), 
-              child: Row(children: [const Icon(Icons.access_time, size: 10, color: Color(0xFFCBD5E1)), const SizedBox(width: 4), Text(a['time'], style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold))])),
-            const SizedBox(width: 8),
-            const Text('VERIFIED EVENT', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFFE2E8F0), letterSpacing: 1.2)),
-          ])
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: kBdr)), 
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time, size: 10, color: Color(0xFFCBD5E1)),
+                    const SizedBox(width: 4),
+                    Text(a['time'], style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold))
+                  ],
+                ),
+              ),
+              const Text('VERIFIED EVENT', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFFE2E8F0), letterSpacing: 1.2)),
+            ],
+          )
         ])),
         const SizedBox(width: 8),
         TextButton(onPressed: () => _snack('Chi tiết'), child: const Text('Chi tiết', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: kTeal))),

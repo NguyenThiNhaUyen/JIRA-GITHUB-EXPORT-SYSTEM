@@ -237,7 +237,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
       children: [
         Expanded(child: headerText),
         const SizedBox(width: 16),
-        actions,
+        Flexible(child: actions),
       ],
     );
   }
@@ -315,7 +315,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                          Expanded(child: Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis)),
                           Text("${(progress * 100).toInt()}%", style: const TextStyle(color: Colors.indigo, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -402,8 +402,11 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                     _buildTableControls(),
                   ],
                 )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              : Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 16,
+                  runSpacing: 12,
                   children: [
                     const Text("Danh sách Chi tiết", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     _buildTableControls(),
@@ -467,6 +470,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                         fontSize: 10, fontWeight: FontWeight.bold)),
                     )),
                     DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: () => _showSemesterModal(semester: s)),
                         IconButton(icon: const Icon(Icons.delete, size: 18, color: Colors.red), onPressed: () => _handleDelete(sId)),
@@ -509,12 +513,14 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(sName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+                    Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -563,8 +569,10 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   }
 
   Widget _buildTableControls() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         SizedBox(
           width: 180,
@@ -580,7 +588,6 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
         DropdownButton<String>(
           value: _filterStatus,
           underline: const SizedBox(),
