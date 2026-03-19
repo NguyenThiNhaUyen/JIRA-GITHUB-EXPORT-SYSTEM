@@ -78,7 +78,9 @@ public class MappingProfile : Profile
         CreateMap<course_enrollment, EnrollmentInfo>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.student_user_id))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.student_user != null && src.student_user.user != null ? src.student_user.user.full_name : "N/A"))
-            .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student_user != null ? src.student_user.student_code : "N/A"));
+            .ForMember(dest => dest.StudentCode, opt => opt.MapFrom(src => src.student_user != null ? src.student_user.student_code : "N/A"))
+            .ForMember(dest => dest.StudentId, opt => opt.MapFrom(src => src.student_user != null ? src.student_user.student_code : "N/A"))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.student_user != null && src.student_user.user != null ? src.student_user.user.email : null));
 
         // ============================================
         // PROJECT MAPPINGS

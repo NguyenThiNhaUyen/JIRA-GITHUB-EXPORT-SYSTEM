@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from"@/components/ui/Card.js
 import { PageHeader } from"@/components/shared/PageHeader.jsx";
 import { AdminStats } from"@/features/dashboard/components/AdminStats.jsx";
 import { Skeleton } from"@/components/ui/Skeleton.jsx";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary.jsx";
 
 // Hooks
 import { useAuth } from"@/context/AuthContext.jsx";
@@ -93,7 +94,8 @@ export default function AdminDashboard() {
  const recentCourses = coursesData?.items || [];
 
  return (
- <div className="space-y-8 animate-in fade-in duration-500">
+  <ErrorBoundary>
+  <div className="space-y-8 animate-in fade-in duration-500">
  <PageHeader
  title="Quản trị Hệ thống"
  subtitle="Tổng quan toàn bộ hoạt động, tài khoản và tích hợp trên hệ thống."
@@ -266,6 +268,7 @@ export default function AdminDashboard() {
  </div>
  </Card>
  </div>
+ </ErrorBoundary>
  );
 }
 
@@ -283,9 +286,3 @@ function CourseStatusBadge({ status }) {
  </span>
  );
 }
-
-
-
-
-
-

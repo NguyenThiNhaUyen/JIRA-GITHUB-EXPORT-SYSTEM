@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button.jsx";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card.jsx";
 import { Modal } from "@/components/ui/Interactive.jsx";
 import { Badge } from "@/components/ui/Badge.jsx";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 // Shared Components
 import { PageHeader } from "@/components/shared/PageHeader.jsx";
@@ -74,7 +75,7 @@ export default function CourseManagement() {
                 subtitle="Quản lý danh sách lớp học phần, phân công giảng viên và import sinh viên."
                 breadcrumb={["Admin", "Lớp học"]}
                 actions={[
-                    <Button key="import" variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-[10px] font-black hover:bg-gray-50 transition-all">
+                    <Button key="import" onClick={handleDownloadTemplate} variant="outline" className="rounded-2xl border-gray-200 h-11 px-6 text-[10px] font-black hover:bg-gray-50 transition-all">
                         <Download size={14} className="mr-2" /> Tải Template Excel
                     </Button>,
                     <Button key="add" onClick={() => { setShowModal(true); }} className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 text-[10px] font-black shadow-lg shadow-teal-100 border-0 transition-all">
@@ -130,11 +131,16 @@ export default function CourseManagement() {
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {loadingCourses ? (
-                                <tr>
-                                    <td colSpan={6} className="py-20 text-center">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto" />
-                                    </td>
-                                </tr>
+                                Array(5).fill(0).map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="px-8 py-6"><div className="flex items-center gap-3"><Skeleton className="h-4 w-6 rounded-full" /><div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-32" /></div></div></td>
+                                        <td className="px-8 py-6 text-center"><div className="flex flex-col items-center gap-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-3 w-20" /></div></td>
+                                        <td className="px-8 py-6 text-center"><Skeleton className="h-4 w-24 mx-auto" /></td>
+                                        <td className="px-8 py-6 text-center"><Skeleton className="h-4 w-10 mx-auto" /></td>
+                                        <td className="px-8 py-6 text-center"><Skeleton className="h-6 w-20 rounded-lg mx-auto" /></td>
+                                        <td className="px-8 py-6"><div className="flex justify-end gap-2"><Skeleton className="h-9 w-9 rounded-xl" /><Skeleton className="h-9 w-9 rounded-xl" /><Skeleton className="h-9 w-9 rounded-xl" /></div></td>
+                                    </tr>
+                                ))
                             ) : filteredCourses.map((course, idx) => {
                                 const lecturer = lecturers.find(l => l.id === course.lecturerId) || course.lecturers?.[0];
                                 const status = COURSE_STATUSES[course.status] || COURSE_STATUSES.ACTIVE;

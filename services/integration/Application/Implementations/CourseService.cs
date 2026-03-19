@@ -341,11 +341,7 @@ public class CourseService : ICourseService
                 {
                     if (existingEnrollment.status == "ACTIVE")
                     {
-                        result.Failed.Add(new EnrollmentFailure
-                        {
-                            StudentUserId = studentUserId,
-                            Reason = "Student already enrolled in this course"
-                        });
+                        // Silent skip - already in course, no need to report as error
                         continue;
                     }
                     else

@@ -232,6 +232,10 @@ export function useCourseManagement() {
         }
     };
 
+    const handleDownloadTemplate = () => {
+        window.open("/templates/template_enrollment.xlsx", "_blank");
+    };
+
     return {
         // Data
         courses,
@@ -260,6 +264,7 @@ export function useCourseManagement() {
         assignForm, setAssignForm,
 
         // Handlers
+        handleDownloadTemplate,
         handleEdit,
         handleDelete,
         handleSubmit,

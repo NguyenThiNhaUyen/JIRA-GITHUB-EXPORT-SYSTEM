@@ -53,9 +53,9 @@ namespace IntegrationService.Tests.Services
             {
                 Id = 1,
                 Email = "test@example.com",
-                Password = "hashed_password",
+                password = "hashed_password",
                 FullName = "Test User",
-                Enabled = true
+                enabled = true
             };
             
             var testRole = new Role { Id = 1, RoleName = "Student" };
@@ -130,8 +130,8 @@ namespace IntegrationService.Tests.Services
             {
                 Id = 1,
                 Email = "test@example.com",
-                Password = "hashed_password",
-                Enabled = true
+                password = "hashed_password",
+                enabled = true
             };
             
             context.Users.Add(testUser);
@@ -169,8 +169,8 @@ namespace IntegrationService.Tests.Services
             {
                 Id = 1,
                 Email = "test@example.com",
-                Password = "hashed_password",
-                Enabled = false // Disabled account
+                password = "hashed_password",
+                enabled = false // Disabled account
             };
             
             context.Users.Add(testUser);

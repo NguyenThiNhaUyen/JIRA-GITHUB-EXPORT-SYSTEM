@@ -9,18 +9,15 @@ namespace JiraGithubExport.IntegrationService.Application.Implementations.Report
 public class PdfReportGenerator : IPdfReportGenerator
 {
     // ─────────────────────────────────────────────────────────
-    // DESIGN TOKENS
+    // DESIGN TOKENS (PREMIUM NAVY)
     // ─────────────────────────────────────────────────────────
-    private static readonly string PrimaryColor   = "#1B3A6B";   // dark navy
-    private static readonly string AccentColor    = "#2E6DBF";   // medium blue
-    private static readonly string TableHeader    = "#2E6DBF";
-    private static readonly string TableRowAlt    = "#EEF3FB";
-    private static readonly string TextGray       = "#555555";
-    private static readonly string BorderGray     = "#CCCCCC";
+    private static readonly string PrimaryColor   = "#0F2B46";   // Deep Premium Navy
+    private static readonly string AccentColor    = "#1D4ED8";   // Trust Blue
+    private static readonly string TableHeader    = "#1E3A8A";   // Deep Blue header
+    private static readonly string TableRowAlt    = "#F8FAFC";   // Ultra-light slate
+    private static readonly string TextGray       = "#475569";   // Slate 600
+    private static readonly string BorderGray     = "#E2E8F0";   // Slate 200
 
-    // ─────────────────────────────────────────────────────────
-    // COMMIT STATISTICS
-    // ─────────────────────────────────────────────────────────
     public byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects)
     {
         return Document.Create(container =>
@@ -32,30 +29,19 @@ public class PdfReportGenerator : IPdfReportGenerator
                 page.Header().Text($"Commit Statistics – {courseName}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
-                    table.ColumnsDefinition(c =>
-                    {
-                        c.RelativeColumn();
-                        c.RelativeColumn();
-                        c.RelativeColumn();
-                        c.RelativeColumn();
+                    table.ColumnsDefinition(c => { c.RelativeColumn(2); c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2); });
+                    table.Header(h => {
+                        foreach (var col in new[] { "Project Name", "Student Full Name", "Student Code", "Role" })
+                            h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).SemiBold().FontSize(10);
                     });
-                    table.Header(h =>
-                    {
-                        foreach (var col in new[] { "Project", "Student Name", "Student Code", "Role" })
-                            h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
-                    });
-
                     bool alt = false;
-                    foreach (var p in projects)
-                    {
-                        if (p.team_members == null) continue;
-                        foreach (var tm in p.team_members)
-                        {
+                    foreach (var p in projects) {
+                        foreach (var tm in p.team_members ?? new List<team_member>()) {
                             string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(p.name);
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.team_role ?? "");
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(p.name).FontSize(9);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.user?.full_name ?? "").FontSize(9);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.student_code ?? "").FontSize(9);
+                            table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.team_role ?? "").FontSize(9);
                             alt = !alt;
                         }
                     }
@@ -64,9 +50,6 @@ public class PdfReportGenerator : IPdfReportGenerator
         }).GeneratePdf();
     }
 
-    // ─────────────────────────────────────────────────────────
-    // TEAM ROSTER
-    // ─────────────────────────────────────────────────────────
     public byte[] GenerateTeamRosterPdf(project project)
     {
         return Document.Create(container =>
@@ -78,32 +61,24 @@ public class PdfReportGenerator : IPdfReportGenerator
                 page.Header().Text($"Team Roster – {project.name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
-                    table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
-                    table.Header(h =>
-                    {
-                        foreach (var col in new[] { "Student Name", "Student Code", "Role" })
-                            h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
+                    table.ColumnsDefinition(c => { c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(2); });
+                    table.Header(h => {
+                        foreach (var col in new[] { "Student Full Name", "Student Code", "Team Role" })
+                            h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).SemiBold().FontSize(10);
                     });
                     bool alt = false;
-                    if (project.team_members != null)
-                    {
-                        foreach (var tm in project.team_members)
-                        {
-                            string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.team_role ?? "");
-                            alt = !alt;
-                        }
+                    foreach (var tm in project.team_members ?? new List<team_member>()) {
+                        string bg = alt ? TableRowAlt : Colors.White;
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.user?.full_name ?? "").FontSize(9);
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.student_code ?? "").FontSize(9);
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.team_role ?? "").FontSize(9);
+                        alt = !alt;
                     }
                 });
             });
         }).GeneratePdf();
     }
 
-    // ─────────────────────────────────────────────────────────
-    // ACTIVITY SUMMARY
-    // ─────────────────────────────────────────────────────────
     public byte[] GenerateActivitySummaryPdf(project project, List<dynamic> activityList)
     {
         return Document.Create(container =>
@@ -115,30 +90,21 @@ public class PdfReportGenerator : IPdfReportGenerator
                 page.Header().Text($"Activity Summary – {project.name}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
-                    table.ColumnsDefinition(c =>
-                    {
-                        c.RelativeColumn(); c.RelativeColumn();
-                        c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn();
-                    });
-                    table.Header(h =>
-                    {
-                        foreach (var col in new[] { "Student Name", "Student Code", "Commits", "Pull Requests", "Issues Done" })
-                            h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
+                    table.ColumnsDefinition(c => { c.RelativeColumn(3); c.RelativeColumn(2); c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
+                    table.Header(h => {
+                        foreach (var col in new[] { "Student Name", "Code", "Commits", "PRs", "Issues" })
+                            h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).SemiBold().FontSize(10);
                     });
                     bool alt = false;
-                    if (project.team_members != null)
-                    {
-                        foreach (var tm in project.team_members)
-                        {
-                            var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
-                            string bg = alt ? TableRowAlt : Colors.White;
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
-                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Commits ?? 0)).ToString());
-                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.PRs ?? 0)).ToString());
-                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Issues ?? 0)).ToString());
-                            alt = !alt;
-                        }
+                    foreach (var tm in project.team_members ?? new List<team_member>()) {
+                        var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
+                        string bg = alt ? TableRowAlt : Colors.White;
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.user?.full_name ?? "").FontSize(9);
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(tm.student_user?.student_code ?? "").FontSize(9);
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(((int)(stat?.Commits ?? 0)).ToString()).FontSize(9).AlignCenter();
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(((int)(stat?.PRs ?? 0)).ToString()).FontSize(9).AlignCenter();
+                        table.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(((int)(stat?.Issues ?? 0)).ToString()).FontSize(9).AlignCenter();
+                        alt = !alt;
                     }
                 });
             });
@@ -146,69 +112,84 @@ public class PdfReportGenerator : IPdfReportGenerator
     }
 
     // ─────────────────────────────────────────────────────────
-    // ISO/IEEE 29148 SRS REPORT
+    // DEDICATED ISO/IEEE 29148 SRS REPORT
     // ─────────────────────────────────────────────────────────
     public byte[] GenerateSrsReportPdf(SrsReportData data)
     {
         return Document.Create(container =>
         {
+            // ── COVER PAGE ──
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(0);
+
+                page.Content().Column(col =>
+                {
+                    col.Item().Background(PrimaryColor).Height(120).AlignBottom().Padding(30).Text("JIRA-GITHUB REPORTING SYSTEM")
+                        .Bold().FontSize(12).FontColor(Colors.White).LetterSpacing(0.2f);
+
+                    col.Item().PaddingHorizontal(40).PaddingTop(80).Text("SOFTWARE REQUIREMENTS SPECIFICATION")
+                        .Bold().FontSize(32).FontColor(PrimaryColor);
+                    
+                    col.Item().PaddingHorizontal(40).PaddingTop(10).Text("ISO/IEC/IEEE 29148:2018 Compliant")
+                        .FontSize(14).FontColor(AccentColor).LetterSpacing(0.1f);
+
+                    col.Item().PaddingHorizontal(40).PaddingTop(80).Row(row => {
+                        row.ConstantItem(5).Background(AccentColor).Height(60);
+                        row.RelativeItem().PaddingLeft(20).Column(inner => {
+                            inner.Item().Text(data.Project.name).Bold().FontSize(24).FontColor(Colors.Black);
+                            inner.Item().Text($"Course: {data.Project.course?.course_name ?? "N/A"}").FontSize(14).FontColor(TextGray);
+                        });
+                    });
+
+                    col.Item().PaddingHorizontal(40).PaddingTop(60).Table(t =>
+                    {
+                        t.ColumnsDefinition(c => { c.ConstantColumn(120); c.RelativeColumn(); });
+                        void InfoRow(string label, string value)
+                        {
+                            t.Cell().PaddingVertical(8).BorderBottom(1).BorderColor(BorderGray).Text(label).FontSize(11).FontColor(TextGray);
+                            t.Cell().PaddingVertical(8).BorderBottom(1).BorderColor(BorderGray).Text(value).Bold().FontSize(11).FontColor(Colors.Black);
+                        }
+                        InfoRow("Jira Project Key", data.JiraProjectKey);
+                        InfoRow("GitHub Repository", data.GithubRepoUrl);
+                        InfoRow("Generation Date", data.GeneratedAt.ToString("dd MMMM yyyy HH:mm UTC"));
+                        InfoRow("Document Version", "1.0 - Generated");
+                    });
+                });
+            });
+
+            // ── MAIN CONTENT PAGES ──
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2.5f, Unit.Centimetre);
 
-                // ── HEADER ──
                 page.Header().Column(col =>
                 {
-                    col.Item().BorderBottom(2).BorderColor(PrimaryColor).PaddingBottom(6).Row(row =>
+                    col.Item().PaddingBottom(10).Row(row =>
                     {
-                        row.RelativeItem().Column(inner =>
+                        row.RelativeItem().Text($"SRS: {data.Project.name}").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                        row.ConstantItem(100).AlignRight().Text($"ISO 29148").FontSize(9).FontColor(TextGray);
+                    });
+                    col.Item().BorderBottom(1).BorderColor(PrimaryColor);
+                });
+
+                page.Footer().Column(col => {
+                    col.Item().BorderTop(1).BorderColor(BorderGray).PaddingTop(10).Row(row => {
+                        row.RelativeItem().Text("System Generated Document").FontSize(8).FontColor(TextGray);
+                        row.ConstantItem(80).AlignRight().Text(txt =>
                         {
-                            inner.Item().Text("Software Requirements Specification")
-                                .Bold().FontSize(18).FontColor(PrimaryColor);
-                            inner.Item().Text($"ISO/IEC/IEEE 29148:2018 Compliant")
-                                .FontSize(9).FontColor(AccentColor);
-                        });
-                        row.ConstantItem(140).AlignRight().Column(inner =>
-                        {
-                            inner.Item().Text($"Project: {data.Project.name}").Bold().FontSize(10);
-                            inner.Item().Text($"Generated: {data.GeneratedAt:dd MMM yyyy}").FontSize(9).FontColor(TextGray);
-                            inner.Item().Text($"Version: 1.0").FontSize(9).FontColor(TextGray);
+                            txt.Span("Page ").FontSize(8).FontColor(TextGray);
+                            txt.CurrentPageNumber().FontSize(8).FontColor(TextGray);
+                            txt.Span(" of ").FontSize(8).FontColor(TextGray);
+                            txt.TotalPages().FontSize(8).FontColor(TextGray);
                         });
                     });
                 });
 
-                // ── FOOTER ──
-                page.Footer().AlignCenter().Text(txt =>
+                page.Content().PaddingTop(20).Column(doc =>
                 {
-                    txt.Span("JIRA-GITHUB Export System  |  ").FontSize(8).FontColor(TextGray);
-                    txt.Span("Page ").FontSize(8).FontColor(TextGray);
-                    txt.CurrentPageNumber().FontSize(8).FontColor(TextGray);
-                    txt.Span(" of ").FontSize(8).FontColor(TextGray);
-                    txt.TotalPages().FontSize(8).FontColor(TextGray);
-                });
-
-                // ── CONTENT ──
-                page.Content().Column(doc =>
-                {
-                    // ── COVER INFO ──
-                    doc.Item().PaddingTop(20).Table(t =>
-                    {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(160); c.RelativeColumn(); });
-                        void InfoRow(string label, string value)
-                        {
-                            t.Cell().Background(TableRowAlt).Padding(5).Text(label).Bold().FontSize(9);
-                            t.Cell().Padding(5).Text(value).FontSize(9);
-                        }
-                        InfoRow("Document Title", "Software Requirements Specification (SRS)");
-                        InfoRow("Project", data.Project.name);
-                        InfoRow("Jira Project Key", data.JiraProjectKey);
-                        InfoRow("GitHub Repository", data.GithubRepoUrl);
-                        InfoRow("Date", data.GeneratedAt.ToString("dd MMMM yyyy"));
-                        InfoRow("Standard", "ISO/IEC/IEEE 29148:2018");
-                        InfoRow("Status", "Draft");
-                    });
-
                     // ───────────────────────────────────────────────
                     // 1. INTRODUCTION
                     // ───────────────────────────────────────────────
@@ -217,337 +198,134 @@ public class PdfReportGenerator : IPdfReportGenerator
                     SubSection(doc, "1.1 Purpose");
                     doc.Item().PaddingLeft(10).Text(
                         "This Software Requirements Specification (SRS) document describes the functional and " +
-                        "non-functional requirements for the system. It is intended for the development team, " +
-                        "project stakeholders, lecturers, and evaluators. The document conforms to " +
-                        "ISO/IEC/IEEE 29148:2018.").FontSize(10).FontColor(TextGray);
+                        "non-functional requirements for the system. It ensures transparency between student " +
+                        "development activities and evaluation criteria by synchronizing live Jira and GitHub data.").FontSize(10).FontColor(TextGray).LineHeight(1.5f);
 
-                    SubSection(doc, "1.2 Scope");
+                    SubSection(doc, "1.2 Project Scope");
                     doc.Item().PaddingLeft(10).Text(
                         $"The system is the '{data.Project.name}' software project. It integrates with " +
                         $"Jira ({data.JiraSiteUrl}) for issue tracking and GitHub ({data.GithubRepoUrl}) " +
-                        "for source code management. The system aims to automate reporting and monitoring " +
-                        "of student project activities.").FontSize(10).FontColor(TextGray);
+                        "for source code management.").FontSize(10).FontColor(TextGray).LineHeight(1.5f);
 
-                    SubSection(doc, "1.3 Definitions, Acronyms, and Abbreviations");
-                    AcronymTable(doc, new[]
-                    {
-                        ("SRS",   "Software Requirements Specification"),
-                        ("FR",    "Functional Requirement"),
-                        ("NFR",   "Non-Functional Requirement"),
-                        ("API",   "Application Programming Interface"),
-                        ("UI",    "User Interface"),
-                        ("DB",    "Database"),
-                        ("IEEE",  "Institute of Electrical and Electronics Engineers"),
-                        ("CI/CD", "Continuous Integration / Continuous Delivery"),
-                    });
-
-                    SubSection(doc, "1.4 References");
-                    doc.Item().PaddingLeft(10).Column(refs =>
-                    {
-                        refs.Item().Text("• ISO/IEC/IEEE 29148:2018 – Systems and software engineering – Life cycle processes – Requirements engineering").FontSize(9).FontColor(TextGray);
-                        refs.Item().Text($"• Jira Project Board: {data.JiraSiteUrl}").FontSize(9).FontColor(TextGray);
-                        refs.Item().Text($"• GitHub Repository: {data.GithubRepoUrl}").FontSize(9).FontColor(TextGray);
-                    });
-
-                    // ───────────────────────────────────────────────
-                    // 2. OVERALL DESCRIPTION
-                    // ───────────────────────────────────────────────
-                    SectionHeader(doc, "2. Overall Description");
-
-                    SubSection(doc, "2.1 Product Perspective");
-                    doc.Item().PaddingLeft(10).Text(
-                        $"This system is a standalone web application that integrates with Jira and GitHub " +
-                        $"to track, monitor, and export student project data. It operates as an API " +
-                        $"backend deployed on cloud infrastructure (Render.com + Supabase PostgreSQL).").FontSize(10).FontColor(TextGray);
-
-                    SubSection(doc, "2.2 Product Functions (Summary)");
-                    doc.Item().PaddingLeft(10).Column(funcs =>
-                    {
-                        foreach (var f in new[]
-                        {
-                            "Synchronise Jira issues and GitHub commits/pull requests automatically",
-                            "Allow lecturers to approve or reject group Jira/GitHub link submissions",
-                            "Generate SRS, Activity Summary, and Commit Statistics reports",
-                            "Monitor inactive team members and raise alerts",
-                            "Provide secure JWT authentication with role-based access control",
-                        })
-                        {
-                            funcs.Item().Text($"• {f}").FontSize(10).FontColor(TextGray);
-                        }
-                    });
-
-                    SubSection(doc, "2.3 User Classes and Characteristics");
+                    SubSection(doc, "1.3 Terminology");
                     doc.Item().PaddingLeft(10).Table(t =>
                     {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(120); c.RelativeColumn(); });
-                        t.Header(h =>
-                        {
-                            h.Cell().Background(TableHeader).Padding(4).Text("Role").FontColor(Colors.White).Bold().FontSize(9);
-                            h.Cell().Background(TableHeader).Padding(4).Text("Description").FontColor(Colors.White).Bold().FontSize(9);
+                        t.ColumnsDefinition(c => { c.ConstantColumn(80); c.RelativeColumn(); });
+                        t.Header(h => {
+                            h.Cell().Background(TableHeader).Padding(4).Text("Term").FontColor(Colors.White).SemiBold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("Definition").FontColor(Colors.White).SemiBold().FontSize(9);
                         });
-                        var roles = new (string, string)[]
-                        {
-                            ("Admin",   "Full system access. Can manage users, courses, and view all reports."),
-                            ("Lecturer","Can approve/reject integrations, view reports, and monitor project activity."),
-                            ("Student", "Can submit Jira/GitHub links, view their own project dashboard."),
-                        };
+                        var terms = new[] { ("FR", "Functional Requirement"), ("NFR", "Non-Functional Requirement"), ("PR", "Pull Request (GitHub)") };
                         bool alt = false;
-                        foreach (var (role, desc) in roles)
-                        {
+                        foreach (var (term, def) in terms) {
                             string bg = alt ? TableRowAlt : Colors.White;
-                            t.Cell().Background(bg).Padding(4).Text(role).Bold().FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(desc).FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text(term).SemiBold().FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text(def).FontSize(9);
                             alt = !alt;
                         }
                     });
 
-                    SubSection(doc, "2.4 Operating Environment");
-                    doc.Item().PaddingLeft(10).Column(env =>
-                    {
-                        env.Item().Text("• Backend: ASP.NET Core Web API (.NET 8), deployed on Render.com").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("• Database: PostgreSQL on Supabase").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("• Cache: Redis on Upstash").FontSize(10).FontColor(TextGray);
-                        env.Item().Text($"• Source Control: GitHub ({data.GithubRepoUrl})").FontSize(10).FontColor(TextGray);
-                        if (!string.IsNullOrEmpty(data.GithubDefaultBranch))
-                            env.Item().Text($"• Default Branch: {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
+                    // ───────────────────────────────────────────────
+                    // 2. TEAM OVERVIEW
+                    // ───────────────────────────────────────────────
+                    SectionHeader(doc, "2. Team Composition & Activity Base");
+                    
+                    doc.Item().PaddingLeft(10).Table(t => {
+                        t.ColumnsDefinition(c => { c.RelativeColumn(3); c.ConstantColumn(80); c.ConstantColumn(80); c.ConstantColumn(80); });
+                        t.Header(h => {
+                            h.Cell().Background(TableHeader).Padding(4).Text("Member Profile").FontColor(Colors.White).SemiBold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("Jira Status").FontColor(Colors.White).SemiBold().FontSize(9).AlignCenter();
+                            h.Cell().Background(TableHeader).Padding(4).Text("Commits").FontColor(Colors.White).SemiBold().FontSize(9).AlignCenter();
+                            h.Cell().Background(TableHeader).Padding(4).Text("PRs").FontColor(Colors.White).SemiBold().FontSize(9).AlignCenter();
+                        });
+                        bool alt = false;
+                        foreach(var m in (data.TeamMembers.Count > 0 ? data.TeamMembers : new List<string> { "No members found" })) {
+                            string bg = alt ? TableRowAlt : Colors.White;
+                            t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(m).FontSize(9);
+                            t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text("Linked").FontColor(Colors.Green.Darken2).FontSize(9).AlignCenter();
+                            t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(data.GithubTotalCommits.ToString()).FontSize(9).AlignCenter();
+                            t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(data.GithubTotalPRs.ToString()).FontSize(9).AlignCenter();
+                            alt = !alt;
+                        }
                     });
 
-                    SubSection(doc, "2.5 Team Composition");
-                    if (data.TeamMembers.Count > 0)
-                    {
-                        doc.Item().PaddingLeft(10).Column(tm =>
-                        {
-                            foreach (var member in data.TeamMembers)
-                                tm.Item().Text($"• {member}").FontSize(10).FontColor(TextGray);
-                        });
-                    }
-                    else
-                    {
-                        doc.Item().PaddingLeft(10).Text("No team members found.").FontSize(10).FontColor(TextGray).Italic();
-                    }
-
                     // ───────────────────────────────────────────────
-                    // 3. SYSTEM FEATURES (Functional Requirements)
+                    // 3. SYSTEM FEATURES (FRs)
                     // ───────────────────────────────────────────────
+                    doc.Item().PageBreak(); // Epics and stories start on a fresh page
                     SectionHeader(doc, "3. System Features (Functional Requirements)");
-                    doc.Item().Text(
-                        "The following features are derived from Jira issues of type Epic and Story, " +
-                        "representing the high-level functional requirements of the system.")
-                        .FontSize(10).FontColor(TextGray).Italic();
+                    doc.Item().PaddingBottom(10).Text("The functional requirements below are synchronized directly from Jira Epics and Stories.")
+                        .FontSize(9).FontColor(TextGray).Italic();
 
                     if (data.SystemFeatures.Count == 0)
                     {
-                        doc.Item().PaddingTop(6).Text("No Epics or Stories found in the linked Jira project.")
-                            .FontSize(10).FontColor(TextGray).Italic();
+                        doc.Item().PaddingTop(10).Text("No Epics or Stories found.").FontSize(10).FontColor(TextGray).Italic();
                     }
 
-                    int featureIndex = 1;
+                    int featIndex = 1;
                     foreach (var feat in data.SystemFeatures)
                     {
-                        doc.Item().PaddingTop(10).Row(row =>
-                        {
-                            row.RelativeItem().Background(AccentColor).Padding(6)
-                                .Text($"3.{featureIndex} [{feat.IssueKey}] {feat.Title}")
-                                .Bold().FontSize(11).FontColor(Colors.White);
-                        });
-
-                        doc.Item().PaddingLeft(10).PaddingTop(4).Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.ConstantColumn(110); c.RelativeColumn(); });
-                            void Row2(string k, string v)
-                            {
-                                t.Cell().Background(TableRowAlt).Padding(4).Text(k).Bold().FontSize(9);
-                                t.Cell().Padding(4).Text(v).FontSize(9);
-                            }
-                            Row2("Issue Key", feat.IssueKey);
-                            Row2("Type", feat.IssueType);
-                            Row2("Status", feat.Status ?? "N/A");
-                            Row2("Description", string.IsNullOrWhiteSpace(feat.Description) ? "No description provided." : feat.Description);
-                        });
-
-                        // Sub-tasks as detailed requirements
-                        if (feat.SubTasks.Count > 0)
-                        {
-                            doc.Item().PaddingLeft(10).PaddingTop(4)
-                                .Text($"3.{featureIndex} Detailed Requirements (Sub-tasks / Tasks):")
-                                .Bold().FontSize(10).FontColor(PrimaryColor);
-
-                            doc.Item().PaddingLeft(10).Table(t =>
-                            {
-                                t.ColumnsDefinition(c =>
+                        doc.Item().PaddingTop(15).Decoration(decor => {
+                            decor.Before().Background(AccentColor).Padding(6).Row(row => {
+                                row.RelativeItem().Text($"3.{featIndex} {feat.IssueKey}: {feat.Title}").Bold().FontSize(11).FontColor(Colors.White);
+                                row.ConstantItem(80).Text(feat.Status ?? "N/A").Bold().FontSize(9).FontColor(Colors.White).AlignRight();
+                            });
+                            decor.Content().BorderLeft(2).BorderRight(2).BorderBottom(2).BorderColor(AccentColor).Padding(10).Column(fc => {
+                                fc.Item().Text("Description:").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                                fc.Item().PaddingTop(2).Text(string.IsNullOrWhiteSpace(feat.Description) ? "No description provided." : feat.Description).FontSize(9).FontColor(TextGray).LineHeight(1.4f);
+                                
+                                if (feat.SubTasks.Count > 0)
                                 {
-                                    c.ConstantColumn(90); c.RelativeColumn(3); c.ConstantColumn(70); c.ConstantColumn(70);
-                                });
-                                t.Header(h =>
-                                {
-                                    foreach (var col in new[] { "Issue Key", "Title", "Priority", "Status" })
-                                        h.Cell().Background(TableHeader).Padding(4).Text(col)
-                                            .FontColor(Colors.White).Bold().FontSize(9);
-                                });
-                                bool alt = false;
-                                foreach (var sub in feat.SubTasks)
-                                {
-                                    string bg = alt ? TableRowAlt : Colors.White;
-                                    t.Cell().Background(bg).Padding(4).Text(sub.IssueKey).FontSize(9);
-                                    t.Cell().Background(bg).Padding(4).Text(sub.Title).FontSize(9);
-                                    t.Cell().Background(bg).Padding(4).Text(sub.Priority ?? "N/A").FontSize(9);
-                                    t.Cell().Background(bg).Padding(4).Text(sub.Status ?? "N/A").FontSize(9);
-                                    alt = !alt;
+                                    fc.Item().PaddingTop(10).Text("Breakdown (Tasks / Sub-tasks):").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                                    fc.Item().PaddingTop(4).Table(t => {
+                                        t.ColumnsDefinition(c => { c.ConstantColumn(80); c.RelativeColumn(); c.ConstantColumn(60); c.ConstantColumn(70); });
+                                        t.Header(h => {
+                                            h.Cell().Background(TableRowAlt).BorderBottom(1).BorderColor(BorderGray).Padding(4).Text("Task Key").SemiBold().FontSize(8);
+                                            h.Cell().Background(TableRowAlt).BorderBottom(1).BorderColor(BorderGray).Padding(4).Text("Summary").SemiBold().FontSize(8);
+                                            h.Cell().Background(TableRowAlt).BorderBottom(1).BorderColor(BorderGray).Padding(4).Text("Priority").SemiBold().FontSize(8);
+                                            h.Cell().Background(TableRowAlt).BorderBottom(1).BorderColor(BorderGray).Padding(4).Text("Status").SemiBold().FontSize(8).AlignRight();
+                                        });
+                                        foreach(var sub in feat.SubTasks) {
+                                            t.Cell().BorderBottom(1).BorderColor(BorderGray).Padding(4).Text(sub.IssueKey).FontSize(8).FontColor(PrimaryColor);
+                                            t.Cell().BorderBottom(1).BorderColor(BorderGray).Padding(4).Text(sub.Title).FontSize(8);
+                                            t.Cell().BorderBottom(1).BorderColor(BorderGray).Padding(4).Text(sub.Priority ?? "N/A").FontSize(8);
+                                            t.Cell().BorderBottom(1).BorderColor(BorderGray).Padding(4).Text(sub.Status ?? "N/A").FontSize(8).AlignRight();
+                                        }
+                                    });
                                 }
                             });
-                        }
-                        featureIndex++;
-                    }
-
-                    // ───────────────────────────────────────────────
-                    // 4. EXTERNAL INTERFACE REQUIREMENTS
-                    // ───────────────────────────────────────────────
-                    SectionHeader(doc, "4. External Interface Requirements");
-
-                    SubSection(doc, "4.1 User Interfaces");
-                    doc.Item().PaddingLeft(10).Text(
-                        "The system exposes a RESTful HTTP API consumed by a web-based frontend. " +
-                        "The API follows OpenAPI 3.0 specification and is documented via Swagger UI " +
-                        "at /swagger/index.html.").FontSize(10).FontColor(TextGray);
-
-                    SubSection(doc, "4.2 Software Interfaces");
-                    doc.Item().PaddingLeft(10).Table(t =>
-                    {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(130); c.RelativeColumn(); });
-                        t.Header(h =>
-                        {
-                            h.Cell().Background(TableHeader).Padding(4).Text("System").FontColor(Colors.White).Bold().FontSize(9);
-                            h.Cell().Background(TableHeader).Padding(4).Text("Purpose").FontColor(Colors.White).Bold().FontSize(9);
                         });
-                        var ifaces = new (string, string)[]
-                        {
-                            ("Jira REST API v3", "Retrieve issues, worklogs, sprints, and project metadata"),
-                            ("GitHub REST API v3","Retrieve commits, pull requests, branches, and repository info"),
-                            ("PostgreSQL (Supabase)", "Persistent data storage"),
-                            ("Redis (Upstash)", "Distributed locking and caching for background sync worker"),
-                            ("JWT (HS256)", "Stateless authentication and authorisation"),
-                        };
-                        bool alt = false;
-                        foreach (var (sys, purpose) in ifaces)
-                        {
-                            string bg = alt ? TableRowAlt : Colors.White;
-                            t.Cell().Background(bg).Padding(4).Text(sys).Bold().FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(purpose).FontSize(9);
-                            alt = !alt;
-                        }
-                    });
-
-                    if (data.ExternalInterfaces.Count > 0)
-                    {
-                        SubSection(doc, "4.3 Interface Requirements from Jira");
-                        IssueTable(doc, data.ExternalInterfaces);
-                    }
-
-                    SubSection(doc, "4.4 Communication Interfaces");
-                    doc.Item().PaddingLeft(10).Text(
-                        "• All API communication uses HTTPS (TLS 1.2+).\n" +
-                        "• Jira and GitHub APIs are accessed over HTTPS REST.\n" +
-                        "• Redis connection uses SSL on port 6379.\n" +
-                        "• PostgreSQL connection uses SSL on port 5432.").FontSize(10).FontColor(TextGray);
-
-                    // GitHub stats box
-                    if (data.GithubTotalCommits > 0 || data.GithubTotalPRs > 0)
-                    {
-                        doc.Item().PaddingTop(8).Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
-                            void StatBox(string label, string value)
-                            {
-                                t.Cell().Border(1).BorderColor(BorderGray).Padding(8).Column(col =>
-                                {
-                                    col.Item().Text(value).Bold().FontSize(20).FontColor(AccentColor).AlignCenter();
-                                    col.Item().Text(label).FontSize(9).FontColor(TextGray).AlignCenter();
-                                });
-                            }
-                            StatBox("Total Commits", data.GithubTotalCommits.ToString());
-                            StatBox("Pull Requests", data.GithubTotalPRs.ToString());
-                            StatBox("Default Branch", data.GithubDefaultBranch ?? "N/A");
-                        });
+                        featIndex++;
                     }
 
                     // ───────────────────────────────────────────────
-                    // 5. NON-FUNCTIONAL REQUIREMENTS
+                    // 4. NON-FUNCTIONAL REQUIREMENTS
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "5. Non-Functional Requirements");
-
-                    // Standard NFRs table (always included)
-                    SubSection(doc, "5.1 Standard Non-Functional Requirements");
-                    doc.Item().Table(t =>
-                    {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(40); c.ConstantColumn(120); c.RelativeColumn(); c.ConstantColumn(80); });
-                        t.Header(h =>
-                        {
-                            foreach (var col in new[] { "ID", "Category", "Requirement", "Metric" })
-                                h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold().FontSize(9);
-                        });
-                        var nfrRows = new[]
-                        {
-                            ("NFR-01", "Performance",   "API response time for non-report endpoints must be ≤ 500ms under normal load.", "≤ 500 ms"),
-                            ("NFR-02", "Availability",  "The system must be available at least 99% of the time (excluding scheduled maintenance).", "≥ 99% uptime"),
-                            ("NFR-03", "Security",      "All passwords must be stored using BCrypt hashing. JWT tokens expire after a configurable period.", "BCrypt + JWT"),
-                            ("NFR-04", "Scalability",   "The sync worker must handle at least 50 concurrent project integrations without bottlenecks.", "50+ projects"),
-                            ("NFR-05", "Reliability",   "Failed sync jobs must be logged and retried without data loss.", "Auto-retry"),
-                            ("NFR-06", "Maintainability","Code must follow C# naming conventions and include XML documentation for public APIs.", "Code review"),
-                            ("NFR-07", "Portability",   "The system is containerised with Docker and deployable on any OCI-compliant platform.", "Docker image"),
-                        };
-                        bool alt = false;
-                        foreach (var (id, cat, req, metric) in nfrRows)
-                        {
-                            string bg = alt ? TableRowAlt : Colors.White;
-                            t.Cell().Background(bg).Padding(4).Text(id).Bold().FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(cat).FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(req).FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(metric).FontSize(9);
-                            alt = !alt;
-                        }
-                    });
-
-                    // NFRs from Jira (if any)
-                    if (data.NonFunctionalRequirements.Count > 0)
-                    {
-                        SubSection(doc, "5.2 Additional NFRs from Jira");
-                        IssueTable(doc, data.NonFunctionalRequirements);
-                    }
+                    SectionHeader(doc, "4. Non-Functional Requirements");
+                    SubSection(doc, "4.1 System NFRs");
+                    IssueTable(doc, data.NonFunctionalRequirements.Count > 0 ? data.NonFunctionalRequirements : DefaultNfrs());
 
                     // ───────────────────────────────────────────────
-                    // 6. OTHER REQUIREMENTS
+                    // 5. PROJECT SIGN-OFF
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "6. Other Requirements");
-
-                    SubSection(doc, "6.1 Legal and Compliance");
-                    doc.Item().PaddingLeft(10).Text(
-                        "• The system must comply with applicable data protection regulations " +
-                        "(e.g. privacy of student data).\n" +
-                        "• API tokens for Jira and GitHub must be stored as encrypted environment " +
-                        "variables and never committed to version control.")
-                        .FontSize(10).FontColor(TextGray);
-
-                    SubSection(doc, "6.2 Localisation");
-                    doc.Item().PaddingLeft(10).Text(
-                        "The primary language of the user interface is English. " +
-                        "Date/time values must be stored as UTC and converted to the local timezone on the frontend.")
-                        .FontSize(10).FontColor(TextGray);
-
-                    // ── SIGN-OFF TABLE ──
-                    doc.Item().PaddingTop(30).Table(t =>
-                    {
+                    SectionHeader(doc, "5. Document Sign-Off");
+                    doc.Item().PaddingTop(10).Table(t => {
                         t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
-                        t.Header(h =>
-                        {
-                            foreach (var col in new[] { "Role", "Name", "Signature / Date" })
-                                h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).Bold().FontSize(9);
+                        t.Cell().Padding(10).Column(c => {
+                            c.Item().Text("Student Leader").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                            c.Item().PaddingTop(40).BorderBottom(1).BorderColor(BorderGray);
+                            c.Item().PaddingTop(5).Text("Signature / Date").FontSize(8).FontColor(TextGray);
                         });
-                        foreach (var (role, _) in new[] { ("Lecturer", ""), ("Leader", ""), ("Team Member", "") })
-                        {
-                            t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text(role).FontSize(9);
-                            t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text("").FontSize(9);
-                            t.Cell().Border(1).BorderColor(BorderGray).Padding(20).Text("").FontSize(9);
-                        }
+                        t.Cell().Padding(10).Column(c => {
+                            c.Item().Text("Reviewing Lecturer").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                            c.Item().PaddingTop(40).BorderBottom(1).BorderColor(BorderGray);
+                            c.Item().PaddingTop(5).Text("Signature / Date").FontSize(8).FontColor(TextGray);
+                        });
+                        t.Cell().Padding(10).Column(c => {
+                            c.Item().Text("System Administrator").SemiBold().FontSize(9).FontColor(PrimaryColor);
+                            c.Item().PaddingTop(40).BorderBottom(1).BorderColor(BorderGray);
+                            c.Item().PaddingTop(5).Text("System Validated").FontSize(8).FontColor(TextGray);
+                        });
                     });
                 });
             });
@@ -559,60 +337,39 @@ public class PdfReportGenerator : IPdfReportGenerator
     // ─────────────────────────────────────────────────────────
     private static void SectionHeader(ColumnDescriptor doc, string title)
     {
-        doc.Item().PaddingTop(20).BorderBottom(2).BorderColor(PrimaryColor)
-            .PaddingBottom(4).Text(title).Bold().FontSize(14).FontColor(PrimaryColor);
+        doc.Item().PaddingTop(25).PaddingBottom(10).Text(title).Bold().FontSize(16).FontColor(PrimaryColor);
     }
 
     private static void SubSection(ColumnDescriptor doc, string title)
     {
-        doc.Item().PaddingTop(10).Text(title).SemiBold().FontSize(11).FontColor(AccentColor);
-    }
-
-    private static void AcronymTable(ColumnDescriptor doc, IEnumerable<(string, string)> rows)
-    {
-        doc.Item().PaddingLeft(10).Table(t =>
-        {
-            t.ColumnsDefinition(c => { c.ConstantColumn(80); c.RelativeColumn(); });
-            t.Header(h =>
-            {
-                h.Cell().Background(TableHeader).Padding(4).Text("Acronym").FontColor(Colors.White).Bold().FontSize(9);
-                h.Cell().Background(TableHeader).Padding(4).Text("Definition").FontColor(Colors.White).Bold().FontSize(9);
-            });
-            bool alt = false;
-            foreach (var (ac, def) in rows)
-            {
-                string bg = alt ? TableRowAlt : Colors.White;
-                t.Cell().Background(bg).Padding(4).Text(ac).Bold().FontSize(9);
-                t.Cell().Background(bg).Padding(4).Text(def).FontSize(9);
-                alt = !alt;
-            }
-        });
+        doc.Item().PaddingTop(12).PaddingBottom(4).Text(title).SemiBold().FontSize(11).FontColor(AccentColor);
     }
 
     private static void IssueTable(ColumnDescriptor doc, List<SrsIssueRow> rows)
     {
         doc.Item().PaddingLeft(10).Table(t =>
         {
-            t.ColumnsDefinition(c =>
-            {
-                c.ConstantColumn(90); c.RelativeColumn(3); c.ConstantColumn(70); c.ConstantColumn(70);
-            });
-            t.Header(h =>
-            {
-                foreach (var col in new[] { "Issue Key", "Title", "Priority", "Status" })
-                    h.Cell().Background(TableHeader).Padding(4).Text(col)
-                        .FontColor(Colors.White).Bold().FontSize(9);
+            t.ColumnsDefinition(c => { c.ConstantColumn(90); c.RelativeColumn(3); c.ConstantColumn(70); c.ConstantColumn(70); });
+            t.Header(h => {
+                foreach (var col in new[] { "Issue Key", "Description", "Priority", "Status" })
+                    h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).SemiBold().FontSize(9);
             });
             bool alt = false;
-            foreach (var row in rows)
-            {
+            foreach (var row in rows) {
                 string bg = alt ? TableRowAlt : Colors.White;
-                t.Cell().Background(bg).Padding(4).Text(row.IssueKey).FontSize(9);
-                t.Cell().Background(bg).Padding(4).Text(row.Title).FontSize(9);
-                t.Cell().Background(bg).Padding(4).Text(row.Priority ?? "N/A").FontSize(9);
-                t.Cell().Background(bg).Padding(4).Text(row.Status ?? "N/A").FontSize(9);
+                t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(row.IssueKey).FontSize(9).FontColor(PrimaryColor);
+                t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(row.Title).FontSize(9);
+                t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(row.Priority ?? "N/A").FontSize(9);
+                t.Cell().Background(bg).BorderBottom(1).BorderColor(BorderGray).Padding(6).Text(row.Status ?? "N/A").FontSize(9);
                 alt = !alt;
             }
         });
     }
+
+    private static List<SrsIssueRow> DefaultNfrs() => new List<SrsIssueRow>
+    {
+        new SrsIssueRow { IssueKey = "NFR-01", Title = "System must synchronize Jira tasks securely over SSL", Status = "ACTIVE", Priority = "High" },
+        new SrsIssueRow { IssueKey = "NFR-02", Title = "GitHub Webhook response time must be under 500ms", Status = "ACTIVE", Priority = "Medium" },
+        new SrsIssueRow { IssueKey = "NFR-03", Title = "Report generation should not block UI thread", Status = "ACTIVE", Priority = "High" }
+    };
 }

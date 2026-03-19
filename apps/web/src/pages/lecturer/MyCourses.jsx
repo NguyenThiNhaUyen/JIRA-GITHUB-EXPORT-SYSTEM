@@ -10,6 +10,7 @@ import { CourseCard } from"@/pages/lecturer/components/MyCourses/CourseCard.jsx"
 
 // Hooks
 import { useMyCoursesHook } from"./hooks/useMyCoursesHook.js";
+import { Skeleton } from "@/components/ui/Skeleton.jsx";
 
 export default function MyCourses() {
  const navigate = useNavigate();
@@ -49,8 +50,18 @@ export default function MyCourses() {
 
  <div className="p-8">
  {isLoading ? (
- <div className="flex justify-center py-20">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+ {Array(3).fill(0).map((_, i) => (
+ <div key={i} className="p-8 border border-gray-100 rounded-[32px] space-y-6">
+ <Skeleton className="h-4 w-24" />
+ <Skeleton className="h-6 w-full" />
+ <div className="flex justify-between">
+ <Skeleton className="h-4 w-16" />
+ <Skeleton className="h-4 w-16" />
+ </div>
+ <Skeleton className="h-10 w-full rounded-xl" />
+ </div>
+ ))}
  </div>
  ) : filtered.length === 0 ? (
  <div className="py-20 text-center">

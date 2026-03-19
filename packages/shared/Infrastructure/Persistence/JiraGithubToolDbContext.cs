@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JiraGithubExport.Shared.Infrastructure.Persistence;
 
@@ -78,6 +79,20 @@ public partial class JiraGithubToolDbContext : DbContext
 
     public virtual DbSet<audit_log> audit_logs { get; set; }
     public virtual DbSet<notification> notifications { get; set; }
+
+    // PascalCase Aliases for Unit Tests compatibility
+    [NotMapped] public virtual DbSet<user> Users => users;
+    [NotMapped] public virtual DbSet<role> Roles => roles;
+    [NotMapped] public virtual DbSet<project> Projects => projects;
+    [NotMapped] public virtual DbSet<course> Courses => courses;
+    [NotMapped] public virtual DbSet<semester> Semesters => semesters;
+    [NotMapped] public virtual DbSet<subject> Subjects => subjects;
+    [NotMapped] public virtual DbSet<lecturer> Lecturers => lecturers;
+    [NotMapped] public virtual DbSet<student> Students => students;
+    [NotMapped] public virtual DbSet<course_enrollment> CourseEnrollments => course_enrollments;
+    [NotMapped] public virtual DbSet<project_integration> ProjectIntegrations => project_integrations;
+    [NotMapped] public virtual DbSet<github_repository> GithubRepositories => github_repositories;
+    [NotMapped] public virtual DbSet<jira_project> JiraProjects => jira_projects;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
