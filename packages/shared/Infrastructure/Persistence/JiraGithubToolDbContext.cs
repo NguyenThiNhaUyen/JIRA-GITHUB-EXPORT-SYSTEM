@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace JiraGithubExport.Shared.Infrastructure.Persistence;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence;
 
 public partial class JiraGithubToolDbContext : DbContext
 {
@@ -511,6 +511,11 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasForeignKey(d => d.submitted_by_user_id)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_project_documents_submitted_by");
+
+            entity.HasOne(d => d.reviewer_user).WithMany()
+                .HasForeignKey(d => d.reviewer_user_id)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_project_documents_reviewer");
         });
 
         modelBuilder.Entity<project_integration>(entity =>
@@ -538,6 +543,16 @@ public partial class JiraGithubToolDbContext : DbContext
             entity.HasOne(d => d.project).WithOne(p => p.project_integration)
                 .HasForeignKey<project_integration>(d => d.project_id)
                 .HasConstraintName("fk_project_integrations_project");
+
+            entity.HasOne(d => d.submitted_by).WithMany()
+                .HasForeignKey(d => d.submitted_by_user_id)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_project_integrations_submitted_by");
+
+            entity.HasOne(d => d.approved_by).WithMany()
+                .HasForeignKey(d => d.approved_by_user_id)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_project_integrations_approved_by");
         });
 
         modelBuilder.Entity<role>(entity =>
@@ -613,6 +628,29 @@ public partial class JiraGithubToolDbContext : DbContext
             entity.HasOne(d => d.student_user).WithMany(p => p.team_members)
                 .HasForeignKey(d => d.student_user_id)
                 .HasConstraintName("fk_team_members_student");
+        });
+
+        modelBuilder.Entity<team_invitation>(entity =>
+        {
+            entity.HasKey(e => e.id).HasName("team_invitations_pkey");
+
+            entity.Property(e => e.status).HasDefaultValue("PENDING");
+            entity.Property(e => e.created_at).HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.project).WithMany()
+                .HasForeignKey(d => d.project_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_team_invitations_project");
+
+            entity.HasOne(d => d.invited_by_user).WithMany()
+                .HasForeignKey(d => d.invited_by_user_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_team_invitations_inviter");
+
+            entity.HasOne(d => d.invited_student_user).WithMany()
+                .HasForeignKey(d => d.invited_student_user_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_team_invitations_invited_student");
         });
 
         modelBuilder.Entity<user>(entity =>

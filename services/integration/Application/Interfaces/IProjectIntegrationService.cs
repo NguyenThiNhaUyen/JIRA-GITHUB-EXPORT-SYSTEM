@@ -1,7 +1,7 @@
-using JiraGithubExport.Shared.Contracts.Requests.Projects;
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface IProjectIntegrationService
 {

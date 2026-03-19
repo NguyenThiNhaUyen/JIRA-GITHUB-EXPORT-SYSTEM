@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Reports;
+namespace JiraGithubExportSystem.Shared.Contracts.Responses.Reports;
 
 public class CommitStatistics
 {

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations.Specific;
 
 public class ProjectRepository : GenericRepository<project>, IProjectRepository
 {

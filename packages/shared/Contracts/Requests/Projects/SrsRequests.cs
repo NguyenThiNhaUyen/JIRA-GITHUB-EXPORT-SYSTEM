@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
-namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
+namespace JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
 
 public class UploadSrsRequest
 {

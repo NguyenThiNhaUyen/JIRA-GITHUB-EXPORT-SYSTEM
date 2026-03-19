@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {

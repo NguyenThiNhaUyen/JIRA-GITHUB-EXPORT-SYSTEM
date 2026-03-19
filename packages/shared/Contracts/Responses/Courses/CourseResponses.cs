@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Courses;
+namespace JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
 
 public class CourseDetailResponse
 {

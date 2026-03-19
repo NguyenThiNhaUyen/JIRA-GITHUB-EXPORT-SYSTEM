@@ -1,16 +1,16 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using JiraGithubExport.JiraService.DTOs;
-using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.JiraService.DTOs;
+using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.JiraService.Services.Implementations;
+namespace JiraGithubExportSystem.JiraService.Services.Implementations;
 
 public class JiraClient : IJiraClient
 {

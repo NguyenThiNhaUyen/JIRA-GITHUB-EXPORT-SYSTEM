@@ -1,8 +1,8 @@
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Courses;
-using JiraGithubExport.Shared.Contracts.Responses.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface ISubjectService
 {

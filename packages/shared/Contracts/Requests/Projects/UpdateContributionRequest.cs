@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
+namespace JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
 
 public class UpdateContributionRequest
 {

@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text.Json;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Common;
 
-namespace JiraGithubExport.IntegrationService.Middleware;
+namespace JiraGithubExportSystem.IntegrationService.Middleware;
 
 public class ExceptionHandlerMiddleware
 {

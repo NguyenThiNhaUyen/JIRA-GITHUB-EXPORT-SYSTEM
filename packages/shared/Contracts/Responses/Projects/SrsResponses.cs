@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Projects;
+namespace JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
 
 public class SrsDocumentResponse
 {

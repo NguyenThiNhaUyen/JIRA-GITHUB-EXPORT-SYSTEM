@@ -1,8 +1,8 @@
 using ClosedXML.Excel;
-using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations.Reports;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
 
 public class ExcelReportGenerator : IExcelReportGenerator
 {

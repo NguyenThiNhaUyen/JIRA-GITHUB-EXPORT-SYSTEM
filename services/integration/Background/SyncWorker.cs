@@ -1,13 +1,13 @@
 using System.Diagnostics;
-using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace JiraGithubExport.IntegrationService.Background;
+namespace JiraGithubExportSystem.IntegrationService.Background;
 
 public class SyncWorker : BackgroundService
 {

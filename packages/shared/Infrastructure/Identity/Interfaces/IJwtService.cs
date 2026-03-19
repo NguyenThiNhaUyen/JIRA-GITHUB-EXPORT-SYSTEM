@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
 
 public interface IJwtService
 {

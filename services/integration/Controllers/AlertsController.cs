@@ -1,10 +1,10 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace JiraGithubExport.IntegrationService.Controllers;
+namespace JiraGithubExportSystem.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api/alerts")]

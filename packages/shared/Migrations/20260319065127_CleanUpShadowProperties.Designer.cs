@@ -3,6 +3,7 @@ using System;
 using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JiraGithubExportSystem.Shared.Migrations
 {
     [DbContext(typeof(JiraGithubToolDbContext))]
-    partial class JiraGithubToolDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319065127_CleanUpShadowProperties")]
+    partial class CleanUpShadowProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1081,6 +1084,9 @@ namespace JiraGithubExportSystem.Shared.Migrations
                     b.Property<long?>("approved_by_user_id")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("approved_byid")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1101,6 +1107,9 @@ namespace JiraGithubExportSystem.Shared.Migrations
                     b.Property<long?>("submitted_by_user_id")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("submitted_byid")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("updated_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1109,9 +1118,9 @@ namespace JiraGithubExportSystem.Shared.Migrations
                     b.HasKey("project_id")
                         .HasName("project_integrations_pkey");
 
-                    b.HasIndex("approved_by_user_id");
+                    b.HasIndex("approved_byid");
 
-                    b.HasIndex("submitted_by_user_id");
+                    b.HasIndex("submitted_byid");
 
                     b.HasIndex(new[] { "github_repo_id" }, "uq_project_integrations_github_repo")
                         .IsUnique();
@@ -1990,9 +1999,7 @@ namespace JiraGithubExportSystem.Shared.Migrations
                 {
                     b.HasOne("JiraGithubExportSystem.Shared.Models.user", "approved_by")
                         .WithMany()
-                        .HasForeignKey("approved_by_user_id")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_project_integrations_approved_by");
+                        .HasForeignKey("approved_byid");
 
                     b.HasOne("JiraGithubExportSystem.Shared.Models.github_repository", "github_repo")
                         .WithOne("project_integration")
@@ -2015,9 +2022,7 @@ namespace JiraGithubExportSystem.Shared.Migrations
 
                     b.HasOne("JiraGithubExportSystem.Shared.Models.user", "submitted_by")
                         .WithMany()
-                        .HasForeignKey("submitted_by_user_id")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_project_integrations_submitted_by");
+                        .HasForeignKey("submitted_byid");
 
                     b.Navigation("approved_by");
 

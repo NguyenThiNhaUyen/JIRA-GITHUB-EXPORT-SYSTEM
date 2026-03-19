@@ -1,13 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using JiraGithubExport.Shared.Common;
-using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Common;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
 
 public class JwtService : IJwtService
 {

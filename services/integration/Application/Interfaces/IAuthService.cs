@@ -1,7 +1,7 @@
-using JiraGithubExport.Shared.Contracts.Requests.Auth;
-using JiraGithubExport.Shared.Contracts.Responses.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface IAuthService
 {

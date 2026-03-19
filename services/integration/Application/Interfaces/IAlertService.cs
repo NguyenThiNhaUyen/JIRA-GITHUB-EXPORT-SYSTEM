@@ -1,8 +1,8 @@
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface IAlertService
 {

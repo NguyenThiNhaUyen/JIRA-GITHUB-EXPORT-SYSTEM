@@ -1,8 +1,8 @@
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Users;
-using JiraGithubExport.Shared.Contracts.Responses.Users;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Users;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Users;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface IUserService
 {

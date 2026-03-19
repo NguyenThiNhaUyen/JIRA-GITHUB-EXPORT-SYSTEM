@@ -1,14 +1,14 @@
 using AutoMapper;
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Courses;
-using JiraGithubExport.Shared.Contracts.Responses.Courses;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class CourseService : ICourseService
 {

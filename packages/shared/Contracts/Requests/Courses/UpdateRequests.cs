@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Requests.Courses;
+namespace JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
 
 public class UpdateSemesterRequest
 {

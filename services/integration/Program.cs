@@ -1,22 +1,22 @@
 using System.Text;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.HttpOverrides;
-using JiraGithubExport.IntegrationService.Application.Implementations;
-using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExport.IntegrationService.Background;
-using JiraGithubExport.Shared.Common;
-using JiraGithubExport.Shared.Models;
-using JiraGithubExport.JiraService.Services.Implementations;
-using JiraGithubExport.GithubService.Services.Implementations;
-using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
-using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.IntegrationService.Middleware;
+using JiraGithubExportSystem.IntegrationService.Application.Implementations;
+using JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExportSystem.IntegrationService.Background;
+using JiraGithubExportSystem.Shared.Common;
+using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExportSystem.JiraService.Services.Implementations;
+using JiraGithubExportSystem.GithubService.Services.Implementations;
+using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.IntegrationService.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -88,14 +88,14 @@ using Microsoft.OpenApi.Models;
                         context.HandleResponse();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExportSystem.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
                         return context.Response.WriteAsync(result);
                     },
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         context.Response.ContentType = "application/json";
-                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExportSystem.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
                         return context.Response.WriteAsync(result);
                     }
                 };
@@ -108,7 +108,7 @@ using Microsoft.OpenApi.Models;
             // ============================================
             
             // AutoMapper
-            builder.Services.AddAutoMapper(typeof(JiraGithubExport.IntegrationService.Application.Mappings.MappingProfile));
+            builder.Services.AddAutoMapper(typeof(JiraGithubExportSystem.IntegrationService.Application.Mappings.MappingProfile));
 
             // Repository & UnitOfWork
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -262,7 +262,7 @@ using Microsoft.OpenApi.Models;
 
             // Map controllers & SignalR Hubs
             app.MapControllers();
-            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExportSystem.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
 
             // ============================================
             // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)

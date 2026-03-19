@@ -1,11 +1,11 @@
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations.Specific;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations;
 
 public class UnitOfWork : IUnitOfWork
 {

@@ -3,6 +3,7 @@ using System;
 using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JiraGithubExportSystem.Shared.Migrations
 {
     [DbContext(typeof(JiraGithubToolDbContext))]
-    partial class JiraGithubToolDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319065312_FixProjectIntegrationMappings")]
+    partial class FixProjectIntegrationMappings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

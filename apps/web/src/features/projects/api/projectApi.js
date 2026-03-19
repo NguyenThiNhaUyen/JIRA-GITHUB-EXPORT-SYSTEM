@@ -30,7 +30,7 @@ export async function deleteProject(projectId) {
 export async function addTeamMember(projectId, studentUserId, role = "MEMBER", responsibility = "") {
     const res = await client.post(`/projects/${projectId}/members`, {
         studentUserId,
-        role,
+        teamRole: role,
         responsibility
     });
     return unwrap(res);

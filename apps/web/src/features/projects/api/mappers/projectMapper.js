@@ -8,18 +8,27 @@ export const mapProject = (project) => {
         courseId: project.courseId,
         courseName: project.courseName,
         team: (project.teamMembers || []).map(member => ({
+            studentUserId: member.studentUserId,
             studentId: member.studentUserId,
-            studentName: member.studentName,
+            studentName: member.fullName,
             studentCode: member.studentCode,
-            role: member.role,
-            contributionScore: member.contributionScore
+            role: member.teamRole,
+            teamRole: member.teamRole,
+            participationStatus: member.participationStatus,
+            responsibility: member.responsibility,
+            joinedAt: member.joinedAt
         })),
         integration: project.integration ? {
-            githubUrl: project.integration.githubUrl,
-            jiraUrl: project.integration.jiraUrl,
-            githubStatus: project.integration.githubStatus,
-            jiraStatus: project.integration.jiraStatus,
-            lastSyncAt: project.integration.lastSyncAt
+            githubRepoUrl: project.integration.githubRepoUrl,
+            githubRepoOwner: project.integration.githubRepoOwner,
+            githubRepoName: project.integration.githubRepoName,
+            jiraProjectKey: project.integration.jiraProjectKey,
+            jiraSiteUrl: project.integration.jiraSiteUrl,
+            approvalStatus: project.integration.approvalStatus,
+            githubStatus: project.integration.approvalStatus,
+            jiraStatus: project.integration.approvalStatus,
+            submittedAt: project.integration.submittedAt,
+            approvedAt: project.integration.approvedAt
         } : null,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt
@@ -39,15 +48,19 @@ export const mapProjectList = (pagedResponse) => {
 export const mapProjectMetrics = (metrics) => {
     if (!metrics) return null;
     return {
-        totalCommits: metrics.totalCommits || 0,
-        totalIssues: metrics.totalIssues || 0,
-        myCommits: metrics.userCommits || 0,
-        myIssues: metrics.userIssues || 0,
-        lastSyncAt: metrics.lastSyncAt,
+        project: metrics.project,
+        teamSummary: metrics.teamSummary,
+        githubStats: metrics.githubStats,
+        jiraStats: metrics.jiraStats,
         contributions: (metrics.memberContributions || []).map(m => ({
-            studentId: m.studentUserId,
-            commits: m.commitsCount || 0,
-            issues: m.issuesCount || 0
+            studentCode: m.studentCode,
+            fullName: m.fullName,
+            commits: m.commits30d || 0,
+            pullRequests: m.pullRequests30d || 0,
+            issues: m.jiraIssuesCompleted30d || 0,
+            lastActivity: m.lastActivityDate,
+            inactiveDays: m.inactiveDays,
+            alert: m.alert
         }))
     };
 };

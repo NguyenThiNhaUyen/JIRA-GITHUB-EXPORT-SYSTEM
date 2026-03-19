@@ -1,6 +1,6 @@
 using System;
 
-namespace JiraGithubExport.Shared.Models;
+namespace JiraGithubExportSystem.Shared.Models;
 
 public partial class audit_log
 {

@@ -1,14 +1,14 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Projects;
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class InvitationService : IInvitationService
 {

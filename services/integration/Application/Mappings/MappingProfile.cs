@@ -1,13 +1,13 @@
 using AutoMapper;
-using JiraGithubExport.Shared.Contracts.Requests.Auth;
-using JiraGithubExport.Shared.Contracts.Requests.Courses;
-using JiraGithubExport.Shared.Contracts.Requests.Projects;
-using JiraGithubExport.Shared.Contracts.Responses.Auth;
-using JiraGithubExport.Shared.Contracts.Responses.Courses;
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.IntegrationService.Application.Mappings;
+namespace JiraGithubExportSystem.IntegrationService.Application.Mappings;
 
 public class MappingProfile : Profile
 {

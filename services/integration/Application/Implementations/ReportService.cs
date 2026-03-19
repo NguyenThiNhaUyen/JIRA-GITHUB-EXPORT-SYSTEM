@@ -1,16 +1,16 @@
 using System.Security.Claims;
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting;
-using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class ReportService : IReportService
 {

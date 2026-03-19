@@ -1,6 +1,6 @@
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 
 public interface IReportService
 {

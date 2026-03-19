@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using JiraGithubExport.Shared.Common;
-using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Common;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.Extensions.Options;
 using Xunit;
 

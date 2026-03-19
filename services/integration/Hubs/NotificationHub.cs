@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.IntegrationService.Hubs;
+namespace JiraGithubExportSystem.IntegrationService.Hubs;
 
 public class NotificationHub : Hub
 {

@@ -1,11 +1,11 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Auth;
-using JiraGithubExport.Shared.Contracts.Responses.Auth;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JiraGithubExport.IntegrationService.Controllers;
+namespace JiraGithubExportSystem.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api")]

@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Requests.Projects;
+namespace JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
 
 public class UpdateProjectRequest
 {

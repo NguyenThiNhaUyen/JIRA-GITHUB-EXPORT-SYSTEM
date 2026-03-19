@@ -1,10 +1,10 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class AlertService : IAlertService
 {

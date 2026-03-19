@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+namespace JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
 
 public interface IGitHubClient
 {

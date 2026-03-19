@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
-using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
 
-namespace JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
 
 public class PasswordHasher : IPasswordHasher
 {

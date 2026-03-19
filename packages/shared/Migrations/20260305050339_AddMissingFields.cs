@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace JiraGithubExport.Shared.Migrations
+namespace JiraGithubExportSystem.Shared.Migrations
 {
     /// <inheritdoc />
     public partial class AddMissingFields : Migration

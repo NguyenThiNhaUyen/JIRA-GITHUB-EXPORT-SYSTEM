@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Users;
+namespace JiraGithubExportSystem.Shared.Contracts.Responses.Users;
 
 public class UserDetailResponse
 {

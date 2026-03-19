@@ -1,11 +1,11 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Contracts.Common;
-using JiraGithubExport.Shared.Contracts.Requests.Courses;
-using JiraGithubExport.Shared.Contracts.Responses.Courses;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JiraGithubExport.IntegrationService.Controllers;
+namespace JiraGithubExportSystem.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api/semesters")]

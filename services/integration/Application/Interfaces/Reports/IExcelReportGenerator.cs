@@ -1,6 +1,6 @@
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
 
 public interface IExcelReportGenerator
 {

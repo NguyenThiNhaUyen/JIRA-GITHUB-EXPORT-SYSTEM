@@ -1,15 +1,15 @@
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
-using JiraGithubExport.GithubService.DTOs;
-using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.GithubService.DTOs;
+using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.GithubService.Services.Implementations;
+namespace JiraGithubExportSystem.GithubService.Services.Implementations;
 
 public class GitHubClient : IGitHubClient
 {

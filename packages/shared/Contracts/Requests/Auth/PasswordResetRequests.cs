@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JiraGithubExport.Shared.Contracts.Requests.Auth;
+namespace JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
 
 public class ForgotPasswordRequest
 {

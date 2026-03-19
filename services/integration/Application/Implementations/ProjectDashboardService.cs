@@ -1,12 +1,12 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class ProjectDashboardService : IProjectDashboardService
 {

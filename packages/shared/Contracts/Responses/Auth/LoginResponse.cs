@@ -1,4 +1,4 @@
-namespace JiraGithubExport.Shared.Contracts.Responses.Auth;
+namespace JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
 
 public class LoginResponse
 {

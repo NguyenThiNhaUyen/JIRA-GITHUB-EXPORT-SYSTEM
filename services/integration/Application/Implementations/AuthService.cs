@@ -1,15 +1,15 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Requests.Auth;
-using JiraGithubExport.Shared.Contracts.Responses.Auth;
-using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Persistence;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
+using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Google.Apis.Auth;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class AuthService : IAuthService
 {

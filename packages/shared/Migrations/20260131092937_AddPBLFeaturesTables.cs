@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace JiraGithubExport.Shared.Migrations
+namespace JiraGithubExportSystem.Shared.Migrations
 {
     /// <inheritdoc />
     public partial class AddPBLFeaturesTables : Migration

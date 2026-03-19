@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace JiraGithubExport.Shared.Models;
+namespace JiraGithubExportSystem.Shared.Models;
 
 public partial class jira_issue_link
 {

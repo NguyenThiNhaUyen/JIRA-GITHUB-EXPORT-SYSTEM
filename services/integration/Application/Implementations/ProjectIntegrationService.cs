@@ -1,15 +1,15 @@
-using JiraGithubExport.IntegrationService.Application.Interfaces;
-using JiraGithubExport.Shared.Common.Exceptions;
-using JiraGithubExport.Shared.Contracts.Requests.Projects;
-using JiraGithubExport.Shared.Contracts.Responses.Projects;
-using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+using JiraGithubExportSystem.Shared.Common.Exceptions;
+using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExportSystem.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExport.IntegrationService.Application.Implementations;
+namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
 
 public class ProjectIntegrationService : IProjectIntegrationService
 {

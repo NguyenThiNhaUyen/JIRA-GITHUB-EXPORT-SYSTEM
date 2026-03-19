@@ -1,7 +1,7 @@
-using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExport.Shared.Models;
+using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExportSystem.Shared.Models;
 
-namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {

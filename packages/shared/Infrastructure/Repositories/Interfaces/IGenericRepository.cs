@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 
 public interface IGenericRepository<T> where T : class
 {

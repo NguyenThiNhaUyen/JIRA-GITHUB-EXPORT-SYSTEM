@@ -1,4 +1,4 @@
-namespace JiraGithubExport.JiraService.DTOs;
+namespace JiraGithubExportSystem.JiraService.DTOs;
 
 /// <summary>
 /// Jira Issue Response from API
