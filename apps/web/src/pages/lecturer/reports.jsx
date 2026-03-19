@@ -1,63 +1,154 @@
 // Reports & Export — Lecturer
-import { ChevronRight, Download, FileSpreadsheet, FileText, Filter, CheckSquare } from "lucide-react";
+import { useState } from "react";
+import { ChevronRight, Download, FileSpreadsheet, FileText, Filter, CheckSquare, Loader2, Link as LinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
+import { 
+    useGenerateCommitStats, 
+    useGenerateTeamRoster, 
+    useGenerateActivitySummary, 
+    useGenerateSrs, 
+    useGetMyReports,
+    useGetReportDownloadLink
+} from "../../features/admin/hooks/useReports.js";
 
 const EXPORT_TYPES = [
     {
         id: "by-course",
         icon: FileSpreadsheet,
         color: "bg-teal-500",
-        title: "Báo cáo theo Lớp",
-        desc: "Tổng hợp tiến độ tất cả nhóm trong một lớp học. Bao gồm: số nhóm, trạng thái GitHub/Jira, cảnh báo.",
+        title: "Thống kê Commit (Lớp)",
+        desc: "Xuất file Excel/PDF thống kê số lượng commit của các nhóm trong lớp.",
         formats: ["PDF", "Excel"],
+        action: "commit-stats"
     },
     {
         id: "by-group",
         icon: FileText,
         color: "bg-blue-500",
-        title: "Báo cáo theo Nhóm",
-        desc: "Chi tiết hoạt động từng nhóm: commit, issue, member, deadline.",
+        title: "Danh sách nhóm (Roster)",
+        desc: "Xuất danh sách thành viên và vai trò của một nhóm cụ thể.",
         formats: ["PDF", "Excel"],
+        action: "team-roster"
     },
     {
-        id: "by-student",
-        icon: CheckSquare,
+        id: "srs-report",
+        icon: LinkIcon,
         color: "bg-indigo-500",
-        title: "Báo cáo theo Sinh viên",
-        desc: "Đóng góp cá nhân: commits, issues, sprint coverage. Phù hợp dùng cho bảng điểm quá trình.",
-        formats: ["PDF", "CSV"],
+        title: "Báo cáo SRS (Jira)",
+        desc: "Tự động sinh tài liệu SRS chuẩn ISO 29148 từ các Issue trên Jira.",
+        formats: ["PDF"],
+        action: "srs"
     },
-];
-
-const MOCK_EXPORTS = [
-    { id: 1, type: "Báo cáo theo Lớp", target: "SE001 - K22", format: "PDF", date: "2025-03-01", size: "1.2 MB" },
-    { id: 2, type: "Báo cáo theo Nhóm", target: "Nhóm SE01-G1", format: "Excel", date: "2025-03-03", size: "890 KB" },
-    { id: 3, type: "Báo cáo theo Sinh viên", target: "SE001 - K22", format: "CSV", date: "2025-03-05", size: "240 KB" },
 ];
 
 export default function Reports() {
-    const { success } = useToast();
+    const { success, error, info } = useToast();
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [selectedProject, setSelectedProject] = useState("");
+
+    // Queries
+    const { data: coursesData } = useGetCourses({ pageSize: 100 });
+    const { data: projectsData } = useGetProjects({ courseId: selectedCourse, pageSize: 100 });
+    const { data: myReports, refetch: refetchReports, isLoading: loadingHistory } = useGetMyReports();
+
+    // Mutations
+    const genCommitStats = useGenerateCommitStats();
+    const genTeamRoster = useGenerateTeamRoster();
+    const genSrs = useGenerateSrs();
+
+    const handleExport = async (type, format) => {
+        if (!selectedCourse) {
+            error("Vui lòng chọn lớp học");
+            return;
+        }
+
+        try {
+            info(`Đang khởi tạo báo cáo ${format}...`);
+            let res;
+            if (type === "commit-stats") {
+                res = await genCommitStats.mutateAsync({ courseId: selectedCourse, format });
+            } else if (type === "team-roster") {
+                if (!selectedProject) { error("Vui lòng chọn nhóm"); return; }
+                res = await genTeamRoster.mutateAsync({ projectId: selectedProject, format });
+            } else if (type === "srs") {
+                if (!selectedProject) { error("Vui lòng chọn nhóm"); return; }
+                res = await genSrs.mutateAsync({ projectId: selectedProject, format });
+            }
+
+            success("Yêu cầu đã được gửi! Vui lòng đợi trong giây lát.");
+            // Pool for history update
+            setTimeout(() => refetchReports(), 2000);
+        } catch (err) {
+            error("Lỗi khi tạo báo cáo: " + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const handleDownload = (report) => {
+        if (report.status !== "COMPLETED") {
+            info("Báo cáo đang được xử lý, vui lòng thử lại sau.");
+            return;
+        }
+        // Giả sử file_url là link tĩnh hoặc route API trả về file
+        const fullUrl = report.file_url.startsWith('http') 
+            ? report.file_url 
+            : `${import.meta.env.VITE_API_URL}${report.file_url}`;
+        window.open(fullUrl, '_blank');
+    };
+
+    const courses = coursesData?.items || [];
+    const projects = projectsData?.items || [];
+    const history = myReports || [];
 
     return (
         <div className="space-y-6">
-            {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                 <span className="text-teal-700 font-semibold">Giảng viên</span>
                 <ChevronRight size={12} />
                 <span className="text-gray-800 font-semibold">Báo cáo & Export</span>
             </nav>
 
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight text-gray-800">Báo cáo & Xuất dữ liệu</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Xuất báo cáo theo lớp, nhóm, hoặc sinh viên (PDF / Excel / CSV)</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-800">Báo cáo & Xuất dữ liệu</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">Tạo báo cáo SRS, thống kê commit và danh sách nhóm</p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Chọn lớp học</span>
+                        <select 
+                            value={selectedCourse}
+                            onChange={(e) => setSelectedCourse(e.target.value)}
+                            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[180px]"
+                        >
+                            <option value="">-- Chọn lớp --</option>
+                            {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Chọn nhóm (nếu cần)</span>
+                        <select 
+                            value={selectedProject}
+                            onChange={(e) => setSelectedProject(e.target.value)}
+                            disabled={!selectedCourse}
+                            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[180px] disabled:opacity-50"
+                        >
+                            <option value="">-- Chọn nhóm --</option>
+                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            {/* Export type cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {EXPORT_TYPES.map(et => {
                     const Icon = et.icon;
+                    const isGenerating = genCommitStats.isPending || genTeamRoster.isPending || genSrs.isPending;
                     return (
                         <Card key={et.id} className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all duration-200">
                             <div className="h-1.5 bg-gradient-to-r from-teal-500 to-teal-600" />
@@ -73,8 +164,9 @@ export default function Reports() {
                                     {et.formats.map(f => (
                                         <button
                                             key={f}
-                                            onClick={() => success(`Đang tạo file ${f}... (chức năng demo)`)}
-                                            className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 rounded-xl px-3 py-1.5 transition-colors"
+                                            disabled={isGenerating}
+                                            onClick={() => handleExport(et.action, f)}
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 rounded-xl px-3 py-1.5 transition-colors disabled:opacity-50"
                                         >
                                             <Download size={11} />{f}
                                         </button>
@@ -86,53 +178,64 @@ export default function Reports() {
                 })}
             </div>
 
-            {/* Recent exports table */}
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                <CardHeader className="border-b border-gray-50 pb-4">
+                <CardHeader className="border-b border-gray-50 pb-4 flex flex-row items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">
                             <Download size={15} className="text-gray-500" />
                         </div>
-                        <CardTitle className="text-base font-semibold text-gray-800">Lịch sử xuất file</CardTitle>
+                        <CardTitle className="text-base font-semibold text-gray-800">Lịch sử xuất file mới nhất</CardTitle>
                     </div>
+                    <Button variant="ghost" size="sm" onClick={() => refetchReports()} className="rounded-full h-8 w-8 p-0">
+                        {loadingHistory ? <Loader2 size={14} className="animate-spin" /> : <Filter size={14} />}
+                    </Button>
                 </CardHeader>
 
                 <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <div className="col-span-4">Loại báo cáo</div>
-                    <div className="col-span-3">Đối tượng</div>
-                    <div className="col-span-1 text-center">Format</div>
-                    <div className="col-span-2 text-center">Ngày tạo</div>
+                    <div className="col-span-3 text-center">Format</div>
+                    <div className="col-span-3 text-center">Ngày tạo</div>
                     <div className="col-span-2 text-right">Thao tác</div>
                 </div>
 
                 <CardContent className="p-0">
-                    {MOCK_EXPORTS.map(ex => (
-                        <div key={ex.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
-                            <div className="col-span-4 text-sm font-medium text-gray-700">{ex.type}</div>
-                            <div className="col-span-3 text-sm text-gray-600">{ex.target}</div>
-                            <div className="col-span-1 text-center">
-                                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
-                                    {ex.format}
-                                </span>
+                    {loadingHistory ? (
+                        <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-teal-500" /></div>
+                    ) : history.length === 0 ? (
+                        <div className="py-10 text-center text-gray-400 text-sm">Chưa có lịch sử xuất file</div>
+                    ) : (
+                        history.slice(0, 10).map(ex => (
+                            <div key={ex.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+                                <div className="col-span-4 flex flex-col">
+                                    <span className="text-sm font-medium text-gray-700">{ex.report_type}</span>
+                                    <span className="text-[10px] text-gray-400 truncate">ID: {ex.scope_entity_id}</span>
+                                </div>
+                                <div className="col-span-3 text-center">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                        ex.format === 'PDF' ? 'text-red-700 bg-red-50 border-red-100' : 'text-green-700 bg-green-50 border-green-100'
+                                    }`}>
+                                        {ex.format}
+                                    </span>
+                                </div>
+                                <div className="col-span-3 text-center text-xs text-gray-500">
+                                    {new Date(ex.requested_at).toLocaleString("vi-VN", { dateStyle: 'short', timeStyle: 'short' })}
+                                </div>
+                                <div className="col-span-2 text-right">
+                                    <button
+                                        onClick={() => handleDownload(ex)}
+                                        className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-3 py-1.5 border border-teal-100 transition-colors ml-auto"
+                                    >
+                                        <Download size={11} /> Tải về
+                                    </button>
+                                </div>
                             </div>
-                            <div className="col-span-2 text-center text-xs text-gray-500">
-                                {new Date(ex.date).toLocaleDateString("vi-VN")}
-                            </div>
-                            <div className="col-span-2 text-right">
-                                <button
-                                    onClick={() => success(`Đang tải ${ex.format}... (demo)`)}
-                                    className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg px-3 py-1.5 border border-teal-100 transition-colors ml-auto"
-                                >
-                                    <Download size={11} />Tải lại
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </CardContent>
             </Card>
 
-            <p className="text-xs text-gray-400 text-center pt-2">
-                * Chức năng export đang phát triển. Demo hiển thị toast thay vì tải file thực.
+            <p className="text-xs text-gray-400 text-center pt-2 italic">
+                Lưu ý: Báo cáo SRS yêu cầu đồ án phải có liên kết với Jira. Thống kê commit yêu cầu liên kết GitHub.
             </p>
         </div>
     );

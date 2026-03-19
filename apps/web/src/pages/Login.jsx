@@ -28,9 +28,9 @@ export default function Login() {
     setError("");
     // Tài khoản mặc định BE seed — xem Program.cs
     const QUICK_CREDS = {
-      admin: { email: "admin@truonghoc.com", password: "Admin@123" },
-      lecturer: { email: "lecturer@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
-      student: { email: "student@truonghoc.com", password: "Admin@123" }, // TODO: thêm vào BE seed nếu chưa có
+      admin: { email: "admin@pbl.com", password: "AdminPassword123!" },
+      lecturer: { email: "lecturer1@pbl.com", password: "LecPassword123!" },
+      student: { email: "student1@pbl.com", password: "StuPassword123!" },
     };
     const creds = QUICK_CREDS[role];
     const result = await login(creds.email, creds.password);
@@ -138,7 +138,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("admin")}
                   disabled={loading}
-                  title="Admin — admin@truonghoc.com"
+                  title="Admin — admin@pbl.com"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <Shield size={18} />
@@ -147,7 +147,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("lecturer")}
                   disabled={loading}
-                  title="Giảng viên"
+                  title="Giảng viên — lecturer1@pbl.com"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <BookOpen size={18} />
@@ -156,7 +156,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("student")}
                   disabled={loading}
-                  title="Sinh viên"
+                  title="Sinh viên — student1@pbl.com"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <GraduationCap size={18} />
@@ -199,20 +199,21 @@ export default function Login() {
           </div>
 
           {/* The overlapped white card (Cut-out effect corner) */}
-          <div className="absolute bottom-0 right-0 w-[85%] max-w-[320px] bg-white rounded-tl-[40px] p-6 pb-6 z-20 shadow-2xl text-black">
+          <div className="absolute bottom-0 right-0 w-[85%] max-w-[340px] bg-white rounded-tl-[40px] p-6 pb-6 z-20 shadow-[-10px_-10px_30px_rgba(0,0,0,0.1)] text-black border-l border-t border-white/20">
             {/* Top concave corner */}
-            <div className="absolute right-0 w-[40px] h-[40px]" style={{ bottom: '100%', background: 'radial-gradient(circle at top left, transparent 40px, white 41px)' }} />
+            <div className="absolute right-0 w-[40px] h-[40px] pointer-events-none" style={{ bottom: '100%', background: 'radial-gradient(circle at top left, transparent 40px, white 41px)' }} />
             {/* Left concave corner */}
-            <div className="absolute bottom-0 w-[40px] h-[40px]" style={{ right: '100%', background: 'radial-gradient(circle at top left, transparent 40px, white 41px)' }} />
+            <div className="absolute bottom-0 w-[40px] h-[40px] pointer-events-none" style={{ right: '100%', background: 'radial-gradient(circle at top left, transparent 40px, white 41px)' }} />
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center shrink-0">
-                <GraduationCap className="w-5 h-5 text-teal-600" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center shrink-0 shadow-sm border border-teal-100">
+                <GraduationCap className="w-6 h-6 text-teal-600" />
               </div>
-              <div className="min-w-0">
-
-                <h3 className="font-bold text-gray-900 text-sm leading-tight truncate">Education Management System</h3>
-                <p className="text-[10px] text-gray-500 mt-0.5 font-medium truncate">
+              <div className="flex flex-col">
+                <h3 className="font-bold text-gray-900 text-base leading-tight">
+                  Education Management System
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 font-medium">
                   Nền tảng Quản lý Giáo dục
                 </p>
               </div>

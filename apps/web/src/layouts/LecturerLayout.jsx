@@ -61,7 +61,7 @@ export default function LecturerLayout({ children }) {
 
             {/* ════ SIDEBAR ════ */}
             <aside className={[
-                "bg-gradient-to-b from-[#134e4a] to-[#0f5864] border-r border-[#6f9aa3] p-4 transition-all duration-300 shadow-2xl z-20 flex flex-col relative",
+                "bg-gradient-to-b from-[#134e4a] to-[#0f5864] p-4 transition-all duration-300 shadow-2xl z-20 flex flex-col relative my-4 ml-2 rounded-tr-[32px] rounded-br-[32px]",
                 collapsed ? "w-20" : "w-64",
             ].join(" ")}>
                 {/* Logo */}

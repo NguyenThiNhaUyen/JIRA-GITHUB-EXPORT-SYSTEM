@@ -13,8 +13,8 @@ import {
 
 // Feature Hooks
 import { useGetSubjects } from "../../features/system/hooks/useSystem.js";
-import { useGetCourses, useGetCourseById } from "../../features/courses/hooks/useCourses.js";
-import { useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
+import { useGetCourses, useGetCourseById, useGetCourseProjectsMetrics } from "../../features/courses/hooks/useCourses.js";
+import { useGetProjects, useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 
 // Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
@@ -39,6 +39,8 @@ export default function LecturerDashboard() {
   const { data: subjectsData = { items: [] } } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
   const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
+  const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourse);
+  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ courseId: selectedCourse });
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
 
   const approveIntMutation = useApproveIntegration();
@@ -47,7 +49,7 @@ export default function LecturerDashboard() {
 
   const subjects = subjectsData.items || [];
   const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
-  const groups = course?.groups || [];
+  const groups = projectsData?.items || [];
 
   const handleManageGroups = () => {
     if (!selectedCourse) { error("Vui lòng chọn lớp học"); return; }
@@ -105,16 +107,15 @@ export default function LecturerDashboard() {
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-  // Build RadarChart data from groups
-  const radarData = groups.map(group => {
-    const teamSize = group.team?.length || 0;
+  // Build RadarChart data from real metrics
+  const radarData = (metricsData || []).map(group => {
     return {
-      groupName: group.name,
-      commits: Math.floor(Math.random() * 20) + 1, // Mock commits for now
-      srsDone: Math.floor(Math.random() * 3), // Mock SRS for now
-      teamSize,
-      githubLinked: group.integration?.githubStatus === 'APPROVED' ? 1 : 0,
-      jiraLinked: group.integration?.jiraStatus === 'APPROVED' ? 1 : 0,
+      groupName: group.projectName,
+      commits: group.commitsCount,
+      srsDone: group.srsReportsCount,
+      teamSize: group.teamSize,
+      githubLinked: group.isGithubLinked ? 1 : 0,
+      jiraLinked: group.isJiraLinked ? 1 : 0,
     };
   });
 

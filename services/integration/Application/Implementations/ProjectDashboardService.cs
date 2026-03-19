@@ -1,6 +1,9 @@
+using System.Linq;
+using JiraGithubExportSystem.Shared.Models;
 using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
 using JiraGithubExportSystem.Shared.Common.Exceptions;
 using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExportSystem.Shared.Contracts.Common;
 using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -46,10 +49,16 @@ public class ProjectDashboardService : IProjectDashboardService
 
     private async Task<ProjectDashboardResponse> CalculateDashboardMetrics(long projectId)
     {
-        var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
+        var project = await _unitOfWork.Projects.Query()
+            .Include(p => p.project_integration)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(su => su.user)
+            .FirstOrDefaultAsync(p => p.id == projectId);
+            
         if (project == null) throw new NotFoundException("Project not found");
 
-        var activeMembers = project.team_members.Where(tm => tm.participation_status == "ACTIVE").ToList();
+        var activeMembers = (project.team_members?.Where(tm => tm.participation_status == "ACTIVE") ?? Enumerable.Empty<team_member>()).ToList();
         var leader = activeMembers.FirstOrDefault(tm => tm.team_role == "LEADER");
 
         var dashboard = new ProjectDashboardResponse
@@ -133,5 +142,106 @@ public class ProjectDashboardService : IProjectDashboardService
         }
 
         return dashboard;
+    }
+
+    public async Task<PagedResponse<GitHubCommitResponse>> GetProjectCommitsAsync(long projectId, PagedRequest request)
+    {
+        var project = await _unitOfWork.Projects.Query()
+            .Include(p => p.project_integration)
+            .FirstOrDefaultAsync(p => p.id == projectId);
+
+        if (project == null || project.project_integration?.github_repo_id == null)
+            return PagedResponse<GitHubCommitResponse>.Empty(request.Page, request.PageSize);
+
+        var repoId = project.project_integration.github_repo_id.Value;
+        var query = _unitOfWork.GitHubCommits.Query()
+            .Where(c => c.repo_id == repoId)
+            .Include(c => c.author_github_user);
+        
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(c => c.committed_at)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(c => new GitHubCommitResponse
+            {
+                Sha = c.commit_sha,
+                Message = c.message ?? "",
+                AuthorName = c.author_github_user != null ? (c.author_github_user.display_name ?? c.author_github_user.login) : "Unknown",
+                AuthorAvatarUrl = c.author_github_user != null ? c.author_github_user.avatar_url : null,
+                CommittedAt = c.committed_at ?? DateTime.MinValue,
+                HtmlUrl = "#" // Placeholder to avoid error if missing
+            })
+            .ToListAsync();
+
+        return new PagedResponse<GitHubCommitResponse>(items, total, request.Page, request.PageSize);
+    }
+
+    public async Task<PagedResponse<JiraIssueResponse>> GetProjectIssuesAsync(long projectId, PagedRequest request)
+    {
+        var project = await _unitOfWork.Projects.Query()
+            .Include(p => p.project_integration)
+            .FirstOrDefaultAsync(p => p.id == projectId);
+
+        if (project == null || project.project_integration?.jira_project_id == null)
+            return PagedResponse<JiraIssueResponse>.Empty(request.Page, request.PageSize);
+
+        var jiraProjectId = project.project_integration.jira_project_id.Value;
+        var query = _unitOfWork.JiraIssues.Query()
+            .Where(i => i.jira_project_id == jiraProjectId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(i => i.updated_at)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(i => new JiraIssueResponse
+            {
+                Key = i.jira_issue_key,
+                Summary = i.title ?? "No Title",
+                Status = i.status ?? "Open",
+                Priority = i.priority ?? "Medium",
+                AssigneeName = i.assignee_jira_account_id ?? "Unassigned",
+                AssigneeAvatarUrl = null,
+                CreatedAt = i.created_at,
+                UpdatedAt = i.updated_at
+            })
+            .ToListAsync();
+
+        return new PagedResponse<JiraIssueResponse>(items, total, request.Page, request.PageSize);
+    }
+
+    public async Task<CourseDashboardMetricsResponse> GetCourseProjectsMetricsAsync(long courseId)
+    {
+        var projects = await _unitOfWork.Projects
+            .Query()
+            .Where(p => p.course_id == courseId)
+            .Include(p => p.team_members)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi.github_repo)
+                    .ThenInclude(gr => gr.github_commits)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi.jira_project)
+                    .ThenInclude(jp => jp.jira_issues)
+            .Include(p => p.project_documents)
+            .ToListAsync();
+
+        var response = new CourseDashboardMetricsResponse
+        {
+            CourseId = courseId,
+            GroupMetrics = projects.Select(p => new CourseGroupMetrics
+            {
+                ProjectId = p.id,
+                ProjectName = p.name,
+                CommitsCount = p.project_integration?.github_repo?.github_commits?.Count ?? 0,
+                JiraIssuesDone = p.project_integration?.jira_project?.jira_issues?.Count(i => i.status == "Done") ?? 0,
+                TeamSize = p.team_members?.Count ?? 0,
+                IsGithubLinked = p.project_integration?.github_repo_id != null && p.project_integration?.approval_status == "APPROVED",
+                IsJiraLinked = p.project_integration?.jira_project_id != null && p.project_integration?.approval_status == "APPROVED",
+                SrsReportsCount = p.project_documents?.Count(d => d.doc_type == "SRS") ?? 0
+            }).ToList()
+        };
+
+        return response;
     }
 }

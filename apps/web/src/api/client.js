@@ -47,7 +47,12 @@ client.interceptors.response.use(
 
         if (status === 401) {
             console.warn("[API] 401 Unauthorized — Token hết hạn hoặc chưa đăng nhập");
-            // TODO: Clear token + redirect /login khi tích hợp Auth hoàn chỉnh
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            // Tránh redirect liên tục nếu đang ở trang login
+            if (!window.location.pathname.includes("/login")) {
+                window.location.href = "/login";
+            }
         } else if (status === 403) {
             console.warn("[API] 403 Forbidden — Không có quyền truy cập endpoint này");
         } else if (!status) {

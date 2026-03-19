@@ -9,7 +9,8 @@ import {
     enrollStudents,
     removeLecturer,
     unenrollStudent,
-    getEnrolledStudents
+    getEnrolledStudents,
+    getCourseProjectsMetrics
 } from '../api/courseApi.js';
 
 export const COURSE_KEYS = {
@@ -116,4 +117,10 @@ export const useGetEnrolledStudents = (courseId, params) => {
         enabled: !!courseId,
     });
 };
-
+export const useGetCourseProjectsMetrics = (courseId) => {
+    return useQuery({
+        queryKey: [...COURSE_KEYS.detail(courseId), 'projects_metrics'],
+        queryFn: () => getCourseProjectsMetrics(courseId),
+        enabled: !!courseId,
+    });
+};

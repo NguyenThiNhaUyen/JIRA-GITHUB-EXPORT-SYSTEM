@@ -106,4 +106,10 @@ export async function getEnrolledStudents(courseId, params = {}) {
     const res = await client.get(`/courses/${courseId}/students`, { params });
     return mapUserList(unwrap(res));
 }
-
+/**
+ * GET /api/courses/:id/projects/metrics
+ */
+export async function getCourseProjectsMetrics(courseId) {
+    const res = await client.get(`/courses/${courseId}/projects/metrics`);
+    return unwrap(res).groupMetrics;
+}

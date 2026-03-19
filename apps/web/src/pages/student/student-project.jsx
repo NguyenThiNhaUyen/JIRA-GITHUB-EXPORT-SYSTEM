@@ -10,14 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import {
-  getProjectById,
-  getCommitsByProject,
-  getSrsReportsByProject,
-  getCommitsByStudent,
-  mockUsers,
-  mockJiraProjects,
-} from "../../mock/data.js";
+import { useGetProjectById, useGetProjectMetrics, useGetProjectCommits } from "../../features/projects/hooks/useProjects.js";
 import {
   ChevronRight, GitCommit, Link2, BarChart2,
   Users, FileText, ArrowLeft, Github, Upload,
@@ -32,16 +25,32 @@ export default function StudentProject() {
   const [activeTab, setActiveTab] = useState("commits");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  /* ── Data (logic unchanged) ── */
-  const project = getProjectById(projectId);
-  const allCommits = getCommitsByProject(projectId);
-  const myCommits = getCommitsByStudent(user?.id).filter(c => c.projectId === projectId);
-  const srsReports = getSrsReportsByProject(projectId);
-  const jiraProject = mockJiraProjects.find(jp => jp.projectId === projectId);
+  /* ── Data Fetching (Real API) ── */
+  const { data: project, isLoading: loadingProject } = useGetProjectById(projectId);
+  const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(projectId);
+  const { data: commitData, isLoading: loadingCommits } = useGetProjectCommits(projectId, { pageSize: 50 });
 
-  const myTeamMember = project?.teamMembers?.find(m => m.studentId === user?.id);
-  const myRole = myTeamMember?.roleInTeam || "MEMBER";
+  const allCommits = commitData?.items || [];
+  // Filter commits for current student using email or name if student_user is joined
+  const myCommits = allCommits.filter(c => 
+    c.authorName?.toLowerCase().includes(user?.fullName?.toLowerCase()) || 
+    c.authorName?.toLowerCase().includes(user?.email?.split('@')[0].toLowerCase())
+  );
+  
+  const srsReports = []; // TODO: Connect to Reports API when available
+
+  const myTeamMember = project?.team?.find(m => m.studentUserId === user?.id);
+  const myRole = myTeamMember?.role || "MEMBER";
   const isLeader = myRole === "LEADER";
+
+  if (loadingProject || loadingMetrics) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
+        <p className="text-sm text-gray-500 font-medium">Đang tải dữ liệu dự án...</p>
+      </div>
+    );
+  }
 
   /* ── Not found ── */
   if (!project) {
@@ -57,10 +66,10 @@ export default function StudentProject() {
   }
 
   /* ── Status helpers ── */
-  const ghStatus = project.githubRepo
+  const ghStatus = project.integration?.githubRepoName
     ? { cls: "bg-green-50 text-green-700 border-green-100", label: "Linked" }
     : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Not linked" };
-  const jiraStatus = project.jiraProjectKey
+  const jiraStatus = project.integration?.jiraProjectKey
     ? { cls: "bg-blue-50 text-blue-700 border-blue-100", label: "Linked" }
     : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Not linked" };
 
@@ -110,9 +119,9 @@ export default function StudentProject() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "My Commits", value: myCommits.length, color: "bg-blue-500", icon: <GitCommit size={18} /> },
-          { label: "Total Commits", value: allCommits.length, color: "bg-teal-500", icon: <BarChart2 size={18} /> },
-          { label: "Contribution", value: `${myTeamMember?.contributionScore || 0}%`, color: "bg-indigo-500", icon: <Star size={18} /> },
-          { label: "Thành viên", value: project.teamMembers?.length || 0, color: "bg-purple-500", icon: <Users size={18} /> },
+          { label: "Total Commits", value: metrics?.githubStats?.totalCommits || 0, color: "bg-teal-500", icon: <BarChart2 size={18} /> },
+          { label: "Issues Done", value: metrics?.jiraStats?.done || 0, color: "bg-indigo-500", icon: <Star size={18} /> },
+          { label: "Thành viên", value: project.team?.length || 0, color: "bg-purple-500", icon: <Users size={18} /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
             <div className={`w-11 h-11 rounded-2xl ${color} text-white flex items-center justify-center shrink-0`}>{icon}</div>
@@ -185,7 +194,7 @@ export default function StudentProject() {
               <CardTitle className="text-base font-semibold text-gray-800">Jira Tasks</CardTitle>
             </CardHeader>
             <CardContent className="pt-5">
-              {!jiraProject ? (
+              {!metrics?.jiraStats ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                   <Link2 size={28} className="text-gray-300" />
                   <p className="text-sm text-gray-400">Không có dữ liệu Jira cho project này</p>
@@ -194,9 +203,9 @@ export default function StudentProject() {
                 <div className="space-y-5">
                   <div className="grid grid-cols-3 gap-4">
                     {[
-                      { label: "Total Issues", value: jiraProject.issueCount, color: "bg-orange-50 text-orange-700" },
-                      { label: "Đã hoàn thành", value: jiraProject.completedIssues, color: "bg-green-50 text-green-700" },
-                      { label: "Sprints", value: jiraProject.sprintCount, color: "bg-purple-50 text-purple-700" },
+                      { label: "Total Issues", value: metrics.jiraStats.totalIssues, color: "bg-orange-50 text-orange-700" },
+                      { label: "Đã hoàn thành", value: metrics.jiraStats.done, color: "bg-green-50 text-green-700" },
+                      { label: "Đang xử lý", value: metrics.jiraStats.inProgress, color: "bg-purple-50 text-purple-700" },
                     ].map(({ label, value, color }) => (
                       <div key={label} className={`rounded-2xl p-4 text-center ${color}`}>
                         <p className="text-2xl font-bold">{value}</p>
@@ -206,12 +215,9 @@ export default function StudentProject() {
                   </div>
                   <div className="border-t border-gray-50 pt-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <p className="text-sm font-semibold text-gray-700">Current Sprint: {jiraProject.currentSprint}</p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${jiraProject.sprintStatus === "ACTIVE" ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
-                        {jiraProject.sprintStatus}
-                      </span>
+                      <p className="text-sm font-semibold text-gray-700">Project Key: {project.integration?.jiraProjectKey}</p>
                     </div>
-                    {/* Mock issues */}
+                    {/* Mock issues for now as they are not mapped yet */}
                     <div className="space-y-2">
                       {[
                         { type: "TASK", title: "Implement user authentication", status: "Done", statusCls: "bg-green-50 text-green-700 border-green-100" },
@@ -226,7 +232,7 @@ export default function StudentProject() {
                               }`}>{issue.type}</span>
                             <div>
                               <p className="text-sm font-medium text-gray-800">{issue.title}</p>
-                              <p className="text-xs text-gray-400">Assignee: {user?.name}</p>
+                              <p className="text-xs text-gray-400">Assignee: {user?.fullName}</p>
                             </div>
                           </div>
                           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${issue.statusCls}`}>{issue.status}</span>
@@ -247,33 +253,33 @@ export default function StudentProject() {
               <CardTitle className="text-base font-semibold text-gray-800">Thành viên nhóm</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {(project.teamMembers || []).map(m => {
-                const isMe = m.studentId === user?.id;
-                const isLeadM = m.roleInTeam === "LEADER";
-                const pct = Math.min(100, ((m.contributionScore || 0) / 40) * 100);
+              {(project.team || []).map(m => {
+                const isMe = m.studentUserId === user?.id;
+                const isLeadM = m.role === "LEADER";
+                const contribution = metrics?.contributions?.find(c => c.studentCode === m.studentCode);
+                const commitsCount = contribution?.commits || 0;
+                
                 return (
-                  <div key={m.studentId} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                  <div key={m.studentUserId} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${isLeadM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
-                      {(mockUsers?.students?.find(s => s.id === m.studentId)?.name || m.studentId || "?").charAt(0)}
+                      {m.studentName?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-semibold text-gray-800">
-                          {mockUsers?.students?.find(s => s.id === m.studentId)?.name || m.studentId}
+                          {m.studentName}
                         </p>
                         {isLeadM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                         {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-teal-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-600 shrink-0">{m.contributionScore || 0}%</span>
+                      <div className="flex items-center gap-3">
+                         <span className="text-xs text-gray-500 flex items-center gap-1"><GitCommit size={10}/> {commitsCount} commits</span>
+                         <span className="text-xs text-gray-500 flex items-center gap-1"><Link2 size={10}/> {contribution?.issues || 0} issues</span>
                       </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${(m.contributionScore || 0) > 20 ? "bg-green-50 text-green-700 border-green-100" : "bg-orange-50 text-orange-600 border-orange-100"
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${commitsCount > 5 ? "bg-green-50 text-green-700 border-green-100" : "bg-orange-50 text-orange-600 border-orange-100"
                       }`}>
-                      {(m.contributionScore || 0) > 20 ? "Active" : "Need attention"}
+                      {commitsCount > 5 ? "Active" : "Low activity"}
                     </span>
                   </div>
                 );

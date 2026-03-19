@@ -175,7 +175,7 @@ public class ProjectsController : ControllerBase
     public async Task<IActionResult> GetIntegration(long projectId)
     {
         var result = await _integrationService.GetIntegrationStatusAsync(projectId);
-        return Ok(ApiResponse<IntegrationInfo>.SuccessResponse(result));
+        return Ok(new ApiResponse<IntegrationInfo> { Success = true, Data = result });
     }
 
     /// <summary>
@@ -188,6 +188,28 @@ public class ProjectsController : ControllerBase
     {
         await _teamService.UpdateContributionScoreAsync(projectId, memberId, request.ContributionScore);
         return Ok(ApiResponse.SuccessResponse("Contribution score updated"));
+    }
+
+    /// <summary>
+    /// Get project commits (real data)
+    /// </summary>
+    [HttpGet("{projectId}/commits")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<GitHubCommitResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectCommits(long projectId, [FromQuery] PagedRequest request)
+    {
+        var result = await _dashboardService.GetProjectCommitsAsync(projectId, request);
+        return Ok(new ApiResponse<PagedResponse<GitHubCommitResponse>> { Success = true, Data = result });
+    }
+
+    /// <summary>
+    /// Get project issues (real data)
+    /// </summary>
+    [HttpGet("{projectId}/issues")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<JiraIssueResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProjectIssues(long projectId, [FromQuery] PagedRequest request)
+    {
+        var result = await _dashboardService.GetProjectIssuesAsync(projectId, request);
+        return Ok(new ApiResponse<PagedResponse<JiraIssueResponse>> { Success = true, Data = result });
     }
 }
 

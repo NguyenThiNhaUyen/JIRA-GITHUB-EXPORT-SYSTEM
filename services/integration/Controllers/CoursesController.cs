@@ -3,6 +3,7 @@ using JiraGithubExportSystem.Shared.Common.Exceptions;
 using JiraGithubExportSystem.Shared.Contracts.Common;
 using JiraGithubExportSystem.Shared.Contracts.Requests.Courses;
 using JiraGithubExportSystem.Shared.Contracts.Responses.Courses;
+using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,11 +16,13 @@ namespace JiraGithubExportSystem.IntegrationService.Controllers;
 public class CoursesController : ControllerBase
 {
     private readonly ICourseService _courseService;
+    private readonly IProjectDashboardService _dashboardService;
     private readonly ILogger<CoursesController> _logger;
 
-    public CoursesController(ICourseService courseService, ILogger<CoursesController> logger)
+    public CoursesController(ICourseService courseService, IProjectDashboardService dashboardService, ILogger<CoursesController> logger)
     {
         _courseService = courseService;
+        _dashboardService = dashboardService;
         _logger = logger;
     }
 
@@ -162,6 +165,26 @@ public class CoursesController : ControllerBase
     public async Task<IActionResult> RemoveEnrollment(long id, long studentId)
     {
         await _courseService.RemoveStudentAsync(id, studentId);
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Student removed from course"));
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Student removed from course"
+        });
+    }
+
+    /// <summary>
+    /// Get course projects metrics (For instructor dashboard radar chart)
+    /// </summary>
+    [HttpGet("{id}/projects/metrics")]
+    [Authorize(Roles = "LECTURER,ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<CourseDashboardMetricsResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCourseMetrics(long id)
+    {
+        var result = await _dashboardService.GetCourseProjectsMetricsAsync(id);
+        return Ok(new ApiResponse<CourseDashboardMetricsResponse>
+        {
+            Success = true,
+            Data = result
+        });
     }
 }

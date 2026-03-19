@@ -15,7 +15,7 @@ export function TopHeader() {
 
     // Load pending invitations for STUDENT users real API
     const isStudent = user?.role === "STUDENT";
-    const { data: invitations = [] } = useGetMyPendingInvitations();
+    const { data: invitations = [] } = useGetMyPendingInvitations({ enabled: isStudent });
     const { mutate: acceptMutate } = useAcceptInvitation();
     const { mutate: rejectMutate } = useRejectInvitation();
 

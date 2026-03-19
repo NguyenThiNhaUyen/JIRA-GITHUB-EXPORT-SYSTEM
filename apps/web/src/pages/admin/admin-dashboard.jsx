@@ -13,8 +13,7 @@ import {
 // Feature Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
-import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
-import { useGetUsers } from "../../features/users/hooks/useUsers.js";
+import { useGetSemesters, useGetSubjects, useGetDashboardStats } from "../../features/system/hooks/useSystem.js";
 
 // Mock recent system activity (static — không cần API)
 const SYSTEM_ACTIVITY = [
@@ -29,26 +28,22 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   // Data Fetching
+  const { data: dashboardStats, isLoading: loadingStats } = useGetDashboardStats();
   const { data: coursesData, isLoading: loadingCourses, error: courseError } = useGetCourses({ page: 1, pageSize: 6 });
   const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
   const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
   const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ pageSize: 1 });
 
-
-  // For counts, we could have a stats API, but for now fetch summaries
-  const { data: lecturersRaw = [], isLoading: loadingLects } = useGetUsers("LECTURER");
-  const { data: studentsRaw = [], isLoading: loadingStus } = useGetUsers("STUDENT");
-
   const recentCourses = coursesData?.items || [];
-  const isLoading = loadingCourses || loadingSems || loadingSubs || loadingLects || loadingStus || loadingProjects;
+  const isLoading = loadingStats || loadingCourses || loadingSems || loadingSubs || loadingProjects;
 
   const stats = {
     semesters: semesters.length,
-    subjects: subjects.length,
-    courses: coursesData?.totalCount || recentCourses.length,
-    lecturers: lecturersRaw.length,
-    students: studentsRaw.length,
-    projects: projectsData?.totalCount || 0,
+    subjects: dashboardStats?.totalSubjects || subjects.length,
+    courses: dashboardStats?.totalCourses || coursesData?.totalCount || 0,
+    lecturers: dashboardStats?.totalLecturers || 0,
+    students: dashboardStats?.totalStudents || 0,
+    projects: dashboardStats?.totalProjects || projectsData?.totalCount || 0,
   };
 
   const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;

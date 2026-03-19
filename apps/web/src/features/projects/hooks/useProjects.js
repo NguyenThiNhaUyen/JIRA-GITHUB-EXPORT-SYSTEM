@@ -11,7 +11,9 @@ import {
     linkIntegration,
     approveIntegration,
     rejectIntegration,
-    getProjectMetrics
+    getProjectMetrics,
+    getProjectCommits,
+    getProjectIssues
 } from '../api/projectApi.js';
 
 
@@ -22,6 +24,9 @@ export const PROJECT_KEYS = {
     details: () => [...PROJECT_KEYS.all, 'detail'],
     detail: (id) => [...PROJECT_KEYS.details(), id],
     team: (projectId) => [...PROJECT_KEYS.detail(projectId), 'team'],
+    metrics: (projectId) => [...PROJECT_KEYS.detail(projectId), 'metrics'],
+    commits: (projectId, params) => [...PROJECT_KEYS.detail(projectId), 'commits', params],
+    issues: (projectId, params) => [...PROJECT_KEYS.detail(projectId), 'issues', params],
 };
 
 export const useGetProjects = (params) => {
@@ -141,5 +146,21 @@ export const useRejectIntegration = () => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
+    });
+};
+
+export const useGetProjectCommits = (projectId, params = {}) => {
+    return useQuery({
+        queryKey: PROJECT_KEYS.commits(projectId, params),
+        queryFn: () => getProjectCommits(projectId, params),
+        enabled: !!projectId,
+    });
+};
+
+export const useGetProjectIssues = (projectId, params = {}) => {
+    return useQuery({
+        queryKey: PROJECT_KEYS.issues(projectId, params),
+        queryFn: () => getProjectIssues(projectId, params),
+        enabled: !!projectId,
     });
 };

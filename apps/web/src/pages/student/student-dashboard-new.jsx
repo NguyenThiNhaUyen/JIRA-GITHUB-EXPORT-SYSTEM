@@ -1,5 +1,6 @@
 // Student Dashboard — Enterprise SaaS Learning Workspace (Real API)
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";

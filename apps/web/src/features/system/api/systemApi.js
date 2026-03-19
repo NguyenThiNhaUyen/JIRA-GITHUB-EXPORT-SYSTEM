@@ -43,3 +43,8 @@ export async function deleteSubject(id) {
     const res = await client.delete(`/subjects/${id}`);
     return unwrap(res);
 }
+
+export async function getDashboardStats() {
+    const res = await client.get("/dashboard/stats");
+    return unwrap(res);
+}

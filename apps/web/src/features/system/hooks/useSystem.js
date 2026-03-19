@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSemesters, createSemester, updateSemester, deleteSemester, getSubjects, createSubject, updateSubject, deleteSubject as deleteSubjectApi } from "../api/systemApi.js";
+import { getSemesters, createSemester, updateSemester, deleteSemester, getSubjects, createSubject, updateSubject, deleteSubject as deleteSubjectApi, getDashboardStats } from "../api/systemApi.js";
 
 export const SYSTEM_KEYS = {
     all: ["system"],
     semesters: () => [...SYSTEM_KEYS.all, "semesters"],
     subjects: () => [...SYSTEM_KEYS.all, "subjects"],
+    stats: () => [...SYSTEM_KEYS.all, "stats"],
 };
 
 export const useGetSemesters = () => useQuery({ queryKey: SYSTEM_KEYS.semesters(), queryFn: getSemesters });
@@ -56,4 +57,7 @@ export const useDeleteSubject = () => {
         mutationFn: deleteSubjectApi,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
     });
-};
+};export const useGetDashboardStats = () => useQuery({
+    queryKey: SYSTEM_KEYS.stats(),
+    queryFn: getDashboardStats
+});

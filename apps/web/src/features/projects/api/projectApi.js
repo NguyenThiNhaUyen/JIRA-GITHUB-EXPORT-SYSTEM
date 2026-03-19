@@ -69,3 +69,13 @@ export async function getProjectMetrics(projectId) {
     return mapProjectMetrics(unwrap(res));
 }
 
+export async function getProjectCommits(projectId, params = {}) {
+    const res = await client.get(`/projects/${projectId}/commits`, { params });
+    return unwrap(res);
+}
+
+export async function getProjectIssues(projectId, params = {}) {
+    const res = await client.get(`/projects/${projectId}/issues`, { params });
+    return unwrap(res);
+}
+

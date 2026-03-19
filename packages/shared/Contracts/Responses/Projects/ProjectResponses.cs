@@ -92,9 +92,47 @@ public class MemberContribution
     public string? Alert { get; set; }
 }
 
+public class GitHubCommitResponse
+{
+    public string Sha { get; set; } = null!;
+    public string Message { get; set; } = null!;
+    public string AuthorName { get; set; } = null!;
+    public string? AuthorAvatarUrl { get; set; }
+    public DateTime CommittedAt { get; set; }
+    public string HtmlUrl { get; set; } = null!;
+}
+
+public class JiraIssueResponse
+{
+    public string Key { get; set; } = null!;
+    public string Summary { get; set; } = null!;
+    public string Status { get; set; } = null!;
+    public string Priority { get; set; } = null!;
+    public string? AssigneeName { get; set; }
+    public string? AssigneeAvatarUrl { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
 
 
 
 
 
+public class CourseGroupMetrics
+{
+    public long ProjectId { get; set; }
+    public string ProjectName { get; set; } = null!;
+    public int CommitsCount { get; set; }
+    public int JiraIssuesDone { get; set; }
+    public int TeamSize { get; set; }
+    public bool IsGithubLinked { get; set; }
+    public bool IsJiraLinked { get; set; }
+    public int SrsReportsCount { get; set; }
+}
+
+public class CourseDashboardMetricsResponse
+{
+    public long CourseId { get; set; }
+    public List<CourseGroupMetrics> GroupMetrics { get; set; } = new();
+}
 

@@ -8,7 +8,7 @@ export const INVITATION_KEYS = {
 };
 
 /** Lấy danh sách lời mời nhóm (STUDENT) */
-export const useGetMyPendingInvitations = () => {
+export const useGetMyPendingInvitations = (options = {}) => {
     return useQuery({
         queryKey: INVITATION_KEYS.myPending(),
         queryFn: async () => {
@@ -16,6 +16,7 @@ export const useGetMyPendingInvitations = () => {
             const data = unwrap(res);
             return data?.items || [];
         },
+        ...options
     });
 };
 

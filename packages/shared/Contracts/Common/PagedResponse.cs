@@ -19,4 +19,9 @@ public class PagedResponse<T>
         PageSize = pageSize;
         TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
     }
+
+    public static PagedResponse<T> Empty(int page, int pageSize)
+    {
+        return new PagedResponse<T>(new List<T>(), 0, page, pageSize);
+    }
 }
