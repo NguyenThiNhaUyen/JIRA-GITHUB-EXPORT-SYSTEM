@@ -1,33 +1,5 @@
 /**
  * courseMapper.js — Adapter: BE CourseDetailResponse → FE Mock shape
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │  MAPPING TABLE:  Backend DTO  →  Frontend UI field               │
- * ├────────────────────────────────┬─────────────────────────────────┤
- * │  BE (CourseDetailResponse)     │  FE (mock/db.js course shape)   │
- * ├────────────────────────────────┼─────────────────────────────────┤
- * │  id             (long)         │  id             (string→string) │
- * │  courseCode     (string)       │  code           (string)        │
- * │  courseName     (string)       │  name           (string)        │
- * │  subject.id     (long)         │  subjectId      (string)        │
- * │  subject.subjectCode (string)  │  subject.code   (string)        │
- * │  subject.subjectName (string)  │  subject.name   (string)        │
- * │  semester.id    (long)         │  semesterId     (string)        │
- * │  semester.name  (string)       │  semester.name  (string)        │
- * │  semester.startDate (DateTime) │  semester.startDate             │
- * │  semester.endDate   (DateTime) │  semester.endDate               │
- * │  enrolledStudentsCount (int)   │  currentStudents (number)       │
- * │  projectsCount  (int)          │  projectsCount  (number)        │
- * │  lecturers[].userId (long)     │  lecturers[].id                 │
- * │  lecturers[].fullName (string) │  lecturers[].name               │
- * │  lecturers[].lecturerCode      │  lecturers[].code               │
- * │  lecturers[].officeEmail       │  lecturers[].email              │
- * │  ── (không có trong BE) ──     │  maxStudents    → hardcode 40   │
- * │  ── (không có trong BE) ──     │  status         → "ACTIVE" (default) │
- * └────────────────────────────────┴─────────────────────────────────┘
- *
- * NOTE: BE không trả về maxStudents và status trực tiếp trong CourseDetailResponse.
- * Đây là gap cần báo BE bổ sung. Tạm thời hardcode fallback hợp lý.
  */
 
 /**
@@ -92,14 +64,17 @@ export function mapCourse(beCourse) {
  * @returns {{ items: object[], totalCount: number, page: number, pageSize: number }}
  */
 export function mapCourseList(beData) {
-    // PagedResponse shape: { results: [], totalCount, page, pageSize }
-    if (beData && (beData.results !== undefined || beData.Results !== undefined)) {
-        const results = beData.results ?? beData.Results ?? [];
+    if (!beData) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+
+    // Support both 'items'/'Items' (standard PagedResponse) and 'results'/'Results' (legacy)
+    const list = beData.items ?? beData.Items ?? beData.results ?? beData.Results;
+
+    if (list !== undefined && Array.isArray(list)) {
         return {
-            items: results.map(mapCourse),
-            totalCount: beData.totalCount ?? beData.TotalCount ?? results.length,
+            items: list.map(mapCourse),
+            totalCount: beData.totalCount ?? beData.TotalCount ?? list.length,
             page: beData.page ?? beData.Page ?? 1,
-            pageSize: beData.pageSize ?? beData.PageSize ?? results.length,
+            pageSize: beData.pageSize ?? beData.PageSize ?? list.length,
         };
     }
 

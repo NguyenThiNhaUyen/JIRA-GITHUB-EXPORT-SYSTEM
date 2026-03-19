@@ -36,12 +36,16 @@ export const mapProject = (project) => {
 };
 
 export const mapProjectList = (pagedResponse) => {
-    if (!pagedResponse) return { items: [], totalCount: 0 };
+    if (!pagedResponse) return { items: [], totalCount: 0, page: 1, pageSize: 0 };
+    
+    // Support both camelCase and PascalCase
+    const list = pagedResponse.items ?? pagedResponse.Items ?? [];
+    
     return {
-        items: (pagedResponse.items || []).map(mapProject),
-        totalCount: pagedResponse.totalCount,
-        page: pagedResponse.page,
-        pageSize: pagedResponse.pageSize
+        items: list.map(mapProject),
+        totalCount: pagedResponse.totalCount ?? pagedResponse.TotalCount ?? list.length,
+        page: pagedResponse.page ?? pagedResponse.Page ?? 1,
+        pageSize: pagedResponse.pageSize ?? pagedResponse.PageSize ?? list.length
     };
 };
 
@@ -64,4 +68,3 @@ export const mapProjectMetrics = (metrics) => {
         }))
     };
 };
-

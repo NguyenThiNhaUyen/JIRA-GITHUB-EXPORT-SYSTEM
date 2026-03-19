@@ -17,13 +17,13 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
             // 1. Seed Roles
             if (!await context.roles.AnyAsync())
             {
-                var roles = new List<role>
+                var rolesList = new List<role>
                 {
                     new role { role_name = "ADMIN" },
                     new role { role_name = "LECTURER" },
                     new role { role_name = "STUDENT" }
                 };
-                context.roles.AddRange(roles);
+                context.roles.AddRange(rolesList);
                 await context.SaveChangesAsync();
             }
 
@@ -31,13 +31,13 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
             var lecturerRole = await context.roles.FirstAsync(r => r.role_name == "LECTURER");
             var studentRole = await context.roles.FirstAsync(r => r.role_name == "STUDENT");
 
-            // 2. Helper function
+            // 2. Helper for User
             async Task<user> EnsureUserAsync(string email, string password, string fullName, role role)
             {
-                var user = await context.users.Include(u => u.roles).FirstOrDefaultAsync(u => u.email == email);
-                if (user == null)
+                var u = await context.users.Include(x => x.roles).FirstOrDefaultAsync(x => x.email == email);
+                if (u == null)
                 {
-                    user = new user
+                    u = new user
                     {
                         email = email,
                         password = passwordHasher != null ? passwordHasher.HashPassword(password) : password,
@@ -45,43 +45,58 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
                         enabled = true,
                         roles = new List<role> { role }
                     };
-                    context.users.Add(user);
+                    context.users.Add(u);
                     await context.SaveChangesAsync();
                 }
                 else
                 {
-                    if (passwordHasher != null && (!user.password.Contains("==") || user.password.Length < 30))
+                    if (passwordHasher != null && (!u.password.Contains("==") || u.password.Length < 30))
                     {
-                        user.password = passwordHasher.HashPassword(password);
+                        u.password = passwordHasher.HashPassword(password);
                     }
-                    if (!user.roles.Any(r => r.role_name == role.role_name))
+                    if (!u.roles.Any(r => r.role_name == role.role_name))
                     {
-                        user.roles.Add(role);
+                        u.roles.Add(role);
                     }
-                    user.enabled = true;
+                    u.enabled = true;
                     await context.SaveChangesAsync();
                 }
-                return user;
+                return u;
             }
 
             var adminUser = await EnsureUserAsync("admin@pbl.com", "AdminPassword123!", "System Administrator", adminRole);
             var lecturerUser = await EnsureUserAsync("lecturer1@pbl.com", "LecPassword123!", "Dr. Nguyen Van A", lecturerRole);
             var studentUser = await EnsureUserAsync("student1@pbl.com", "StuPassword123!", "Nguyễn Văn Sinh Viên", studentRole);
 
-            // 3. Lecturer record
+            // 3. Lecturer record (Handle Unique Constraint on lecturer_code)
+            var lecCode = "LEC001";
+            var existingLecByCode = await context.lecturers.FirstOrDefaultAsync(l => l.lecturer_code == lecCode);
             var lecturerRecord = await context.lecturers.FirstOrDefaultAsync(l => l.user_id == lecturerUser.id);
+
             if (lecturerRecord == null)
             {
-                lecturerRecord = new lecturer
+                // If code is already used by another user, we must use a different code or reassign
+                if (existingLecByCode != null)
                 {
-                    user_id = lecturerUser.id,
-                    lecturer_code = "LEC001",
-                    department = "Software Engineering",
-                    office_email = "nva@pbl.com",
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                context.lecturers.Add(lecturerRecord);
+                    // Update existing to current user to resolve conflict
+                    existingLecByCode.user_id = lecturerUser.id;
+                    existingLecByCode.office_email = "nva@pbl.com";
+                    existingLecByCode.department = "Software Engineering";
+                    lecturerRecord = existingLecByCode;
+                }
+                else
+                {
+                    lecturerRecord = new lecturer
+                    {
+                        user_id = lecturerUser.id,
+                        lecturer_code = lecCode,
+                        department = "Software Engineering",
+                        office_email = "nva@pbl.com",
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    context.lecturers.Add(lecturerRecord);
+                }
                 await context.SaveChangesAsync();
             }
 
@@ -107,67 +122,74 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
                 await context.SaveChangesAsync();
             }
 
-            // 5. Courses (Seed 2 courses for Lecturer)
-            var course1 = await context.courses.Include(c => c.lecturer_users).FirstOrDefaultAsync(c => c.course_code == "SE101");
-            if (course1 == null)
+            // 5. Courses
+            async Task<course> EnsureCourseAsync(string code, string name)
             {
-                course1 = new course
+                var c = await context.courses.Include(x => x.lecturer_users).FirstOrDefaultAsync(x => x.course_code == code);
+                if (c == null)
                 {
-                    course_code = "SE101",
-                    course_name = "Lớp học mẫu K21 - Nhóm 1",
-                    semester_id = semester.id,
-                    subject_id = subject.id,
-                    created_by_user_id = adminUser.id,
-                    max_students = 50,
-                    status = "ACTIVE",
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                course1.lecturer_users.Add(lecturerRecord);
-                context.courses.Add(course1);
+                    c = new course
+                    {
+                        course_code = code,
+                        course_name = name,
+                        semester_id = semester.id,
+                        subject_id = subject.id,
+                        created_by_user_id = adminUser.id,
+                        max_students = 50,
+                        status = "ACTIVE",
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    c.lecturer_users.Add(lecturerRecord);
+                    context.courses.Add(c);
+                }
+                else
+                {
+                    if (!c.lecturer_users.Any(l => l.user_id == lecturerRecord.user_id))
+                    {
+                        c.lecturer_users.Add(lecturerRecord);
+                    }
+                }
                 await context.SaveChangesAsync();
+                return c;
             }
 
-            var course2 = await context.courses.Include(c => c.lecturer_users).FirstOrDefaultAsync(c => c.course_code == "SE102");
-            if (course2 == null)
-            {
-                course2 = new course
-                {
-                    course_code = "SE102",
-                    course_name = "Lớp học mẫu K21 - Nhóm 2",
-                    semester_id = semester.id,
-                    subject_id = subject.id,
-                    created_by_user_id = adminUser.id,
-                    max_students = 40,
-                    status = "ACTIVE",
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                course2.lecturer_users.Add(lecturerRecord);
-                context.courses.Add(course2);
-                await context.SaveChangesAsync();
-            }
+            var course1 = await EnsureCourseAsync("SE101", "Lớp học mẫu K21 - Nhóm 1");
+            var course2 = await EnsureCourseAsync("SE102", "Lớp học mẫu K21 - Nhóm 2");
 
-            // 6. Student record
+            // 6. Student record (Handle Unique Constraint on student_code)
+            var stuCode = "STU001";
+            var existingStuByCode = await context.students.FirstOrDefaultAsync(s => s.student_code == stuCode);
             var studentRecord = await context.students.FirstOrDefaultAsync(s => s.user_id == studentUser.id);
+
             if (studentRecord == null)
             {
-                studentRecord = new student
+                if (existingStuByCode != null)
                 {
-                    user_id = studentUser.id,
-                    student_code = "STU001",
-                    major = "Công nghệ phần mềm",
-                    department = "Khoa CNTT",
-                    intake_year = 2021,
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                context.students.Add(studentRecord);
+                    existingStuByCode.user_id = studentUser.id;
+                    existingStuByCode.major = "Công nghệ phần mềm";
+                    studentRecord = existingStuByCode;
+                }
+                else
+                {
+                    studentRecord = new student
+                    {
+                        user_id = studentUser.id,
+                        student_code = stuCode,
+                        major = "Công nghệ phần mềm",
+                        department = "Khoa CNTT",
+                        intake_year = 2021,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    context.students.Add(studentRecord);
+                }
                 await context.SaveChangesAsync();
             }
 
             // Enroll student to Course 1
-            if (!await context.course_enrollments.AnyAsync(e => e.student_user_id == studentRecord.user_id && e.course_id == course1.id))
+            var enrollment = await context.course_enrollments.FirstOrDefaultAsync(e => e.student_user_id == studentRecord.user_id && e.course_id == course1.id);
+            if (enrollment == null)
             {
                 context.course_enrollments.Add(new course_enrollment
                 {
@@ -176,6 +198,11 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
                     status = "ACTIVE",
                     enrolled_at = DateTime.UtcNow
                 });
+                await context.SaveChangesAsync();
+            }
+            else if (enrollment.status != "ACTIVE")
+            {
+                enrollment.status = "ACTIVE";
                 await context.SaveChangesAsync();
             }
 
@@ -212,7 +239,8 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
             }
 
             // Team Member for Project 1
-            if (!await context.team_members.AnyAsync(tm => tm.project_id == project1.id && tm.student_user_id == studentRecord.user_id))
+            var teamMember = await context.team_members.FirstOrDefaultAsync(tm => tm.project_id == project1.id && tm.student_user_id == studentRecord.user_id);
+            if (teamMember == null)
             {
                 context.team_members.Add(new team_member
                 {
@@ -227,7 +255,7 @@ namespace JiraGithubExportSystem.Shared.Infrastructure.Persistence
                 await context.SaveChangesAsync();
             }
 
-            // Add some Student Activity for Dashboard
+            // 8. Student Activity for Dashboard
             if (!await context.student_activity_dailies.AnyAsync(a => a.student_user_id == studentRecord.user_id && a.project_id == project1.id))
             {
                 context.student_activity_dailies.Add(new student_activity_daily

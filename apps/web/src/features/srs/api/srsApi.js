@@ -11,8 +11,9 @@ import { unwrap } from "../../../api/unwrap.js";
 export async function getProjectSrs(projectId) {
     const res = await client.get(`/projects/${projectId}/srs`);
     const paged = unwrap(res);
-    // Trả về mảng items, map về shape mà UI đang dùng
-    return (paged?.items ?? paged ?? []).map(mapSrs);
+    // Support paged items array from PagedResponse (Standard BE response)
+    const list = paged?.items ?? paged?.Items ?? (Array.isArray(paged) ? paged : []);
+    return list.map(mapSrs);
 }
 
 /**

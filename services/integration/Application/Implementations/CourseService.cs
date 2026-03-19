@@ -126,48 +126,33 @@ public class CourseService : ICourseService
         return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
     }
 
-    public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request)
-    {
-        var lecturer = await _unitOfWork.Lecturers.Query()
-            .Include(l => l.courses)
-            .FirstOrDefaultAsync(l => l.user_id == lecturerUserId);
-
-        if (lecturer == null)
+        public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByLecturerAsync(long lecturerUserId, PagedRequest request)
         {
-            throw new NotFoundException("Lecturer not found");
+            var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByLecturerAsync(
+                lecturerUserId,
+                request.Q,
+                request.SortDir,
+                request.Page,
+                request.PageSize
+            );
+
+            var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+            return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
         }
 
-        var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByLecturerAsync(
-            lecturerUserId,
-            request.Q,
-            request.SortDir,
-            request.Page,
-            request.PageSize
-        );
-
-        var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
-        return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
-    }
-
-    public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request)
-    {
-        var student = await _unitOfWork.Students.FirstOrDefaultAsync(s => s.user_id == studentUserId);
-        if (student == null)
+        public async Task<PagedResponse<CourseDetailResponse>> GetCoursesByStudentAsync(long studentUserId, PagedRequest request)
         {
-            throw new NotFoundException("Student not found");
+            var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByStudentAsync(
+                studentUserId,
+                request.Q,
+                request.SortDir,
+                request.Page,
+                request.PageSize
+            );
+
+            var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
+            return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
         }
-
-        var (items, totalItems) = await _unitOfWork.Courses.GetPagedCoursesByStudentAsync(
-            studentUserId,
-            request.Q,
-            request.SortDir,
-            request.Page,
-            request.PageSize
-        );
-
-        var dtoList = items.Select(c => _mapper.Map<CourseDetailResponse>(c)).ToList();
-        return new PagedResponse<CourseDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
-    }
 
     // ============================================
     // ASSIGN LECTURER
