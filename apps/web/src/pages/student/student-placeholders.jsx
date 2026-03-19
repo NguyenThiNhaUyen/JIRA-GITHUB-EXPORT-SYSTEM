@@ -218,6 +218,9 @@ export function StudentSrsPage() {
 
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
+    
+    // FETCH SRS for the first group for demo
+    const { data: srsList = [] } = useGetProjectSrs(myGroups[0]?.id);
 
     if (loadingProjects) {
         return (
@@ -226,8 +229,6 @@ export function StudentSrsPage() {
             </div>
         );
     }
-
-
 
     return (
         <div className="space-y-6">
