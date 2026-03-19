@@ -88,11 +88,9 @@ public class LecturerInfo
 public class EnrollmentInfo
 {
     public long UserId { get; set; }
-    public long studentId => UserId; // Alias for some FE parts
     public string FullName { get; set; } = null!;
-    public string studentName => FullName; // Alias for some FE parts
     public string StudentCode { get; set; } = null!;
-    public string StudentId { get; set; } = null!; // Real student ID string (e.g. SE123456)
+    public string StudentId { get; set; } = null!;
     public string? Email { get; set; }
 }
 

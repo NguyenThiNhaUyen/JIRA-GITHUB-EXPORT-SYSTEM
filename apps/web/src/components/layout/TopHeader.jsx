@@ -91,8 +91,9 @@ export function TopHeader() {
     let isMounted = true;
 
     const startSignalR = async () => {
-        const BASE_URL = (import.meta.env.VITE_API_URL ?? "https://jira-github-export-system.onrender.com/api")
-          .replace(/\/api$/, ""); 
+        const DEFAULT_PROD_URL = "https://jira-github-export-system.onrender.com/api";
+        const envUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') + '/api' : null;
+        const BASE_URL = (envUrl || DEFAULT_PROD_URL).replace(/\/api$/, ""); 
         
         connection = new HubConnectionBuilder()
           .withUrl(`${BASE_URL}/notificationHub`, {
