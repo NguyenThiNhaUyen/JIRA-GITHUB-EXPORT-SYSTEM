@@ -17,6 +17,7 @@ import {
   useGenerateSrs
 } from '../../features/admin/hooks/useReports.js';
 import { useToast } from '../../components/ui/toast.jsx';
+import { useGetCommitTrends, useGetInactiveTeams, useGetIntegrationStats } from '../../features/admin/hooks/useAnalytics.js';
 
 export default function AdminReports() {
   const { success, error } = useToast();
@@ -36,6 +37,11 @@ export default function AdminReports() {
   const generateTeamRoster = useGenerateTeamRoster();
   const generateSrs = useGenerateSrs();
 
+  // Analytics
+  const { data: commitTrendsRaw } = useGetCommitTrends(30);
+  const { data: inactiveTeamsRaw } = useGetInactiveTeams();
+  const { data: integrationStats } = useGetIntegrationStats();
+
   const semesters = semestersData || [];
   const allCourses = coursesData?.items || [];
 
@@ -54,10 +60,15 @@ export default function AdminReports() {
 
   const projectStats = {
     totalProjects: stats.totalProjects,
-    activeProjects: stats.totalProjects, // Fallback since status isn't clear for projects yet
-    silentProjects: 0, // Placeholder
+    activeProjects: integrationStats?.totalProjects ?? stats.totalProjects,
+    silentProjects: Array.isArray(inactiveTeamsRaw) ? inactiveTeamsRaw.length : 0,
     projectsWithSrs: 0
   };
+
+  // Normalize commit trends for chart: BE → [{ name, commits }]
+  const commitChartData = Array.isArray(commitTrendsRaw)
+    ? commitTrendsRaw.map(d => ({ name: d.date || d.label || d.week, commits: d.count || d.commits || 0 }))
+    : [];
 
   const handleGenerateReport = async (type, id) => {
     try {
@@ -84,9 +95,7 @@ export default function AdminReports() {
 
   const loading = loadingSemesters || loadingCourses;
 
-  // Prepare chart data (Note: commitTrends placeholder for now)
-  const commitChartData = [];
-
+  // Prepare chart data from real commit trends
   const projectDistribution = filteredCourses.map(course => ({
     name: course.code,
     projects: course.projectsCount || 0,
@@ -361,7 +370,7 @@ export default function AdminReports() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center text-center space-y-4 h-full py-4">
               <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
-                <span className="text-2xl font-bold">{data.projectStats.silentProjects}</span>
+                  <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 text-lg">Dự án chưa hoạt động</h4>

@@ -116,3 +116,20 @@ export async function getCourseProjectsMetrics(courseId) {
     const result = unwrap(res);
     return result.groupMetrics || result;
 }
+
+/**
+ * POST /api/courses/:id/enrollments/import
+ * Upload file Excel (.xlsx / .xls / .csv) chứa danh sách studentId hoặc email
+ * BE xử lý parse + enroll.
+ * @param {number|string} courseId
+ * @param {File} file
+ * @returns {Promise<{ enrolled: number, skipped: number }>}
+ */
+export async function importEnrollmentsFile(courseId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await client.post(`/courses/${courseId}/enrollments/import`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return unwrap(res);
+}

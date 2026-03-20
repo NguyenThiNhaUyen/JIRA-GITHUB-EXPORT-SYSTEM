@@ -3,11 +3,13 @@ import { unwrap } from "../../../api/unwrap.js";
 import { mapUser } from "./mappers/userMapper.js";
 
 export async function getAllLecturers() {
-    const res = await client.get("/lecturers");
-    const arr = unwrap(res) || [];
-    // Sử dụng mapUser từ cùng thư mục chung (vì thư mục map thường nằm ở features/users)
-    // Lưu ý: Import tương đối phụ thuộc vào vị trí thực tế của file này
-    return arr.map(mapUser);
+    const res = await client.get("/lecturers", { params: { pageSize: 200 } });
+    const payload = unwrap(res);
+    // BE may return { items: [...] } (paged) or plain array
+    const items = payload?.items ?? payload?.Items ?? payload?.results ?? payload?.Results;
+    if (items && Array.isArray(items)) return items.map(mapUser);
+    if (Array.isArray(payload)) return payload.map(mapUser);
+    return [];
 }
 
 export async function getLecturerWorkload(lecturerId) {

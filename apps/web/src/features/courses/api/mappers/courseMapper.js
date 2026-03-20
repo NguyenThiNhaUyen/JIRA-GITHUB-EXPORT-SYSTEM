@@ -21,19 +21,19 @@ export function mapCourse(beCourse) {
         name: beCourse.courseName ?? beCourse.CourseName ?? "",
 
         // ── Subject (nested, FE vẫn có thể dùng subjectId để lookup) ──
-        subjectId: String(subj.id ?? subj.Id ?? ""),
+        subjectId: String(subj.id ?? subj.Id ?? beCourse.subjectId ?? beCourse.SubjectId ?? ""),
         subject: {
-            id: String(subj.id ?? subj.Id ?? ""),
-            code: subj.subjectCode ?? subj.SubjectCode ?? "",
-            name: subj.subjectName ?? subj.SubjectName ?? "",
+            id: String(subj.id ?? subj.Id ?? beCourse.subjectId ?? beCourse.SubjectId ?? ""),
+            code: subj.subjectCode ?? subj.SubjectCode ?? beCourse.subjectCode ?? beCourse.SubjectCode ?? "",
+            name: subj.subjectName ?? subj.SubjectName ?? beCourse.subjectName ?? beCourse.SubjectName ?? "",
         },
 
         // ── Semester ───────────────────────────────────────────────
-        semesterId: String(sem.id ?? sem.Id ?? ""),
+        semesterId: String(sem.id ?? sem.Id ?? beCourse.semesterId ?? beCourse.SemesterId ?? ""),
         semester: {
-            id: String(sem.id ?? sem.Id ?? ""),
-            name: sem.name ?? sem.Name ?? "",
-            code: sem.name ?? sem.Name ?? "",   // mock dùng .code, BE chỉ có .name
+            id: String(sem.id ?? sem.Id ?? beCourse.semesterId ?? beCourse.SemesterId ?? ""),
+            name: (typeof sem === 'string' ? sem : sem.name) ?? sem.Name ?? beCourse.semesterName ?? beCourse.SemesterName ?? "",
+            code: (typeof sem === 'string' ? sem : sem.name) ?? sem.Name ?? beCourse.semesterName ?? beCourse.SemesterName ?? "",   // mock dùng .code, BE chỉ có .name
             startDate: sem.startDate ?? sem.StartDate ?? null,
             endDate: sem.endDate ?? sem.EndDate ?? null,
         },

@@ -18,6 +18,7 @@ import { useGetCourses, useGetEnrolledStudents } from "../../features/courses/ho
 import { useGetProjects, useLinkIntegration, useAddTeamMember } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
+import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations } from "../../features/student/hooks/useStudent.js";
 
 import SRSUploadModal from "./SRSUploadModal.jsx";
 import CourseWorkspace from "./CourseWorkspace.jsx";
@@ -40,6 +41,12 @@ export default function StudentDashboard() {
     const { data: coursesData = { items: [] }, isLoading: coursesLoading, refetch: refetchCourses } = useGetCourses({ pageSize: 100 });
     const { data: projectsData = { items: [] }, isLoading: projectsLoading, refetch: refetchProjects } = useGetProjects({ pageSize: 100 });
     const { data: alertsData = { items: [] }, isLoading: alertsLoading, refetch: refetchAlerts } = useGetAlerts({ pageSize: 10 });
+    // Personal analytics APIs
+    const { data: dashboardStats } = useGetStudentDashboardStats();
+    const { data: myTasksData } = useGetMyTasks({ pageSize: 5, status: 'IN_PROGRESS' });
+    const { data: myDeadlinesData } = useGetMyDeadlines();
+    const { data: commitActivity } = useGetMyCommitActivity(7);
+    const { data: myInvitationsData, refetch: refetchInvitations } = useGetMyInvitations();
 
     const courses = coursesData.items || [];
     const myGroupsList = projectsData.items || [];
@@ -57,12 +64,53 @@ export default function StudentDashboard() {
 
     const isLoading = coursesLoading || projectsLoading;
 
+    // Personal stats from API
+    const myStats = {
+        totalCommits: dashboardStats?.totalCommits ?? dashboardStats?.commits ?? 0,
+        openTasks: dashboardStats?.openTasks ?? dashboardStats?.tasksDue ?? (Array.isArray(myTasksData?.items) ? myTasksData.items.length : 0),
+        upcomingDeadlines: Array.isArray(myDeadlinesData) ? myDeadlinesData.filter(d => {
+            if (!d.dueDate && !d.deadline) return true;
+            const due = new Date(d.dueDate || d.deadline);
+            return due > new Date();
+        }).length : 0,
+    };
+
     // loadData: hàm làm mới dữ liệu thủ công
     const loadData = () => {
         refetchCourses();
         refetchProjects();
         refetchAlerts();
+        refetchInvitations();
         if (selectedGroup?.id) refetchSrs();
+    };
+
+    // Invitations helpers
+    const myInvitations = Array.isArray(myInvitationsData) ? myInvitationsData :
+        (myInvitationsData?.items ?? []);
+
+    const handleAcceptInvitation = async (invitationId) => {
+        try {
+            const client = (await import('../../api/client.js')).default;
+            const { unwrap } = await import('../../api/unwrap.js');
+            await unwrap(await client.post(`/invitations/${invitationId}/accept`));
+            success('Chấp nhận lời mời thành công!');
+            refetchInvitations();
+            refetchProjects();
+        } catch (err) {
+            showError(err.message || 'Chấp nhận không thành công');
+        }
+    };
+
+    const handleDeclineInvitation = async (invitationId) => {
+        try {
+            const client = (await import('../../api/client.js')).default;
+            const { unwrap } = await import('../../api/unwrap.js');
+            await unwrap(await client.post(`/invitations/${invitationId}/reject`));
+            success('Từ chối lời mời');
+            refetchInvitations();
+        } catch (err) {
+            showError(err.message || 'Không thể từ chối lời mời');
+        }
     };
 
     // SRS Mutations
@@ -185,7 +233,7 @@ export default function StudentDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <StatCard icon={<BookOpen size={20} />} color="bg-blue-500" label="Lớp đang học" value={courses.length} />
                         <StatCard icon={<Users size={20} />} color="bg-teal-500" label="Nhóm của tôi" value={Object.keys(groupsMapByCourse).length} />
-                        <StatCard icon={<GitBranch size={20} />} color="bg-green-500" label="Links đã duyệt" value={approvedCount} />
+                        <StatCard icon={<GitBranch size={20} />} color="bg-green-500" label="Commits" value={myStats.totalCommits} />
                         <StatCard icon={<Bell size={20} />} color={alerts.length > 0 ? "bg-orange-400" : "bg-gray-400"} label="Cảnh báo" value={alerts.length} />
                     </div>
                 )}
@@ -285,7 +333,136 @@ export default function StudentDashboard() {
                         </div>
 
 
-                        {/* ── D. Personal Alerts ── */}
+                        {/* ── D. Personal Stats 2-col: Deadlines & Active Tasks ── */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            {/* Deadlines */}
+                            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                                <CardHeader className="border-b border-gray-50 pb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                                            <Clock size={15} className="text-blue-500" />
+                                        </div>
+                                        <CardTitle className="text-base font-semibold text-gray-800">Deadline sắp đến</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-3 pb-2">
+                                    {!Array.isArray(myDeadlinesData) || myDeadlinesData.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                            <CheckCircle size={24} className="text-green-400" />
+                                            <p className="text-sm text-gray-400">Không có deadline sắp đến</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-50">
+                                            {myDeadlinesData.slice(0, 5).map((d, i) => {
+                                                const dueDate = d.dueDate || d.deadline;
+                                                const isOverdue = dueDate && new Date(dueDate) < new Date();
+                                                return (
+                                                    <div key={d.id || i} className="flex items-center gap-3 py-2.5 px-1">
+                                                        <div className={`w-2 h-2 rounded-full shrink-0 ${isOverdue ? 'bg-red-400' : 'bg-blue-400'}`} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-800 truncate">{d.title || d.summary || d.name}</p>
+                                                            <p className="text-xs text-gray-400">{d.projectName || d.courseName || ''}</p>
+                                                        </div>
+                                                        {dueDate && (
+                                                            <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                                                {new Date(dueDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Active Jira Tasks */}
+                            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                                <CardHeader className="border-b border-gray-50 pb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                                            <BarChart2 size={15} className="text-teal-500" />
+                                        </div>
+                                        <CardTitle className="text-base font-semibold text-gray-800">Task Jira đang thực hiện</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-3 pb-2">
+                                    {!myTasksData?.items?.length ? (
+                                        <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                            <CheckCircle size={24} className="text-green-400" />
+                                            <p className="text-sm text-gray-400">Không có task nào đang thực hiện</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-50">
+                                            {myTasksData.items.slice(0, 5).map((t, i) => (
+                                                <div key={t.id || i} className="flex items-center gap-3 py-2.5 px-1">
+                                                    <div className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-800 truncate">{t.summary || t.title || t.name}</p>
+                                                        <p className="text-xs text-gray-400">{t.projectKey || t.project || ''}</p>
+                                                    </div>
+                                                    <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 uppercase">
+                                                        {t.status || 'IN PROGRESS'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* ── E. L\u1eddi m\u1eddi tham gia nh\u00f3m ── */}
+                        {myInvitations.length > 0 && (
+                            <Card className="border border-amber-100 shadow-sm rounded-[24px] overflow-hidden bg-amber-50/30">
+                                <CardHeader className="border-b border-amber-100/50 pb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
+                                            <Users size={15} className="text-amber-600" />
+                                        </div>
+                                        <CardTitle className="text-base font-semibold text-gray-800">L\u1eddi m\u1eddi tham gia Nh\u00f3m</CardTitle>
+                                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 bg-amber-400 text-white rounded-full">
+                                            {myInvitations.length} m\u1edbi
+                                        </span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-3 pb-2">
+                                    <div className="space-y-2">
+                                        {myInvitations.map((inv, i) => (
+                                            <div key={inv.id || i} className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 border border-amber-100">
+                                                <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold shrink-0">
+                                                    {(inv.projectName || inv.groupName || 'N')?.charAt(0)}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-gray-800 truncate">
+                                                        {inv.projectName || inv.groupName || 'Nh\u00f3m ch\u01b0a c\u00f3 t\u00ean'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {inv.inviterName ? `M\u1eddi b\u1edfi: ${inv.inviterName}` : ''}{inv.courseName ? ` \u00b7 ${inv.courseName}` : ''}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <button
+                                                        onClick={() => handleAcceptInvitation(inv.id)}
+                                                        className="text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg transition-colors"
+                                                    >
+                                                        \u2713 Ch\u1ea5p nh\u1eadn
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeclineInvitation(inv.id)}
+                                                        className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition-colors"
+                                                    >
+                                                        \u00d7 T\u1eeb ch\u1ed1i
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* ── F. Personal Alerts ── */}
                         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                             <CardHeader className="border-b border-gray-50 pb-4">
                                 <div className="flex items-center gap-2">

@@ -20,6 +20,7 @@ import SemesterManagement from "./pages/admin/semester-management.jsx";
 import SubjectManagement from "./pages/admin/subject-management.jsx";
 import LecturerAssignment from "./pages/admin/lecturer-assignment.jsx";
 import UserManagement from "./pages/admin/users.jsx";
+import UserDetail from "./pages/admin/user-detail.jsx";
 import MyReports from "./pages/admin/my-reports.jsx";
 
 // Lecturer pages
@@ -147,6 +148,7 @@ export default function App() {
       />
       <Route path="/admin/lecturer-assignment" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><LecturerAssignment /></AdminLayout></RoleGuard></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><UserManagement /></AdminLayout></RoleGuard></ProtectedRoute>} />
+      <Route path="/admin/users/:userId" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><UserDetail /></AdminLayout></RoleGuard></ProtectedRoute>} />
       <Route path="/admin/my-reports" element={<ProtectedRoute><RoleGuard requiredRole="ADMIN"><AdminLayout><MyReports /></AdminLayout></RoleGuard></ProtectedRoute>} />
 
       {/* ─── Lecturer routes ─── */}

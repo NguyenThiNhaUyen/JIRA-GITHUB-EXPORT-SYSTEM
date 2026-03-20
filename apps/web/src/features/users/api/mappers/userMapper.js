@@ -5,21 +5,40 @@
 export function mapUser(beUser) {
     if (!beUser) return null;
 
-    // BE role list -> single role string (fallback logic)
+    // BE may return roles as array OR as a single role string
     const roles = beUser.roles || beUser.Roles || [];
+    const singleRole = beUser.role || beUser.Role || "";
+    const allRoles = Array.isArray(roles) ? roles : [roles];
+    // Insert the single role string if not already in the array
+    if (singleRole && !allRoles.includes(singleRole)) allRoles.push(singleRole);
+
     let role = "STUDENT";
-    if (roles.includes("ADMIN") || roles.includes("SUPER_ADMIN")) role = "ADMIN";
-    else if (roles.includes("LECTURER")) role = "LECTURER";
+    if (allRoles.some(r => r === "ADMIN" || r === "SUPER_ADMIN")) role = "ADMIN";
+    else if (allRoles.some(r => r === "LECTURER")) role = "LECTURER";
+
+    // BE uses `enabled` (bool) for active status
+    const enabled = beUser.enabled ?? beUser.Enabled;
+    const statusStr = beUser.status || beUser.Status;
+    let status;
+    if (typeof enabled === "boolean") {
+        status = enabled ? "ACTIVE" : "DISABLED";
+    } else if (statusStr) {
+        status = statusStr;
+    } else {
+        status = "ACTIVE";
+    }
 
     return {
-        id: String(beUser.id || beUser.Id),
-        name: beUser.fullName || beUser.FullName || "",
+        id: String(beUser.id || beUser.Id || beUser.userId || beUser.UserId || ""),
+        name: beUser.fullName || beUser.FullName || beUser.name || beUser.Name || "",
         email: beUser.email || beUser.Email || "",
-        role: role,
-        status: (beUser.enabled ?? beUser.Enabled) ? "ACTIVE" : "DISABLED",
-        studentId: beUser.studentCode || beUser.StudentCode || null,
+        role,
+        status,
+        studentId: beUser.studentCode || beUser.StudentCode || beUser.studentId || beUser.StudentId || null,
+        studentCode: beUser.studentCode || beUser.StudentCode || null,
         lecturerCode: beUser.lecturerCode || beUser.LecturerCode || null,
-        createdAt: beUser.createdAt || beUser.CreatedAt
+        department: beUser.department || beUser.Department || null,
+        createdAt: beUser.createdAt || beUser.CreatedAt || null,
     };
 }
 

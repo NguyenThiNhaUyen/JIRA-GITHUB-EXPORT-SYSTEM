@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, AlertCircle, PlayCircle, CheckCircle, Upload } from "lucide-react";
 
 // Feature Hooks
-import { useGetCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignLecturer, useEnrollStudents } from "../../features/courses/hooks/useCourses.js";
+import { useGetCourses, useCreateCourse, useUpdateCourse, useDeleteCourse, useAssignLecturer, useEnrollStudents, useRemoveLecturer, useUnenrollStudent, useGetEnrolledStudents, useImportEnrollments } from "../../features/courses/hooks/useCourses.js";
 import { useGetSemesters, useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 
@@ -43,6 +43,9 @@ export default function CourseManagement() {
   const deleteMutation = useDeleteCourse();
   const assignMutation = useAssignLecturer();
   const enrollMutation = useEnrollStudents();
+  const removeLecturerMutation = useRemoveLecturer();
+  const unenrollMutation = useUnenrollStudent();
+  const importMutation = useImportEnrollments();
 
   const [showModal, setShowModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -54,6 +57,8 @@ export default function CourseManagement() {
 
   const [importCourse, setImportCourse] = useState(null);
   const [importSelectedIds, setImportSelectedIds] = useState([]);
+  const [importDragOver, setImportDragOver] = useState(false);
+  const [importFile, setImportFile] = useState(null);
 
   const [filterSemester, setFilterSemester] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
@@ -212,41 +217,38 @@ export default function CourseManagement() {
   const handleRemoveLecturer = async (course) => {
     const lecs = getCourseLecturers(course);
     if (lecs.length === 0) return;
-    if (!confirm(`Xóa giảng viên khỏi lớp ${course.code}?`)) return;
+    if (!confirm(`Xóa giảng viên ${lecs[0].name} khỏi lớp ${course.code}?`)) return;
     try {
-      // Assuming we have a way to remove lecturer, for now use a placeholder or log
-      // await removeLecturerMutation.mutateAsync({ courseId: course.id, lecturerUserId: lecs[0].id });
-      showError("Tính năng xóa giảng viên đang được cập nhật ở BE");
+      await removeLecturerMutation.mutateAsync({ courseId: course.id, lecturerUserId: lecs[0].id });
+      success(`Đã xóa GV khỏi lớp ${course.code}`);
     } catch (err) {
-      showError(err.message || "Xóa thất bại");
+      showError(err.message || "Xóa giảng viên thất bại");
     }
   };
 
   const handleOpenViewStudents = (course) => {
-    // In real app, we might need a separate API to get students by course
-    // For now, if CourseDetailResponse has students, use it. 
-    // Otherwise, we might need useGetCourseStudents(course.id) hook.
     setViewStudentsCourse(course);
-    setViewStudentsList([]); // TODO: Fetch from somewhere
+    setViewStudentsList([]);
     setShowViewStudentsModal(true);
   };
 
-  const handleKickStudent = (enrollmentId, studentName) => {
+  // Load students khi modal mở — dùng hook riêng để fetch theo courseId
+  // Sẽ được trigger khi viewStudentsCourse thay đổi
+  const { data: enrolledStudentsData, refetch: refetchEnrolled } = useGetEnrolledStudents(
+    viewStudentsCourse?.id,
+    { pageSize: 200 }
+  );
+  const enrolledStudentsList = enrolledStudentsData?.items || [];
+
+  const handleKickStudent = async (studentUserId, studentName) => {
     if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
-    // remove enrollment
-    const enrollments = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id });
-    const target = enrollments.find(e => {
-      const s = db.findById("users.students", e.studentId);
-      return s?.name === studentName;
-    });
-    if (target) db.delete("courseEnrollments", target.id);
-    // update count
-    const remaining = db.findMany("courseEnrollments", { courseId: viewStudentsCourse.id }).length;
-    db.update("courses", viewStudentsCourse.id, { currentStudents: remaining });
-    success(`Đã đuổi ${studentName} khỏi lớp`);
-    // refresh modal list
-    handleOpenViewStudents(viewStudentsCourse);
-    loadData();
+    try {
+      await unenrollMutation.mutateAsync({ courseId: viewStudentsCourse.id, studentUserId });
+      success(`Đã xóa ${studentName} khỏi lớp`);
+      refetchEnrolled();
+    } catch (err) {
+      showError(err.message || "Xóa sinh viên thất bại");
+    }
   };
 
   // Import SV helpers
@@ -720,11 +722,60 @@ export default function CourseManagement() {
               </p>
             </div>
 
-            {/* Excel upload placeholder */}
-            <div className="border-2 border-dashed border-purple-200 rounded-xl p-4 flex flex-col items-center gap-2 bg-purple-50/30 cursor-pointer hover:bg-purple-50 transition-colors">
+            {/* Excel upload — real file input */}
+            <div
+              className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center gap-2 transition-colors cursor-pointer ${
+                importDragOver ? 'border-purple-400 bg-purple-100/60' : 'border-purple-200 bg-purple-50/30 hover:bg-purple-50'
+              }`}
+              onDragOver={e => { e.preventDefault(); setImportDragOver(true); }}
+              onDragLeave={() => setImportDragOver(false)}
+              onDrop={e => {
+                e.preventDefault();
+                setImportDragOver(false);
+                const f = e.dataTransfer.files[0];
+                if (f) setImportFile(f);
+              }}
+              onClick={() => document.getElementById('excel-import-input')?.click()}
+            >
               <Upload size={24} className="text-purple-400" />
-              <p className="text-sm font-medium text-purple-700">Kéo & thả file Excel hoặc nhấn để chọn</p>
-              <p className="text-xs text-gray-400">.xlsx, .xls (tính năng parse sẽ kết nối BE)</p>
+              {importFile ? (
+                <>
+                  <p className="text-sm font-semibold text-purple-700">{importFile.name}</p>
+                  <p className="text-xs text-gray-400">{(importFile.size / 1024).toFixed(1)} KB — Sẵn sàng upload</p>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!importCourse) return;
+                      try {
+                        const res = await importMutation.mutateAsync({ courseId: importCourse.id, file: importFile });
+                        const enrolled = res?.enrolled ?? res?.count ?? '?';
+                        const skipped = res?.skipped ?? 0;
+                        success(`Import thành công! ${enrolled} SV được thêm, ${skipped} bỏ qua.`);
+                        setImportFile(null);
+                        setShowImportModal(false);
+                      } catch (err) {
+                        showError(err.message || 'Import thất bại. Kiểm tra định dạng file.');
+                      }
+                    }}
+                    disabled={importMutation.isPending}
+                    className="mt-1 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {importMutation.isPending ? 'Đang upload...' : '🚀 Upload lên hệ thống'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-purple-700">Kéo &amp; thả file Excel hoặc nhấn để chọn</p>
+                  <p className="text-xs text-gray-400">.xlsx, .xls, .csv — Cột: StudentId / Email</p>
+                </>
+              )}
+              <input
+                id="excel-import-input"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={e => { const f = e.target.files[0]; if (f) setImportFile(f); }}
+              />
             </div>
 
             {/* Student checkbox list */}
@@ -802,23 +853,23 @@ export default function CourseManagement() {
               <p className="text-sm text-gray-600">
                 Lớp: <span className="font-bold text-gray-900">{viewStudentsCourse.code} — {viewStudentsCourse.name}</span>
               </p>
-              <p className="text-xs text-gray-500 mt-1">{viewStudentsList.length} sinh viên đang enrolled</p>
+              <p className="text-xs text-gray-500 mt-1">{enrolledStudentsList.length} sinh viên đang enrolled</p>
             </div>
-            {viewStudentsList.length === 0 ? (
+            {enrolledStudentsList.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">Chưa có sinh viên nào trong lớp.</p>
             ) : (
               <div className="max-h-[360px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
-                {viewStudentsList.map((stu) => (
+                {enrolledStudentsList.map((stu) => (
                   <div key={stu.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50/30 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
                       {stu.name?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
-                      <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
+                      <p className="text-xs text-gray-400">{stu.studentCode || stu.studentId} · {stu.email}</p>
                     </div>
                     <button
-                      onClick={() => handleKickStudent(stu.enrollmentId, stu.name)}
+                      onClick={() => handleKickStudent(stu.id, stu.name)}
                       className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Đuổi

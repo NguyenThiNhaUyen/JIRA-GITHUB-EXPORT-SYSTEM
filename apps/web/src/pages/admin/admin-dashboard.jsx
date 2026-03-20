@@ -14,15 +14,9 @@ import {
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 import { useGetProjects } from "../../features/projects/hooks/useProjects.js";
 import { useGetSemesters, useGetSubjects, useGetDashboardStats } from "../../features/system/hooks/useSystem.js";
+import { useGetActivityLog, useGetIntegrationStats, useGetTeamRankings, useGetInactiveTeams } from "../../features/admin/hooks/useAnalytics.js";
 
-// Mock recent system activity (static — không cần API)
-const SYSTEM_ACTIVITY = [
-  { icon: Users, color: "text-blue-600 bg-blue-50", msg: "Sinh viên mới đăng ký lớp SE001", time: "5 phút trước" },
-  { icon: UserCog, color: "text-teal-600 bg-teal-50", msg: "GV. Nguyễn được phân công SE002", time: "30 phút trước" },
-  { icon: BookOpen, color: "text-indigo-600 bg-indigo-50", msg: "Lớp học phần SE003-K22 được tạo mới", time: "2 giờ trước" },
-  { icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Học kỳ 2024-2 đã được kích hoạt", time: "Hôm qua" },
-  { icon: AlertCircle, color: "text-orange-600 bg-orange-50", msg: "5 nhóm chưa submit GitHub link", time: "Hôm qua" },
-];
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -33,6 +27,30 @@ export default function AdminDashboard() {
   const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
   const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
   const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ pageSize: 1 });
+  const { data: activityLogRaw } = useGetActivityLog(8);
+  const { data: integrationStats } = useGetIntegrationStats();
+  const { data: teamRankingsRaw } = useGetTeamRankings(5);
+  const { data: inactiveTeamsRaw } = useGetInactiveTeams();
+
+  // Normalize activityLog — BE trả về AuditLogResponse[]: { type, message, time, timestamp }
+  const ICON_MAP = {
+    info: { icon: Activity, color: "text-blue-600 bg-blue-50" },
+    success: { icon: CheckCircle, color: "text-green-600 bg-green-50" },
+    warning: { icon: AlertCircle, color: "text-orange-600 bg-orange-50" },
+    error: { icon: WifiOff, color: "text-red-600 bg-red-50" },
+  };
+  const activityLog = Array.isArray(activityLogRaw) ? activityLogRaw.map((log, i) => ({
+    ...log,
+    ...(ICON_MAP[log.type] || ICON_MAP.info),
+    id: i,
+    msg: log.message,
+    time: log.time || new Date(log.timestamp).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
+  })) : [];
+
+  // Normalize team rankings
+  const teamRankings = Array.isArray(teamRankingsRaw) ? teamRankingsRaw : [];
+  const inactiveTeams = Array.isArray(inactiveTeamsRaw) ? inactiveTeamsRaw : [];
+
 
   const recentCourses = coursesData?.items || [];
   const isLoading = loadingStats || loadingCourses || loadingSems || loadingSubs || loadingProjects;
@@ -77,7 +95,7 @@ export default function AdminDashboard() {
         <HeroCard icon={<BookOpen size={20} />} color="bg-blue-600" label="Lớp học phần" value={stats.courses} />
         <HeroCard icon={<UserCog size={20} />} color="bg-purple-500" label="Giảng viên" value={stats.lecturers} />
         <HeroCard icon={<GraduationCap size={20} />} color="bg-teal-500" label="Sinh viên" value={stats.students} />
-        <HeroCard icon={<FolderKanban size={20} />} color="bg-orange-400" label="Nhóm dự án" value={stats.projects} />
+        <HeroCard icon={<FolderKanban size={20} />} color="bg-orange-400" label="Nhóm dự án" value={stats.projects} sub={integrationStats ? `${integrationStats.repoConnected ?? 0} đã kết nối` : undefined} />
       </div>
 
       {/* ── B. Activity + Quick Actions (2-col) ── */}
@@ -93,8 +111,10 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {SYSTEM_ACTIVITY.map((act, i) => (
-              <div key={i} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
+            {activityLog.length === 0 ? (
+              <div className="flex items-center justify-center py-10 text-gray-400 text-sm">Không có hoạt động nào gần đây</div>
+            ) : activityLog.map((act) => (
+              <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${act.color}`}>
                   <act.icon size={14} />
                 </div>
@@ -223,6 +243,92 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── E. 2-col: Team Rankings + Inactive Teams ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Team Rankings */}
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="border-b border-gray-50 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
+                <TrendingUp size={15} className="text-amber-500" />
+              </div>
+              <CardTitle className="text-base font-semibold text-gray-800">Bảng xếp hạng Nhóm</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {teamRankings.length === 0 ? (
+              <div className="flex items-center justify-center py-10 text-gray-400 text-sm">Chưa có dữ liệu xếp hạng</div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {teamRankings.map((team, i) => (
+                  <div key={team.projectId ?? team.id ?? i} className="flex items-center gap-3 px-5 py-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                      i === 0 ? 'bg-amber-400 text-white' :
+                      i === 1 ? 'bg-gray-300 text-gray-700' :
+                      i === 2 ? 'bg-orange-300 text-white' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{team.projectName ?? team.name ?? `Nhóm ${i+1}`}</p>
+                      <p className="text-xs text-gray-400">{team.courseCode ?? team.courseName ?? ''}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-teal-600">{team.totalCommits ?? team.commits ?? 0}</p>
+                      <p className="text-[10px] text-gray-400">commits</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Inactive Teams Warning */}
+        <Card className={`border shadow-sm rounded-[24px] overflow-hidden ${
+          inactiveTeams.length > 0 ? 'border-red-100 bg-red-50/20' : 'border-green-100 bg-green-50/20'
+        }`}>
+          <CardHeader className="border-b border-gray-50/50 pb-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                inactiveTeams.length > 0 ? 'bg-red-50' : 'bg-green-50'
+              }`}>
+                <AlertCircle size={15} className={inactiveTeams.length > 0 ? 'text-red-500' : 'text-green-500'} />
+              </div>
+              <CardTitle className="text-base font-semibold text-gray-800">Nhóm ít hoạt động</CardTitle>
+              {inactiveTeams.length > 0 && (
+                <span className="ml-auto text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-600 rounded-full">{inactiveTeams.length} nhóm</span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {inactiveTeams.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <CheckCircle size={28} className="text-green-400" />
+                <p className="text-sm text-gray-500 font-medium">Tất cả nhóm đang hoạt động tốt!</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {inactiveTeams.slice(0, 5).map((team, i) => (
+                  <div key={team.projectId ?? team.id ?? i} className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{team.projectName ?? team.name ?? `Nhóm ${i+1}`}</p>
+                      <p className="text-xs text-gray-400">{team.courseCode ?? team.lastActivity ?? 'Chưa có hoạt động'}</p>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded-full">
+                      {team.daysSinceLastCommit != null ? `${team.daysSinceLastCommit}d` : 'Bất hoạt'}
+                    </span>
+                  </div>
+                ))}
+                {inactiveTeams.length > 5 && (
+                  <div className="px-5 py-2.5 text-xs text-gray-400 text-center">+{inactiveTeams.length - 5} nhóm khác</div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

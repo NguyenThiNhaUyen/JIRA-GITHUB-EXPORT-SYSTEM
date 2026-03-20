@@ -10,7 +10,8 @@ import {
     removeLecturer,
     unenrollStudent,
     getEnrolledStudents,
-    getCourseProjectsMetrics
+    getCourseProjectsMetrics,
+    importEnrollmentsFile
 } from '../api/courseApi.js';
 
 export const COURSE_KEYS = {
@@ -122,5 +123,20 @@ export const useGetCourseProjectsMetrics = (courseId) => {
         queryKey: [...COURSE_KEYS.detail(courseId), 'projects_metrics'],
         queryFn: () => getCourseProjectsMetrics(courseId),
         enabled: !!courseId,
+    });
+};
+
+/**
+ * Upload file Excel để import SV vào lớp
+ * POST /api/courses/:id/enrollments/import
+ */
+export const useImportEnrollments = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ courseId, file }) => importEnrollmentsFile(courseId, file),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.detail(variables.courseId) });
+            queryClient.invalidateQueries({ queryKey: COURSE_KEYS.lists() });
+        },
     });
 };

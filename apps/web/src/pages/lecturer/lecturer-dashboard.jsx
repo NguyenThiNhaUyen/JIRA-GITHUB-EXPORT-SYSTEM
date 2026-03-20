@@ -16,6 +16,7 @@ import { useGetSubjects } from "../../features/system/hooks/useSystem.js";
 import { useGetCourses, useGetCourseById, useGetCourseProjectsMetrics } from "../../features/courses/hooks/useCourses.js";
 import { useGetProjects, useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
+import { useGetLecturerActivityLogs, useGetGroupRadarMetrics } from "../../features/admin/hooks/useAnalytics.js";
 
 // Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
 
@@ -42,6 +43,22 @@ export default function LecturerDashboard() {
   const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourse);
   const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ courseId: selectedCourse });
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
+  const { data: activityLogRaw } = useGetLecturerActivityLogs(8);
+
+  // Normalize activityLog — BE trả về AuditLogResponse[]: { type, message, time, timestamp }
+  const ICON_MAP_ACT = {
+    info: { icon: GitBranch, color: "text-teal-600 bg-teal-50" },
+    success: { icon: CheckCircle, color: "text-green-600 bg-green-50" },
+    warning: { icon: FileText, color: "text-indigo-600 bg-indigo-50" },
+    error: { icon: BookOpen, color: "text-blue-600 bg-blue-50" },
+  };
+  const activityLog = Array.isArray(activityLogRaw) ? activityLogRaw.map((log, i) => ({
+    id: i + 1,
+    ...(ICON_MAP_ACT[log.type] || ICON_MAP_ACT.info),
+    msg: log.message,
+    time: log.time || new Date(log.timestamp).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
+  })) : [];
+
 
   const approveIntMutation = useApproveIntegration();
   const rejectIntMutation = useRejectIntegration();
@@ -107,15 +124,15 @@ export default function LecturerDashboard() {
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-  // Build RadarChart data from real metrics
+  // Build RadarChart data from real analytics API (useGetGroupRadarMetrics hoặc fallback từ metricsData)
   const radarData = (metricsData || []).map(group => {
     return {
-      groupName: group.projectName,
-      commits: group.commitsCount,
-      srsDone: group.srsReportsCount,
-      teamSize: group.teamSize,
-      githubLinked: group.isGithubLinked ? 1 : 0,
-      jiraLinked: group.isJiraLinked ? 1 : 0,
+      groupName: group.projectName ?? group.groupName ?? "",
+      commits: group.commitsCount ?? group.commits ?? 0,
+      srsDone: group.srsReportsCount ?? group.srsDone ?? 0,
+      teamSize: group.teamSize ?? 0,
+      githubLinked: group.isGithubLinked ? 1 : (group.githubLinked ?? 0),
+      jiraLinked: group.isJiraLinked ? 1 : (group.jiraLinked ?? 0),
     };
   });
 
@@ -237,7 +254,9 @@ export default function LecturerDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {MOCK_ACTIVITY.map(act => (
+            {activityLog.length === 0 ? (
+              <div className="flex items-center justify-center py-10 text-gray-400 text-sm">Không có hoạt động nào gần đây</div>
+            ) : activityLog.map(act => (
               <div key={act.id} className="flex items-start gap-3 px-5 py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors last:border-0">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${act.color}`}>
                   <act.icon size={14} />

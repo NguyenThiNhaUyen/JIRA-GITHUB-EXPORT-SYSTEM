@@ -26,11 +26,11 @@ export function mapSubject(beSub) {
 }
 
 export function mapSemesterList(beData) {
-    const results = beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
+    const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSemester);
 }
 
 export function mapSubjectList(beData) {
-    const results = beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
+    const results = beData?.items || beData?.Items || beData?.results || beData?.Results || (Array.isArray(beData) ? beData : []);
     return results.map(mapSubject);
 }

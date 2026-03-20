@@ -13,11 +13,12 @@ import {
     useUpdateSrsStatus,
     useProvideSrsFeedback
 } from "../../features/srs/hooks/useSrs.js";
+import { useRemindOverdueSrs } from "../../features/admin/hooks/useReports.js";
 import { getProjectSrs } from "../../features/srs/api/srsApi.js";
 
 
 export default function SrsReports() {
-    const { success } = useToast();
+    const { success, error: showError } = useToast();
     const { user } = useAuth();
     const [selected, setSelected] = useState(null);
     const [filter, setFilter] = useState("all");
@@ -82,6 +83,7 @@ export default function SrsReports() {
 
     const updateStatusMutation = useUpdateSrsStatus();
     const feedbackMutation = useProvideSrsFeedback();
+    const remindSrsMutation = useRemindOverdueSrs();
 
     const handleStatusUpdate = async (srsId, newStatus) => {
         try {
@@ -129,6 +131,16 @@ export default function SrsReports() {
                     <h2 className="text-2xl font-bold tracking-tight text-gray-800">SRS Reports</h2>
                     <p className="text-sm text-gray-500 mt-0.5">Tài liệu đặc tả yêu cầu phần mềm theo nhóm / project</p>
                 </div>
+                <button
+                    onClick={() => remindSrsMutation.mutate(undefined, {
+                        onSuccess: () => success('Đã gửi nhắc nhở SRS đến tất cả nhóm chưa nộp!'),
+                        onError: (err) => showError(err.message || 'Không thể gửi nhắc nhở'),
+                    })}
+                    disabled={remindSrsMutation.isPending}
+                    className="flex items-center gap-2 text-xs font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl px-4 py-2 transition-colors disabled:opacity-50"
+                >
+                    🔔 {remindSrsMutation.isPending ? 'Nhắn...': 'Nhắc nộp SRS (Overdue)'}
+                </button>
             </div>
 
             {/* Stats */}

@@ -252,6 +252,13 @@ export default function UserManagement() {
                                                         <Key size={13} className="text-gray-400" />
                                                         Đặt lại mật khẩu
                                                     </button>
+                                                    <div className="border-t border-gray-50 my-1" />
+                                                    <button
+                                                        onClick={() => { setActionMenu(null); navigate(`/admin/users/${u.id}`); }}
+                                                        className="w-full text-left px-4 py-2 hover:bg-teal-50 text-teal-700 flex items-center gap-2 transition-colors font-semibold"
+                                                    >
+                                                        👤 Xem chi tiết
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>

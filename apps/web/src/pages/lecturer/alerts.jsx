@@ -7,7 +7,7 @@ import { useToast } from "../../components/ui/toast.jsx";
 import { ALERT_SEVERITY as SEV } from "../../shared/permissions.js";
 
 // Feature Hooks
-import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
+import { useGetAlerts, useResolveAlert, useSendAlert } from "../../features/system/hooks/useAlerts.js";
 
 // Xóa buildAlertsFromData cũ vì giờ đã có API trả về trực tiếp
 
@@ -19,6 +19,7 @@ export default function Alerts() {
 
     const { data: alertsData, isLoading, refetch } = useGetAlerts({ pageSize: 100 });
     const { mutate: resolveMutate } = useResolveAlert();
+    const sendAlertMutation = useSendAlert();
 
     const alertsList = alertsData?.items || [];
 
@@ -29,9 +30,28 @@ export default function Alerts() {
         });
     };
 
-    const remind = (alert) => {
-        setRemindedIds((prev) => new Set([...prev, alert.id]));
-        success(`Đã gửi nhắc nhở đến ${alert.groupName || 'nhóm'}`);
+    const remind = async (alert) => {
+        // Nếu có projectId → gọi API thật, nếu không → fallback toast
+        if (!alert.projectId) {
+            setRemindedIds((prev) => new Set([...prev, alert.id]));
+            success(`Đã gửi nhắc nhở đến ${alert.groupName || 'nhóm'}`);
+            return;
+        }
+        const message = window.prompt(
+            `Nhập nội dung nhắc nhở cho nhóm "${alert.groupName || 'nhóm'}":`,
+            alert.message || 'Nhóm cần cập nhật tiến độ ngay!'
+        );
+        if (message === null) return; // User cancel
+        sendAlertMutation.mutate(
+            { projectId: alert.projectId, message, severity: alert.severity || 'MEDIUM' },
+            {
+                onSuccess: () => {
+                    setRemindedIds((prev) => new Set([...prev, alert.id]));
+                    success(`Đã gửi nhắc nhở đến nhóm "${alert.groupName || 'nhóm'}"`);
+                },
+                onError: (err) => showError(err.message || 'Không thể gửi nhắc nhở'),
+            }
+        );
     };
 
     const refresh = () => {

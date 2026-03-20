@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     generateCommitStats,
     generateTeamRoster,
@@ -7,6 +7,7 @@ import {
     getReportDownloadLink,
     getMyReports
 } from "../api/reportApi.js";
+import { remindOverdueSrs } from "../../system/api/alertApi.js";
 
 /**
  * Hook Mutation cho: TẠO Commit Statistics
@@ -64,5 +65,32 @@ export function useGetMyReports(options = {}) {
         queryKey: ["reports", "me"],
         queryFn: getMyReports,
         ...options
+    });
+}/**
+ * Hook Mutation cho: Cập nhật trạng thái báo cáo (Admin)
+ * PUT /api/reports/:id/status
+ */
+export function useUpdateReportStatus() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, status }) => {
+            const client = (await import('../../../api/client.js')).default;
+            const { unwrap } = await import('../../../api/unwrap.js');
+            const res = await client.put(`/reports/${id}/status`, { status });
+            return unwrap(res);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reports'] });
+        },
+    });
+}
+
+/**
+ * Hook Mutation: Nhắc nhở nộp SRS quá hạn (Lecturer/Admin)
+ * POST /api/srs/remind-overdue
+ */
+export function useRemindOverdueSrs() {
+    return useMutation({
+        mutationFn: remindOverdueSrs,
     });
 }
