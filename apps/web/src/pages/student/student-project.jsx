@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import { useGetProjectById, useGetProjectMetrics, useGetProjectCommits } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjectById, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjectCommits } from "../../features/github/hooks/useGithub.js";
 import {
   ChevronRight, GitCommit, Link2, BarChart2,
   Users, FileText, ArrowLeft, Github, Upload,

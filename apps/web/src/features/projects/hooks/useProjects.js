@@ -11,9 +11,7 @@ import {
     linkIntegration,
     approveIntegration,
     rejectIntegration,
-    getProjectMetrics,
-    getProjectCommits,
-    getProjectIssues
+    getProjectMetrics
 } from '../api/projectApi.js';
 
 
@@ -149,18 +147,4 @@ export const useRejectIntegration = () => {
     });
 };
 
-export const useGetProjectCommits = (projectId, params = {}) => {
-    return useQuery({
-        queryKey: PROJECT_KEYS.commits(projectId, params),
-        queryFn: () => getProjectCommits(projectId, params),
-        enabled: !!projectId,
-    });
-};
 
-export const useGetProjectIssues = (projectId, params = {}) => {
-    return useQuery({
-        queryKey: PROJECT_KEYS.issues(projectId, params),
-        queryFn: () => getProjectIssues(projectId, params),
-        enabled: !!projectId,
-    });
-};
