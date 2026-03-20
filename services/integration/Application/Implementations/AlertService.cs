@@ -147,9 +147,9 @@ public class AlertService : IAlertService
             .Select(m => m.student_user_id.ToString())
             .ToList();
 
-        var lecturerIds = await _context.lecturer_courses
-            .Where(lc => lc.course_id == project.course_id)
-            .Select(lc => lc.user_id.ToString())
+        var lecturerIds = await _context.lecturers
+            .Where(l => l.courses.Any(c => c.id == project.course_id))
+            .Select(l => l.user_id.ToString())
             .ToListAsync();
 
         foreach (var uid in memberIds.Concat(lecturerIds).Distinct())
