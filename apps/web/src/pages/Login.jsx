@@ -4,13 +4,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Button } from "../components/ui/button.jsx";
 import { Alert } from "../components/ui/interactive.jsx";
-import { BookOpen, Shield, GraduationCap } from "lucide-react";
+import { BookOpen, Shield, GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const { login, loading } = useAuth();
+  const { login, loginGoogle, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -87,15 +89,24 @@ export default function Login() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu của bạn"
-                  required
-                  disabled={loading}
-                  className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu của bạn"
+                    required
+                    disabled={loading}
+                    className="w-full px-5 py-4 bg-white/80 border border-teal-100 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all text-sm shadow-sm pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -126,7 +137,28 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col gap-4 items-center">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  setError("");
+                  const result = await loginGoogle(credentialResponse.credential);
+                  if (result.success) {
+                    navigate(result.redirectPath);
+                  } else {
+                    setError(result.error || "Đăng nhập Google thất bại");
+                  }
+                }}
+                onError={() => {
+                  setError("Lỗi khi kết nối với Google");
+                }}
+                text="signin_with"
+                shape="pill"
+                size="large"
+                logo_alignment="center"
+              />
+            </div>
+
+            <div className="mt-4">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px bg-teal-100 flex-1"></div>
                 <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Đăng nhập nhanh</span>

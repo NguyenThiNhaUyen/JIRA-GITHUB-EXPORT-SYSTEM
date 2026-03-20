@@ -1,6 +1,6 @@
 // AuthContext: Quản lý authentication state — Real API (ASP.NET BE)
 import { createContext, useContext, useState } from "react";
-import { loginWithCredentials } from "../features/auth/api/authApi.js";
+import { loginWithCredentials, loginWithGoogle } from "../features/auth/api/authApi.js";
 
 /* eslint-disable react-refresh/only-export-components */
 const AuthContext = createContext(null);
@@ -94,6 +94,33 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginGoogle = async (idToken) => {
+    setLoading(true);
+    try {
+      const apiRes = await loginWithGoogle(idToken);
+      const loginResponse = apiRes?.data ?? apiRes?.Data ?? apiRes;
+
+      if (!loginResponse?.accessToken && !loginResponse?.AccessToken) {
+        throw new Error(apiRes?.message ?? apiRes?.Message ?? "Đăng nhập Google thất bại");
+      }
+
+      const token = loginResponse.accessToken ?? loginResponse.AccessToken;
+      const feUser = mapBEUserToFEUser(loginResponse);
+      const redirect = ROLE_REDIRECTS[feUser.role] ?? "/";
+
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("user", JSON.stringify(feUser));
+      setUser(feUser);
+
+      return { success: true, redirectPath: redirect };
+    } catch (err) {
+      const msg = err?.message ?? "Đăng nhập bằng Google thất bại";
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("accessToken");
@@ -105,6 +132,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     login,
+    loginGoogle,
     logout,
     loading,
     isAuthenticated: !!user,

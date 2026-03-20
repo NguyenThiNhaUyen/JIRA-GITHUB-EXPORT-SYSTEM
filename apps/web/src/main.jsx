@@ -8,6 +8,9 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import { ToastProvider } from "./components/ui/toast.jsx";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE";
 
 // TanStack Query client
 const queryClient = new QueryClient({
@@ -26,9 +29,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <AuthProvider>
-            <AppProvider>
-              <App />
-            </AppProvider>
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+              <AppProvider>
+                <App />
+              </AppProvider>
+            </GoogleOAuthProvider>
           </AuthProvider>
         </ToastProvider>
       </QueryClientProvider>
