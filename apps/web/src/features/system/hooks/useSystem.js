@@ -57,7 +57,12 @@ export const useDeleteSubject = () => {
         mutationFn: deleteSubjectApi,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: SYSTEM_KEYS.subjects() }),
     });
-};export const useGetDashboardStats = () => useQuery({
+};
+
+export const useGetDashboardStats = () => useQuery({
     queryKey: SYSTEM_KEYS.stats(),
-    queryFn: getDashboardStats
+    queryFn: getDashboardStats,
+    retry: false,          // Không retry khi 404
+    staleTime: 5 * 60 * 1000,  // 5 phút
+    onError: () => null,   // Bỏ qua lỗi silently
 });

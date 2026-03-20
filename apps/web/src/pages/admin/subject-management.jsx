@@ -31,6 +31,7 @@ export default function SubjectManagement() {
     const [formData, setFormData] = useState({
         code: "",
         name: "",
+        department: "",
         credits: 3,
         status: "ACTIVE",
     });
@@ -40,6 +41,7 @@ export default function SubjectManagement() {
         setFormData({
             code: "",
             name: "",
+            department: "",
             credits: 3,
             status: "ACTIVE",
         });
@@ -51,6 +53,7 @@ export default function SubjectManagement() {
         setFormData({
             code: subject.code,
             name: subject.name,
+            department: subject.department || "",
             credits: subject.credits,
             status: subject.status,
         });
@@ -229,6 +232,22 @@ export default function SubjectManagement() {
                             onChange={(e) =>
                                 setFormData({ ...formData, name: e.target.value })
                             }
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Khoa / Bộ môn *
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                            value={formData.department}
+                            onChange={(e) =>
+                                setFormData({ ...formData, department: e.target.value })
+                            }
+                            placeholder="VD: Kỹ thuật phần mềm"
                             required
                         />
                     </div>

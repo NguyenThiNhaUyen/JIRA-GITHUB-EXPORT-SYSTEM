@@ -15,7 +15,7 @@ import {
 
 // Feature Hooks
 import { useGetCourses, useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
-import { useGetProjects, useLinkIntegration, useAddTeamMember } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjects, useLinkIntegration, useAddTeamMember, useCreateProject } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations } from "../../features/student/hooks/useStudent.js";
@@ -113,7 +113,8 @@ export default function StudentDashboard() {
         }
     };
 
-    // SRS Mutations
+    // Projects Mutations
+    const { mutate: createProjectMutate } = useCreateProject();
     const { mutate: submitSrsMutate } = useSubmitSrs();
     const { mutate: deleteSrsMutate } = useDeleteSrs();
 
@@ -172,6 +173,24 @@ export default function StudentDashboard() {
                     setShowUploadModal(false);
                 },
                 onError: (err) => showError(err?.message || "Không thể nộp SRS"),
+            }
+        );
+    };
+
+    const handleCreateProject = (courseId, courseName) => {
+        const projectName = window.prompt(`Nhập tên nhóm cho lớp ${courseName}:`, `Team ${user?.name || ''}`);
+        if (!projectName || !projectName.trim()) return;
+
+        createProjectMutate(
+            { courseId, name: projectName.trim(), description: `Nhóm học tập lớp ${courseName}` },
+            {
+                onSuccess: (newProj) => {
+                    success(`Đã tạo nhóm ${projectName} thành công! Bạn là Leader.`);
+                    refetchProjects();
+                    // Optionally select it immediately
+                    setSelectedCourseId(String(courseId));
+                },
+                onError: (err) => showError(err?.message || "Không thể tạo nhóm"),
             }
         );
     };
@@ -321,9 +340,18 @@ export default function StudentDashboard() {
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <button className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 rounded-xl py-2 transition-colors group-hover:bg-teal-100">
-                                                        Vào lớp <ArrowRight size={12} />
-                                                    </button>
+                                                    {grp ? (
+                                                        <button className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 rounded-xl py-2 transition-colors group-hover:bg-teal-100">
+                                                            Vào lớp <ArrowRight size={12} />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleCreateProject(course.id, course.name); }}
+                                                            className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-100 rounded-xl py-2 transition-colors"
+                                                        >
+                                                            <UserPlus size={12} /> Tạo nhóm mới
+                                                        </button>
+                                                    )}
                                                 </CardContent>
                                             </Card>
                                         );

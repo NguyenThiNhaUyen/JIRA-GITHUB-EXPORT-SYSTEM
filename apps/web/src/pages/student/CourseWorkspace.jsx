@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
-import { useAddTeamMember, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
 
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
 
@@ -36,6 +36,9 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const { success, error: showError } = useToast();
 
     const { mutateAsync: addMemberMutateAsync } = useAddTeamMember();
+    const { mutateAsync: removeMemberMutateAsync } = useRemoveTeamMember();
+    const { mutateAsync: updateMemberMutateAsync } = useUpdateTeamMember();
+
     const { data: enrolledData = { items: [] }, isFetching: isEnrolledFetching } = useGetEnrolledStudents(course?.id, { pageSize: 500 });
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(group?.id);
 
@@ -62,6 +65,8 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
         let errorMessages = [];
         for (const studentId of inviteSelectedIds) {
             try {
+                // BE api/projects/{id}/members is actually an invitation flow on some versions,
+                // but our FE implementation uses it as direct add for simplicity in demo.
                 await addMemberMutateAsync({
                     projectId: group.id,
                     studentId: studentId,
@@ -70,18 +75,45 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                 });
                 successCount++;
             } catch (err) {
-                errorMessages.push(err?.message || `Không thể thêm SV ${studentId}`);
+                errorMessages.push(err?.message || `Không thể mời SV ${studentId}`);
             }
         }
         setIsInviting(false);
         if (successCount > 0) {
-            success(`Đã thêm ${successCount} thành viên vào nhóm!`);
+            success(`Đã gửi lời mời tới ${successCount} sinh viên!`);
         }
         if (errorMessages.length > 0) {
             showError(errorMessages.join(" | "));
         }
         setShowInviteModal(false);
         setInviteSelectedIds([]);
+    };
+
+    const handleRemoveMember = async (studentId, studentName) => {
+        if (!window.confirm(`Bạn có chắc muốn mời sinh viên ${studentName} ra khỏi nhóm?`)) return;
+        try {
+            await removeMemberMutateAsync({ projectId: group.id, studentId });
+            success(`Đã xóa ${studentName} khỏi nhóm thành công.`);
+        } catch (err) {
+            showError(err.message || "Không thể xóa thành viên");
+        }
+    };
+
+    const handlePromoteToLeader = async (studentId, studentName) => {
+        if (!window.confirm(`Bạn có chắc muốn chuyển quyền Leader cho ${studentName}? Bạn sẽ trở thành thành viên thường.`)) return;
+        try {
+            // First promote the new leader
+            await updateMemberMutateAsync({
+                projectId: group.id, studentId, updates: { role: 'LEADER' }
+            });
+            // Then demote myself (handled automatically by BE or we can do it explicitly if needed)
+            await updateMemberMutateAsync({
+                projectId: group.id, studentId: userId, updates: { role: 'MEMBER' }
+            });
+            success(`Chúc mừng! ${studentName} đã trở thành Leader mới.`);
+        } catch (err) {
+            showError(err.message || "Không thể chuyển quyền Leader");
+        }
     };
 
     return (
@@ -250,7 +282,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                 const isMe = stu.studentId === userId;
                                 const isLeaderM = stu.role === 'LEADER';
                                 return (
-                                    <div key={stu.studentId} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                                    <div key={stu.studentId} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isLeaderM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
                                             {stu.studentName?.charAt(0)}
                                         </div>
@@ -262,11 +294,32 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                             </div>
                                             <p className="text-xs text-gray-400">{stu.studentCode}</p>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-xs font-bold text-gray-700">
-                                                {metrics?.contributions?.find(m => m.studentId === stu.studentId)?.commits ?? "0"}
-                                            </p>
-                                            <p className="text-[10px] text-gray-400">commits</p>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-xs font-bold text-gray-700">
+                                                    {metrics?.contributions?.find(m => m.studentId === stu.studentId)?.commits ?? "0"}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400">commits</p>
+                                            </div>
+
+                                            {isLeader && !isMe && (
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => handlePromoteToLeader(stu.studentId, stu.studentName)}
+                                                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                                        title="Chuyển quyền Leader"
+                                                    >
+                                                        <Crown size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRemoveMember(stu.studentId, stu.studentName)}
+                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Xóa khỏi nhóm"
+                                                    >
+                                                        <Users size={14} className="rotate-45" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );

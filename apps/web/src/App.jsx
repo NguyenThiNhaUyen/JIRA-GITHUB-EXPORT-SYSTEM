@@ -48,9 +48,13 @@ import StudentCoursesPage, {
 
 
 import { useAuth } from "./context/AuthContext.jsx";
+import { useSignalR } from "./hooks/useSignalR.js";
 
 export default function App() {
   const { isAuthenticated, userRole } = useAuth();
+  
+  // Real-time notification listener
+  useSignalR();
 
   // Helper function to get redirect path based on role
   const getDefaultRedirect = () => {

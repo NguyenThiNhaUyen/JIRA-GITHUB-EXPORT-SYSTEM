@@ -17,7 +17,17 @@ import {
 import { Modal } from "../../components/ui/interactive.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, PlayCircle, AlertCircle, CheckCircle } from "lucide-react";
+import { CalendarDays, PlayCircle, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
+
+// Helper: format ISO date → "dd thg MM, yyyy"
+const fmtDate = (iso) => {
+    if (!iso) return '—';
+    try {
+        return new Date(iso).toLocaleDateString('vi-VN', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+    } catch { return iso; }
+};
 import {
     useGetSemesters,
     useCreateSemester,
@@ -184,8 +194,12 @@ export default function SemesterManagement() {
                                                     <span className="font-semibold text-gray-800 text-sm">{semester.name}</span>
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
-                                                    <div className="text-sm text-gray-600 font-medium">{semester.startDate}</div>
-                                                    <div className="text-xs text-gray-400 mt-0.5">{semester.endDate}</div>
+                                                    <div className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5">
+                                                        <CalendarDays size={13} className="text-blue-400 shrink-0" />
+                                                        <span>{fmtDate(semester.startDate)}</span>
+                                                        <ArrowRight size={12} className="text-gray-300" />
+                                                        <span>{fmtDate(semester.endDate)}</span>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="py-4 px-6 text-center">
                                                     <div className="flex flex-wrap justify-center gap-1">
