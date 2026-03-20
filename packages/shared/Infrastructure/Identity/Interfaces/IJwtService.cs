@@ -1,12 +1,13 @@
 using System.Security.Claims;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
+namespace JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 
 public interface IJwtService
 {
     string GenerateToken(user user, List<string> roles);
     ClaimsPrincipal? ValidateToken(string token);
+    ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
 }
 
 

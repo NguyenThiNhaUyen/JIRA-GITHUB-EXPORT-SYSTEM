@@ -1,5 +1,5 @@
 using System;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
+using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
 using Xunit;
 
 namespace Shared.Tests.Identity

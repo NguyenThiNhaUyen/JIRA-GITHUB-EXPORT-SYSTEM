@@ -1,4 +1,4 @@
-namespace JiraGithubExportSystem.GithubService.DTOs;
+namespace JiraGithubExport.GithubService.DTOs;
 
 public class GitHubRepoResponse
 {

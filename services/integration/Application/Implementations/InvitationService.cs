@@ -1,24 +1,30 @@
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
-using JiraGithubExportSystem.Shared.Common.Exceptions;
-using JiraGithubExportSystem.Shared.Contracts.Common;
-using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
-using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
-using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Requests.Projects;
+using JiraGithubExport.Shared.Contracts.Responses.Projects;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Implementations;
+namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
 public class InvitationService : IInvitationService
 {
     private readonly JiraGithubToolDbContext _context;
     private readonly ILogger<InvitationService> _logger;
+    private readonly IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> _hubContext;
 
-    public InvitationService(JiraGithubToolDbContext context, ILogger<InvitationService> logger)
+    public InvitationService(
+        JiraGithubToolDbContext context, 
+        ILogger<InvitationService> logger,
+        IHubContext<JiraGithubExport.IntegrationService.Hubs.NotificationHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task<InvitationResponse> SendInvitationAsync(long projectId, long inviterUserId, CreateInvitationRequest request)
@@ -60,6 +66,29 @@ public class InvitationService : IInvitationService
         _context.team_invitations.Add(invitation);
         await _context.SaveChangesAsync();
 
+        // Send real-time notification
+        try
+        {
+            await _hubContext.Clients.User(request.StudentUserId.ToString())
+                .SendAsync("ReceiveNotification", new 
+                { 
+                    id = $"INV_{invitation.id}",
+                    type = "INVITATION", 
+                    message = $"Bạn đã nhận được lời mời tham gia dự án {project.name}",
+                    timestamp = DateTime.UtcNow,
+                    isRead = false,
+                    metadata = new Dictionary<string, object> 
+                    { 
+                        { "projectId", projectId }, 
+                        { "invitationId", invitation.id } 
+                    }
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send SignalR notification for invitation {InvitationId}", invitation.id);
+        }
+
         _logger.LogInformation("User {InviterId} sent an invitation to student {StudentId} for project {ProjectId}", inviterUserId, request.StudentUserId, projectId);
 
         return await GetInvitationResponseAsync(invitation.id);
@@ -68,7 +97,7 @@ public class InvitationService : IInvitationService
     public async Task<PagedResponse<InvitationResponse>> GetMyPendingInvitationsAsync(long studentUserId, PagedRequest request)
     {
         var query = _context.team_invitations
-            .Include(i => i.project)
+            .Include(i => i.project).ThenInclude(p => p.course)
             .Include(i => i.invited_by_user)
             .Include(i => i.invited_student_user.user)
             .Where(i => i.invited_student_user_id == studentUserId && i.status == "PENDING")
@@ -89,7 +118,7 @@ public class InvitationService : IInvitationService
         return new PagedResponse<InvitationResponse>
         {
             Items = mapped,
-            TotalItems = total,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(total / (double)pageSize)
@@ -168,7 +197,7 @@ public class InvitationService : IInvitationService
     private async Task<InvitationResponse> GetInvitationResponseAsync(long invitationId)
     {
         var i = await _context.team_invitations
-            .Include(inv => inv.project)
+            .Include(inv => inv.project).ThenInclude(p => p.course)
             .Include(inv => inv.invited_by_user)
             .Include(inv => inv.invited_student_user.user)
             .FirstOrDefaultAsync(inv => inv.id == invitationId)
@@ -184,6 +213,8 @@ public class InvitationService : IInvitationService
             Id = i.id,
             ProjectId = i.project_id,
             ProjectName = i.project?.name ?? "",
+            CourseId = i.project?.course_id ?? 0,
+            CourseName = i.project?.course?.course_name ?? "N/A",
             InvitedByUserId = i.invited_by_user_id,
             InvitedByName = i.invited_by_user?.full_name ?? "",
             InvitedStudentUserId = i.invited_student_user_id,

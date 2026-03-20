@@ -1,6 +1,6 @@
 using System;
 
-namespace JiraGithubExportSystem.Shared.Models;
+namespace JiraGithubExport.Shared.Models;
 
 public partial class inactive_alert
 {

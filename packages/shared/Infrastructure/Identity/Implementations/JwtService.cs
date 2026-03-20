@@ -1,13 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using JiraGithubExportSystem.Shared.Common;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Common;
+using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
+namespace JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
 
 public class JwtService : IJwtService
 {
@@ -29,10 +29,26 @@ public class JwtService : IJwtService
             new Claim("email", user.email)
         };
 
-        // Add roles as claims
+        // Add primary role as claim (ưu tiên cao nhất: ADMIN > LECTURER > STUDENT)
+        // Chỉ dùng 1 role duy nhất để [Authorize(Roles = "...")] hoạt động chính xác
+        var upperRoles = roles.Select(r => r.ToUpper()).ToList();
+        string primaryRole;
+        if (upperRoles.Contains("ADMIN") || upperRoles.Contains("SUPER_ADMIN"))
+            primaryRole = "ADMIN";
+        else if (upperRoles.Contains("LECTURER"))
+            primaryRole = "LECTURER";
+        else
+            primaryRole = upperRoles.FirstOrDefault() ?? "STUDENT";
+
+        claims.Add(new Claim(ClaimTypes.Role, primaryRole));
+        // Cũng thêm claim "role" để FE decode JWT lấy được
+        claims.Add(new Claim("role", primaryRole));
+
+        // Optional: Keep all roles if multiple role support is needed in the future
         foreach (var role in roles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            if (role.ToUpper() != primaryRole) 
+                claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
@@ -69,6 +85,39 @@ public class JwtService : IJwtService
             };
 
             return tokenHandler.ValidateToken(token, validationParameters, out _);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = _jwtSettings.Audience,
+                ValidateLifetime = false, // Ignore expiration for refresh
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out var securityToken);
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+            return principal;
         }
         catch
         {

@@ -1,62 +1,78 @@
 using System.Text;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.HttpOverrides;
-using JiraGithubExportSystem.IntegrationService.Application.Implementations;
-using JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExportSystem.IntegrationService.Background;
-using JiraGithubExportSystem.Shared.Common;
-using JiraGithubExportSystem.Shared.Models;
-using JiraGithubExportSystem.JiraService.Services.Implementations;
-using JiraGithubExportSystem.GithubService.Services.Implementations;
-using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations;
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExportSystem.IntegrationService.Middleware;
+using JiraGithubExport.IntegrationService.Application.Implementations;
+using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExport.IntegrationService.Background;
+using JiraGithubExport.Shared.Common;
+using JiraGithubExport.Shared.Models;
+using JiraGithubExport.JiraService.Services.Implementations;
+using JiraGithubExport.GithubService.Services.Implementations;
+using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
+using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Implementations;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExport.IntegrationService.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-    var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+var builder = WebApplication.CreateBuilder(args);
 
-    // Forwarded Headers for reverse proxy (Load Balancer)
-    builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    {
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownNetworks.Clear();
-        options.KnownProxies.Clear();
-    });
+// Forwarded Headers for reverse proxy (Load Balancer)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
-            // ============================================
-            // CONFIGURATION
-            // ============================================
+// ============================================
+// CONFIGURATION
+// ============================================
 
             // JWT Settings
-            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            builder.Services.Configure<JwtSettings>(jwtSection);
+            var jwtSettings = jwtSection.Get<JwtSettings>();
 
-            // ============================================
-            // DATABASE
-            // ============================================
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.SecretKey))
+            {
+                throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
+            }
+
+// ============================================
+// DATABASE
+// ============================================
 
             var connectionString = builder.Configuration.GetConnectionString("Default");
             
-            builder.Services.AddDbContext<JiraGithubToolDbContext>(options =>
+            // Fix for Supabase MaxClientsInSessionMode: Enforce strict connection pooling limits
+            if (!string.IsNullOrEmpty(connectionString) && !connectionString.Contains("Max Pool Size", StringComparison.OrdinalIgnoreCase))
             {
-                options.UseNpgsql(connectionString);
+                connectionString = $"{connectionString.TrimEnd(';')};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=5;Connection Idle Lifetime=20;";
+            }
 
-                if (builder.Environment.IsDevelopment())
+            // Fix connection exhaustion by pooling DbContext instances
+            builder.Services.AddDbContextPool<JiraGithubToolDbContext>(options =>
+            {
+                options.UseNpgsql(connectionString, o => 
                 {
-                    options.EnableDetailedErrors();
-                    options.EnableSensitiveDataLogging();
-                }
-            });
+                    o.EnableRetryOnFailure(3); // Thêm retry để chống rớt mạng
+                });
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
+});
 
 
             // ============================================
@@ -83,39 +99,53 @@ using Microsoft.OpenApi.Models;
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request for the hub
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/notificationHub")))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = context =>
                     {
                         context.HandleResponse();
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
-                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExportSystem.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Unauthorized. Please log in first."));
                         return context.Response.WriteAsync(result);
                     },
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
                         context.Response.ContentType = "application/json";
-                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExportSystem.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
+                        var result = System.Text.Json.JsonSerializer.Serialize(JiraGithubExport.Shared.Contracts.Common.ApiResponse.ErrorResponse("Forbidden. You don't have permission to access this resource."));
                         return context.Response.WriteAsync(result);
                     }
                 };
             });
 
-            builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
-            // ============================================
-            // APPLICATION SERVICES
-            // ============================================
-            
-            // AutoMapper
-            builder.Services.AddAutoMapper(typeof(JiraGithubExportSystem.IntegrationService.Application.Mappings.MappingProfile));
+// ============================================
+// APPLICATION SERVICES
+// ============================================
 
-            // Repository & UnitOfWork
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(JiraGithubExport.IntegrationService.Application.Mappings.MappingProfile));
 
-            // Identity services
-            builder.Services.AddScoped<IJwtService, JwtService>();
-            builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+// Repository & UnitOfWork
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Identity services
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             // Tầng Application (Services)
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -133,190 +163,186 @@ using Microsoft.OpenApi.Models;
             builder.Services.AddScoped<IAlertService, AlertService>();
             builder.Services.AddScoped<ISrsService, SrsService>();
             builder.Services.AddScoped<IInvitationService, InvitationService>();
-
-            // Background Services
-            builder.Services.AddHostedService<SyncWorker>();
-
-            // External Services (with HttpClient)
-            builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
-            {
-                client.BaseAddress = new Uri(builder.Configuration["GitHub:ApiBaseUrl"] ?? "https://api.github.com/");
-            });
-            builder.Services.AddHttpClient<IJiraClient, JiraClient>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
 
 
+// Background Services
+builder.Services.AddHostedService<SyncWorker>();
 
-            // ============================================
-            // API CONTROLLERS, SWAGGER, REDIS & SIGNALR
-            // ============================================
+// External Services (with HttpClient)
+builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["GitHub:ApiBaseUrl"] ?? "https://api.github.com/");
+});
+builder.Services.AddHttpClient<IJiraClient, JiraClient>();
 
-            builder.Services.AddControllers();
+// ============================================
+// API CONTROLLERS, SWAGGER, REDIS & SIGNALR
+// ============================================
+
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                });
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSignalR();
             
-            // Redis Configuration
+            // Redis Configuration (Non-blocking Connect)
             var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379,abortConnect=false";
             
-            // Register IConnectionMultiplexer for distributed locks (e.g., SyncWorker)
-            var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
-            builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-
-            builder.Services.AddStackExchangeRedisCache(options =>
+            try 
             {
-                options.Configuration = redisConnection;
-                options.InstanceName = "PBLPlatform_";
-            });
-            
-            builder.Services.AddSwaggerGen(c =>
+                var multiplexer = ConnectionMultiplexer.Connect(redisConnection);
+                builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            }
+            catch (Exception ex)
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "PBL Platform API",
-                    Version = "v1",
-                    Description = "Project-Based Learning Platform with Jira & GitHub Integration"
-                });
-
-                // Add JWT Authentication to Swagger
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
-                });
-            });
-
-            // ============================================
-            // CORS (for frontend development)
-            // ============================================
-            
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    // For Production, change SetIsOriginAllowed(_ => true) to exact domains
-                    policy.SetIsOriginAllowed(origin => true) // Allow any origin safely with credentials
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials(); // Required for SignalR WebSockets
-                });
-            });
-
-            // ============================================
-            // BUILD APP
-            // ============================================
-
-            var app = builder.Build();
-
-            // ============================================
-            // MIDDLEWARE PIPELINE
-            // ============================================
-            
-            // First middleware: Forwarded headers
-            app.UseForwardedHeaders();
-
-            // Global exception handler
-            app.UseCustomExceptionHandler();
-
-            // Swagger (Development only)
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
-                    c.RoutePrefix = "swagger"; // Swagger at /swagger
-                });
+                Console.WriteLine($"[WARNING] Redis connection failed: {ex.Message}. Distributed features might not work.");
+                // We still register a dummy or handle null in services if needed, 
+                // but at least the app won't crash on startup.
             }
 
-            if (!app.Environment.IsDevelopment())
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnection;
+    options.InstanceName = "PBLPlatform_";
+});
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PBL Platform API",
+        Version = "v1",
+        Description = "Project-Based Learning Platform with Jira & GitHub Integration"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// ============================================
+// CORS
+// ============================================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.SetIsOriginAllowed(origin => true) 
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); 
+    });
+});
+
+// ============================================
+// BUILD APP
+// ============================================
+
+var app = builder.Build();
+
+// ============================================
+// MIDDLEWARE PIPELINE
+// ============================================
+
+app.UseForwardedHeaders();
+app.UseCustomExceptionHandler();
+
+
+// Swagger is always enabled for demo and grading purposes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PBL Platform API v1");
+    c.RoutePrefix = "swagger"; // Swagger at /swagger
+    c.DocumentTitle = "PBL Platform – Jira & GitHub Export API";
+});
+
+            // Render/Cloud handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-Render environments.
+            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
             {
                 app.UseHttpsRedirection();
             }
 
+            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
             app.UseStaticFiles();
 
-            // CORS
-            app.UseCors("AllowAll");
+app.UseCors("AllowAll");
 
-            // Authentication & Authorization
-            app.UseAuthentication();
-            app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
             // Map controllers & SignalR Hubs
             app.MapControllers();
-            app.MapHub<JiraGithubExportSystem.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            // Mount NotificationHub on both paths to support FE calling /notificationHub
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/hubs/notifications");
+            app.MapHub<JiraGithubExport.IntegrationService.Hubs.NotificationHub>("/notificationHub");
+
+            // Health Check Endpoint for Render/Deployments
+            app.MapGet("/", () => Results.Ok(new { status = "Healthy", version = "1.1.0", timestamp = DateTime.UtcNow }));
+            app.MapGet("/health", () => Results.Ok(new { status = "UP" }));
 
             // ============================================
-            // DATABASE SEEDING (AUTO-CREATE ADMIN SYSTEM)
+            // DATABASE SEEDING (Background)
             // ============================================
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<JiraGithubToolDbContext>();
-                    var passwordHasher = services.GetRequiredService<IPasswordHasher>();
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-
-                    // 0. Auto-migrate database on startup
-                    try
-                    {
-                        logger.LogInformation("Applying database migrations...");
-                        await context.Database.MigrateAsync();
-                        logger.LogInformation("Database migrated successfully.");
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogCritical(ex, "❌ Database migration failed! Deployment halted.");
-                        throw; // Rethrow so deployment fails fast
-                    }
-
-                    // 1. Create Default Roles if not exist
-                    var defaultRoles = new[] { "ADMIN", "LECTURER", "STUDENT" };
-                    bool rolesAdded = false;
-                    foreach (var roleName in defaultRoles)
-                    {
-                        if (!await context.roles.AnyAsync(r => r.role_name == roleName))
-                        {
-                            context.roles.Add(new role { role_name = roleName });
-                            rolesAdded = true;
-                        }
-                    }
-                    if (rolesAdded) await context.SaveChangesAsync();
-
-                    await DbInitializer.SeedAsync(context, passwordHasher);
-                    logger.LogInformation("🚀 [SYSTEM INIT] Database seeding completed successfully.");
+            _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
                 }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "❌ An error occurred while seeding the database.");
-                }
-            }
+            });
 
             // ============================================
             // RUN APPLICATION
             // ============================================
+            var envPort = Environment.GetEnvironmentVariable("PORT");
+            if (!string.IsNullOrEmpty(envPort))
+            {
+                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
+                var url = $"http://0.0.0.0:{envPort}";
+                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
+                app.Urls.Clear(); // Clear any pre-configured URLs
+                app.Urls.Add(url);
+                await app.RunAsync();
+            }
+            else
+            {
+                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
+                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
+                await app.RunAsync();
+            }
 
-            await app.RunAsync();
+
 
 
 

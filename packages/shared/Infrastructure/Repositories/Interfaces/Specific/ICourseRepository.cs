@@ -1,6 +1,6 @@
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
+namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
 
 public interface ICourseRepository : IGenericRepository<course>
 {

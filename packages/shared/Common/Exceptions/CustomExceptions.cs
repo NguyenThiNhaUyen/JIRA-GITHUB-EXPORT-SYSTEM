@@ -1,4 +1,4 @@
-namespace JiraGithubExportSystem.Shared.Common.Exceptions;
+namespace JiraGithubExport.Shared.Common.Exceptions;
 
 public class BusinessException : Exception
 {

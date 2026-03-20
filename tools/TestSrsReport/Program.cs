@@ -1,6 +1,6 @@
-using JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.IntegrationService.Application.Implementations.Reports;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExport.Shared.Models;
 using QuestPDF.Infrastructure;
 
 // Required by QuestPDF

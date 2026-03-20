@@ -1,36 +1,35 @@
-import db from "../../../mock/db.js";
-
-// Helper giả lập delay mạng (500ms)
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
+import { mapProject as mapGroup } from "../../projects/api/mappers/projectMapper.js";
 
 export async function getGroupById(groupId) {
-    await delay();
-    const group = db.findById("groups", groupId);
-    if (!group) throw new Error("Group not found");
-
-    const students = db.getGroupStudents(groupId);
-    const course = db.findById("courses", group.courseId);
-
-    // Gộp chung data trả về như 1 cục response từ BE
+    const res = await client.get(`/projects/${groupId}`);
+    const beData = unwrap(res);
+    const mapped = mapGroup(beData);
+    
+    // Gộp chung data trả về tương thích với mảng sinh viên ở UI cũ nếu UI chưa đổi
     return {
-        ...group,
-        students,
-        course,
+        ...mapped,
+        students: mapped.team || [],
+        course: { id: mapped.courseId, name: mapped.courseName }
     };
 }
 
 export async function approveGroupLink(groupId, linkType, lecturerId) {
-    await delay();
-    return db.approveGroupLink(groupId, linkType, lecturerId);
+    // Gọi API của Project Service
+    const res = await client.post(`/projects/${groupId}/integrations/approve`);
+    return unwrap(res);
 }
 
 export async function rejectGroupLink(groupId, linkType, lecturerId) {
-    await delay();
-    return db.rejectGroupLink(groupId, linkType, lecturerId);
+    // Bắt buộc đẩy lý do theo request DTO
+    const res = await client.post(`/projects/${groupId}/integrations/reject`, { reason: "Rejected by Lecturer" });
+    return unwrap(res);
 }
 
-// API Giả lập cập nhật điểm (hiện chưa có trong mock DB)
 export async function updateStudentScore(groupId, studentId, score) {
-    await delay();
-    return { success: true, score };
+    const res = await client.patch(`/projects/${groupId}/members/${studentId}/contribution`, { 
+        contributionScore: score 
+    });
+    return unwrap(res);
 }

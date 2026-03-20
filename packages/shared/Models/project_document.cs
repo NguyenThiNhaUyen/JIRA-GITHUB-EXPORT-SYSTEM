@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace JiraGithubExportSystem.Shared.Models;
+namespace JiraGithubExport.Shared.Models;
 
 public partial class project_document
 {
@@ -23,7 +23,11 @@ public partial class project_document
 
     public long? reviewer_user_id { get; set; }
 
+    public decimal? score { get; set; }
+
     public string? feedback { get; set; }
+
+    public string? metadata { get; set; } // For checklist JSON
 
     public DateTime? reviewed_at { get; set; }
 

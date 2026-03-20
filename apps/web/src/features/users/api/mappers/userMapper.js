@@ -8,7 +8,7 @@ export function mapUser(beUser) {
     // BE role list -> single role string (fallback logic)
     const roles = beUser.roles || beUser.Roles || [];
     let role = "STUDENT";
-    if (roles.includes("ADMIN")) role = "ADMIN";
+    if (roles.includes("ADMIN") || roles.includes("SUPER_ADMIN")) role = "ADMIN";
     else if (roles.includes("LECTURER")) role = "LECTURER";
 
     return {
@@ -24,11 +24,11 @@ export function mapUser(beUser) {
 }
 
 export function mapUserList(beData) {
-    if (beData && (beData.results || beData.Results)) {
-        const results = beData.results || beData.Results || [];
+    if (beData && (beData.results || beData.Results || beData.items || beData.Items)) {
+        const results = beData.results || beData.Results || beData.items || beData.Items || [];
         return {
             items: results.map(mapUser),
-            totalCount: beData.totalCount || beData.TotalCount || results.length,
+            totalCount: beData.totalCount || beData.TotalCount || beData.totalItems || beData.TotalItems || results.length,
             page: beData.page || beData.Page || 1,
             pageSize: beData.pageSize || beData.PageSize || results.length
         };

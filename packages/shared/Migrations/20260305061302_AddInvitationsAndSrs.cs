@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace JiraGithubExportSystem.Shared.Migrations
+namespace JiraGithubExport.Shared.Migrations
 {
     /// <inheritdoc />
     public partial class AddInvitationsAndSrs : Migration

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace JiraGithubExportSystem.Shared.Models;
+namespace JiraGithubExport.Shared.Models;
 
 public partial class project_integration
 {

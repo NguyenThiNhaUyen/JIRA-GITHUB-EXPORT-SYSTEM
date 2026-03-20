@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JiraGithubExportSystem.Shared.Contracts.Requests.Users;
+namespace JiraGithubExport.Shared.Contracts.Requests.Users;
 
 public class UpdateUserRoleRequest
 {

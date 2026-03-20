@@ -1,6 +1,6 @@
-using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
+using JiraGithubExport.Shared.Contracts.Requests.Projects;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface IProjectTeamService
 {

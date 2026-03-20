@@ -1,10 +1,10 @@
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExport.Shared.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
+namespace JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 
 public class PdfReportGenerator : IPdfReportGenerator
 {
@@ -29,7 +29,7 @@ public class PdfReportGenerator : IPdfReportGenerator
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
-                page.Header().Text($"Thống kê Commit – {courseName}").SemiBold().FontSize(20).FontColor(PrimaryColor);
+                page.Header().Text($"Commit Statistics – {courseName}").SemiBold().FontSize(20).FontColor(PrimaryColor);
                 page.Content().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -41,7 +41,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                     });
                     table.Header(h =>
                     {
-                        foreach (var col in new[] { "Dự án", "Tên sinh viên", "Mã sinh viên", "Vai trò" })
+                        foreach (var col in new[] { "Project", "Student Name", "Student Code", "Role" })
                             h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
                     });
 
@@ -301,7 +301,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                         }
                     });
 
-                    SubSection(doc, "2.4 Môi trường vận hành");
+                    SubSection(doc, "2.4 Operating Environment");
                     doc.Item().PaddingLeft(10).Column(env =>
                     {
                         env.Item().Text("• Backend: ASP.NET Core Web API (.NET 8), deployed on Render.com").FontSize(10).FontColor(TextGray);
@@ -312,7 +312,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                             env.Item().Text($"• Default Branch: {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
                     });
 
-                    SubSection(doc, "2.5 Thành phần nhóm");
+                    SubSection(doc, "2.5 Team Composition");
                     if (data.TeamMembers.Count > 0)
                     {
                         doc.Item().PaddingLeft(10).Column(tm =>
@@ -329,10 +329,10 @@ public class PdfReportGenerator : IPdfReportGenerator
                     // ───────────────────────────────────────────────
                     // 3. SYSTEM FEATURES (Functional Requirements)
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "3. Tính năng hệ thống (Yêu cầu chức năng)");
+                    SectionHeader(doc, "3. System Features (Functional Requirements)");
                     doc.Item().Text(
-                        "Các tính năng sau đây được trích xuất từ các Epic và Story trên Jira, " +
-                        "đại diện cho các yêu cầu chức năng cấp cao của hệ thống.")
+                        "The following features are derived from Jira issues of type Epic and Story, " +
+                        "representing the high-level functional requirements of the system.")
                         .FontSize(10).FontColor(TextGray).Italic();
 
                     if (data.SystemFeatures.Count == 0)
@@ -369,7 +369,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                         if (feat.SubTasks.Count > 0)
                         {
                             doc.Item().PaddingLeft(10).PaddingTop(4)
-                                .Text($"3.{featureIndex} Yêu cầu chi tiết (Sub-tasks / Tasks):")
+                                .Text($"3.{featureIndex} Detailed Requirements (Sub-tasks / Tasks):")
                                 .Bold().FontSize(10).FontColor(PrimaryColor);
 
                             doc.Item().PaddingLeft(10).Table(t =>
@@ -380,7 +380,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                                 });
                                 t.Header(h =>
                                 {
-                                    foreach (var col in new[] { "Mã Issue", "Tiêu đề", "Ưu tiên", "Trạng thái" })
+                                    foreach (var col in new[] { "Issue Key", "Title", "Priority", "Status" })
                                         h.Cell().Background(TableHeader).Padding(4).Text(col)
                                             .FontColor(Colors.White).Bold().FontSize(9);
                                 });
@@ -402,22 +402,22 @@ public class PdfReportGenerator : IPdfReportGenerator
                     // ───────────────────────────────────────────────
                     // 4. EXTERNAL INTERFACE REQUIREMENTS
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "4. Yêu cầu giao diện bên ngoài");
+                    SectionHeader(doc, "4. External Interface Requirements");
 
-                    SubSection(doc, "4.1 Giao diện người dùng");
+                    SubSection(doc, "4.1 User Interfaces");
                     doc.Item().PaddingLeft(10).Text(
-                        "Hệ thống cung cấp một RESTful HTTP API được tiêu thụ bởi một ứng dụng web frontend. " +
-                        "API tuân thủ đặc tả OpenAPI 3.0 và được tài liệu hóa qua Swagger UI " +
-                        "tại /swagger/index.html.").FontSize(10).FontColor(TextGray);
+                        "The system exposes a RESTful HTTP API consumed by a web-based frontend. " +
+                        "The API follows OpenAPI 3.0 specification and is documented via Swagger UI " +
+                        "at /swagger/index.html.").FontSize(10).FontColor(TextGray);
 
-                    SubSection(doc, "4.2 Giao diện phần mềm");
+                    SubSection(doc, "4.2 Software Interfaces");
                     doc.Item().PaddingLeft(10).Table(t =>
                     {
                         t.ColumnsDefinition(c => { c.ConstantColumn(130); c.RelativeColumn(); });
                         t.Header(h =>
                         {
-                            h.Cell().Background(TableHeader).Padding(4).Text("Hệ thống").FontColor(Colors.White).Bold().FontSize(9);
-                            h.Cell().Background(TableHeader).Padding(4).Text("Mục đích").FontColor(Colors.White).Bold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("System").FontColor(Colors.White).Bold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("Purpose").FontColor(Colors.White).Bold().FontSize(9);
                         });
                         var ifaces = new (string, string)[]
                         {
@@ -473,16 +473,16 @@ public class PdfReportGenerator : IPdfReportGenerator
                     // ───────────────────────────────────────────────
                     // 5. NON-FUNCTIONAL REQUIREMENTS
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "5. Yêu cầu phi chức năng");
+                    SectionHeader(doc, "5. Non-Functional Requirements");
 
                     // Standard NFRs table (always included)
-                    SubSection(doc, "5.1 Các yêu cầu phi chức năng tiêu chuẩn");
+                    SubSection(doc, "5.1 Standard Non-Functional Requirements");
                     doc.Item().Table(t =>
                     {
                         t.ColumnsDefinition(c => { c.ConstantColumn(40); c.ConstantColumn(120); c.RelativeColumn(); c.ConstantColumn(80); });
                         t.Header(h =>
                         {
-                            foreach (var col in new[] { "ID", "Phân loại", "Yêu cầu", "Chỉ số" })
+                            foreach (var col in new[] { "ID", "Category", "Requirement", "Metric" })
                                 h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold().FontSize(9);
                         });
                         var nfrRows = new[]
@@ -517,9 +517,9 @@ public class PdfReportGenerator : IPdfReportGenerator
                     // ───────────────────────────────────────────────
                     // 6. OTHER REQUIREMENTS
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "6. Các yêu cầu khác");
+                    SectionHeader(doc, "6. Other Requirements");
 
-                    SubSection(doc, "6.1 Pháp lý và tuân thủ");
+                    SubSection(doc, "6.1 Legal and Compliance");
                     doc.Item().PaddingLeft(10).Text(
                         "• The system must comply with applicable data protection regulations " +
                         "(e.g. privacy of student data).\n" +
@@ -539,7 +539,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                         t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
                         t.Header(h =>
                         {
-                            foreach (var col in new[] { "Vai trò", "Họ tên", "Chữ ký / Ngày" })
+                            foreach (var col in new[] { "Role", "Name", "Signature / Date" })
                                 h.Cell().Background(TableHeader).Padding(6).Text(col).FontColor(Colors.White).Bold().FontSize(9);
                         });
                         foreach (var (role, _) in new[] { ("Lecturer", ""), ("Leader", ""), ("Team Member", "") })

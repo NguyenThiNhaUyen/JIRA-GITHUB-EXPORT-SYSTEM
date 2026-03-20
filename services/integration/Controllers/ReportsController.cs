@@ -1,10 +1,11 @@
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
-using JiraGithubExportSystem.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Responses.Reports;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.Shared.Contracts.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace JiraGithubExportSystem.IntegrationService.Controllers;
+namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api/reports")]
@@ -12,11 +13,13 @@ namespace JiraGithubExportSystem.IntegrationService.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly ISrsService _srsService;
     private readonly ILogger<ReportsController> _logger;
 
-    public ReportsController(IReportService reportService, ILogger<ReportsController> logger)
+    public ReportsController(IReportService reportService, ISrsService srsService, ILogger<ReportsController> logger)
     {
         _reportService = reportService;
+        _srsService = srsService;
         _logger = logger;
     }
 
@@ -27,14 +30,39 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
-    /// Get my reports
+    /// Get my reports or project SRS reports
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetMyReports()
+    public async Task<IActionResult> GetReports(
+        [FromQuery] long? projectId, 
+        [FromQuery] long? courseId,
+        [FromQuery] string? type, 
+        [FromQuery] string? status,
+        [FromQuery] string? milestone,
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 50)
     {
+        if (type == "SRS")
+        {
+            var srsResult = await _srsService.GetSrsListByCourseAsync(courseId, projectId, status, milestone, page, pageSize);
+            return Ok(ApiResponse<PagedResponse<JiraGithubExport.Shared.Contracts.Responses.Projects.SrsDocumentResponse>>.SuccessResponse(srsResult));
+        }
+
         var userId = GetCurrentUserId();
         var result = await _reportService.GetUserReportsAsync(userId);
-        return Ok(ApiResponse<object>.SuccessResponse(result));
+        return Ok(ApiResponse<List<ReportExportResponse>>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Update SRS review status
+    /// </summary>
+    [HttpPut("{id}/status")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    public async Task<IActionResult> ReviewSrsStatus(long id, [FromBody] JiraGithubExport.Shared.Contracts.Requests.Projects.ReviewSrsStatusRequest request)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _srsService.ReviewSrsStatusAsync(id, userId, request);
+        return Ok(ApiResponse<JiraGithubExport.Shared.Contracts.Responses.Projects.SrsDocumentResponse>.SuccessResponse(result, "SRS status updated"));
     }
 
     /// <summary>
@@ -51,10 +79,15 @@ public class ReportsController : ControllerBase
     /// Generate team roster report
     /// </summary>
     [HttpPost("team-roster")]
-    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long projectId, [FromQuery] string format = "PDF")
+    public async Task<IActionResult> GenerateTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
     {
-        var reportId = await _reportService.GenerateTeamRosterReportAsync(projectId, format);
-        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Report generation started"));
+        if (courseId.HasValue)
+        {
+            var reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, format);
+            return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide roster generation started"));
+        }
+        var reportIdProj = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, format);
+        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "Report generation started"));
     }
 
     /// <summary>
@@ -75,10 +108,15 @@ public class ReportsController : ControllerBase
     /// Generate ISO 29148 SRS report from Jira
     /// </summary>
     [HttpPost("srs")]
-    public async Task<IActionResult> GenerateSrs([FromQuery] long projectId, [FromQuery] string format = "PDF")
+    public async Task<IActionResult> GenerateSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
     {
-        var reportId = await _reportService.GenerateSrsReportAsync(projectId, format);
-        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "SRS Report generation started"));
+        if (courseId.HasValue)
+        {
+            var reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, format);
+            return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Course-wide SRS generation started"));
+        }
+        var reportIdProj = await _reportService.GenerateSrsReportAsync(projectId!.Value, format);
+        return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "SRS Report generation started"));
     }
 
     /// <summary>

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using JiraGithubExportSystem.IntegrationService.Application.Implementations;
-using JiraGithubExportSystem.Shared.Common.Exceptions;
-using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
-using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.IntegrationService.Application.Implementations;
+using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Contracts.Requests.Auth;
+using JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -91,6 +92,7 @@ namespace IntegrationService.Tests.Services
             Assert.Equal("Bearer", response.TokenType);
             Assert.Equal(3600, response.ExpiresIn);
             Assert.Equal("test@example.com", response.User.Email);
+            Assert.Equal("STUDENT", response.User.Role);
             Assert.Contains("STUDENT", response.User.Roles);
         }
 

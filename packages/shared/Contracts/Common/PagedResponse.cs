@@ -1,9 +1,14 @@
-namespace JiraGithubExportSystem.Shared.Contracts.Common;
+namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class PagedResponse<T>
 {
     public List<T> Items { get; set; } = new();
-    public int TotalItems { get; set; }
+    public int TotalCount { get; set; }
+    public int TotalItems 
+    { 
+        get => TotalCount; 
+        set => TotalCount = value; 
+    }
     public int TotalPages { get; set; }
     public int Page { get; set; }
     public int PageSize { get; set; }
@@ -11,17 +16,12 @@ public class PagedResponse<T>
 
     public PagedResponse() { }
 
-    public PagedResponse(List<T> items, int totalItems, int page, int pageSize)
+    public PagedResponse(List<T> items, int totalCount, int page, int pageSize)
     {
         Items = items;
-        TotalItems = totalItems;
+        TotalCount = totalCount;
         Page = page;
         PageSize = pageSize;
-        TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-    }
-
-    public static PagedResponse<T> Empty(int page, int pageSize)
-    {
-        return new PagedResponse<T>(new List<T>(), 0, page, pageSize);
+        TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
     }
 }

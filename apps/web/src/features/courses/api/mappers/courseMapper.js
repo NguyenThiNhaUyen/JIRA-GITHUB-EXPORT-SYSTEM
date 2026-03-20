@@ -53,6 +53,24 @@ export function mapCourse(beCourse) {
             email: l.officeEmail ?? l.OfficeEmail ?? "",
         })),
 
+        // ── Groups & Enrollments (from BE CourseDetailResponse) ────
+        groups: (beCourse.groups || beCourse.Groups || []).map(g => ({
+            id: String(g.id || g.Id || ""),
+            name: g.name || g.Name || "",
+            status: g.status || g.Status || "PENDING",
+            githubStatus: g.githubStatus || g.GithubStatus || "NONE",
+            jiraStatus: g.jiraStatus || g.JiraStatus || "NONE",
+            topic: g.topic || g.Topic || "",
+            integration: g.integration || g.Integration || null
+        })),
+        enrollments: (beCourse.enrollments || beCourse.Enrollments || []).map(e => ({
+            userId: String(e.userId || e.UserId || ""),
+            fullName: e.fullName || e.FullName || "",
+            studentCode: e.studentCode || e.StudentCode || "",
+            studentId: e.studentId || e.StudentId || "",
+            email: e.email || e.Email || ""
+        })),
+
         // ── Projects count ─────────────────────────────────────────
         projectsCount: beCourse.projectsCount ?? beCourse.ProjectsCount ?? 0,
     };

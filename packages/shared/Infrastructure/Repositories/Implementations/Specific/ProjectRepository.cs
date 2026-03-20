@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using JiraGithubExportSystem.Shared.Infrastructure.Persistence;
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Infrastructure.Persistence;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Implementations.Specific;
+namespace JiraGithubExport.Shared.Infrastructure.Repositories.Implementations.Specific;
 
 public class ProjectRepository : GenericRepository<project>, IProjectRepository
 {
@@ -28,6 +28,10 @@ public class ProjectRepository : GenericRepository<project>, IProjectRepository
 
         var totalItems = await query.CountAsync();
         var items = await query
+            .Include(p => p.project_integration)
+            .Include(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(su => su.user)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

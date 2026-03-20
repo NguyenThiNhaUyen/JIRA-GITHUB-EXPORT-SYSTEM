@@ -1,11 +1,11 @@
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
-using JiraGithubExportSystem.Shared.Common.Exceptions;
-using JiraGithubExportSystem.Shared.Contracts.Common;
-using JiraGithubExportSystem.Shared.Contracts.Requests.Auth;
-using JiraGithubExportSystem.Shared.Contracts.Responses.Auth;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Requests.Auth;
+using JiraGithubExport.Shared.Contracts.Responses.Auth;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JiraGithubExportSystem.IntegrationService.Controllers;
+namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api")]
@@ -107,6 +107,29 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, "ResetPassword failed");
             return BadRequest(ApiResponse.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Refresh an expired access token
+    /// </summary>
+    [HttpPost("auth/refresh")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshRequest request)
+    {
+        try
+        {
+            var response = await _authService.RefreshTokenAsync(request);
+            return Ok(ApiResponse<LoginResponse>.SuccessResponse(response, "Token refreshed successfully"));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(ApiResponse.ErrorResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Refresh token failed");
+            return StatusCode(500, ApiResponse.ErrorResponse("An error occurred during token refresh"));
         }
     }
 }

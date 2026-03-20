@@ -1,16 +1,17 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using JiraGithubExportSystem.JiraService.DTOs;
-using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.JiraService.DTOs;
+using JiraGithubExport.Shared.Contracts.Responses.Integrations;
+using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace JiraGithubExportSystem.JiraService.Services.Implementations;
+namespace JiraGithubExport.JiraService.Services.Implementations;
 
 public class JiraClient : IJiraClient
 {
@@ -115,11 +116,11 @@ public class JiraClient : IJiraClient
         }
         catch (System.Net.Sockets.SocketException ex)
         {
-            _logger.LogError("DNS/Network error for Jira URL '{SiteUrl}': {Message}. Please verify the Jira URL is correct and accessible.", siteUrl, ex.Message);
+            _logger.LogWarning("DNS/Network error for Jira URL '{SiteUrl}': {Message}. Please verify the Jira URL is correct and accessible.", siteUrl, ex.Message);
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError("HTTP request error for Jira project {ProjectKey}: {Message}. Please check your Jira URL and credentials.", projectKey, ex.Message);
+            _logger.LogWarning("HTTP request error for Jira project {ProjectKey}: {Message}. Please check your Jira URL and credentials.", projectKey, ex.Message);
         }
         catch (Exception ex)
         {
@@ -170,5 +171,73 @@ public class JiraClient : IJiraClient
             _logger.LogError(ex, "Failed to get last update date for {ProjectKey}", projectKey);
             return null;
         }
+    }
+
+    public async Task<List<JiraBoardResponse>> GetBoardsAsync(string projectKey, string siteUrl)
+    {
+        var boards = new List<JiraBoardResponse>();
+        try
+        {
+            // Jira Agile API returns boards associated with a project if queried correctly
+            var url = $"{siteUrl.TrimEnd('/')}/rest/agile/1.0/board?projectKeyOrId={projectKey.Trim()}";
+            var response = await _httpClient.GetAsync(url);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var agileResponse = await response.Content.ReadFromJsonAsync<JiraAgileResponse<JiraBoardResponse>>();
+                if (agileResponse != null && agileResponse.Values != null)
+                {
+                    boards.AddRange(agileResponse.Values);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Failed to fetch Jira boards for {ProjectKey}. Status: {Status}", projectKey, response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching Jira boards for {ProjectKey}", projectKey);
+        }
+        return boards;
+    }
+
+    public async Task<List<JiraSprintResponse>> GetSprintsAsync(long boardId, string siteUrl)
+    {
+        var sprints = new List<JiraSprintResponse>();
+        try
+        {
+            int startAt = 0;
+            int maxResults = 50;
+            bool isLast = false;
+
+            while (!isLast)
+            {
+                var url = $"{siteUrl.TrimEnd('/')}/rest/agile/1.0/board/{boardId}/sprint?startAt={startAt}&maxResults={maxResults}";
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to fetch Sprints for Board {BoardId}. Status: {Status}", boardId, response.StatusCode);
+                    break;
+                }
+
+                var agileResponse = await response.Content.ReadFromJsonAsync<JiraAgileResponse<JiraSprintResponse>>();
+                if (agileResponse == null || agileResponse.Values == null) break;
+
+                sprints.AddRange(agileResponse.Values);
+                
+                isLast = agileResponse.IsLast;
+                startAt += agileResponse.Values.Count;
+                
+                // Safety break to prevent infinite loops if Jira acts weird
+                if (agileResponse.Values.Count == 0 || sprints.Count > 1000) break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching Jira sprints for board {BoardId}", boardId);
+        }
+        return sprints;
     }
 }

@@ -1,4 +1,4 @@
-namespace JiraGithubExportSystem.Shared.Infrastructure.Identity.Interfaces;
+namespace JiraGithubExport.Shared.Infrastructure.Identity.Interfaces;
 
 public interface IPasswordHasher
 {

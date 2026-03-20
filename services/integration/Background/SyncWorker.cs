@@ -1,13 +1,13 @@
 using System.Diagnostics;
-using JiraGithubExportSystem.Shared.Infrastructure.ExternalServices.Interfaces;
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace JiraGithubExportSystem.IntegrationService.Background;
+namespace JiraGithubExport.IntegrationService.Background;
 
 public class SyncWorker : BackgroundService
 {
@@ -107,15 +107,17 @@ public class SyncWorker : BackgroundService
         var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
         var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
 
-        // Get all active integration project
+        // Fetch data and release DB connection IMMEDIATELY
         var integrations = await unitOfWork.ProjectIntegrations.Query()
             .Include(pi => pi.github_repo)
             .Include(pi => pi.jira_project)
             .Include(pi => pi.project)
             .Where(pi => pi.project.status == "ACTIVE")
+            .AsNoTracking() // Optimize Memory
             .ToListAsync(stoppingToken);
+            
+        _logger.LogInformation("Found {Count} active integrations to sync. DB Connection released to pool.", integrations.Count);
 
-        _logger.LogInformation("Found {Count} active integrations to sync", integrations.Count);
 
         foreach (var integration in integrations)
         {
@@ -150,11 +152,3 @@ public class SyncWorker : BackgroundService
         _logger.LogInformation("Sync logic completed at {Time}", DateTime.UtcNow);
     }
 }
-
-
-
-
-
-
-
-

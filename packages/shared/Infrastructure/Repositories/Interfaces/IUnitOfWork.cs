@@ -1,7 +1,7 @@
-using JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces.Specific;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces.Specific;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.Shared.Infrastructure.Repositories.Interfaces;
+namespace JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {
@@ -27,7 +27,9 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<inactive_alert> InactiveAlerts { get; }
     IGenericRepository<report_export> ReportExports { get; }
     IGenericRepository<audit_log> AuditLogs { get; }
+    IGenericRepository<team_invitation> TeamInvitations { get; }
     IGenericRepository<external_account> ExternalAccounts { get; }
+    IGenericRepository<notification> Notifications { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

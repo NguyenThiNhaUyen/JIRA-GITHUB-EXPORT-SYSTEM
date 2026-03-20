@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>JiraGithubExportSystem.IntegrationService</RootNamespace>
+    <UserSecretsId>1d0888cf-5c29-4ccd-beb1-21d4b04f6d30</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

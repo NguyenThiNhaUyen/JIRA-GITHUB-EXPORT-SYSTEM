@@ -1,4 +1,4 @@
-namespace JiraGithubExportSystem.Shared.Common;
+namespace JiraGithubExport.Shared.Common;
 
 public class JwtSettings
 {

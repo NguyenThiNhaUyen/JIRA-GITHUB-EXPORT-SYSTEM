@@ -107,9 +107,12 @@ export async function getEnrolledStudents(courseId, params = {}) {
     return mapUserList(unwrap(res));
 }
 /**
- * GET /api/courses/:id/projects/metrics
+ * GET /api/analytics/courses/:id/contributions
+ * Đã bẻ hướng từ endpoint cũ (/courses/:id/projects/metrics) sang Analytics Service.
  */
 export async function getCourseProjectsMetrics(courseId) {
-    const res = await client.get(`/courses/${courseId}/projects/metrics`);
-    return unwrap(res).groupMetrics;
+    const res = await client.get(`/analytics/courses/${courseId}/contributions`);
+    // Fallback unwrap toàn bộ response phòng trường hợp UI chưa cập nhật object root.
+    const result = unwrap(res);
+    return result.groupMetrics || result;
 }

@@ -1,4 +1,4 @@
-namespace JiraGithubExportSystem.Shared.Contracts.Common;
+namespace JiraGithubExport.Shared.Contracts.Common;
 
 public class PaginatedResponse<T>
 {

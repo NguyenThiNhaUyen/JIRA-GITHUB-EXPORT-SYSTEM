@@ -1,6 +1,6 @@
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
+namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 public interface IPdfReportGenerator
 {

@@ -1,8 +1,8 @@
-using JiraGithubExportSystem.Shared.Contracts.Common;
-using JiraGithubExportSystem.Shared.Contracts.Requests.Projects;
-using JiraGithubExportSystem.Shared.Contracts.Responses.Projects;
+using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Requests.Projects;
+using JiraGithubExport.Shared.Contracts.Responses.Projects;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Interfaces;
+namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface IProjectCoreService
 {
@@ -11,4 +11,7 @@ public interface IProjectCoreService
     Task DeleteProjectAsync(long projectId);
     Task<ProjectDetailResponse> GetProjectByIdAsync(long projectId);
     Task<PagedResponse<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId, PagedRequest request);
+    Task<List<CommitResponse>> GetProjectCommitsAsync(long projectId, int page = 1, int pageSize = 50);
+    Task<List<JiraGithubExport.Shared.Contracts.Responses.Analytics.StudentCommitHistoryResponse>> GetProjectCommitHistoryAsync(long projectId);
+    Task<object> SyncProjectCommitsAsync(long projectId);
 }

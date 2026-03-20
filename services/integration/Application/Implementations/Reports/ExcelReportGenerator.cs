@@ -1,19 +1,19 @@
 using ClosedXML.Excel;
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces.Reports;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
+using JiraGithubExport.Shared.Models;
 
-namespace JiraGithubExportSystem.IntegrationService.Application.Implementations.Reports;
+namespace JiraGithubExport.IntegrationService.Application.Implementations.Reports;
 
 public class ExcelReportGenerator : IExcelReportGenerator
 {
     public byte[] GenerateCommitStatisticsReport(string courseName, List<project> projects)
     {
         using var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Thống kê Commit");
-        worksheet.Cell(1, 1).Value = "Tên dự án";
-        worksheet.Cell(1, 2).Value = "Tên sinh viên";
-        worksheet.Cell(1, 3).Value = "Mã sinh viên";
-        worksheet.Cell(1, 4).Value = "Vai trò";
+        var worksheet = workbook.Worksheets.Add("Commit Statistics");
+        worksheet.Cell(1, 1).Value = "Project Name";
+        worksheet.Cell(1, 2).Value = "Student Name";
+        worksheet.Cell(1, 3).Value = "Student Code";
+        worksheet.Cell(1, 4).Value = "Role";
 
         int row = 2;
         foreach (var p in projects)
@@ -41,10 +41,10 @@ public class ExcelReportGenerator : IExcelReportGenerator
     public byte[] GenerateTeamRosterReport(project project)
     {
         using var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Danh sách nhóm");
-        worksheet.Cell(1, 1).Value = "Tên sinh viên";
-        worksheet.Cell(1, 2).Value = "Mã sinh viên";
-        worksheet.Cell(1, 3).Value = "Vai trò";
+        var worksheet = workbook.Worksheets.Add("Team Roster");
+        worksheet.Cell(1, 1).Value = "Student Name";
+        worksheet.Cell(1, 2).Value = "Student Code";
+        worksheet.Cell(1, 3).Value = "Role";
 
         int row = 2;
         if (project.team_members != null)
@@ -68,12 +68,12 @@ public class ExcelReportGenerator : IExcelReportGenerator
     public byte[] GenerateActivitySummaryReport(project project, List<dynamic> activityList)
     {
         using var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Tổng hợp hoạt động");
-        worksheet.Cell(1, 1).Value = "Tên sinh viên";
-        worksheet.Cell(1, 2).Value = "Mã sinh viên";
-        worksheet.Cell(1, 3).Value = "Số Commit";
-        worksheet.Cell(1, 4).Value = "Số Pull Request";
-        worksheet.Cell(1, 5).Value = "Số Issue hoàn thành";
+        var worksheet = workbook.Worksheets.Add("Activity Summary");
+        worksheet.Cell(1, 1).Value = "Student Name";
+        worksheet.Cell(1, 2).Value = "Student Code";
+        worksheet.Cell(1, 3).Value = "Commits";
+        worksheet.Cell(1, 4).Value = "Pull Requests";
+        worksheet.Cell(1, 5).Value = "Issues Completed";
 
         int row = 2;
         if (project.team_members != null)

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace JiraGithubExportSystem.Shared.Models;
+namespace JiraGithubExport.Shared.Models;
 
 public partial class team_invitation
 {

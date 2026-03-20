@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using JiraGithubExportSystem.Shared.Common;
-using JiraGithubExportSystem.Shared.Infrastructure.Identity.Implementations;
-using JiraGithubExportSystem.Shared.Models;
+using JiraGithubExport.Shared.Common;
+using JiraGithubExport.Shared.Infrastructure.Identity.Implementations;
+using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -55,8 +55,7 @@ namespace Shared.Tests.Identity
             Assert.Equal(_jwtSettings.Issuer, token.Issuer);
             Assert.Equal(_jwtSettings.Audience, token.Audiences.First());
             Assert.Contains(token.Claims, c => c.Type == "email" && c.Value == testUser.email);
-            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "Admin");
-            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "User");
+            Assert.Contains(token.Claims, c => c.Type == ClaimTypes.Role && c.Value == "ADMIN");
         }
 
         [Fact]

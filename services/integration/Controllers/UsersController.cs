@@ -1,11 +1,11 @@
-using JiraGithubExportSystem.IntegrationService.Application.Interfaces;
-using JiraGithubExportSystem.Shared.Contracts.Common;
-using JiraGithubExportSystem.Shared.Contracts.Requests.Users;
-using JiraGithubExportSystem.Shared.Contracts.Responses.Users;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
+using JiraGithubExport.Shared.Contracts.Common;
+using JiraGithubExport.Shared.Contracts.Requests.Users;
+using JiraGithubExport.Shared.Contracts.Responses.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace JiraGithubExportSystem.IntegrationService.Controllers;
+namespace JiraGithubExport.IntegrationService.Controllers;
 
 [ApiController]
 [Route("api/users")]
@@ -20,10 +20,10 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all users (Admin only). Supports ?role=ADMIN|LECTURER|STUDENT filter.
+    /// Get all users (Admin/Lecturer). Supports ?role=ADMIN|LECTURER|STUDENT filter.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<UserDetailResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] string? role, [FromQuery] PagedRequest request)
     {
@@ -31,11 +31,29 @@ public class UsersController : ControllerBase
         return Ok(ApiResponse<PagedResponse<UserDetailResponse>>.SuccessResponse(result));
     }
 
+    [HttpGet("students")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudents()
+    {
+        var result = await _userService.GetStudentsAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
+    [HttpGet("lecturers")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDetailResponse>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLecturers()
+    {
+        var result = await _userService.GetLecturersAsync();
+        return Ok(ApiResponse<List<UserDetailResponse>>.SuccessResponse(result));
+    }
+
     /// <summary>
-    /// Get user by ID (Admin only)
+    /// Get user by ID (Admin/Lecturer)
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "LECTURER,ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse<UserDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(long id)
     {
@@ -47,7 +65,7 @@ public class UsersController : ControllerBase
     /// Change user role (Admin only)
     /// </summary>
     [HttpPatch("{id}/role")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateRole(long id, [FromBody] UpdateUserRoleRequest request)
     {
@@ -59,7 +77,7 @@ public class UsersController : ControllerBase
     /// Enable or disable user account (Admin only)
     /// </summary>
     [HttpPatch("{id}/status")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateUserStatusRequest request)
     {
@@ -71,11 +89,47 @@ public class UsersController : ControllerBase
     /// Admin reset password for a user
     /// </summary>
     [HttpPost("{id}/reset-password")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AdminResetPassword(long id, [FromBody] AdminResetPasswordRequest request)
     {
         await _userService.AdminResetPasswordAsync(id, request.NewPassword);
         return Ok(ApiResponse.SuccessResponse("Password reset successfully"));
+    }
+
+    /// <summary>
+    /// Create a new user (Admin only)
+    /// </summary>
+    [HttpPost]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<UserDetailResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+    {
+        var result = await _userService.CreateUserAsync(request);
+        return Ok(ApiResponse<UserDetailResponse>.SuccessResponse(result, "User created successfully"));
+    }
+
+    /// <summary>
+    /// Get linked accounts (Github/Jira) for a student
+    /// </summary>
+    [HttpGet("student/{id}/links")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<StudentLinksResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentLinks(long id)
+    {
+        var result = await _userService.GetStudentLinksAsync(id);
+        return Ok(ApiResponse<StudentLinksResponse>.SuccessResponse(result));
+    }
+
+    /// <summary>
+    /// Link accounts (Github/Jira) for a student
+    /// </summary>
+    [HttpPost("student/{id}/links")]
+    [Authorize(Roles = "STUDENT,LECTURER,ADMIN,SUPER_ADMIN")]
+    [ProducesResponseType(typeof(ApiResponse<StudentLinksResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> LinkStudentAccounts(long id, [FromBody] LinkStudentAccountsRequest request)
+    {
+        var result = await _userService.LinkStudentAccountsAsync(id, request);
+        return Ok(ApiResponse<StudentLinksResponse>.SuccessResponse(result, "Accounts linked successfully"));
     }
 }
