@@ -7,7 +7,9 @@ using JiraGithubExport.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
+// Implementation of Alerting and Real-time Notification service
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
+
 
 public class AlertService : IAlertService
 {
