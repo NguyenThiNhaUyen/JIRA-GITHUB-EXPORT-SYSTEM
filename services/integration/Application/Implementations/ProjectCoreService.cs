@@ -9,6 +9,8 @@ using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using JiraGithubExport.IntegrationService.Hubs;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -19,19 +21,22 @@ public class ProjectCoreService : IProjectCoreService
     private readonly ILogger<ProjectCoreService> _logger;
     private readonly IGitHubClient _githubClient;
     private readonly IJiraClient _jiraClient;
+    private readonly IHubContext<NotificationHub> _hub;
 
     public ProjectCoreService(
         IUnitOfWork unitOfWork, 
         IMapper mapper, 
         ILogger<ProjectCoreService> logger,
         IGitHubClient githubClient,
-        IJiraClient jiraClient)
+        IJiraClient jiraClient,
+        IHubContext<NotificationHub> hub)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _githubClient = githubClient;
         _jiraClient = jiraClient;
+        _hub = hub;
     }
 
     public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId)
@@ -64,6 +69,29 @@ public class ProjectCoreService : IProjectCoreService
 
         _unitOfWork.Projects.Add(project);
         await _unitOfWork.SaveChangesAsync();
+
+        try 
+        {
+            var courseEnt = await _unitOfWork.Courses.Query()
+                .Include(c => c.lecturer_users)
+                .FirstOrDefaultAsync(c => c.id == courseId);
+            
+            if (courseEnt != null && courseEnt.lecturer_users.Any())
+            {
+                var msg = new { 
+                    Type = "GROUP_CREATED", 
+                    Message = $"Nhóm mới '{project.name}' vừa được tạo trong lớp {courseEnt.course_code}." 
+                };
+                foreach (var l in courseEnt.lecturer_users)
+                {
+                    await _hub.Clients.User(l.user_id.ToString()).SendAsync("ReceiveNotification", msg);
+                }
+            }
+        } 
+        catch (Exception ex) 
+        {
+            _logger.LogWarning(ex, "Could not send SignalR notification on project creation.");
+        }
 
         return _mapper.Map<ProjectDetailResponse>(project);
     }

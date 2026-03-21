@@ -4,6 +4,9 @@ using JiraGithubExport.Shared.Contracts.Requests.Projects;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using JiraGithubExport.IntegrationService.Hubs;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -11,11 +14,13 @@ public class ProjectTeamService : IProjectTeamService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ProjectTeamService> _logger;
+    private readonly IHubContext<NotificationHub> _hub;
 
-    public ProjectTeamService(IUnitOfWork unitOfWork, ILogger<ProjectTeamService> logger)
+    public ProjectTeamService(IUnitOfWork unitOfWork, ILogger<ProjectTeamService> logger, IHubContext<NotificationHub> hub)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _hub = hub;
     }
 
     public async Task AddTeamMemberAsync(long projectId, AddTeamMemberRequest request)
@@ -59,6 +64,39 @@ public class ProjectTeamService : IProjectTeamService
 
         _unitOfWork.TeamMembers.Add(teamMember);
         await _unitOfWork.SaveChangesAsync();
+
+        try
+        {
+            var p = await _unitOfWork.Projects.Query()
+                .Include(proj => proj.course)
+                    .ThenInclude(c => c.lecturer_users)
+                .FirstOrDefaultAsync(proj => proj.id == projectId);
+            
+            var userAdded = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.id == request.StudentUserId);
+            
+            if (p?.course?.lecturer_users != null && p.course.lecturer_users.Any() && userAdded != null)
+            {
+                var msg = new { 
+                    Type = "MEMBER_ADDED", 
+                    Message = $"Sinh viên '{userAdded.full_name}' ({userAdded.email}) vừa gia nhập nhóm '{p.name}' trong lớp {p.course.course_code}." 
+                };
+                foreach (var l in p.course.lecturer_users)
+                {
+                    await _hub.Clients.User(l.user_id.ToString()).SendAsync("ReceiveNotification", msg);
+                }
+
+                // notify the student
+                var studentMsg = new { 
+                    Type = "JOINED_GROUP", 
+                    Message = $"Bạn đã được thêm vào nhóm '{p.name}' trong lớp {p.course.course_code}." 
+                };
+                await _hub.Clients.User(request.StudentUserId.ToString()).SendAsync("ReceiveNotification", studentMsg);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not send SignalR notification on member addition.");
+        }
     }
 
     public async Task RemoveTeamMemberAsync(long projectId, long studentUserId)

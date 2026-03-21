@@ -8,6 +8,8 @@ using JiraGithubExport.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
+using JiraGithubExport.IntegrationService.Hubs;
 
 namespace JiraGithubExport.IntegrationService.Application.Implementations;
 
@@ -16,12 +18,18 @@ public class ProjectIntegrationService : IProjectIntegrationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<ProjectIntegrationService> _logger;
+    private readonly IHubContext<NotificationHub> _hub;
 
-    public ProjectIntegrationService(IUnitOfWork unitOfWork, IServiceScopeFactory serviceScopeFactory, ILogger<ProjectIntegrationService> logger)
+    public ProjectIntegrationService(
+        IUnitOfWork unitOfWork, 
+        IServiceScopeFactory serviceScopeFactory, 
+        ILogger<ProjectIntegrationService> logger,
+        IHubContext<NotificationHub> hub)
     {
         _unitOfWork = unitOfWork;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
+        _hub = hub;
     }
 
     public async Task LinkIntegrationAsync(long projectId, long submittedByUserId, LinkIntegrationRequest request)
@@ -146,6 +154,25 @@ public class ProjectIntegrationService : IProjectIntegrationService
         }
 
         await _unitOfWork.SaveChangesAsync();
+
+        try
+        {
+            var p = await _unitOfWork.Projects.Query()
+                .Include(proj => proj.course).ThenInclude(c => c.lecturer_users)
+                .FirstOrDefaultAsync(proj => proj.id == projectId);
+            
+            if (p?.course?.lecturer_users != null && p.course.lecturer_users.Any())
+            {
+                var msg = new { 
+                    Type = "LINKS_SUBMITTED", 
+                    Message = $"Nhóm '{p.name}' vừa cập nhật liên kết Github/Jira. Vui lòng phê duyệt." 
+                };
+                foreach (var l in p.course.lecturer_users)
+                    await _hub.Clients.User(l.user_id.ToString()).SendAsync("ReceiveNotification", msg);
+            }
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
+
         _logger.LogInformation("Integration submitted for project {ProjectId} by user {UserId}, status=PENDING", projectId, submittedByUserId);
     }
 
@@ -169,6 +196,22 @@ public class ProjectIntegrationService : IProjectIntegrationService
         integration.updated_at = DateTime.UtcNow;
         _unitOfWork.ProjectIntegrations.Update(integration);
         await _unitOfWork.SaveChangesAsync();
+
+        try
+        {
+            var members = await _unitOfWork.TeamMembers.Query()
+                .Where(tm => tm.project_id == projectId && tm.participation_status == "ACTIVE")
+                .Select(tm => tm.student_user_id.ToString())
+                .ToListAsync();
+            
+            var msg = new { 
+                Type = "LINKS_APPROVED", 
+                Message = $"Tuyệt vời! Liên kết dự án của nhóm '{integration.project?.name}' đã được phê duyệt. Hệ thống đang bắt đầu đồng bộ dữ liệu." 
+            };
+            foreach (var uid in members)
+                await _hub.Clients.User(uid).SendAsync("ReceiveNotification", msg);
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
 
         _logger.LogInformation("Integration approved for project {ProjectId} by lecturer {UserId}", projectId, approvedByUserId);
 
@@ -214,6 +257,22 @@ public class ProjectIntegrationService : IProjectIntegrationService
         integration.updated_at = DateTime.UtcNow;
         _unitOfWork.ProjectIntegrations.Update(integration);
         await _unitOfWork.SaveChangesAsync();
+
+        try
+        {
+            var members = await _unitOfWork.TeamMembers.Query()
+                .Where(tm => tm.project_id == projectId && tm.participation_status == "ACTIVE")
+                .Select(tm => tm.student_user_id.ToString())
+                .ToListAsync();
+            
+            var msg = new { 
+                Type = "LINKS_REJECTED", 
+                Message = $"Liên kết dự án của nhóm vừa bị từ chối. Lý do: {reason ?? "Không rõ"}. Vui lòng kiểm tra lại." 
+            };
+            foreach (var uid in members)
+                await _hub.Clients.User(uid).SendAsync("ReceiveNotification", msg);
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
 
         _logger.LogInformation("Integration rejected for project {ProjectId} by lecturer {UserId}. Reason: {Reason}", projectId, rejectedByUserId, reason);
     }

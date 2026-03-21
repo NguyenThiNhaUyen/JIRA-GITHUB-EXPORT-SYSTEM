@@ -52,14 +52,19 @@ public class StudentService : IStudentService
     {
         var courses = await _unitOfWork.CourseEnrollments.Query()
             .Include(e => e.course)
+                .ThenInclude(c => c.subject)
+            .Include(e => e.course)
+                .ThenInclude(c => c.lecturer_users)
             .Where(e => e.student_user_id == userId && e.status == "ACTIVE")
             .Select(e => new
             {
                 id = e.course.id,
-                courseCode = e.course.course_code,
-                courseName = e.course.course_name,
+                code = e.course.course_code,
+                name = e.course.course_name,
                 status = e.course.status,
-                enrolledAt = e.enrolled_at
+                enrolledAt = e.enrolled_at,
+                subject = e.course.subject != null ? new { code = e.course.subject.subject_code, name = e.course.subject.subject_name } : null,
+                lecturers = e.course.lecturer_users.Select(l => new { id = l.user_id, name = l.office_email }).ToList()
             })
             .ToListAsync();
 
@@ -69,15 +74,27 @@ public class StudentService : IStudentService
     public async Task<PagedResponse<object>> GetStudentProjectsAsync(long userId, PagedRequest request)
     {
         var projects = await _unitOfWork.TeamMembers.Query()
+            .AsNoTracking()
             .Include(t => t.project).ThenInclude(p => p.course)
+            .Include(t => t.project).ThenInclude(p => p.project_integration)
+            .Include(t => t.project).ThenInclude(p => p.team_members)
             .Where(t => t.student_user_id == userId && t.participation_status == "ACTIVE")
             .Select(t => new
             {
                 id = t.project.id,
                 name = t.project.name,
+                courseId = t.project.course_id,
                 courseCode = t.project.course.course_code,
                 role = t.team_role,
-                status = t.project.status
+                status = t.project.status,
+                topic = t.project.description,
+                integration = t.project.project_integration != null ? new {
+                     githubUrl = t.project.project_integration.github_repo.repo_url,
+                     jiraUrl = t.project.project_integration.jira_project.jira_url,
+                     githubStatus = t.project.project_integration.approval_status,
+                     jiraStatus = t.project.project_integration.approval_status
+                } : null,
+                team = t.project.team_members.Select(tm => new { studentId = tm.student_user_id, role = tm.team_role }).ToList()
             })
             .ToListAsync();
 

@@ -22,7 +22,8 @@ export function useSignalR() {
     }
 
     const token = localStorage.getItem('accessToken');
-    const hubUrl = `${import.meta.env.VITE_API_URL}/notificationHub`;
+    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+    const hubUrl = `${baseUrl}/notificationHub`;
 
     // Create connection
     const connection = new signalR.HubConnectionBuilder()
@@ -53,7 +54,9 @@ export function useSignalR() {
           info(message, { title: 'Thông báo mới' });
         }
       } else {
-        info(notification.message || 'Bạn có thông báo mới');
+        const title = 'Thông báo hệ thống';
+        const msg = notification.message || notification.Message || payload?.message || payload?.Message || 'Bạn có thông báo mới';
+        info(msg, { title });
       }
     });
 
