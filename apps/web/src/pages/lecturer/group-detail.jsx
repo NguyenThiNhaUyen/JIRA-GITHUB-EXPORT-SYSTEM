@@ -11,6 +11,7 @@ import {
     useRejectIntegration,
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
+import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
 
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
@@ -32,6 +33,8 @@ export default function GroupDetail() {
     const approveMutation = useApproveIntegration();
     const rejectMutation = useRejectIntegration();
     const updateMemberMutation = useUpdateTeamMember();
+    
+    const { mutate: generateSrsMutate, isPending: isGeneratingSrs } = useGenerateSrs();
 
     // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
     if (isLoading) {
@@ -86,6 +89,13 @@ export default function GroupDetail() {
                 onSuccess: () => success(`Đã lưu điểm ${numScore} cho sinh viên`)
             }
         );
+    };
+
+    const handleGenerateSrs = () => {
+        generateSrsMutate({ projectId: groupId, format: "PDF" }, {
+            onSuccess: () => success("Hệ thống đang tự tạo và xuất báo cáo SRS!"),
+            onError: (err) => error("Lỗi xuất SRS: " + (err.message || ""))
+        });
     };
 
     const handleExport = () => {
@@ -313,11 +323,26 @@ export default function GroupDetail() {
 
                     {/* Export */}
                     <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-                        <CardContent className="p-5">
+                        <CardContent className="p-5 space-y-4">
+                            <div className="flex items-center justify-between pb-3 border-b border-gray-50">
+                                <div>
+                                    <p className="font-semibold text-gray-800 text-sm">Xuất báo cáo SRS (ISO 29148)</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Tự động xuất SRS từ dữ liệu Jira & Github (Không giới hạn số lần)</p>
+                                </div>
+                                <Button
+                                    onClick={handleGenerateSrs}
+                                    disabled={isGeneratingSrs}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-9 px-4 text-sm disabled:opacity-50 border-0 shadow-sm"
+                                >
+                                    <FileDown size={14} />
+                                    {isGeneratingSrs ? "Đang xuất..." : "Xuất SRS ISO"}
+                                </Button>
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-semibold text-gray-800 text-sm">Xuất báo cáo</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">Xuất dữ liệu nhóm sang Word/PDF</p>
+                                    <p className="font-semibold text-gray-800 text-sm">Xuất bảng điểm (CSV)</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">Tải về danh sách thành viên và điểm</p>
                                 </div>
                                 <Button
                                     onClick={handleExport}
@@ -325,12 +350,9 @@ export default function GroupDetail() {
                                     className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm"
                                 >
                                     <FileDown size={14} />
-                                    Xuất file
+                                    Tải CSV
                                 </Button>
                             </div>
-                            <p className="text-[11px] text-gray-300 mt-3">
-                                * Tính năng đang phát triển — sẽ gọi API GitHub & Jira để lấy dữ liệu thực tế.
-                            </p>
                         </CardContent>
                     </Card>
 

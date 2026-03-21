@@ -20,7 +20,6 @@ import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations } from "../../features/student/hooks/useStudent.js";
 
-import SRSUploadModal from "./SRSUploadModal.jsx";
 import CourseWorkspace from "./CourseWorkspace.jsx";
 
 
@@ -34,8 +33,6 @@ export default function StudentDashboard() {
     const { success, error: showError } = useToast();
 
     const [selectedCourseId, setSelectedCourseId] = useState(null);
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const [editingReport, setEditingReport] = useState(null);
 
     // Data Fetching - Real API
     const { data: coursesData = { items: [] }, isLoading: coursesLoading, refetch: refetchCourses } = useGetCourses({ pageSize: 100 });
@@ -115,8 +112,6 @@ export default function StudentDashboard() {
 
     // Projects Mutations
     const { mutate: createProjectMutate } = useCreateProject();
-    const { mutate: submitSrsMutate } = useSubmitSrs();
-    const { mutate: deleteSrsMutate } = useDeleteSrs();
 
 
 
@@ -159,23 +154,7 @@ export default function StudentDashboard() {
         });
     };
 
-    /* ── SRS submit (Leader only) ── */
-    const handleSaveSRS = (form) => {
-        if (!selectedGroup?.id || !form.file) return;
-
-        // BE chỉ có API upload SRS /api/projects/:id/srs nhận multipart formdata
-        // Chỉnh sửa (update) phiên bản hiện chưa có BE endpoint -> coi như upload bản mới luôn
-        submitSrsMutate(
-            { projectId: selectedGroup.id, file: form.file },
-            {
-                onSuccess: () => {
-                    success("Đã nộp SRS thành công! Đang chờ giảng viên xem xét.");
-                    setShowUploadModal(false);
-                },
-                onError: (err) => showError(err?.message || "Không thể nộp SRS"),
-            }
-        );
-    };
+    /* ── Link submit (Leader only) ── */
 
     const handleCreateProject = (courseId, courseName) => {
         const projectName = window.prompt(`Nhập tên nhóm cho lớp ${courseName}:`, `Team ${user?.name || ''}`);
@@ -195,17 +174,6 @@ export default function StudentDashboard() {
         );
     };
 
-    const handleDeleteSRS = (srsId) => {
-        if (!window.confirm("Bạn có chắc muốn xóa SRS report này?")) return;
-        deleteSrsMutate(
-            { reportId: srsId },
-            {
-                onSuccess: () => success("Đã xóa SRS report."),
-                onError: (err) => showError(err?.message || "Không thể xóa SRS"),
-            }
-        );
-    };
-
     /* ── Derived data ── */
     const approvedCount = myGroupsList.filter(g =>
         g.integration?.githubStatus === "APPROVED" &&
@@ -219,12 +187,12 @@ export default function StudentDashboard() {
 
     return (
         <>
-            <div className="space-y-8 bg-[#040405] min-h-screen -m-6 p-6 pb-20 overflow-x-hidden">
+            <div className="space-y-8 bg-white shadow-sm border-gray-100 min-h-screen -m-6 p-6 pb-20 overflow-x-hidden">
                 {/* ── Breadcrumb ── */}
                 <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                     <span className="text-teal-700 font-semibold">Sinh viên</span>
                     <ChevronRight size={12} />
-                    <span className="text-zinc-500 font-semibold">
+                    <span className="text-gray-500 font-semibold">
                         {selectedCourseId ? `${selectedCourse?.code} — Nhóm của tôi` : "Dashboard"}
                     </span>
                 </nav>
@@ -233,11 +201,11 @@ export default function StudentDashboard() {
                 {!selectedCourseId && (
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-white uppercase">
+                            <h2 className="text-2xl font-black tracking-tight text-gray-800 uppercase">
                                 Xin chào, {user?.name || "Sinh viên"}
                             </h2>
-                            <p className="text-sm text-zinc-500 mt-1 flex items-center gap-2">
-                                <span className="bg-teal-500/10 text-teal-400 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-500/20 uppercase">Auth: Active</span>
+                            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                <span className="bg-teal-500/10 text-teal-600 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-500/20 uppercase">Auth: Active</span>
                                 Học kỳ đang hoạt động — hãy kiểm tra tiến độ nhóm
                             </p>
                         </div>
@@ -253,7 +221,7 @@ export default function StudentDashboard() {
                         <StatCard icon={<BookOpen size={18} />} color="bg-emerald-500/10 text-emerald-400 border-emerald-500/20" label="Lớp đang học" value={courses.length} />
                         <StatCard icon={<Users size={18} />} color="bg-violet-500/10 text-violet-400 border-violet-500/20" label="Nhóm của tôi" value={Object.keys(groupsMapByCourse).length} />
                         <StatCard icon={<GitBranch size={18} />} color="bg-blue-500/10 text-blue-400 border-blue-500/20" label="Commits" value={myStats.totalCommits} />
-                        <StatCard icon={<Bell size={18} />} color={alerts.length > 0 ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-zinc-800/50 text-zinc-500 border-zinc-700/50"} label="Cảnh báo" value={alerts.length} />
+                        <StatCard icon={<Bell size={18} />} color={alerts.length > 0 ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-gray-50 text-gray-500 border-gray-100"} label="Cảnh báo" value={alerts.length} />
                     </div>
                 )}
 
@@ -267,9 +235,6 @@ export default function StudentDashboard() {
                         userId={user?.id}
                         onBack={() => setSelectedCourseId(null)}
                         onSubmitLinks={handleSubmitLinks}
-                        onUploadSRS={() => { setShowUploadModal(true); setEditingReport(null); }}
-                        onEditSRS={(r) => { setEditingReport(r); setShowUploadModal(true); }}
-                        onDeleteSRS={handleDeleteSRS}
                     />
                 ) : (
                     !selectedCourseId && <>
@@ -304,31 +269,31 @@ export default function StudentDashboard() {
                                         // Card layout inspired by the screenshot: Minimal, Dark/Clean
                                         return (
                                             <div key={course.id}
-                                                className="relative group bg-[#0D0D0E] border border-zinc-800/80 rounded-[20px] p-6 hover:border-teal-500/40 transition-all cursor-pointer overflow-hidden"
+                                                className="relative group bg-white shadow-sm border-gray-100 border border-gray-100 rounded-[20px] p-6 hover:border-teal-500/40 transition-all cursor-pointer overflow-hidden"
                                                 onClick={() => setSelectedCourseId(String(course.id))}
                                             >
                                                 <div className="flex flex-col h-full space-y-4">
                                                     <div className="flex items-start justify-between">
                                                         <div className="space-y-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[10px] font-bold text-teal-400 bg-teal-400/10 px-2 py-0.5 rounded uppercase tracking-wider">
+                                                                <span className="text-[10px] font-bold text-teal-600 bg-teal-400/10 px-2 py-0.5 rounded uppercase tracking-wider">
                                                                     {course.subject?.code || course.code}
                                                                 </span>
                                                                 {isLeader && <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded uppercase flex items-center gap-1"><Crown size={8}/>Leader</span>}
                                                             </div>
-                                                            <h4 className="text-base font-bold text-zinc-100 group-hover:text-teal-400 transition-colors uppercase tracking-tight">{course.name}</h4>
+                                                            <h4 className="text-base font-bold text-gray-800 group-hover:text-teal-600 transition-colors uppercase tracking-tight">{course.name}</h4>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex-1 space-y-2.5">
-                                                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                                            <div className="w-5 h-5 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-300">
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                            <div className="w-5 h-5 rounded bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-600">
                                                                 {course.lecturers?.[0]?.name?.charAt(0) || "G"}
                                                             </div>
                                                             <span className="truncate">{course.lecturers?.[0]?.name || "Chưa có GV"}</span>
                                                         </div>
                                                         {grp && (
-                                                            <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
+                                                            <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
                                                                 <div className="w-5 h-5 rounded bg-teal-400/10 flex items-center justify-center text-teal-500">
                                                                     <Users size={10} />
                                                                 </div>
@@ -347,13 +312,13 @@ export default function StudentDashboard() {
                                                             </button>
                                                         ) : (
                                                             <div className="flex items-center justify-between">
-                                                                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded bg-[#18181B] border border-zinc-700/50 uppercase tracking-tighter ${lsCfg.cls}`}>
+                                                                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded bg-white shadow-sm border-gray-100 border border-gray-100 uppercase tracking-tighter ${lsCfg.cls}`}>
                                                                     {linkStatus === "PENDING" && <span className="mr-1 text-amber-500">⚠</span>}
                                                                     {linkStatus === "APPROVED" && <span className="mr-1 text-emerald-500">✓</span>}
                                                                     {linkStatus === "REJECTED" && <span className="mr-1 text-rose-500">×</span>}
                                                                     {lsCfg.label}
                                                                 </span>
-                                                                <ArrowRight size={14} className="text-zinc-600 group-hover:text-teal-400 transform group-hover:translate-x-1 transition-all" />
+                                                                <ArrowRight size={14} className="text-zinc-600 group-hover:text-teal-600 transform group-hover:translate-x-1 transition-all" />
                                                             </div>
                                                         )}
                                                     </div>
@@ -369,20 +334,20 @@ export default function StudentDashboard() {
                         {/* ── D. Personal Stats 2-col: Deadlines & Active Tasks ── */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             {/* Deadlines */}
-                            <div className="bg-[#0D0D0E] border border-zinc-800/80 rounded-[24px] overflow-hidden">
-                                <div className="p-6 border-b border-zinc-800/50">
+                            <div className="bg-white shadow-sm border-gray-100 border border-gray-100 rounded-[24px] overflow-hidden">
+                                <div className="p-6 border-b border-gray-100">
                                      <div className="flex items-center gap-2">
                                          <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
                                              <Clock size={15} className="text-blue-400" />
                                          </div>
-                                         <h3 className="text-base font-bold text-zinc-100 uppercase tracking-tight">Deadline sắp đến</h3>
+                                         <h3 className="text-base font-bold text-gray-800 uppercase tracking-tight">Deadline sắp đến</h3>
                                      </div>
                                  </div>
                                  <div className="p-4 pt-2">
                                      {!Array.isArray(myDeadlinesData) || myDeadlinesData.length === 0 ? (
                                          <div className="flex flex-col items-center justify-center py-8 gap-2">
                                              <CheckCircle size={24} className="text-emerald-500/30" />
-                                             <p className="text-xs text-zinc-500 font-medium">Không có deadline sắp đến</p>
+                                             <p className="text-xs text-gray-500 font-medium">Không có deadline sắp đến</p>
                                          </div>
                                      ) : (
                                          <div className="space-y-1">
@@ -390,11 +355,11 @@ export default function StudentDashboard() {
                                                  const dueDate = d.dueDate || d.deadline;
                                                  const isOverdue = dueDate && new Date(dueDate) < new Date();
                                                  return (
-                                                     <div key={d.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-zinc-800/50 transition-colors group">
+                                                     <div key={d.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
                                                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOverdue ? 'bg-rose-500' : 'bg-blue-500'}`} />
                                                          <div className="flex-1 min-w-0">
-                                                             <p className="text-sm font-semibold text-zinc-200 truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{d.title || d.summary || d.name}</p>
-                                                             <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{d.projectName || d.courseName || ''}</p>
+                                                             <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{d.title || d.summary || d.name}</p>
+                                                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{d.projectName || d.courseName || ''}</p>
                                                          </div>
                                                          {dueDate && (
                                                              <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded border ${isOverdue ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
@@ -410,31 +375,31 @@ export default function StudentDashboard() {
                             </div>
 
                             {/* Active Jira Tasks */}
-                            <div className="bg-[#0D0D0E] border border-zinc-800/80 rounded-[24px] overflow-hidden">
-                                <div className="p-6 border-b border-zinc-800/50">
+                            <div className="bg-white shadow-sm border-gray-100 border border-gray-100 rounded-[24px] overflow-hidden">
+                                <div className="p-6 border-b border-gray-100">
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded-xl bg-teal-500/10 flex items-center justify-center">
-                                            <BarChart2 size={15} className="text-teal-400" />
+                                            <BarChart2 size={15} className="text-teal-600" />
                                         </div>
-                                        <h3 className="text-base font-bold text-zinc-100 uppercase tracking-tight">Task Jira đang thực hiện</h3>
+                                        <h3 className="text-base font-bold text-gray-800 uppercase tracking-tight">Task Jira đang thực hiện</h3>
                                     </div>
                                 </div>
                                 <div className="p-4 pt-2">
                                     {!myTasksData?.items?.length ? (
                                         <div className="flex flex-col items-center justify-center py-8 gap-2">
                                             <CheckCircle size={24} className="text-teal-500/30" />
-                                            <p className="text-xs text-zinc-500 font-medium">Không có task nào đang thực hiện</p>
+                                            <p className="text-xs text-gray-500 font-medium">Không có task nào đang thực hiện</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-1">
                                             {myTasksData.items.slice(0, 5).map((t, i) => (
-                                                <div key={t.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-zinc-800/50 transition-colors group">
+                                                <div key={t.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-semibold text-zinc-200 truncate group-hover:text-teal-400 transition-colors uppercase tracking-tight">{t.summary || t.title || t.name}</p>
-                                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{t.projectKey || t.project || ''}</p>
+                                                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-600 transition-colors uppercase tracking-tight">{t.summary || t.title || t.name}</p>
+                                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t.projectKey || t.project || ''}</p>
                                                     </div>
-                                                    <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded border bg-teal-500/10 text-teal-400 border-teal-500/20 uppercase tracking-tighter">
+                                                    <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded border bg-teal-500/10 text-teal-600 border-teal-500/20 uppercase tracking-tighter">
                                                         {t.status || 'IN PROGRESS'}
                                                     </span>
                                                 </div>
@@ -447,13 +412,13 @@ export default function StudentDashboard() {
 
                         {/* ── E. L\u1eddi m\u1eddi tham gia nh\u00f3m ── */}
                         {myInvitations.length > 0 && (
-                            <div className="bg-[#0D0D0E] border border-amber-500/20 rounded-[24px] overflow-hidden bg-gradient-to-br from-amber-500/5 to-transparent">
+                            <div className="bg-white shadow-sm border-gray-100 border border-amber-500/20 rounded-[24px] overflow-hidden bg-gradient-to-br from-amber-500/5 to-transparent">
                                 <div className="p-6 border-b border-amber-500/10">
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center">
                                             <Users size={15} className="text-amber-400" />
                                         </div>
-                                        <h3 className="text-base font-bold text-zinc-100 uppercase tracking-tight">Lời mời tham gia Nhóm</h3>
+                                        <h3 className="text-base font-bold text-gray-800 uppercase tracking-tight">Lời mời tham gia Nhóm</h3>
                                         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 bg-amber-500 text-black rounded-full uppercase tracking-tighter">
                                             {myInvitations.length} MỚI
                                         </span>
@@ -462,15 +427,15 @@ export default function StudentDashboard() {
                                 <div className="p-4">
                                     <div className="space-y-3">
                                         {myInvitations.map((inv, i) => (
-                                            <div key={inv.id || i} className="flex items-center gap-3 bg-[#18181B] rounded-[18px] px-4 py-3 border border-zinc-800/80">
-                                                <div className="w-9 h-9 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center text-sm font-black shrink-0">
+                                            <div key={inv.id || i} className="flex items-center gap-3 bg-white shadow-sm border-gray-100 rounded-[18px] px-4 py-3 border border-gray-100">
+                                                <div className="w-9 h-9 rounded-full bg-teal-500/20 text-teal-600 flex items-center justify-center text-sm font-black shrink-0">
                                                     {(inv.projectName || inv.groupName || 'N')?.charAt(0)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-zinc-200 truncate uppercase tracking-tight">
+                                                    <p className="text-sm font-bold text-gray-700 truncate uppercase tracking-tight">
                                                         {inv.projectName || inv.groupName || 'Nhóm chưa có tên'}
                                                     </p>
-                                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                                                         {inv.inviterName ? `By: ${inv.inviterName}` : ''}{inv.courseName ? ` · ${inv.courseName}` : ''}
                                                     </p>
                                                 </div>
@@ -496,13 +461,13 @@ export default function StudentDashboard() {
                         )}
 
                         {/* ── F. Personal Alerts ── */}
-                        <div className="bg-[#0D0D0E] border border-zinc-800/80 rounded-[24px] overflow-hidden">
-                            <div className="p-6 border-b border-zinc-800/50">
+                        <div className="bg-white shadow-sm border-gray-100 border border-gray-100 rounded-[24px] overflow-hidden">
+                            <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center">
                                         <Bell size={15} className="text-rose-400" />
                                     </div>
-                                    <h3 className="text-base font-bold text-zinc-100 uppercase tracking-tight">Cảnh báo & Nhắc nhở</h3>
+                                    <h3 className="text-base font-bold text-gray-800 uppercase tracking-tight">Cảnh báo & Nhắc nhở</h3>
                                 </div>
                             </div>
                             <div className="p-4">
@@ -511,7 +476,7 @@ export default function StudentDashboard() {
                                         <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
                                             <CheckCircle size={28} className="text-emerald-500/50" />
                                         </div>
-                                        <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Hệ thống an toàn</p>
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Hệ thống an toàn</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2 pt-1">
@@ -526,7 +491,7 @@ export default function StudentDashboard() {
                                                     </div>
                                                     <button
                                                         onClick={() => handleResolveAlert(a.id)}
-                                                        className="shrink-0 text-zinc-500 hover:text-emerald-400 transition-colors opacity-0 group-hover:opacity-100 p-1"
+                                                        className="shrink-0 text-gray-500 hover:text-emerald-400 transition-colors opacity-0 group-hover:opacity-100 p-1"
                                                         title="Đã xem"
                                                     >
                                                         <CheckCircle size={18} />
@@ -542,12 +507,6 @@ export default function StudentDashboard() {
                 )}
             </div>
 
-            <SRSUploadModal
-                isOpen={showUploadModal}
-                onClose={() => { setShowUploadModal(false); setEditingReport(null); }}
-                onSave={handleSaveSRS}
-                editingReport={editingReport}
-            />
         </>
     );
 }
@@ -555,11 +514,11 @@ export default function StudentDashboard() {
 /* ─────── StatCard ─────── */
 function StatCard({ icon, color, label, value }) {
     return (
-        <div className={`bg-[#0D0D0E] rounded-2xl p-5 border border-zinc-800/80 shadow-sm flex items-center gap-4 hover:border-zinc-700 transition-all group cursor-default`}>
+        <div className={`bg-white shadow-sm border-gray-100 rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 hover:border-zinc-700 transition-all group cursor-default`}>
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center shrink-0 border border-current/10`}>{icon}</div>
             <div>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{label}</p>
-                <h3 className="text-xl font-bold text-white transition-all group-hover:scale-105 origin-left">{value}</h3>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{label}</p>
+                <h3 className="text-xl font-bold text-gray-800 transition-all group-hover:scale-105 origin-left">{value}</h3>
             </div>
         </div>
     );

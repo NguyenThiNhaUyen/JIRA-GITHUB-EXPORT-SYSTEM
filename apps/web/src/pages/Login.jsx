@@ -30,9 +30,9 @@ export default function Login() {
     setError("");
     // Tài khoản mặc định BE seed — xem Program.cs
     const QUICK_CREDS = {
-      admin: { email: "admin@pbl.com", password: "AdminPassword123!" },
-      lecturer: { email: "lecturer1@pbl.com", password: "LecPassword123!" },
-      student: { email: "student1@pbl.com", password: "StuPassword123!" },
+      admin: { email: "admin@truonghoc.com", password: "Admin@123" },
+      lecturer: { email: "gv@fpt.edu.vn", password: "Lecturer@123" },
+      student: { email: "sv@fpt.edu.vn", password: "Student@123" },
     };
     const creds = QUICK_CREDS[role];
     const result = await login(creds.email, creds.password);
@@ -104,7 +104,7 @@ export default function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                   </button>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("admin")}
                   disabled={loading}
-                  title="Admin — admin@pbl.com"
+                  title="Admin — admin@truonghoc.com"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <Shield size={18} />
@@ -179,7 +179,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("lecturer")}
                   disabled={loading}
-                  title="Giảng viên — lecturer1@pbl.com"
+                  title="Giảng viên — gv@fpt.edu.vn"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <BookOpen size={18} />
@@ -188,7 +188,7 @@ export default function Login() {
                   type="button"
                   onClick={() => quickLogin("student")}
                   disabled={loading}
-                  title="Sinh viên — student1@pbl.com"
+                  title="Sinh viên — sv@fpt.edu.vn"
                   className="w-12 h-12 rounded-full bg-white border border-teal-100 flex items-center justify-center text-teal-700 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-200 hover:shadow-md transition-all"
                 >
                   <GraduationCap size={18} />

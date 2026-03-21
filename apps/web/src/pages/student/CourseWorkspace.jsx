@@ -12,10 +12,11 @@ import {
 
 import { useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
 import { useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
+import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
 
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
 
-export default function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onBack, onSubmitLinks, onUploadSRS, onEditSRS, onDeleteSRS }) {
+export default function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onBack, onSubmitLinks, onDeleteSRS }) {
     const [githubInput, setGithubInput] = useState(group.integration?.githubUrl || "");
     const [jiraInput, setJiraInput] = useState(group.integration?.jiraUrl || "");
     const [topicInput, setTopicInput] = useState(group.topic || "");
@@ -41,6 +42,30 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
 
     const { data: enrolledData = { items: [] }, isFetching: isEnrolledFetching } = useGetEnrolledStudents(course?.id, { pageSize: 500 });
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(group?.id);
+
+    // Auto-generate SRS Hook
+    const { mutate: generateSrsMutate, isPending: isGenerating } = useGenerateSrs();
+
+    // 1-week cooldown logic
+    const lastSrs = srsReports?.slice().sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
+    const isWithinWeek = lastSrs ? (new Date() - new Date(lastSrs.submittedAt)) / (1000 * 60 * 60 * 24) < 7 : false;
+
+    const handleAutoGenerateSRS = () => {
+        if (!bothApproved) {
+            showError("Bạn cần liên kết GitHub & Jira và được giảng viên duyệt trước khi tạo SRS.");
+            return;
+        }
+        if (isWithinWeek) {
+            showError("Theo quy định, bạn chỉ được hệ thống hỗ trợ xuất báo cáo định kỳ 1 lần mỗi tuần.");
+            return;
+        }
+        generateSrsMutate({ projectId: group.id, format: "PDF" }, {
+            onSuccess: () => {
+                success("Đã ra lệnh cho hệ thống tự động cào dữ liệu tạo SRS! Vui lòng chờ cập nhật (F5).");
+            },
+            onError: (err) => showError(err?.message || "Không thể tạo báo cáo SRS")
+        });
+    };
 
     // Invite students functionality
     const handleOpenInvite = () => {
@@ -336,8 +361,13 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                     <CardTitle className="text-base font-semibold text-gray-800">SRS Reports</CardTitle>
                                 </div>
                                 {isLeader && (
-                                    <button onClick={onUploadSRS} className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-xl transition-colors">
-                                        + Nộp SRS
+                                    <button 
+                                        onClick={handleAutoGenerateSRS} 
+                                        disabled={isGenerating || isWithinWeek}
+                                        title={isWithinWeek ? "Chỉ được xuất báo cáo SRS 1 lần/tuần." : ""}
+                                        className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isGenerating ? "Đang xuất..." : "+ Tự động xuất SRS"}
                                     </button>
                                 )}
                             </div>
@@ -346,14 +376,22 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             {!isLeader && (
                                 <div className="flex items-start gap-2 mx-5 mt-3 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-xl">
                                     <AlertTriangle size={12} className="shrink-0 mt-0.5 text-amber-500" />
-                                    Chỉ Team Leader mới được upload/xóa SRS.
+                                    Chỉ Team Leader mới được thao tác quản lý SRS.
                                 </div>
                             )}
                             {srsReports.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                                     <BookOpen size={24} className="text-gray-300" />
                                     <p className="text-sm text-gray-400">Chưa có SRS nào</p>
-                                    {isLeader && <button onClick={onUploadSRS} className="text-xs font-semibold text-teal-700 hover:underline mt-1">Nộp SRS đầu tiên</button>}
+                                    {isLeader && (
+                                        <button 
+                                            onClick={handleAutoGenerateSRS} 
+                                            disabled={isGenerating || isWithinWeek}
+                                            className="text-xs font-semibold text-teal-700 hover:underline mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isGenerating ? "Hệ thống đang chạy..." : "Xuất bản SRS đầu tiên (Tự động)"}
+                                        </button>
+                                    )}
                                 </div>
                             ) : srsReports.map(rpt => (
                                 <div key={rpt.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
@@ -368,9 +406,6 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                     </div>
                                     {isLeader && (
                                         <div className="flex items-center gap-1.5 shrink-0">
-                                            {rpt.status === "DRAFT" && (
-                                                <button onClick={() => onEditSRS(rpt)} className="text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-2.5 py-1 rounded-lg transition-colors">Sửa</button>
-                                            )}
                                             <button onClick={() => onDeleteSRS(rpt.id)} className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-2.5 py-1 rounded-lg transition-colors">Xóa</button>
                                         </div>
                                     )}
