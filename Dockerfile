@@ -26,4 +26,5 @@ RUN dotnet publish "IntegrationService.csproj" -c Release -o /app/publish /p:Use
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "JiraGithubExport.IntegrationService.dll"]
+ENTRYPOINT ["dotnet", "IntegrationService.dll"]
+
