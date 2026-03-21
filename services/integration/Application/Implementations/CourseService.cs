@@ -137,13 +137,20 @@ public class CourseService : ICourseService
 
         var response = _mapper.Map<CourseDetailResponse>(course);
         
-        // Manual mapping for groups with clear status
+        // Manual mapping for groups with clear status and team members
         response.Groups = (course.projects ?? new List<project>()).Select(p => new CourseGroupInfo
         {
             Id = p.id,
             Name = p.name,
             GithubStatus = p.project_integration?.approval_status ?? "NONE",
-            JiraStatus = p.project_integration?.approval_status ?? "NONE"
+            JiraStatus = p.project_integration?.approval_status ?? "NONE",
+            Topic = p.description,
+            Team = p.team_members.Select(tm => new EnrollmentInfo
+            {
+                UserId = tm.student_user_id,
+                FullName = tm.student_user?.user?.full_name ?? "Unknown",
+                StudentCode = tm.student_user?.student_code ?? "N/A"
+            }).ToList()
         }).ToList();
 
         return response;

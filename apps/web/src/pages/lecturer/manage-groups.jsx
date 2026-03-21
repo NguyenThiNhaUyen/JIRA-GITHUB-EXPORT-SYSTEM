@@ -86,17 +86,20 @@ export default function ManageGroups() {
     };
 
     const handleUpdateGroupTopic = async (groupId, newTopic) => {
+        const currentGroup = groups.find(g => g.id === groupId);
         try {
             await updateProjectMutation.mutateAsync({
                 id: groupId,
-                body: { description: newTopic }
+                body: { 
+                    name: currentGroup?.name || `Nhóm ${groupId}`,
+                    description: newTopic 
+                }
             });
             success("Đã cập nhật đề tài");
         } catch (err) {
             error("Không thể cập nhật đề tài");
         }
     };
-
     const handleRemoveStudentFromGroup = async (groupId, studentId) => {
         try {
             await removeTeamMemberMutation.mutateAsync({ projectId: groupId, studentId });

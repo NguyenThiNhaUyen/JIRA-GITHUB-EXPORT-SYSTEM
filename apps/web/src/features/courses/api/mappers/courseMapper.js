@@ -61,7 +61,12 @@ export function mapCourse(beCourse) {
             githubStatus: g.githubStatus || g.GithubStatus || "NONE",
             jiraStatus: g.jiraStatus || g.JiraStatus || "NONE",
             topic: g.topic || g.Topic || "",
-            integration: g.integration || g.Integration || null
+            integration: g.integration || g.Integration || null,
+            team: (g.team || g.Team || []).map(tm => ({
+                studentId: String(tm.userId || tm.UserId || ""),
+                studentName: tm.fullName || tm.FullName || "",
+                studentCode: tm.studentCode || tm.StudentCode || ""
+            }))
         })),
         enrollments: (beCourse.enrollments || beCourse.Enrollments || []).map(e => ({
             userId: String(e.userId || e.UserId || ""),

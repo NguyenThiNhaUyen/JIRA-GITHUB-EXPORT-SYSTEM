@@ -1,36 +1,29 @@
+# Root Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy the solution file and project files first to cache restore
-COPY ["JiraGithubExportSystem.sln", "./"]
+# Copy các project files để restore dependencies trước
 COPY ["services/integration/IntegrationService.csproj", "services/integration/"]
+COPY ["packages/shared/Shared.csproj", "packages/shared/"]
 COPY ["services/jira-service/JiraService.csproj", "services/jira-service/"]
 COPY ["services/github-service/GithubService.csproj", "services/github-service/"]
-COPY ["packages/shared/Shared.csproj", "packages/shared/"]
-COPY ["tests/IntegrationService.Tests/IntegrationService.Tests.csproj", "tests/IntegrationService.Tests/"]
-COPY ["tests/Shared.Tests/Shared.Tests.csproj", "tests/Shared.Tests/"]
 
-# Restore dependencies
-RUN dotnet restore "JiraGithubExportSystem.sln"
+RUN dotnet restore "services/integration/IntegrationService.csproj"
 
-# Copy the rest of the source code
+# Copy toàn bộ code
 COPY . .
-
-# Build and Publish IntegrationService
 WORKDIR "/src/services/integration"
+RUN dotnet build "IntegrationService.csproj" -c Release -o /app/build
+
+FROM build AS publish
 RUN dotnet publish "IntegrationService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Generate runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM base AS final
 WORKDIR /app
-COPY --from=build /app/publish .
-
-# Environment variables
-# DO NOT set ASPNETCORE_URLS here - let Program.cs handle port binding via PORT env var from Render
-ENV ASPNETCORE_ENVIRONMENT=Production
-
-# Expose port (Render assigns PORT dynamically, default 10000/8080)
-EXPOSE 10000
-
-# Run the app
-ENTRYPOINT ["dotnet", "IntegrationService.dll"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "JiraGithubExport.IntegrationService.dll"]
