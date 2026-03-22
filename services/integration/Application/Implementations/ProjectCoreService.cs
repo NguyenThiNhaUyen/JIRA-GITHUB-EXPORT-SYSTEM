@@ -57,19 +57,37 @@ public class ProjectCoreService : IProjectCoreService
             throw new BusinessException("Project with this name already exists in the course");
         }
 
-        var studentUser = await _unitOfWork.Students.FirstOrDefaultAsync(su => su.user_id == currentUserId);
-        if (studentUser == null)
+        var user = await _unitOfWork.Users.Query()
+            .Include(u => u.roles)
+            .Include(u => u.student)
+            .FirstOrDefaultAsync(u => u.id == currentUserId);
+
+        if (user == null) throw new NotFoundException("User not found");
+
+        var isStudent = user.roles.Any(r => r.role_name == "STUDENT") || user.student != null;
+        var isAdminOrLecturer = user.roles.Any(r => r.role_name == "ADMIN" || r.role_name == "LECTURER");
+
+        if (!isStudent && !isAdminOrLecturer)
         {
-            throw new BusinessException("Only enrolled students can create a group");
+            throw new BusinessException("You do not have permission to create a group");
         }
 
-        // Check enrollment
-        var isEnrolled = await _unitOfWork.CourseEnrollments.Query()
-            .AnyAsync(e => e.student_user_id == studentUser.user_id && e.course_id == courseId && e.status == "ENROLLED");
-        
-        if (!isEnrolled)
+        if (isStudent)
         {
-            throw new BusinessException("You must be enrolled in this course to create a group");
+            var studentUser = user.student;
+            if (studentUser == null)
+            {
+                throw new BusinessException("Only enrolled students can create a group");
+            }
+
+            // Check enrollment
+            var isEnrolled = await _unitOfWork.CourseEnrollments.Query()
+                .AnyAsync(e => e.student_user_id == studentUser.user_id && e.course_id == courseId && e.status == "ENROLLED");
+            
+            if (!isEnrolled)
+            {
+                throw new BusinessException("You must be enrolled in this course to create a group");
+            }
         }
 
         var project = new project
@@ -84,16 +102,20 @@ public class ProjectCoreService : IProjectCoreService
 
         _unitOfWork.Projects.Add(project);
 
-        var teamMember = new team_member
+        // Only add as leader if a STUDENT is self-creating
+        if (isStudent && user.student != null)
         {
-            project = project,
-            student_user_id = studentUser.user_id,
-            team_role = "LEADER",
-            participation_status = "ACTIVE",
-            joined_at = DateTime.UtcNow,
-            responsibility = "Quản lý nhóm"
-        };
-        _unitOfWork.TeamMembers.Add(teamMember);
+            var teamMember = new team_member
+            {
+                project = project,
+                student_user_id = user.student.user_id,
+                team_role = "LEADER",
+                participation_status = "ACTIVE",
+                joined_at = DateTime.UtcNow,
+                responsibility = "Quản lý nhóm"
+            };
+            _unitOfWork.TeamMembers.Add(teamMember);
+        }
 
         await _unitOfWork.SaveChangesAsync();
 
