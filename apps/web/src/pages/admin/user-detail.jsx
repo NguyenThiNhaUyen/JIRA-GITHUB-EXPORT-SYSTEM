@@ -66,7 +66,7 @@ export default function UserDetail() {
             <div className="flex flex-col items-center justify-center py-32 gap-4">
                 <User size={48} className="text-gray-300" />
                 <p className="text-gray-500 font-medium">Không tìm thấy người dùng</p>
-                <Button variant="outline" onClick={() => navigate("/admin/users")} className="rounded-xl">
+                <Button variant="outline" onClick={() => navigate(-1)} className="rounded-xl">
                     ← Quay lại
                 </Button>
             </div>
@@ -112,12 +112,12 @@ export default function UserDetail() {
             <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                 <span
                     className="text-teal-700 font-semibold cursor-pointer hover:underline"
-                    onClick={() => navigate("/admin")}
+                    onClick={() => navigate(-2)}
                 >Admin</span>
                 <ChevronRight size={12} />
                 <span
                     className="text-teal-600 cursor-pointer hover:underline"
-                    onClick={() => navigate("/admin/users")}
+                    onClick={() => navigate(-1)}
                 >Quản lý Tài khoản</span>
                 <ChevronRight size={12} />
                 <span className="text-gray-800 font-semibold">{user.name}</span>

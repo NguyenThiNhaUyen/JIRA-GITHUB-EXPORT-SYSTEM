@@ -20,6 +20,7 @@ import { useToast } from '../../components/ui/toast.jsx';
 import { useGetCommitTrends, useGetInactiveTeams, useGetIntegrationStats } from '../../features/admin/hooks/useAnalytics.js';
 
 export default function AdminReports() {
+  const navigate = useNavigate();
   const { success, error } = useToast();
   // Filters state
   const [selectedSemester, setSelectedSemester] = useState('');

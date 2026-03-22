@@ -174,7 +174,7 @@ export default function GroupDetail() {
                 <div className="space-y-2 min-w-0">
                     <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                         <button
-                            onClick={() => navigate("/lecturer")}
+                            onClick={() => navigate(-2)}
                             className="text-teal-700 font-semibold hover:underline"
                         >Giảng viên</button>
                         <ChevronRight size={12} />

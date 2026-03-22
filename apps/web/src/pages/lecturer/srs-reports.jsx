@@ -102,7 +102,6 @@ export default function SrsReports() {
             loadSrsData(selectedProject);
         } catch (err) {
             showError(err.message || 'Cập nhật trạng thái SRS thất bại');
-            console.error(err);
         }
     };
 
@@ -116,7 +115,6 @@ export default function SrsReports() {
             loadSrsData(selectedProject);
         } catch (err) {
             showError(err.message || 'Lưu nhận xét thất bại');
-            console.error(err);
         }
     };
 
