@@ -50,6 +50,8 @@ export function TopHeader() {
 
     const getPageTitle = () => {
         const path = location.pathname;
+        // Admin pages
+        if (path.includes("/admin/users")) return "Quản lý Tài khoản";
         if (path.includes("/admin/courses")) return "Quản lý Lớp học";
         if (path.includes("/admin/semesters")) return "Quản lý Học kỳ";
         if (path.includes("/admin/subjects")) return "Quản lý Môn học";
@@ -59,13 +61,22 @@ export function TopHeader() {
         // Lecturer pages
         if (path.includes("/lecturer/group")) return "Chi tiết Nhóm";
         if (path.includes("/lecturer/course")) return "Quản lý Nhóm";
+        if (path.includes("/lecturer/reports")) return "Báo cáo & Export";
+        if (path.includes("/lecturer/contributions")) return "Theo dõi Đóng góp";
+        if (path.includes("/lecturer/alerts")) return "Cảnh báo";
+        if (path.includes("/lecturer/srs-reports")) return "SRS Reports";
+        if (path.includes("/lecturer/groups")) return "Nhóm & Dự án";
         if (path === "/lecturer") return "Tổng quan Giảng viên";
 
-        return "Dashboard";
+        // Student pages
+        if (path.includes("/student/project")) return "Chi tiết Dự án";
+        if (path.includes("/student/courses")) return "Lớp học của tôi";
+        if (path === "/student") return "Tổng quan Sinh viên";
+
+        return "Tổng quan";
     };
 
-    const isRootPath = location.pathname === "/admin" || location.pathname === "/lecturer";
-    const backPath = location.pathname.startsWith("/admin") ? "/admin" : location.pathname.startsWith("/lecturer") ? "/lecturer" : "/";
+    const isRootPath = location.pathname === "/admin" || location.pathname === "/lecturer" || location.pathname === "/student";
 
     const pendingCount = (isStudent ? invitations.length : 0) + notifications.length;
 
@@ -82,7 +93,7 @@ export function TopHeader() {
             <div className="flex items-center gap-4">
                 {!isRootPath && (
                     <button
-                        onClick={() => navigate(backPath)}
+                    onClick={() => navigate(-1)}
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 mr-2"
                         title="Trở về Tổng quan"
                     >
