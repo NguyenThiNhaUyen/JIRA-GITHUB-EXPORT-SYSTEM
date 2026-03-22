@@ -30,23 +30,38 @@ export function unwrap(apiResponse) {
 }
 
 /**
- * Lấy message lỗi từ ApiResponse
+ * Lấy message lỗi từ ApiResponse (Bóc tách mảng BUG-61)
  * @param {object} apiResponse
  * @returns {string}
  */
 export function unwrapError(apiResponse) {
-    return (
-        apiResponse?.message ??
-        apiResponse?.Message ??
-        "Đã xảy ra lỗi"
-    );
+    if (!apiResponse) return "Đã xảy ra lỗi kết nối";
+
+    // 1. Check message (Priority)
+    const msg = (apiResponse.message ?? apiResponse.Message);
+    if (msg) return msg;
+
+    // 2. Check errors array (FluentValidation / Identity style)
+    const errors = (apiResponse.errors ?? apiResponse.Errors);
+    if (Array.isArray(errors) && errors.length > 0) {
+        return errors.join(" | ");
+    }
+    
+    // 3. Fallback
+    return "Đã xảy ra lỗi không xác định";
 }
 
 /**
- * Kiểm tra request có thành công không
+ * Kiểm tra request có thành công không (DURABILITY BUG-62)
  * @param {object} apiResponse
  * @returns {boolean}
  */
 export function isSuccess(apiResponse) {
-    return apiResponse?.success === true || apiResponse?.Success === true;
+    if (!apiResponse) return false;
+    // Thành công nếu explicit success=true HOẶC không có lỗi (204 No Content style)
+    return (
+        apiResponse.success === true || 
+        apiResponse.Success === true || 
+        (apiResponse.success === undefined && apiResponse.Success === undefined && !apiResponse.errors && !apiResponse.Errors)
+    );
 }

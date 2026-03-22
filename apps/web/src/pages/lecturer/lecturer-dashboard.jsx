@@ -40,7 +40,7 @@ export default function LecturerDashboard() {
   const selectedSubjectId = selectedSubject ? parseInt(selectedSubject) : null;
   const selectedCourseId = selectedCourse ? parseInt(selectedCourse) : null;
 
-  const { data: subjectsData = { items: [] } } = useGetSubjects();
+  const { data: subjects = [] } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
   const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourseId);
   const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourseId);
@@ -67,7 +67,6 @@ export default function LecturerDashboard() {
   const rejectIntMutation = useRejectIntegration();
   const resolveAlertMutation = useResolveAlert();
 
-  const subjects = subjectsData.items || [];
   const courses = (coursesData.items || []).filter(c => !selectedSubjectId || c.subjectId === selectedSubjectId);
   const groups = projectsData?.items || [];
 
@@ -114,12 +113,17 @@ export default function LecturerDashboard() {
     jira: groups.filter(g => g.integration?.jiraStatus === "APPROVED").length,
     alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
   };
-  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => ({
-    id: a.id,
-    name: a.groupName,
-    msg: a.message,
-    severity: a.severity.toLowerCase() === "high" ? "error" : "warning"
-  }));
+  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => {
+    // BUG-43: Standardized severity mapping (CRITICAL, HIGH, URGENT -> error)
+    const sev = a.severity?.toUpperCase() || "";
+    const isCritical = ["HIGH", "CRITICAL", "URGENT"].includes(sev);
+    return {
+      id: a.id,
+      name: a.groupName,
+      msg: a.message,
+      severity: isCritical ? "error" : "warning"
+    };
+  });
   const currentSubject = subjects.find(s => s.id === selectedSubjectId);
   const currentCourse = courses.find(c => c.id === selectedCourseId);
 
@@ -127,8 +131,8 @@ export default function LecturerDashboard() {
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
   );
 
-  // Build RadarChart data from real analytics API (useGetGroupRadarMetrics hoặc fallback từ metricsData)
-  const radarData = (metricsData || []).map(group => {
+  // Build RadarChart data from real analytics API (Safe Mapping BUG-46)
+  const radarData = Array.isArray(metricsData) ? metricsData.map(group => {
     return {
       groupName: group.projectName ?? group.groupName ?? "",
       commits: group.commitsCount ?? group.commits ?? 0,
@@ -137,7 +141,7 @@ export default function LecturerDashboard() {
       githubLinked: group.isGithubLinked ? 1 : (group.githubLinked ?? 0),
       jiraLinked: group.isJiraLinked ? 1 : (group.jiraLinked ?? 0),
     };
-  });
+  }) : [];
 
 
   return (
@@ -171,7 +175,14 @@ export default function LecturerDashboard() {
         </CardHeader>
         <CardContent className="pt-5 pb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <SelectField label="Môn học" value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)}>
+            <SelectField
+              label="Môn học"
+              value={selectedSubject}
+              onChange={e => {
+                setSelectedSubject(e.target.value);
+                setSelectedCourse(""); // BUG-41: Reset course when subject changes
+              }}
+            >
               <option value="">— Chọn môn học —</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.code} – {s.name}</option>)}
             </SelectField>
@@ -393,8 +404,15 @@ export default function LecturerDashboard() {
       )}
 
 
-      {/* ── E. RadarChart — So sánh Nhóm ──────── */}
-      {selectedCourse && radarData.length > 0 && (
+      {/* ── E. RadarChart — So sánh Nhóm (Loading State BUG-45) ──────── */}
+      {selectedCourse && (loadingMetrics ? (
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardContent className="py-20 flex flex-col items-center justify-center gap-4">
+             <div className="w-12 h-12 rounded-full border-4 border-teal-100 border-t-teal-500 animate-spin" />
+             <p className="text-xs text-gray-400 animate-pulse">Đang phân tích dữ liệu so sánh...</p>
+          </CardContent>
+        </Card>
+      ) : radarData.length > 0 && (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
           <CardHeader className="border-b border-gray-50 pb-4">
             <div className="flex items-center gap-2">
@@ -416,7 +434,7 @@ export default function LecturerDashboard() {
             <GroupRadarChart data={radarData} />
           </CardContent>
         </Card>
-      )}
+      ))}
 
       {/* Empty state when no course selected */}
       {!selectedCourse && (

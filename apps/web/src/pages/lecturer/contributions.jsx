@@ -15,13 +15,7 @@ export default function Contributions() {
     const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const courses = coursesData.items || [];
 
-    useEffect(() => {
-        if (courses.length > 0 && !selectedCourse) {
-            setSelectedCourse(String(courses[0].id));
-        }
-    }, [courses]);
-
-    // Fetch projects thuộc lớp đã chọn (không dùng course.groups vì list API không include groups)
+    // Fetch projects thuộc lớp đã chọn
     const { data: courseProjectsData = { items: [] }, isLoading: loadingProjects } = useGetProjects(
         selectedCourse ? { courseId: selectedCourse, pageSize: 100 } : null
     );
@@ -32,31 +26,21 @@ export default function Contributions() {
         setSelectedProject("");
     }, [selectedCourse]);
 
-    // Khi nhóm load xong, tự chọn nhóm đầu tiên
-    useEffect(() => {
-        if (groups.length > 0 && !selectedProject) {
-            setSelectedProject(String(groups[0].id));
-        }
-    }, [groups]);
-
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(selectedProject);
     
     const weeklyCommits = metrics?.weeklyCommits || new Array(12).fill(0);
     const commitsByStudent = metrics?.contributions || [];
 
-
     const maxWeekly = Math.max(...weeklyCommits, 1);
-
     const sortedStudents = [...commitsByStudent].sort((a, b) => b.commits - a.commits);
 
-    // Group-level stats (Với API hiện tại, thông tin nhóm được gộp chung trong project metrics)
+    // Group-level stats
     const totalCommits = sortedStudents.reduce((s, st) => s + (st.commits || 0), 0);
     const activeStudents = sortedStudents.filter((s) => (s.commits || 0) > 0).length;
     const inactiveStudents = sortedStudents.filter((s) => (s.commits || 0) === 0).length;
 
     return (
         <div className="space-y-6">
-            {/* Breadcrumb ... remains same ... */}
             <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                 <span className="text-teal-700 font-semibold">Giảng viên</span>
                 <ChevronRight size={12} />
@@ -68,50 +52,52 @@ export default function Contributions() {
                     <h2 className="text-2xl font-bold tracking-tight text-gray-800">Theo dõi đóng góp</h2>
                     <p className="text-sm text-gray-500 mt-0.5">Commit, hoạt động theo nhóm và cá nhân</p>
                 </div>
-                {courses.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">Khối lớp:</span>
-                            <select
-                                value={selectedCourse}
-                                onChange={(e) => {
-                                    setSelectedCourse(e.target.value);
-                                    setSelectedProject(""); 
-                                }}
-                                className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none text-xs font-semibold"
-                            >
-                                {courses.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.code}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {groups.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-400">Nhóm:</span>
-                                <select
-                                    value={selectedProject}
-                                    onChange={(e) => setSelectedProject(e.target.value)}
-                                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none text-xs font-semibold"
-                                >
-                                    {groups.map((g) => (
-                                        <option key={g.id} value={g.id}>{g.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">Khối lớp:</span>
+                        <select
+                            value={selectedCourse}
+                            onChange={(e) => setSelectedCourse(e.target.value)}
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none text-xs font-semibold"
+                        >
+                            <option value="">-- Chọn Khối lớp --</option>
+                            {courses.map((c) => (
+                                <option key={c.id} value={c.id}>{c.code}</option>
+                            ))}
+                        </select>
                     </div>
-                )}
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">Nhóm:</span>
+                        <select
+                            value={selectedProject}
+                            onChange={(e) => setSelectedProject(e.target.value)}
+                            disabled={!selectedCourse}
+                            className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg focus:outline-none text-xs font-semibold disabled:opacity-50"
+                        >
+                            <option value="">-- Chọn Nhóm --</option>
+                            {groups.map((g) => (
+                                <option key={g.id} value={g.id}>{g.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            {loadingMetrics || loadingProjects ? (
+            {loadingProjects ? (
                 <div className="py-20 flex flex-col items-center gap-3">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
-                    <p className="text-sm text-gray-400">{loadingProjects ? "Đang tải danh sách nhóm..." : "Đang đồng bộ dữ liệu GitHub..."}</p>
+                    <p className="text-sm text-gray-400">Đang tải danh mục...</p>
                 </div>
             ) : !selectedProject ? (
-                <div className="py-20 text-center text-gray-400">
-                    <Activity size={40} className="mx-auto mb-3 opacity-20" />
-                    <p>Vui lòng chọn một dự án để xem báo cáo đóng góp</p>
+                <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-gray-300 rounded-[32px]">
+                    <Activity className="text-gray-300 mb-4" size={48} />
+                    <p className="text-sm text-gray-400 font-medium">Vui lòng chọn Khối lớp và Nhóm ở menu phía trên</p>
+                </div>
+            ) : loadingMetrics ? (
+                <div className="py-20 flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
+                    <p className="text-sm text-gray-400">Đang đồng bộ dữ liệu GitHub...</p>
                 </div>
             ) : (
                 <>

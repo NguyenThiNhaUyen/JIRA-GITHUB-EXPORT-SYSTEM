@@ -11,24 +11,49 @@ export default function MyReports() {
     const navigate = useNavigate();
     const { data: reports, isLoading, refetch, isFetching } = useGetMyReports();
 
-    const handleDownload = async (reportId) => {
+    const handleDownload = async (report) => {
+        // AUDITED: status field is lowercase per API response
+        if (report.status !== "COMPLETED") {
+            info("Báo cáo đang được xử lý, vui lòng thử lại.");
+            return;
+        }
+
+        // AUDITED: fileUrl field is lowercase per API response
+        const fileUrl = report.fileUrl ?? report.FileUrl;
+        if (fileUrl) {
+            // Direct download from fileUrl if available (most cases)
+            const fullUrl = fileUrl.startsWith("http")
+                ? fileUrl
+                : `${import.meta.env.VITE_API_URL ?? ""}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
+            const a = document.createElement("a");
+            a.href = fullUrl;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            if (report.fileName) a.download = report.fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            return;
+        }
+
+        // Fallback: call download-link API
         try {
             info("Đang lấy link tải...");
-            // Chúng ta call API lấy link thực tế
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/reports/${reportId}/download-link`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+            // AUDITED: use VITE_API_URL (not VITE_API_BASE_URL) and accessToken (not token)
+            const BASE = import.meta.env.VITE_API_URL ?? "";
+            const token = localStorage.getItem("accessToken") ?? sessionStorage.getItem("accessToken");
+            const res = await fetch(`${BASE}/api/reports/${report.id}/download-link`, {
+                headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-
-            if (data.data?.downloadUrl) {
-                window.open(data.data.downloadUrl, '_blank');
+            const dlUrl = data?.data?.downloadUrl ?? data?.downloadUrl;
+            if (dlUrl) {
+                window.open(dlUrl, "_blank");
             } else {
                 error("Báo cáo chưa sẵn sàng hoặc đã hết hạn.");
             }
         } catch (err) {
-            error("Lỗi khi lấy link tải: " + err.message);
+            error("Lỗi khi lấy link tải: " + (err?.message ?? "Không xác định"));
         }
     };
 
@@ -88,38 +113,42 @@ export default function MyReports() {
                                                 </div>
                                                 <div>
                                                     <div className="font-semibold text-gray-800">
-                                                        {report.reportName || `Báo cáo #${report.id}`}
+                                                        {/* AUDITED: field 'type' per API response */}
+                                                        {report.type ?? report.reportType ?? report.reportName ?? `Báo cáo #${report.id}`}
                                                     </div>
-                                                    <div className="text-[10px] text-gray-400 font-mono uppercase">
-                                                        {report.reportType}
+                                                    <div className="text-[10px] text-gray-400 font-mono">
+                                                        #{report.id}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="px-2 py-1 rounded-md bg-gray-100 text-gray-600 font-bold text-[10px] uppercase">
-                                                {report.format || 'PDF'}
+                                                {/* AUDITED: field 'format' per API response */}
+                                                {(report.format ?? report.Format ?? "PDF") === "DOCX" ? "Word" : (report.format ?? report.Format ?? "PDF")}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center text-gray-500">
                                             <div className="flex flex-col items-center">
                                                 <span className="flex items-center gap-1">
                                                     <Clock size={12} />
-                                                    {new Date(report.createdAt).toLocaleDateString('vi-VN')}
+                                                    {/* AUDITED: field 'createdAt' per API response */}
+                                                    {report.createdAt ? new Date(report.createdAt).toLocaleDateString("vi-VN") : "—"}
                                                 </span>
                                                 <span className="text-[10px]">
-                                                    {new Date(report.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                                    {report.createdAt ? new Date(report.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}
                                                 </span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex justify-center">
-                                                {report.status === 'COMPLETED' ? (
+                                                {/* AUDITED: field 'status' per API response */}
+                                                {(report.status ?? report.Status) === "COMPLETED" ? (
                                                     <span className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-full text-xs font-medium">
                                                         <CheckCircle size={14} />
                                                         Hoàn thành
                                                     </span>
-                                                ) : report.status === 'FAILED' ? (
+                                                ) : (report.status ?? report.Status) === "FAILED" ? (
                                                     <span className="flex items-center gap-1.5 text-red-600 bg-red-50 px-2.5 py-1 rounded-full text-xs font-medium">
                                                         <AlertCircle size={14} />
                                                         Thất bại
@@ -136,8 +165,8 @@ export default function MyReports() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                disabled={report.status !== 'COMPLETED'}
-                                                onClick={() => handleDownload(report.id)}
+                                                disabled={(report.status ?? report.Status) !== "COMPLETED"}
+                                                onClick={() => handleDownload(report)}
                                                 className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-xl font-bold"
                                             >
                                                 <Download size={16} className="mr-2" />

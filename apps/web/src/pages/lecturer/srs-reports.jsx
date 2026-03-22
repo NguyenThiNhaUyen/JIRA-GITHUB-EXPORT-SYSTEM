@@ -20,19 +20,30 @@ import { getProjectSrs } from "../../features/srs/api/srsApi.js";
 export default function SrsReports() {
     const { success, error: showError } = useToast();
     const { user } = useAuth();
+    const [selectedCourse, setSelectedCourse] = useState("");
+    const [selectedProject, setSelectedProject] = useState("");
+    
     const [selected, setSelected] = useState(null);
     const [filter, setFilter] = useState("all");
     const [srsList, setSrsList] = useState([]);
+    const [loadingSrs, setLoadingSrs] = useState(false);
     const [feedbackText, setFeedbackText] = useState("");
 
     const { data: coursesData } = useGetCourses({ pageSize: 100 });
-    const { data: projectsData } = useGetProjects({ pageSize: 100 });
+    const { data: projectsData = { items: [] } } = useGetProjects(
+        selectedCourse ? { courseId: selectedCourse, pageSize: 100 } : null
+    );
 
     useEffect(() => {
-        if (coursesData?.items && projectsData?.items) {
-            loadAllSrsData(projectsData.items, coursesData.items);
+        let isCancelled = false;
+        if (selectedProject) {
+             // Pass isCancelled check to avoid setting state if unmounted or project changed
+             loadSrsData(selectedProject, isCancelled);
+        } else {
+            setSrsList([]);
         }
-    }, [coursesData, projectsData]);
+        return () => { isCancelled = true; };
+    }, [selectedProject]);
 
     useEffect(() => {
         if (selected) {
@@ -41,42 +52,37 @@ export default function SrsReports() {
         }
     }, [selected, srsList]);
 
-    const loadAllSrsData = async (projects, courses) => {
-        if (!user) return;
+    const loadSrsData = async (projectId, isCancelled = false) => {
+        if (!user || !projectId) return;
+        setLoadingSrs(true);
         try {
-            // Lấy toàn bộ SRS cho các projects của lecturer (parallel requests)
-            const srsPromises = projects.map(p => getProjectSrs(p.id));
-            const results = await Promise.all(srsPromises);
+            const results = await getProjectSrs(projectId);
+            if (isCancelled) return; // BUG-51: Race condition guard
+            
+            const project = projectsData.items.find(p => p.id === parseInt(projectId));
+            const course = coursesData?.items.find(c => c.id === project?.courseId);
 
-            const lecturerSrs = [];
+            const mappedSrs = results.map(srs => ({
+                id: srs.id,
+                group: project?.name || 'Nhóm',
+                project: course?.code || `Project #${projectId}`,
+                version: srs.version,
+                status: srs.status,
+                date: srs.submittedAt,
+                reviewer: srs.reviewerName || '—',
+                feedback: srs.feedback || '',
+                fileUrl: srs.fileUrl,
+                rawSrs: srs
+            }));
 
-            // Map the data
-            for (let i = 0; i < projects.length; i++) {
-                const project = projects[i];
-                const course = courses.find(c => c.id === project.courseId);
-                const srsOfProject = results[i]; // already mapped by getProjectSrs
-
-                for (const srs of srsOfProject) {
-                    lecturerSrs.push({
-                        id: srs.id,
-                        group: project.name, // Project name is usually group name in this system
-                        project: course?.code || `C-${project.courseId}`,
-                        version: srs.version,
-                        status: srs.status,
-                        date: srs.submittedAt,
-                        reviewer: srs.reviewerName || '—',
-                        feedback: srs.feedback || '',
-                        fileUrl: srs.fileUrl,
-                        rawSrs: srs // hold full original object
-                    });
-                }
-            }
-
-            // sort by submitted at desc
-            lecturerSrs.sort((a, b) => new Date(b.date) - new Date(a.date));
-            setSrsList(lecturerSrs);
+            mappedSrs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setSrsList(mappedSrs);
         } catch (err) {
+            if (isCancelled) return;
             console.error("Failed to fetch SRS", err);
+            setSrsList([]);
+        } finally {
+            if (!isCancelled) setLoadingSrs(false);
         }
     };
 
@@ -93,7 +99,7 @@ export default function SrsReports() {
                 feedback: feedbackText
             });
             success(`Đã chuyển trạng thái SRS sang ${newStatus}`);
-            loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
+            loadSrsData(selectedProject);
         } catch (err) {
             showError(err.message || 'Cập nhật trạng thái SRS thất bại');
             console.error(err);
@@ -107,7 +113,7 @@ export default function SrsReports() {
                 feedback: feedbackText
             });
             success("Đã ghi nhận nhận xét");
-            loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
+            loadSrsData(selectedProject);
         } catch (err) {
             showError(err.message || 'Lưu nhận xét thất bại');
             console.error(err);
@@ -133,16 +139,46 @@ export default function SrsReports() {
                     <h2 className="text-2xl font-bold tracking-tight text-gray-800">SRS Reports</h2>
                     <p className="text-sm text-gray-500 mt-0.5">Tài liệu đặc tả yêu cầu phần mềm theo nhóm / project</p>
                 </div>
-                <button
-                    onClick={() => remindSrsMutation.mutate(undefined, {
-                        onSuccess: () => success('Đã gửi nhắc nhở SRS đến tất cả nhóm chưa nộp!'),
-                        onError: (err) => showError(err.message || 'Không thể gửi nhắc nhở'),
-                    })}
-                    disabled={remindSrsMutation.isPending}
-                    className="flex items-center gap-2 text-xs font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl px-4 py-2 transition-colors disabled:opacity-50"
-                >
-                    🔔 {remindSrsMutation.isPending ? 'Nhắn...': 'Nhắc nộp SRS (Overdue)'}
-                </button>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Lớp học</span>
+                        <select 
+                            value={selectedCourse}
+                            onChange={(e) => { setSelectedCourse(e.target.value); setSelectedProject(""); }}
+                            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[160px]"
+                        >
+                            <option value="">-- Chọn lớp --</option>
+                            {coursesData?.items?.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Nhóm</span>
+                        <select 
+                            value={selectedProject}
+                            onChange={(e) => setSelectedProject(e.target.value)}
+                            disabled={!selectedCourse}
+                            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[160px] disabled:opacity-50"
+                        >
+                            <option value="">-- Chọn nhóm --</option>
+                            {projectsData.items.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="pt-5">
+                        <button
+                            onClick={() => remindSrsMutation.mutate(undefined, {
+                                onSuccess: () => success('Đã gửi nhắc nhở SRS đến tất cả nhóm chưa nộp!'),
+                                onError: (err) => showError(err.message || 'Không thể gửi nhắc nhở'),
+                            })}
+                            disabled={remindSrsMutation.isPending}
+                            className="flex items-center gap-2 text-xs font-semibold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl px-4 py-2 h-9 transition-colors disabled:opacity-50"
+                        >
+                            🔔 {remindSrsMutation.isPending ? 'Nhắn...': 'Nhắc nộp'}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Stats */}
@@ -185,12 +221,34 @@ export default function SrsReports() {
                             <div className="col-span-4 text-right">Thao tác</div>
                         </div>
                         <CardContent className="p-0">
-                            {filtered.map((srs) => {
-                                const s = STATUS[srs.status];
+                             {loadingSrs ? (
+                                <div className="p-10 space-y-4">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="h-10 bg-gray-50 rounded-xl animate-pulse" />
+                                    ))}
+                                </div>
+                            ) : filtered.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-2">
+                                    <FileText size={28} className="text-gray-200" />
+                                    <p className="text-sm text-gray-400">Không có báo cáo nào</p>
+                                </div>
+                            ) : filtered.map((srs) => {
+                                // BUG-53: Safe status mapping with fallback
+                                const s = STATUS[srs.status] || { 
+                                    label: srs.status || 'UNKNOWN', 
+                                    cls: "bg-gray-50 text-gray-500 border-gray-100" 
+                                };
                                 return (
                                     <div
                                         key={srs.id}
-                                        onClick={() => setSelected(srs.id === selected ? null : srs.id)}
+                                        onClick={() => {
+                                            // BUG-54: Check for unsaved feedback (Stress Test Protection)
+                                            const originalFeedback = srsList.find(s => s.id === selected)?.feedback || "";
+                                            if (selected && selected !== srs.id && feedbackText !== originalFeedback) {
+                                                if (!window.confirm("Bạn có thay đổi nhận xét chưa lưu. Tiếp tục chuyển?")) return;
+                                            }
+                                            setSelected(srs.id === selected ? null : srs.id);
+                                        }}
                                         className={`grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/60 transition-colors last:border-0 cursor-pointer ${selected === srs.id ? "bg-teal-50/40" : ""}`}
                                     >
                                         <div className="col-span-4">

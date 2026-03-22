@@ -22,7 +22,7 @@ import {
 
 export default function ManageGroups() {
     const { courseId: paramId } = useParams();
-    const courseId = paramId || "1";
+    const courseId = paramId;
     const { success, error } = useToast();
 
     const [selectedStudents, setSelectedStudents] = useState([]);
@@ -175,6 +175,27 @@ export default function ManageGroups() {
             error("Không thể thêm học sinh");
         }
     };
+
+    if (!courseId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-4">
+                    <Users size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">Quản lý nhóm</h2>
+                <p className="text-sm text-gray-500 mt-2 max-w-sm">
+                    Vui lòng chọn lớp học từ menu "Lớp của tôi" hoặc trang Dashboard để bắt đầu quản lý nhóm và thành viên.
+                </p>
+                <Button 
+                    variant="outline" 
+                    className="mt-6 rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50"
+                    onClick={() => navigate("/lecturer")}
+                >
+                     Quay lại Dashboard
+                </Button>
+            </div>
+        );
+    }
 
     if (loadingCourse || loadingStudents) {
         return (

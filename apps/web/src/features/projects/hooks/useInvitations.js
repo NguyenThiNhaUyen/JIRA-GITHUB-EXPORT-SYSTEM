@@ -12,9 +12,14 @@ export const useGetMyPendingInvitations = (options = {}) => {
     return useQuery({
         queryKey: INVITATION_KEYS.myPending(),
         queryFn: async () => {
-            const res = await client.get("/invitations/my-pending");
-            const data = unwrap(res);
-            return data?.items || [];
+            try {
+                const res = await client.get("/invitations/my-pending");
+                const data = unwrap(res);
+                return data?.items || [];
+            } catch (err) {
+                console.error("Failed to fetch invitations (possibly 500):", err);
+                return []; // Silent fail for student dashboard
+            }
         },
         ...options
     });

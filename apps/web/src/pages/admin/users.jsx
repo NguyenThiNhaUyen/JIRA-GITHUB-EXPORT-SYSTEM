@@ -1,5 +1,4 @@
-// User Management — Admin Module
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
@@ -20,8 +19,8 @@ export default function UserManagement() {
     const { success, error } = useToast();
 
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [filterRole, setFilterRole] = useState("all");
-    const [users, setUsers] = useState([]);
     const [actionMenu, setActionMenu] = useState(null);
 
     const { data: adminsRaw = [], isLoading: load1 } = useGetUsers("ADMIN");
@@ -32,14 +31,22 @@ export default function UserManagement() {
     const statusMutation = useUpdateUserStatus();
     const passMutation = useResetUserPassword();
 
+    // BUG-47: Aggregate users reactively as they load (Parallel Loading)
+    const allUsers = useMemo(() => {
+        const admins = (adminsRaw || []).map(u => ({ ...u, role: "ADMIN" }));
+        const lects = (lectsRaw || []).map(u => ({ ...u, role: "LECTURER" }));
+        const students = (studentsRaw || []).map(u => ({ ...u, role: "STUDENT" }));
+        return [...admins, ...lects, ...students];
+    }, [adminsRaw, lectsRaw, studentsRaw]);
+
+    // BUG-48: Debounce search for 3000+ users (Stress Test Enhancement)
     useEffect(() => {
-        if (!load1 && !load2 && !load3) {
-            const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN" }));
-            const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER" }));
-            const students = studentsRaw.map(u => ({ ...u, role: "STUDENT" }));
-            setUsers([...admins, ...lects, ...students]);
-        }
-    }, [adminsRaw, lectsRaw, studentsRaw, load1, load2, load3]);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
 
     const handleChangeRole = async (userId, newRole) => {
         try {
@@ -72,15 +79,15 @@ export default function UserManagement() {
         }
     };
 
-    const filtered = users.filter(u => {
-        const matchSearch = !search ||
-            u.name?.toLowerCase().includes(search.toLowerCase()) ||
-            u.email?.toLowerCase().includes(search.toLowerCase());
+    const filtered = allUsers.filter(u => {
+        const matchSearch = !debouncedSearch ||
+            u.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            u.email?.toLowerCase().includes(debouncedSearch.toLowerCase());
         const matchRole = filterRole === "all" || u.role === filterRole;
         return matchSearch && matchRole;
     });
 
-    const countByRole = (role) => users.filter(u => u.role === role).length;
+    const countByRole = (role) => allUsers.filter(u => u.role === role).length;
 
     return (
         <div className="space-y-6" onClick={() => setActionMenu(null)}>
@@ -102,9 +109,9 @@ export default function UserManagement() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: "Tổng", value: users.length, color: "text-gray-700 bg-gray-50 border-gray-200" },
+                    { label: "Tổng", value: allUsers.length, color: "text-gray-700 bg-gray-50 border-gray-200" },
                     { label: "Admin", value: countByRole("ADMIN"), color: "text-purple-700 bg-purple-50 border-purple-100" },
                     { label: "Giảng viên", value: countByRole("LECTURER"), color: "text-teal-700 bg-teal-50 border-teal-100" },
                     { label: "Sinh viên", value: countByRole("STUDENT"), color: "text-blue-700 bg-blue-50 border-blue-100" },
@@ -146,8 +153,8 @@ export default function UserManagement() {
                 </CardContent>
             </Card>
 
-            {/* Users table */}
-            <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            {/* Users table (BUG-49: Removed overflow-hidden to prevent menu clipping) */}
+            <Card className="border border-gray-100 shadow-sm rounded-[24px] bg-white">
                 <div className="grid grid-cols-12 gap-3 px-6 py-3 bg-gray-50/60 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <div className="col-span-4">Người dùng</div>
                     <div className="col-span-3 hidden md:block">Email</div>
@@ -197,14 +204,19 @@ export default function UserManagement() {
                                             </span>
                                         </div>
 
-                                        {/* Status */}
+                                        {/* Status (BUG-50: Enhanced mapping) */}
                                         <div className="col-span-2 text-center">
-                                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${isActive
-                                                ? "bg-green-50 text-green-700"
-                                                : "bg-gray-100 text-gray-500"
+                                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                                u.status === 'ACTIVE' ? "bg-green-50 text-green-700" :
+                                                u.status === 'DISABLED' ? "bg-gray-100 text-gray-500" :
+                                                "bg-amber-50 text-amber-700"
                                                 }`}>
-                                                {isActive ? <CheckCircle size={9} /> : <XCircle size={9} />}
-                                                {isActive ? "Hoạt động" : "Vô hiệu hóa"}
+                                                {u.status === 'ACTIVE' ? <CheckCircle size={9} /> : 
+                                                 u.status === 'DISABLED' ? <XCircle size={9} /> : 
+                                                 <Activity size={9} />}
+                                                {u.status === 'ACTIVE' ? "Hoạt động" : 
+                                                 u.status === 'DISABLED' ? "Vô hiệu hóa" : 
+                                                 "Chờ xác minh"}
                                             </span>
                                         </div>
 

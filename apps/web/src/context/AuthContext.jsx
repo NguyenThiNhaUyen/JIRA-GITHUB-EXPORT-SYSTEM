@@ -1,5 +1,6 @@
 // AuthContext: Quản lý authentication state — Real API (ASP.NET BE)
 import { createContext, useContext, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query"; // BUG-63: Import query client
 import { loginWithCredentials, loginWithGoogle } from "../features/auth/api/authApi.js";
 
 /* eslint-disable react-refresh/only-export-components */
@@ -53,6 +54,7 @@ function restoreUserFromStorage() {
 }
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(restoreUserFromStorage);
   const [loading, setLoading] = useState(false);
 
@@ -127,6 +129,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    // BUG-63: Important - clear all cached data on logout for security & state consistency
+    queryClient.clear();
+
     setUser(null);
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");

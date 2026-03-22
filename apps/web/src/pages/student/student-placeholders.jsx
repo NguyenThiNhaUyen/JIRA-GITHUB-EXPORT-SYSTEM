@@ -10,6 +10,8 @@ import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
 import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 import { SRS_STATUS, ALERT_SEVERITY } from "../../shared/permissions.js";
 
+import { useQuery, useQueries } from "@tanstack/react-query";
+import { getProjectMetrics } from "../../features/projects/api/projectApi.js";
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
 
 /* ─── Shared Breadcrumb ─── */
@@ -30,11 +32,24 @@ export function StudentContributionPage() {
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
 
-    // Summary stats calculation (vẫn cần project metrics cho từng nhóm)
-    // Tạm thời hiển thị danh sách trước, metrics sẽ được fetch trong component con nếu cần
-    // hoặc fetch ở đây nếu số lượng nhóm ít.
-    const totalMyCommits = 0; // Sẽ được cập nhật từ metrics
-    const activeGroups = myGroups.length;
+    const metricQueries = useQueries({
+        queries: myGroups.map(g => ({
+            queryKey: ['projects', 'detail', g.id, 'metrics'],
+            queryFn: () => getProjectMetrics(g.id),
+            staleTime: 60000,
+        }))
+    });
+
+    const totalMyCommits = metricQueries.reduce((sum, q) => {
+        if (!q.data) return sum;
+        const myMetric = q.data.studentMetrics?.find(m => m.studentId === user?.id);
+        return sum + (myMetric?.commitCount || 0);
+    }, 0);
+
+    const activeGroups = myGroups.filter((_, i) => {
+        const q = metricQueries[i];
+        return q.data && q.data.totalCommits > 0;
+    }).length;
 
     if (loadingProjects) {
         return (

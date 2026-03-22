@@ -71,3 +71,15 @@ export async function getMyInvitations(params = {}) {
     const res = await client.get("/student/me/invitations", { params });
     return unwrap(res);
 }
+
+/** POST /api/invitations/{id}/accept — Chấp nhận lời mời */
+export async function acceptInvitation(invitationId) {
+    const res = await client.post(`/invitations/${invitationId}/accept`);
+    return unwrap(res);
+}
+
+/** POST /api/invitations/{id}/reject — Từ chối lời mời */
+export async function rejectInvitation(invitationId) {
+    const res = await client.post(`/invitations/${invitationId}/reject`);
+    return unwrap(res);
+}

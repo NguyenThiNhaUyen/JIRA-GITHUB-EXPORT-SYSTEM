@@ -81,7 +81,15 @@ export default function SemesterManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn xóa học kỳ này?")) {
+        const semesterCourses = getCoursesForSemester(id);
+        const semesterName = semesters.find(s => s.id === id)?.name || "học kỳ này";
+
+        if (semesterCourses.length > 0) {
+            showError(`Không thể xóa! Học kỳ "${semesterName}" đang có ${semesterCourses.length} lớp học đang hoạt động.`);
+            return;
+        }
+
+        if (window.confirm(`Bạn có chắc và muốn xóa "${semesterName}"? Dữ liệu này không thể khôi phục.`)) {
             try {
                 await deleteMutation.mutateAsync(id);
                 success("Xóa học kỳ thành công!");
@@ -93,6 +101,13 @@ export default function SemesterManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // BUG-55: Robust Date Validation (Stress Test Protection)
+        if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+            showError("Ngày kết thúc phải lớn hơn ngày bắt đầu");
+            return;
+        }
+
         const code = formData.name.toUpperCase().replace(/\s+/g, '');
 
         try {
@@ -347,9 +362,12 @@ export default function SemesterManagement() {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm"
+                            disabled={createMutation.isPending || updateMutation.isPending}
+                            className={`bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm ${
+                                (createMutation.isPending || updateMutation.isPending) ? "opacity-50" : ""
+                            }`}
                         >
-                            {editingSemester ? "Cập nhật" : "Tạo mới"}
+                            {(createMutation.isPending || updateMutation.isPending) ? "Đang xử lý..." : (editingSemester ? "Cập nhật" : "Tạo mới")}
                         </Button>
                     </div>
                 </form>

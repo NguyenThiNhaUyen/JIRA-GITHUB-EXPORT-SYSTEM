@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     getMyStats, getMyCourses, getMyProjects,
     getMyCommits, getMyTasks, getMyGrades,
     getMyWarnings, getMyHeatmap, getMyCommitActivity,
-    getMyDeadlines, getMyInvitations
+    getMyDeadlines, getMyInvitations,
+    acceptInvitation, rejectInvitation
 } from "../api/studentApi.js";
 import {
     getStudentDashboardStats, getStudentDeadlines, getStudentCommitActivity
@@ -102,3 +103,26 @@ export const useGetMyInvitations = (params = {}) => useQuery({
     queryKey: STUDENT_KEYS.invitations(),
     queryFn: () => getMyInvitations(params),
 });
+
+/** Chấp nhận lời mời */
+export const useAcceptInvitation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: acceptInvitation,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.invitations() });
+            queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.projects() });
+        },
+    });
+};
+
+/** Từ chối lời mời */
+export const useDeclineInvitation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: rejectInvitation,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: STUDENT_KEYS.invitations() });
+        },
+    });
+};

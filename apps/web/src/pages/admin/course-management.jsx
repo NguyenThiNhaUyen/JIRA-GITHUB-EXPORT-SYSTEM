@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button.jsx";
 import {
   Card,
@@ -61,8 +61,18 @@ export default function CourseManagement() {
   const [importFile, setImportFile] = useState(null);
 
   const [filterSemester, setFilterSemester] = useState("");
+  const [searchTermStudent, setSearchTermStudent] = useState("");
+  const [debouncedSearchStudent, setDebouncedSearchStudent] = useState("");
   const [editingCourse, setEditingCourse] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
+
+  // Debounce search term for better performance (Stress Test Recommendation)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchStudent(searchTermStudent);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTermStudent]);
 
   const [formData, setFormData] = useState({
     code: "",
@@ -88,14 +98,14 @@ export default function CourseManagement() {
       const rows = courses.map(course => {
         const subjectCode = getSubjectCode(course.subjectId);
         const semesterName = getSemesterName(course.semesterId);
-        const lecturerName = getCourseLecturer(course.id) || "Chưa có GV";
+        const lecturerName = getCourseLecturerName(course) || "Chưa có GV";
         return [
-          course.code,
-          subjectCode,
-          semesterName,
+          course.code || "",
+          subjectCode || "",
+          semesterName || "",
           course.currentStudents || 0,
           course.maxStudents || 0,
-          lecturerName
+          lecturerName || ""
         ].map(val => `"${val}"`).join(","); // wrap in quotes to handle commas in data
       });
 
@@ -235,16 +245,16 @@ export default function CourseManagement() {
   // Load students khi modal mở — dùng hook riêng để fetch theo courseId
   // Sẽ được trigger khi viewStudentsCourse thay đổi
   const { data: enrolledStudentsData, refetch: refetchEnrolled } = useGetEnrolledStudents(
-    viewStudentsCourse?.id,
-    { pageSize: 200 }
+    (viewStudentsCourse?.id || importCourse?.id),
+    { pageSize: 500 }
   );
   const enrolledStudentsList = enrolledStudentsData?.items || [];
 
   const handleKickStudent = async (studentUserId, studentName) => {
-    if (!confirm(`Đuổi ${studentName} khỏi lớp?`)) return;
+    if (!confirm(`Xóa sinh viên ${studentName} khỏi lớp này?`)) return;
     try {
       await unenrollMutation.mutateAsync({ courseId: viewStudentsCourse.id, studentUserId });
-      success(`Đã xóa ${studentName} khỏi lớp`);
+      success(`Đã xóa ${studentName} khỏi lớp thành công.`);
       refetchEnrolled();
     } catch (err) {
       showError(err.message || "Xóa sinh viên thất bại");
@@ -258,7 +268,18 @@ export default function CourseManagement() {
     setShowImportModal(true);
   };
 
-  const importAvailableStudents = allStudents; // Optimization: filter out already enrolled if possible
+  const importAvailableStudents = allStudents.filter(stu => {
+    // 1. Filter out already enrolled
+    const isEnrolled = enrolledStudentsList.some(e => String(e.id) === String(stu.id));
+    if (isEnrolled) return false;
+
+    // 2. Filter by debounced search term
+    if (!debouncedSearchStudent) return true;
+    const lowerSearch = debouncedSearchStudent.toLowerCase();
+    return stu.name?.toLowerCase().includes(lowerSearch) || 
+           stu.studentId?.toLowerCase().includes(lowerSearch) || 
+           stu.email?.toLowerCase().includes(lowerSearch);
+  });
 
   const toggleImportStudent = (id) => {
     setImportSelectedIds(prev =>
@@ -779,16 +800,29 @@ export default function CourseManagement() {
             </div>
 
             {/* Student checkbox list */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Chọn sinh viên chưa có trong lớp ({importAvailableStudents.length} SV)
-                </label>
-                {importSelectedIds.length > 0 && (
-                  <span className="text-xs font-semibold text-white bg-purple-600 rounded-full px-2 py-0.5">
-                    Đã chọn: {importSelectedIds.length}
-                  </span>
-                )}
+              <div className="space-y-3 mb-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Chọn sinh viên chưa có trong lớp ({importAvailableStudents.length} SV)
+                  </label>
+                  {importSelectedIds.length > 0 && (
+                    <span className="text-xs font-semibold text-white bg-purple-600 rounded-full px-2 py-0.5">
+                      Đã chọn: {importSelectedIds.length}
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm theo tên, mã số, email..."
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                    value={searchTermStudent}
+                    onChange={e => setSearchTermStudent(e.target.value)}
+                  />
+                  {searchTermStudent && (
+                    <button onClick={() => setSearchTermStudent("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">×</button>
+                  )}
+                </div>
               </div>
               {importAvailableStudents.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-6">Tất cả sinh viên đã có trong lớp này.</p>
@@ -817,28 +851,27 @@ export default function CourseManagement() {
                   ))}
                 </div>
               )}
-            </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowImportModal(false)}
-                className="rounded-xl border-gray-200"
-              >
-                Hủy
-              </Button>
-              <Button
-                onClick={handleImportSubmit}
-                disabled={importSelectedIds.length === 0}
-                className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm disabled:opacity-50"
-              >
-                Thêm {importSelectedIds.length > 0 ? `${importSelectedIds.length} SV` : ''} vào lớp
-              </Button>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowImportModal(false)}
+                  className="rounded-xl border-gray-200"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleImportSubmit}
+                  disabled={importSelectedIds.length === 0}
+                  className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm disabled:opacity-50"
+                >
+                  Thêm {importSelectedIds.length > 0 ? `${importSelectedIds.length} SV` : ''} vào lớp
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Modal>
 
       {/* View / Kick Students Modal */}
       <Modal
@@ -872,7 +905,7 @@ export default function CourseManagement() {
                       onClick={() => handleKickStudent(stu.id, stu.name)}
                       className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
-                      Đuổi
+                      Xóa
                     </button>
                   </div>
                 ))}

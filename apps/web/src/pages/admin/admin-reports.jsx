@@ -24,6 +24,7 @@ export default function AdminReports() {
   // Filters state
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
+  const [expandedCourse, setExpandedCourse] = useState(null);
 
   // Fetch Data
   const { data: semestersData, isLoading: loadingSemesters } = useGetSemesters();
@@ -103,10 +104,10 @@ export default function AdminReports() {
   }));
 
   const srsStatusData = [
-    { name: 'Draft', value: 0, color: '#64748b' },
-    { name: 'Review', value: 0, color: '#f59e0b' },
-    { name: 'Final', value: 0, color: '#22c55e' },
-    { name: 'Rejected', value: 0, color: '#ef4444' }
+    { name: 'Draft', value: integrationStats?.srsStatus?.draft || 0, color: '#64748b' },
+    { name: 'Review', value: integrationStats?.srsStatus?.review || 0, color: '#f59e0b' },
+    { name: 'Final', value: integrationStats?.srsStatus?.final || 0, color: '#22c55e' },
+    { name: 'Rejected', value: integrationStats?.srsStatus?.rejected || 0, color: '#ef4444' }
   ];
 
   if (loading) {
@@ -293,56 +294,90 @@ export default function AdminReports() {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filteredCourses.map((course) => (
-                    <tr key={course.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-gray-800">{course.code}</div>
-                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course.name}</div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="font-medium text-gray-700">{course.currentStudents}</span>
-                        <span className="text-gray-400 text-xs ml-1">/{course.maxStudents}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="font-medium text-gray-700">{course.projectsCount || 0}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
-                          course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
-                            'text-gray-600 bg-gray-100'
-                          }`}>
-                          {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50"
-                          title="Báo cáo Commit"
-                          onClick={() => handleGenerateReport('COMMIT', course.id)}
-                        >
-                          <Printer size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
-                          title="Báo cáo Team Roster"
-                          onClick={() => handleGenerateReport('ROSTER', course.id)}
-                        >
-                          <Users size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
-                          title="Xuất SRS ISO (Giả lập)"
-                          onClick={() => handleGenerateReport('SRS', course.id)}
-                        >
-                          <FileText size={16} />
-                        </Button>
-                      </td>
-                    </tr>
+                    <React.Fragment key={course.id}>
+                      <tr 
+                        className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                             <ChevronRight size={14} className={`transition-transform ${expandedCourse === course.id ? 'rotate-90' : ''}`} />
+                             <div>
+                                <div className="font-semibold text-gray-800">{course.code}</div>
+                                <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course.name}</div>
+                             </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="font-medium text-gray-700">{course.currentStudents}</span>
+                          <span className="text-gray-400 text-xs ml-1">/{course.maxStudents}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="font-medium text-gray-700">{course.projectsCount || 0}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
+                            course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
+                              'text-gray-600 bg-gray-100'
+                            }`}>
+                            {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50"
+                            title="Báo cáo Commit"
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('COMMIT', course.id); }}
+                          >
+                            <Printer size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+                            title="Báo cáo Team Roster"
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('ROSTER', course.id); }}
+                          >
+                            <Users size={16} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
+                            title="Xuất SRS ISO (Giả lập)"
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('SRS', course.id); }}
+                          >
+                            <FileText size={16} />
+                          </Button>
+                        </td>
+                      </tr>
+                      {expandedCourse === course.id && (
+                        <tr className="bg-gray-50/30">
+                          <td colSpan={5} className="px-12 py-4 border-l-4 border-blue-400">
+                             <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Danh sách dự án ({course.projectsCount || 0})</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                   {(course.groups || []).length > 0 ? (
+                                     course.groups.map(p => (
+                                       <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
+                                          <div>
+                                             <div className="text-sm font-bold text-teal-700">{p.name}</div>
+                                             <div className="text-[10px] text-gray-500 mt-0.5 truncate max-w-[150px]">{p.description || "Chưa có đề tài"}</div>
+                                          </div>
+                                          <Badge variant="outline" className="text-[9px] h-5">{p.status || "ACTIVE"}</Badge>
+                                       </div>
+                                     ))
+                                   ) : (
+                                     <div className="col-span-full py-4 text-center text-xs text-gray-400 italic">Chưa có dự án nào được tạo</div>
+                                   )}
+                                </div>
+                             </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {filteredCourses.length === 0 && (
                     <tr>
