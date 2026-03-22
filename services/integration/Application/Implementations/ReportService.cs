@@ -83,14 +83,26 @@ public class ReportService : IReportService
                 .Where(p => p.course_id == courseId)
                 .ToListAsync();
 
+            var projectIds = projects.Select(p => p.id).ToList();
+            var activities = await _unitOfWork.StudentActivityDailies.FindAsync(sad =>
+                sad.project_id != null && projectIds.Contains(sad.project_id.Value));
+
+            var activityList = activities.GroupBy(a => a.student_user_id)
+                .Select(g => new { 
+                    StudentId = g.Key, 
+                    Commits = g.Sum(x => x.commits_count), 
+                    PRs = g.Sum(x => x.pull_requests_count), 
+                    Issues = g.Sum(x => x.issues_completed) 
+                }).Cast<dynamic>().ToList();
+
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects);
+                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects, activityList);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects);
+                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects, activityList);
                 await File.WriteAllBytesAsync(filePath, fileBytes);
             }
 

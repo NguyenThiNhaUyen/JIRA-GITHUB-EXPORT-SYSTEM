@@ -4,7 +4,7 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 
 public interface IPdfReportGenerator
 {
-    byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects);
+    byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects, List<dynamic> activityList);
     byte[] GenerateTeamRosterPdf(project project);
     byte[] GenerateActivitySummaryPdf(project project, List<dynamic> activityList);
     byte[] GenerateSrsReportPdf(SrsReportData data);
