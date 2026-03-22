@@ -85,7 +85,7 @@ public class ReportService : IReportService
 
             var projectIds = projects.Select(p => p.id).ToList();
             var activities = await _unitOfWork.StudentActivityDailies.FindAsync(sad =>
-                sad.project_id != null && projectIds.Contains(sad.project_id.Value));
+                projectIds.Contains(sad.project_id));
 
             var activityList = activities.GroupBy(a => a.student_user_id)
                 .Select(g => new { 
