@@ -138,7 +138,9 @@ public class CourseService : ICourseService
         var response = _mapper.Map<CourseDetailResponse>(course);
         
         // Manual mapping for groups with clear status and team members
-        response.Groups = (course.projects ?? new List<project>()).Select(p => new CourseGroupInfo
+        response.Groups = (course.projects ?? new List<project>())
+            .Where(p => p.status == "ACTIVE")
+            .Select(p => new CourseGroupInfo
         {
             Id = p.id,
             Name = p.name,

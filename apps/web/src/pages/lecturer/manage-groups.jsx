@@ -26,6 +26,7 @@ export default function ManageGroups() {
     const { success, error } = useToast();
 
     const [selectedStudents, setSelectedStudents] = useState([]);
+    const [selectedLeaderId, setSelectedLeaderId] = useState(null);
     const [newGroupTopic, setNewGroupTopic] = useState("");
 
     const [showForceAddModal, setShowForceAddModal] = useState(false);
@@ -65,12 +66,13 @@ export default function ManageGroups() {
                 await addTeamMemberMutation.mutateAsync({
                     projectId: project.id,
                     studentId,
-                    role: studentId === selectedStudents[0] ? "LEADER" : "MEMBER"
+                    role: studentId === selectedLeaderId ? "LEADER" : "MEMBER"
                 });
             }
 
             success(`Đã tạo nhóm "${project.name}"`);
             setSelectedStudents([]);
+            setSelectedLeaderId(null);
             setNewGroupTopic("");
         } catch (err) {
             error("Không thể tạo nhóm: " + (err.message || "Lỗi hệ thống"));
@@ -126,9 +128,17 @@ export default function ManageGroups() {
     };
 
     const toggleStudentSelection = (studentId) =>
-        setSelectedStudents((prev) =>
-            prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
-        );
+        setSelectedStudents((prev) => {
+            const isRemoving = prev.includes(studentId);
+            if (isRemoving) {
+                if (selectedLeaderId === studentId) setSelectedLeaderId(null);
+                return prev.filter((id) => id !== studentId);
+            } else {
+                // If no leader selected and this is first student, auto-set as leader
+                if (!selectedLeaderId) setSelectedLeaderId(studentId);
+                return [...prev, studentId];
+            }
+        });
 
     // Calculate students not in any group
     const assignedStudentIds = new Set(groups.flatMap((g) => (g.team || []).map(m => m.studentId)));
@@ -277,10 +287,20 @@ export default function ManageGroups() {
                                                     onChange={() => toggleStudentSelection(student.id)}
                                                     className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
                                                 />
-                                                <div>
+                                                <div className="flex-1">
                                                     <p className="text-sm font-medium text-gray-700">{student.name}</p>
                                                     <p className="text-xs text-gray-400">{student.studentId}</p>
                                                 </div>
+                                                
+                                                {selectedStudents.includes(student.id) && (
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(student.id); }}
+                                                        className={`p-1.5 rounded-lg transition-all ${selectedLeaderId === student.id ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-amber-400'}`}
+                                                        title="Chọn làm Trưởng nhóm"
+                                                    >
+                                                        <Star size={14} fill={selectedLeaderId === student.id ? "currentColor" : "none"} />
+                                                    </button>
+                                                )}
                                             </label>
                                         ))
                                     )}
