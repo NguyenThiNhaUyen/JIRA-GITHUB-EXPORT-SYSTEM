@@ -49,9 +49,10 @@ export default function StudentDashboard() {
     const myGroupsList = projectsData.items || [];
 
     // Map projects to a courseId keyed object for easy lookup in Workspace
+    // Dùng String() để đảm bảo key type nhất quán với selectedCourseId (cũng là String)
     const groupsMapByCourse = {};
     myGroupsList.forEach(p => {
-        groupsMapByCourse[p.courseId] = p;
+        groupsMapByCourse[String(p.courseId)] = p;
     });
 
     const selectedGroup = selectedCourseId ? groupsMapByCourse[selectedCourseId] : null;
@@ -235,6 +236,13 @@ export default function StudentDashboard() {
                         userId={user?.id}
                         onBack={() => setSelectedCourseId(null)}
                         onSubmitLinks={handleSubmitLinks}
+                    />
+                ) : selectedCourseId && selectedCourse && !selectedGroup ? (
+                    /* Nhánh: đã chọn lớp nhưng chưa có nhóm */
+                    <NoGroupView
+                        course={selectedCourse}
+                        onBack={() => setSelectedCourseId(null)}
+                        onCreateGroup={() => handleCreateProject(selectedCourse.id, selectedCourse.name)}
                     />
                 ) : (
                     !selectedCourseId && <>
@@ -519,6 +527,59 @@ function StatCard({ icon, color, label, value }) {
             <div>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{label}</p>
                 <h3 className="text-xl font-bold text-gray-800 transition-all group-hover:scale-105 origin-left">{value}</h3>
+            </div>
+        </div>
+    );
+}
+
+/* ─────── NoGroupView ─────── */
+/* Hiển thị khi SV đã chọn lớp nhưng chưa có nhóm */
+function NoGroupView({ course, onBack, onCreateGroup }) {
+    return (
+        <div className="space-y-5">
+            <button onClick={onBack} className="flex items-center gap-2 text-xs font-semibold text-teal-700 hover:underline">
+                ← Quay lại danh sách lớp
+            </button>
+
+            <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-8 flex flex-col items-center gap-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-400/10 flex items-center justify-center">
+                    <GraduationCap size={32} className="text-amber-500" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800 uppercase tracking-tight">{course.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                        <span className="font-bold text-teal-600">{course.subject?.code || course.code}</span>
+                        {course.lecturers?.[0]?.name && (
+                            <> · GV: <span className="font-semibold">{course.lecturers[0].name}</span></>
+                        )}
+                    </p>
+                </div>
+
+                <div className="bg-amber-400/5 border border-amber-400/20 rounded-2xl px-6 py-5 max-w-sm">
+                    <p className="text-sm font-semibold text-amber-700">Bạn chưa có nhóm trong lớp này</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                        Tạo nhóm mới để làm Leader, hoặc chờ Leader nhóm khác gửi lời mời tham gia.
+                    </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={onCreateGroup}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm"
+                    >
+                        <UserPlus size={16} /> Tạo nhóm mới (Làm Leader)
+                    </button>
+                    <button
+                        onClick={onBack}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm rounded-xl transition-all"
+                    >
+                        ← Quay lại
+                    </button>
+                </div>
+
+                <p className="text-xs text-gray-400">
+                    💡 Sau khi tạo nhóm hoặc được mời, hãy làm mới trang để cập nhật thông tin.
+                </p>
             </div>
         </div>
     );

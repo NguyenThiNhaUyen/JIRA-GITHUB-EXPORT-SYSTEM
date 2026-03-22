@@ -65,10 +65,20 @@ export async function deleteSubject(id) {
 }
 
 export async function getDashboardStats() {
-    // /dashboard/stats doesn't exist on BE — use analytics overview instead
+    // Correct endpoint: /api/analytics/stats (Admin-only)
+    // Returns: AdminStatsResponse { Semesters, Subjects, Courses, Lecturers, Students, Projects }
     try {
-        const res = await client.get("/analytics/overview");
-        return unwrap(res);
+        const res = await client.get("/analytics/stats");
+        const data = unwrap(res);
+        // Normalize to camelCase for FE consumption
+        return {
+            totalSemesters: data.semesters ?? data.Semesters ?? 0,
+            totalSubjects: data.subjects ?? data.Subjects ?? 0,
+            totalCourses: data.courses ?? data.Courses ?? 0,
+            totalLecturers: data.lecturers ?? data.Lecturers ?? 0,
+            totalStudents: data.students ?? data.Students ?? 0,
+            totalProjects: data.projects ?? data.Projects ?? 0,
+        };
     } catch {
         // Fallback: compose from courses + users queries (non-blocking)
         return null;

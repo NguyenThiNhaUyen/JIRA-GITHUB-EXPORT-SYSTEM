@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ChevronRight, BarChart3, GitBranch, TrendingUp, Users, Activity, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjects, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
 
 
 const WEEKS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
@@ -21,9 +21,18 @@ export default function Contributions() {
         }
     }, [courses]);
 
-    const currentCourse = courses.find(c => String(c.id) === selectedCourse);
-    const groups = currentCourse?.groups || [];
+    // Fetch projects thuộc lớp đã chọn (không dùng course.groups vì list API không include groups)
+    const { data: courseProjectsData = { items: [] }, isLoading: loadingProjects } = useGetProjects(
+        selectedCourse ? { courseId: selectedCourse, pageSize: 100 } : null
+    );
+    const groups = courseProjectsData.items || [];
 
+    // Khi đổi lớp, reset nhóm đã chọn
+    useEffect(() => {
+        setSelectedProject("");
+    }, [selectedCourse]);
+
+    // Khi nhóm load xong, tự chọn nhóm đầu tiên
     useEffect(() => {
         if (groups.length > 0 && !selectedProject) {
             setSelectedProject(String(groups[0].id));
@@ -96,10 +105,10 @@ export default function Contributions() {
                 )}
             </div>
 
-            {loadingMetrics ? (
+            {loadingMetrics || loadingProjects ? (
                 <div className="py-20 flex flex-col items-center gap-3">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
-                    <p className="text-sm text-gray-400">Đang đồng bộ dữ liệu GitHub...</p>
+                    <p className="text-sm text-gray-400">{loadingProjects ? "Đang tải danh sách nhóm..." : "Đang đồng bộ dữ liệu GitHub..."}</p>
                 </div>
             ) : !selectedProject ? (
                 <div className="py-20 text-center text-gray-400">

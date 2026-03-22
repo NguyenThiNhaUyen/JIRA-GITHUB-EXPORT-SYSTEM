@@ -268,7 +268,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         </CardHeader>
                         <CardContent className="pt-4 grid grid-cols-2 gap-3">
                             {[
-                                { label: "My Commits", value: metrics?.myCommits ?? "0", color: "text-blue-700 bg-blue-50" },
+                                { label: "My Commits", value: metrics?.userCommits ?? metrics?.myCommits ?? "0", color: "text-blue-700 bg-blue-50" },
                                 { label: "Total Commits", value: metrics?.totalCommits ?? "0", color: "text-teal-700 bg-teal-50" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className={`rounded-xl px-3 py-2.5 flex flex-col items-center text-center ${color}`}>

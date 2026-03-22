@@ -52,8 +52,14 @@ export default function Reports() {
 
     // Queries
     const { data: coursesData } = useGetCourses({ pageSize: 100 });
-    const { data: projectsData } = useGetProjects({ courseId: selectedCourse, pageSize: 100 });
+    const { data: projectsData = { items: [] } } = useGetProjects(
+        selectedCourse ? { courseId: selectedCourse, pageSize: 100 } : null
+    );
     const { data: myReports, refetch: refetchReports, isLoading: loadingHistory } = useGetMyReports();
+
+    useEffect(() => {
+        setSelectedProject("");
+    }, [selectedCourse]);
 
     // Mutations
     const genCommitStats = useGenerateCommitStats();
