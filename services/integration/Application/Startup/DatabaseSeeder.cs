@@ -74,18 +74,24 @@ public static class DatabaseSeeder
             await dbContext.SaveChangesAsync();
         }
 
-        // Lecturer
-        string lectEmail = "gv@fpt.edu.vn";
-        if (!await dbContext.users.AnyAsync(u => u.email == lectEmail))
+        // Lecturers
+        var lectEmails = new[] { "gv@fpt.edu.vn", "dunghv@fpt.edu.vn", "thanhnb@fpt.edu.vn" };
+        var lectRole = await dbContext.roles.FirstAsync(r => r.role_name == "LECTURER");
+
+        foreach (var email in lectEmails)
         {
-            var role = await dbContext.roles.FirstAsync(r => r.role_name == "LECTURER");
-            var u = new user { email = lectEmail, password = hasher.HashPassword("Lecturer@123"), full_name = "Nguyễn Văn A", enabled = true };
-            u.roles.Add(role);
-            dbContext.users.Add(u);
-            await dbContext.SaveChangesAsync();
-            dbContext.lecturers.Add(new lecturer { user_id = u.id, lecturer_code = "GV001", office_email = lectEmail, department = "SE" });
-            await dbContext.SaveChangesAsync();
+            if (!await dbContext.users.AnyAsync(u => u.email == email))
+            {
+                var u = new user { email = email, password = hasher.HashPassword("Lecturer@123"), full_name = email == "gv@fpt.edu.vn" ? "Nguyễn Văn A" : email.Split('@')[0], enabled = true };
+                u.roles.Add(lectRole);
+                dbContext.users.Add(u);
+                await dbContext.SaveChangesAsync();
+                
+                string code = "GV" + u.id.ToString().PadLeft(3, '0');
+                dbContext.lecturers.Add(new lecturer { user_id = u.id, lecturer_code = code, office_email = email, department = "SE" });
+            }
         }
+        await dbContext.SaveChangesAsync();
 
         // Student
         string studEmail = "sv@fpt.edu.vn";
@@ -175,10 +181,28 @@ public static class DatabaseSeeder
                 course_code = courseCode, course_name = "SWD392 - SE1831", semester_id = sem.id, subject_id = sub.id,
                 created_by_user_id = lect.id, status = "ACTIVE", max_students = 30
             };
-            newCourse.lecturer_users.Add(lect.lecturer);
+            
+            var allLecturers = await dbContext.lecturers.ToListAsync();
+            foreach (var l in allLecturers)
+            {
+                newCourse.lecturer_users.Add(l);
+            }
+            
             dbContext.courses.Add(newCourse);
             await dbContext.SaveChangesAsync();
             existingCourse = newCourse;
+        }
+        else
+        {
+            var allLecturers = await dbContext.lecturers.ToListAsync();
+            foreach (var l in allLecturers)
+            {
+                if (!existingCourse.lecturer_users.Any(lu => lu.user_id == l.user_id))
+                {
+                    existingCourse.lecturer_users.Add(l);
+                }
+            }
+            await dbContext.SaveChangesAsync();
         }
 
         var stu = await dbContext.users.FirstOrDefaultAsync(u => u.email == "sv@fpt.edu.vn");
