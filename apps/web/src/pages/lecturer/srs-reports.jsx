@@ -95,6 +95,7 @@ export default function SrsReports() {
             success(`Đã chuyển trạng thái SRS sang ${newStatus}`);
             loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
         } catch (err) {
+            showError(err.message || 'Cập nhật trạng thái SRS thất bại');
             console.error(err);
         }
     };
@@ -108,6 +109,7 @@ export default function SrsReports() {
             success("Đã ghi nhận nhận xét");
             loadAllSrsData(projectsData?.items || [], coursesData?.items || []);
         } catch (err) {
+            showError(err.message || 'Lưu nhận xét thất bại');
             console.error(err);
         }
     };

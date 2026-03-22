@@ -165,7 +165,7 @@ export default function Contributions() {
                                     ))}
                                 </div>
                                 <p className="text-[10px] text-gray-400 mt-3 italic">
-                                    * Dữ liệu commit 30 ngày gần nhất được tổng hợp từ GitHub.
+                                    * Dữ liệu commit 12 tuần gần nhất được tổng hợp từ GitHub.
                                 </p>
                             </CardContent>
                         </Card>

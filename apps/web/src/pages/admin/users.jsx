@@ -17,7 +17,7 @@ const ROLE_CFG = {
 
 export default function UserManagement() {
     const navigate = useNavigate();
-    const { success } = useToast();
+    const { success, error } = useToast();
 
     const [search, setSearch] = useState("");
     const [filterRole, setFilterRole] = useState("all");
@@ -34,9 +34,9 @@ export default function UserManagement() {
 
     useEffect(() => {
         if (!load1 && !load2 && !load3) {
-            const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN", status: "ACTIVE" }));
-            const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER", status: "ACTIVE" }));
-            const students = studentsRaw.map(u => ({ ...u, role: "STUDENT", status: "ACTIVE" }));
+            const admins = adminsRaw.map(u => ({ ...u, role: "ADMIN" }));
+            const lects = lectsRaw.map(u => ({ ...u, role: "LECTURER" }));
+            const students = studentsRaw.map(u => ({ ...u, role: "STUDENT" }));
             setUsers([...admins, ...lects, ...students]);
         }
     }, [adminsRaw, lectsRaw, studentsRaw, load1, load2, load3]);

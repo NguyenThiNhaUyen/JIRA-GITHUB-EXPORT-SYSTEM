@@ -12,13 +12,14 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const { login, loginGoogle, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const result = await login(email, password);
+    const result = await login(email, password, rememberMe);
     if (result.success) {
       navigate(result.redirectPath);
     } else {
@@ -35,7 +36,7 @@ export default function Login() {
       student: { email: "sv@fpt.edu.vn", password: "Student@123" },
     };
     const creds = QUICK_CREDS[role];
-    const result = await login(creds.email, creds.password);
+    const result = await login(creds.email, creds.password, true);
     if (result.success) {
       navigate(result.redirectPath);
     } else {
@@ -117,7 +118,12 @@ export default function Login() {
 
               <div className="flex items-center justify-between px-2 pt-1 pb-2">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0" />
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0"
+                  />
                   <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trì đăng nhập</span>
                 </label>
                 <Link

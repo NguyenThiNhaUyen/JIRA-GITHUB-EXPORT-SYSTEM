@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../components/ui/button.jsx";
 import { Alert } from "../components/ui/interactive.jsx";
 import { Mail, ArrowLeft, CheckCircle, Shield, GraduationCap } from "lucide-react";
+import { forgotPassword } from "../features/auth/api/authApi.js";
+
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
@@ -16,16 +18,15 @@ export default function ForgotPassword() {
         e.preventDefault();
         setError("");
         setLoading(true);
-
-        // Simulate API call
-        setTimeout(() => {
-            if (email) {
-                setIsSubmitted(true);
-            } else {
-                setError("Vui lòng nhập email hợp lệ");
-            }
+        // Real API call
+        try {
+            await forgotPassword(email);
+            setIsSubmitted(true);
+        } catch (err) {
+            setError(err.message || "Email không tồn tại trong hệ thống");
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     const handleBackToLogin = () => {
@@ -162,7 +163,7 @@ export default function ForgotPassword() {
                     {/* Abstract pattern inside */}
                     <div className="absolute top-[30%] right-[10%] w-64 h-64 pointer-events-none opacity-20">
                         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white">
-                            <path fill="currentColor" d="M100 0C100 55.2285 55.2285 100 0 100C55.2285 100 144.772 100 200C100 144.772 144.772 100 200 100C144.772 100 100 55.2285 100 0Z" />
+                            <path fill="currentColor" d="M100 0C100 55.2285 55.2285 100 0 100C55.2285 100 100 144.772 100 200C100 144.772 144.772 100 200 100C144.772 100 100 55.2285 100 0Z" />
                         </svg>
                     </div>
 

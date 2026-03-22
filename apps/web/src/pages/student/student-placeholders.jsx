@@ -175,7 +175,7 @@ export function StudentAlertsPage() {
                 </div>
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
                     <div className="w-11 h-11 rounded-2xl bg-red-400 text-white flex items-center justify-center shrink-0"><AlertTriangle size={18} /></div>
-                    <div><p className="text-xs text-gray-500">Cần xử lý ngay</p><h3 className="text-2xl font-bold text-gray-800">{alerts.filter(a => a.sev === "high").length}</h3></div>
+                    <div><p className="text-xs text-gray-500">Cần xử lý ngay</p><h3 className="text-2xl font-bold text-gray-800">{alerts.filter(a => a.severity?.toLowerCase() === "high").length}</h3></div>
                 </div>
             </div>
 
@@ -219,9 +219,6 @@ export function StudentSrsPage() {
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
     
-    // FETCH SRS for the first group for demo
-    const { data: srsList = [] } = useGetProjectSrs(myGroups[0]?.id);
-
     if (loadingProjects) {
         return (
             <div className="flex h-full items-center justify-center py-20">
@@ -238,14 +235,7 @@ export function StudentSrsPage() {
                 <p className="text-sm text-gray-500 mt-0.5">Xem lịch sử nộp SRS và nhận xét từ giảng viên</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-                {["FINAL", "REVIEW", "DRAFT"].map(s => (
-                    <div key={s} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${SRS_STATUS_CLS[s]}`}>
-                        <span className="text-xs font-semibold">{s}</span>
-                        <span className="text-xl font-bold">{srsList.filter(x => x.status === s).length}</span>
-                    </div>
-                ))}
-            </div>
+
 
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                 <CardContent className="p-0">
@@ -273,30 +263,43 @@ function ProjectSrsRows({ project }) {
     if (srsList.length === 0) return null;
 
     return (
-        <>
-            {srsList.map(rpt => (
-                <div key={rpt.id} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-mono font-semibold text-gray-700">v{rpt.version}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${SRS_STATUS_CLS[rpt.status] || SRS_STATUS_CLS.DRAFT}`}>{rpt.status}</span>
+        <div className="border-b border-gray-100 last:border-0 p-5">
+            <h4 className="text-sm font-bold text-gray-800 mb-3">{project.name}</h4>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+                {["FINAL", "REVIEW", "DRAFT"].map(s => {
+                    const count = srsList.filter(x => x.status === s).length;
+                    return (
+                        <div key={s} className={`rounded-xl px-3 py-2 border flex items-center justify-between text-[10px] ${SRS_STATUS_CLS[s]} ${count === 0 ? "opacity-40" : ""}`}>
+                            <span className="font-semibold">{s}</span>
+                            <span className="text-sm font-bold">{count}</span>
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{project.name} · {project.course?.name || "Lớp"}</p>
-                        {rpt.feedback && <p className="text-xs text-blue-600 italic mt-0.5">Nhận xét GV: {rpt.feedback}</p>}
-                        <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                                <Clock size={9} />{new Date(rpt.submittedAt).toLocaleDateString("vi-VN")}
-                            </p>
-                            {rpt.fileUrl && (
-                                <a href={rpt.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-teal-600 hover:underline flex items-center gap-1">
-                                    <FileDown size={10} /> Tải file
-                                </a>
-                            )}
+                    );
+                })}
+            </div>
+            <div className="space-y-3">
+                {srsList.map(rpt => (
+                    <div key={rpt.id} className="flex items-center gap-4 py-3 border-t border-gray-50 hover:bg-gray-50/50 transition-colors rounded-lg px-2">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-xs font-mono font-semibold text-gray-700">v{rpt.version}</span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase ${SRS_STATUS_CLS[rpt.status] || SRS_STATUS_CLS.DRAFT}`}>{rpt.status}</span>
+                            </div>
+                            {rpt.feedback && <p className="text-[11px] text-blue-600 italic mt-0.5 bg-blue-50/50 px-2 py-1 rounded-md">Nhận xét GV: {rpt.feedback}</p>}
+                            <div className="flex items-center justify-between mt-1.5">
+                                <p className="text-[9px] text-gray-400 flex items-center gap-1">
+                                    <Clock size={8} />{new Date(rpt.submittedAt).toLocaleDateString("vi-VN")}
+                                </p>
+                                {rpt.fileUrl && (
+                                    <a href={rpt.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-teal-600 hover:underline flex items-center gap-1">
+                                        <FileDown size={10} /> Tải file
+                                    </a>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
-        </>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -339,7 +342,7 @@ export default function StudentCoursesPage() {
                         return (
                             <Card key={c.id}
                                 className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all cursor-pointer"
-                                onClick={() => navigate("/student")}
+                                onClick={() => project ? navigate(`/student/project/${project.id}`) : navigate("/student/my-project")}
                             >
                                 <div className="h-1 bg-gradient-to-r from-teal-500 to-teal-400" />
                                 <CardContent className="p-5">

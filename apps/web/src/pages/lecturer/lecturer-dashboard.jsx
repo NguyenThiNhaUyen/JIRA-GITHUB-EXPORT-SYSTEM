@@ -37,11 +37,14 @@ export default function LecturerDashboard() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
 
+  const selectedSubjectId = selectedSubject ? parseInt(selectedSubject) : null;
+  const selectedCourseId = selectedCourse ? parseInt(selectedCourse) : null;
+
   const { data: subjectsData = { items: [] } } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
-  const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourse);
-  const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourse);
-  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ courseId: selectedCourse });
+  const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourseId);
+  const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourseId);
+  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ courseId: selectedCourseId });
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
   const { data: activityLogRaw } = useGetLecturerActivityLogs(8);
 
@@ -65,7 +68,7 @@ export default function LecturerDashboard() {
   const resolveAlertMutation = useResolveAlert();
 
   const subjects = subjectsData.items || [];
-  const courses = (coursesData.items || []).filter(c => !selectedSubject || c.subjectId === parseInt(selectedSubject));
+  const courses = (coursesData.items || []).filter(c => !selectedSubjectId || c.subjectId === selectedSubjectId);
   const groups = projectsData?.items || [];
 
   const handleManageGroups = () => {
@@ -117,8 +120,8 @@ export default function LecturerDashboard() {
     msg: a.message,
     severity: a.severity.toLowerCase() === "high" ? "error" : "warning"
   }));
-  const currentSubject = subjects.find(s => s.id === parseInt(selectedSubject));
-  const currentCourse = courses.find(c => c.id === parseInt(selectedCourse));
+  const currentSubject = subjects.find(s => s.id === selectedSubjectId);
+  const currentCourse = courses.find(c => c.id === selectedCourseId);
 
   const pendingIntegrations = groups.filter(
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"

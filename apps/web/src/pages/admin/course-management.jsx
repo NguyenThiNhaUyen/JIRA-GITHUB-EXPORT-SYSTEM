@@ -114,7 +114,7 @@ export default function CourseManagement() {
 
       success("Đã xuất danh sách lớp học thành công!");
     } catch (err) {
-      error("Lỗi khi xuất file Excel/CSV");
+      showError("Lỗi khi xuất file Excel/CSV");
     }
   };
   const handleCreate = () => {
