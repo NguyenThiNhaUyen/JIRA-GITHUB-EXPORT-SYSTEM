@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import client from "../api/client.js";
-import { unwrap } from "../api/unwrap.js";
+import client from "../../../api/client.js";
+import { unwrap } from "../../../api/unwrap.js";
 
 export const NOTIFICATION_KEYS = {
     all: ["notifications"],
