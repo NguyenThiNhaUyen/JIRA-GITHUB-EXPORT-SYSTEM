@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Bell, Settings, LogOut, ChevronDown, Users, Check, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useGetMyPendingInvitations, useAcceptInvitation, useRejectInvitation } from "../../features/projects/hooks/useInvitations.js";
+import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
+import { useGetNotifications, useMarkNotificationAsRead } from "../../features/system/hooks/useNotifications.js";
 import { useToast } from "../../components/ui/toast.jsx";
 
 export function TopHeader() {
@@ -16,6 +18,13 @@ export function TopHeader() {
     // Load pending invitations for STUDENT users real API
     const isStudent = user?.role === "STUDENT";
     const { data: invitations = [] } = useGetMyPendingInvitations({ enabled: isStudent });
+    
+    // Load notifications for ALL roles (Real-time and persistent)
+    const { data: notificationsData } = useGetNotifications({ pageSize: 10 });
+    const notifications = notificationsData?.items?.filter(n => !n.isRead) || [];
+
+    const { mutate: markAsReadMutate } = useMarkNotificationAsRead();
+
     const { mutate: acceptMutate } = useAcceptInvitation();
     const { mutate: rejectMutate } = useRejectInvitation();
 
@@ -58,7 +67,7 @@ export function TopHeader() {
     const isRootPath = location.pathname === "/admin" || location.pathname === "/lecturer";
     const backPath = location.pathname.startsWith("/admin") ? "/admin" : location.pathname.startsWith("/lecturer") ? "/lecturer" : "/";
 
-    const pendingCount = isStudent ? invitations.length : 0;
+    const pendingCount = (isStudent ? invitations.length : 0) + notifications.length;
 
     const formatTime = (dateStr) => {
         const diff = Date.now() - new Date(dateStr).getTime();
@@ -170,21 +179,43 @@ export function TopHeader() {
                                         </div>
                                     ))}
 
-                                    {/* NON-STUDENT: system notifications */}
-                                    {!isStudent && (
-                                        <>
-                                            <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors relative">
-                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full"></div>
-                                                <p className="text-sm font-semibold text-gray-800">Cập nhật hệ thống</p>
-                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">Hệ thống đã được cập nhật lên phiên bản mới nhất với nhiều tính năng và cải thiện hiệu suất.</p>
-                                                <p className="text-[10px] text-gray-400 mt-2">10 phút trước</p>
+                                    {/* Real Persistent Notifications for All Roles */}
+                                    {notifications.length > 0 && notifications.map(notif => (
+                                        <div 
+                                            key={notif.id} 
+                                            className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors relative group"
+                                            onClick={() => {
+                                                markAsReadMutate(notif.id);
+                                                // Navigate based on role or metadata
+                                                if (user?.role === 'STUDENT') navigate('/student');
+                                                else if (user?.role === 'LECTURER') navigate('/lecturer');
+                                                else navigate('/admin');
+                                                setShowNotifications(false);
+                                            }}
+                                        >
+                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-500 rounded-r-full"></div>
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-sm font-semibold text-gray-800">{notif.type || 'Thông báo'}</p>
+                                                <div className="w-2 h-2 rounded-full bg-teal-500 shrink-0 mt-1"></div>
                                             </div>
-                                            <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
-                                                <p className="text-sm font-semibold text-gray-600">Lớp học mới được tạo</p>
-                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">Lớp học PRN1821 vừa được tạo thành công trên hệ thống.</p>
-                                                <p className="text-[10px] text-gray-400 mt-2">1 giờ trước</p>
-                                            </div>
-                                        </>
+                                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
+                                            <p className="text-[10px] text-gray-400 mt-2">{formatTime(notif.timestamp)}</p>
+                                        </div>
+                                    ))}
+
+                                    {/* Empty State */}
+                                    {!isStudent && notifications.length === 0 && (
+                                        <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+                                            <Bell size={28} className="text-gray-300" />
+                                            <p className="text-sm">Không có thông báo mới</p>
+                                        </div>
+                                    )}
+
+                                    {isStudent && invitations.length === 0 && notifications.length === 0 && (
+                                        <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+                                            <Bell size={28} className="text-gray-300" />
+                                            <p className="text-sm">Không có thông báo mới</p>
+                                        </div>
                                     )}
                                 </div>
 

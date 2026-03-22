@@ -19,17 +19,20 @@ public class ProjectIntegrationService : IProjectIntegrationService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<ProjectIntegrationService> _logger;
     private readonly IHubContext<NotificationHub> _hub;
+    private readonly IAnalyticsService _analyticsService;
 
     public ProjectIntegrationService(
         IUnitOfWork unitOfWork, 
         IServiceScopeFactory serviceScopeFactory, 
         ILogger<ProjectIntegrationService> logger,
-        IHubContext<NotificationHub> hub)
+        IHubContext<NotificationHub> hub,
+        IAnalyticsService analyticsService)
     {
         _unitOfWork = unitOfWork;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
         _hub = hub;
+        _analyticsService = analyticsService;
     }
 
     public async Task LinkIntegrationAsync(long projectId, long submittedByUserId, LinkIntegrationRequest request)
@@ -163,12 +166,12 @@ public class ProjectIntegrationService : IProjectIntegrationService
             
             if (p?.course?.lecturer_users != null && p.course.lecturer_users.Any())
             {
-                var msg = new { 
-                    Type = "LINKS_SUBMITTED", 
-                    Message = $"Nhóm '{p.name}' vừa cập nhật liên kết Github/Jira. Vui lòng phê duyệt." 
-                };
+                var msg = $"Nhóm '{p.name}' vừa cập nhật liên kết Github/Jira. Vui lòng phê duyệt.";
                 foreach (var l in p.course.lecturer_users)
-                    await _hub.Clients.User(l.user_id.ToString()).SendAsync("ReceiveNotification", msg);
+                {
+                    await _analyticsService.BuildNotificationAsync(l.user_id, "LINKS_SUBMITTED", msg, 
+                        System.Text.Json.JsonSerializer.Serialize(new { ProjectId = projectId }));
+                }
             }
         }
         catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
@@ -201,15 +204,14 @@ public class ProjectIntegrationService : IProjectIntegrationService
         {
             var members = await _unitOfWork.TeamMembers.Query()
                 .Where(tm => tm.project_id == projectId && tm.participation_status == "ACTIVE")
-                .Select(tm => tm.student_user_id.ToString())
                 .ToListAsync();
             
-            var msg = new { 
-                Type = "LINKS_APPROVED", 
-                Message = $"Tuyệt vời! Liên kết dự án của nhóm '{integration.project?.name}' đã được phê duyệt. Hệ thống đang bắt đầu đồng bộ dữ liệu." 
-            };
-            foreach (var uid in members)
-                await _hub.Clients.User(uid).SendAsync("ReceiveNotification", msg);
+            var msg = $"Tuyệt vời! Liên kết dự án của nhóm '{integration.project?.name}' đã được phê duyệt. Hệ thống đang bắt đầu đồng bộ dữ liệu.";
+            foreach (var m in members)
+            {
+                await _analyticsService.BuildNotificationAsync(m.student_user_id, "LINKS_APPROVED", msg, 
+                    System.Text.Json.JsonSerializer.Serialize(new { ProjectId = projectId }));
+            }
         }
         catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
 
@@ -262,15 +264,14 @@ public class ProjectIntegrationService : IProjectIntegrationService
         {
             var members = await _unitOfWork.TeamMembers.Query()
                 .Where(tm => tm.project_id == projectId && tm.participation_status == "ACTIVE")
-                .Select(tm => tm.student_user_id.ToString())
                 .ToListAsync();
             
-            var msg = new { 
-                Type = "LINKS_REJECTED", 
-                Message = $"Liên kết dự án của nhóm vừa bị từ chối. Lý do: {reason ?? "Không rõ"}. Vui lòng kiểm tra lại." 
-            };
-            foreach (var uid in members)
-                await _hub.Clients.User(uid).SendAsync("ReceiveNotification", msg);
+            var msg = $"Liên kết dự án của nhóm vừa bị từ chối. Lý do: {reason ?? "Không rõ"}. Vui lòng kiểm tra lại.";
+            foreach (var m in members)
+            {
+                await _analyticsService.BuildNotificationAsync(m.student_user_id, "LINKS_REJECTED", msg, 
+                    System.Text.Json.JsonSerializer.Serialize(new { ProjectId = projectId }));
+            }
         }
         catch (Exception ex) { _logger.LogWarning(ex, "SignalR notification failed"); }
 

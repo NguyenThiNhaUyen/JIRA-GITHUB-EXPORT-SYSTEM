@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import { useGetProjectById, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjectById, useGetProjectMetrics, useLinkIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectCommits } from "../../features/github/hooks/useGithub.js";
+import { useToast } from "../../components/ui/toast.jsx";
 import {
   ChevronRight, GitCommit, Link2, BarChart2,
   Users, FileText, ArrowLeft, Github, Upload,
@@ -25,11 +26,19 @@ export default function StudentProject() {
 
   const [activeTab, setActiveTab] = useState("commits");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  
+  const [githubUrl, setGithubUrl] = useState("");
+  const [jiraUrl, setJiraUrl] = useState("");
+
+  const { success, error: showError } = useToast();
 
   /* ── Data Fetching (Real API) ── */
   const { data: project, isLoading: loadingProject } = useGetProjectById(projectId);
   const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(projectId);
   const { data: commitData, isLoading: loadingCommits } = useGetProjectCommits(projectId, { pageSize: 50 });
+  
+  const { mutate: linkIntegrationMutate } = useLinkIntegration();
 
   const allCommits = commitData?.items || [];
   // Filter commits for current student using email or name if student_user is joined
@@ -105,6 +114,20 @@ export default function StudentProject() {
               <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${jiraStatus.cls}`}>
                 <Link2 size={12} />Jira: {jiraStatus.label}
               </div>
+              
+              {isLeader && (project.integration?.githubStatus !== "APPROVED") && (
+                <button
+                  onClick={() => {
+                    setGithubUrl(project.integration?.githubUrl || "");
+                    setJiraUrl(project.integration?.jiraUrl || "");
+                    setIsLinkModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
+                >
+                  <Link2 size={12} />Kết nối GitHub/Jira
+                </button>
+              )}
+
               <button
                 onClick={() => setIsUploadModalOpen(true)}
                 className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-xl transition-colors"
@@ -388,6 +411,73 @@ export default function StudentProject() {
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => setIsUploadModalOpen(false)} className="flex-1 rounded-xl border-gray-200 text-gray-600 h-10">Hủy</Button>
             <Button onClick={() => setIsUploadModalOpen(false)} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 border-0">Upload</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Link Integration Modal ── */}
+      <Modal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        title="Kết nối GitHub & Jira"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-gray-500 bg-blue-50 border border-blue-100 p-3 rounded-xl">
+             💡 Vui lòng cung cấp URL chính xác để giảng viên có thể phê duyệt và hệ thống bắt đầu kéo dữ liệu (commits, issues).
+          </p>
+          
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">GitHub Repository URL</label>
+            <div className="relative group">
+               <Github className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={16} />
+               <input
+                type="text"
+                value={githubUrl}
+                onChange={(e) => setGithubUrl(e.target.value)}
+                placeholder="https://github.com/username/repo"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
+               />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Jira Project URL / Key</label>
+            <div className="relative group">
+               <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+               <input
+                type="text"
+                value={jiraUrl}
+                onChange={(e) => setJiraUrl(e.target.value)}
+                placeholder="https://tenant.atlassian.net/browse/KEY"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+               />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsLinkModalOpen(false)} className="flex-1 rounded-xl border-gray-200 text-gray-600 h-10">Hủy</Button>
+            <Button 
+                onClick={() => {
+                  if (!githubUrl.trim() || !jiraUrl.trim()) {
+                    showError("Vui lòng nhập đầy đủ links!");
+                    return;
+                  }
+                  linkIntegrationMutate({
+                    projectId: projectId,
+                    body: { githubUrl: githubUrl.trim(), jiraUrl: jiraUrl.trim() }
+                  }, {
+                    onSuccess: () => {
+                      success("Đã gửi yêu cầu kết nối! Đang chờ giảng viên phê duyệt.");
+                      setIsLinkModalOpen(false);
+                    },
+                    onError: (err) => showError(err.message || "Không thể gửi yêu cầu")
+                  });
+                }}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 border-0 shadow-sm"
+            >
+                Xác nhận kết nối
+            </Button>
           </div>
         </div>
       </Modal>
