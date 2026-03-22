@@ -9,7 +9,7 @@
  */
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-system.onrender.com";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-system-production.up.railway.app";
 
 const client = axios.create({
     baseURL: `${BASE_URL}/api`,
