@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { useToast } from "../../components/ui/toast.jsx";
 import {
     ChevronRight, UserPlus, Users, GitBranch, BookOpen,
-    Trash2, Eye, PenLine, ArrowLeft
+    Trash2, Eye, PenLine, ArrowLeft, Star
 } from "lucide-react";
 
 // Feature Hooks
@@ -16,7 +16,8 @@ import {
     useDeleteProject,
     useUpdateProject,
     useAddTeamMember,
-    useRemoveTeamMember
+    useRemoveTeamMember,
+    useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
 
 export default function ManageGroups() {
@@ -41,6 +42,7 @@ export default function ManageGroups() {
     const updateProjectMutation = useUpdateProject();
     const addTeamMemberMutation = useAddTeamMember();
     const removeTeamMemberMutation = useRemoveTeamMember();
+    const updateTeamMemberMutation = useUpdateTeamMember();
 
     const students = studentsData.items || [];
     const groups = course?.groups || [];
@@ -106,6 +108,20 @@ export default function ManageGroups() {
             success("Đã xóa học sinh khỏi nhóm");
         } catch (err) {
             error("Không thể xóa học sinh");
+        }
+    };
+
+    const handlePromoteLeader = async (groupId, studentId, studentName) => {
+        if (!confirm(`Bạn có chắc muốn chỉ định ${studentName} làm Trưởng nhóm mới?`)) return;
+        try {
+            await updateTeamMemberMutation.mutateAsync({
+                projectId: groupId,
+                studentId,
+                updates: { role: "LEADER" }
+            });
+            success(`Đã chỉ định ${studentName} làm Trưởng nhóm.`);
+        } catch (err) {
+            error("Không thể chuyển quyền trưởng nhóm: " + (err.message || "Lỗi hệ thống"));
         }
     };
 
@@ -388,12 +404,24 @@ export default function ManageGroups() {
                                                                 {member.role === "LEADER" && (
                                                                     <span className="text-[9px] font-bold text-teal-600 uppercase">★</span>
                                                                 )}
-                                                                <button
-                                                                    onClick={() => handleRemoveStudentFromGroup(group.id, member.studentId)}
-                                                                    className="text-gray-300 hover:text-red-500 transition-colors ml-0.5 font-bold"
-                                                                >
-                                                                    ×
-                                                                </button>
+                                                                <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    {member.role !== "LEADER" && (
+                                                                        <button
+                                                                            onClick={() => handlePromoteLeader(group.id, member.studentId, member.studentName)}
+                                                                            title="Chuyển quyền Leader"
+                                                                            className="text-amber-500 hover:text-amber-600 transition-colors p-0.5"
+                                                                        >
+                                                                            <Star size={10} fill="currentColor" />
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => handleRemoveStudentFromGroup(group.id, member.studentId)}
+                                                                        title="Xóa SV khỏi nhóm"
+                                                                        className="text-gray-300 hover:text-red-500 transition-colors p-0.5 font-bold"
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>

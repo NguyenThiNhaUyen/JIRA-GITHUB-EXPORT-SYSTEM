@@ -132,7 +132,7 @@ export default function StudentDashboard() {
     };
 
     /* ── Link submit (Leader only) ── */
-    const handleSubmitLinks = (group, githubUrl, jiraUrl, topic) => {
+    const handleSubmitLinks = (group, githubUrl, jiraUrl) => {
         const err = requireLeader({ ...group, teamLeaderId: group.team?.find(m => m.role === 'LEADER')?.studentId }, user?.id);
         if (err) { showError(err); return; }
         if (!githubUrl.trim() || !jiraUrl.trim()) { showError("Vui lòng nhập đầy đủ GitHub URL và Jira URL!"); return; }
@@ -141,8 +141,7 @@ export default function StudentDashboard() {
             projectId: group.id,
             body: {
                 githubUrl: githubUrl.trim(),
-                jiraUrl: jiraUrl.trim(),
-                topic: topic.trim()
+                jiraUrl: jiraUrl.trim()
             }
         }, {
             onSuccess: () => {

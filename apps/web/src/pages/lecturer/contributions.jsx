@@ -40,10 +40,8 @@ export default function Contributions() {
     }, [groups]);
 
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(selectedProject);
-
-    // Dữ liệu giả cho Weekly Commits (BE chưa có API theo tuần chi tiết)
-    const [weeklyCommits, setWeeklyCommits] = useState(new Array(12).fill(0).map(() => Math.floor(Math.random() * 5)));
     
+    const weeklyCommits = metrics?.weeklyCommits || new Array(12).fill(0);
     const commitsByStudent = metrics?.contributions || [];
 
 

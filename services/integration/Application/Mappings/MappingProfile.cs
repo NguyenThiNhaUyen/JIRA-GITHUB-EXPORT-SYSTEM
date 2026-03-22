@@ -90,7 +90,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.student_user.user.full_name))
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.team_role))
             .ForMember(dest => dest.ParticipationStatus, opt => opt.MapFrom(src => src.participation_status))
-            .ForMember(dest => dest.ContributionScore, opt => opt.MapFrom(src => 90)); // Sample score
+            .ForMember(dest => dest.ContributionScore, opt => opt.MapFrom(src => (int)(src.contribution_score ?? 0)));
         CreateMap<project_integration, IntegrationInfo>()
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.repo_url : null))
             .ForMember(dest => dest.GithubRepoOwner, opt => opt.MapFrom(src => src.github_repo != null ? src.github_repo.owner_login : null))

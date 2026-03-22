@@ -31,6 +31,7 @@ export const useGetProjects = (params) => {
     return useQuery({
         queryKey: PROJECT_KEYS.list(params),
         queryFn: () => getProjects(params),
+        enabled: !!params,
     });
 };
 

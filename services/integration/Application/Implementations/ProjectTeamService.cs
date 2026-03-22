@@ -99,6 +99,37 @@ public class ProjectTeamService : IProjectTeamService
         }
     }
 
+    public async Task UpdateTeamMemberAsync(long projectId, long studentUserId, UpdateTeamMemberRequest request)
+    {
+        var member = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
+            tm.project_id == projectId && tm.student_user_id == studentUserId && tm.participation_status == "ACTIVE");
+
+        if (member == null) throw new NotFoundException("Team member not found");
+
+        if (!string.IsNullOrEmpty(request.Role))
+        {
+            // If promoting to LEADER, demote existing leader
+            if (request.Role.ToUpper() == "LEADER" && member.team_role.ToUpper() != "LEADER")
+            {
+                var existingLeader = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>
+                    tm.project_id == projectId && tm.team_role == "LEADER" && tm.participation_status == "ACTIVE");
+
+                if (existingLeader != null)
+                {
+                    existingLeader.team_role = "MEMBER";
+                    _unitOfWork.TeamMembers.Update(existingLeader);
+                }
+            }
+            member.team_role = request.Role.ToUpper();
+        }
+
+        if (request.Responsibility != null)
+            member.responsibility = request.Responsibility;
+
+        _unitOfWork.TeamMembers.Update(member);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task RemoveTeamMemberAsync(long projectId, long studentUserId)
     {
         var teamMember = await _unitOfWork.TeamMembers.FirstOrDefaultAsync(tm =>

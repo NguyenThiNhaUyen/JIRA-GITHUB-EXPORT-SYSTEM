@@ -184,6 +184,17 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
+    /// Update team member (Role/Responsibility) (Leader/Lecturer/Admin)
+    /// </summary>
+    [HttpPatch("{projectId}/members/{studentId}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMember(long projectId, long studentId, [FromBody] UpdateTeamMemberRequest request)
+    {
+        await _teamService.UpdateTeamMemberAsync(projectId, studentId, request);
+        return Ok(ApiResponse.SuccessResponse("Team member updated"));
+    }
+
+    /// <summary>
     /// Update contribution score for a team member (Lecturer/Admin only)
     /// </summary>
     [HttpPatch("{projectId}/members/{memberId}/contribution")]

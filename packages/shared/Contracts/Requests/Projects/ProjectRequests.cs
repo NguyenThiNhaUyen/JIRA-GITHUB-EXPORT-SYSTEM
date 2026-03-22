@@ -43,6 +43,12 @@ public class RejectIntegrationRequest
     public string? Reason { get; set; }
 }
 
+public class UpdateTeamMemberRequest
+{
+    public string? Role { get; set; }
+    public string? Responsibility { get; set; }
+}
+
 
 
 

@@ -114,6 +114,7 @@ public class ProjectDashboardResponse
     public GitHubStats? GitHubStats { get; set; }
     public JiraStats? JiraStats { get; set; }
     public List<MemberContribution> MemberContributions { get; set; } = new();
+    public List<int> WeeklyCommits { get; set; } = new();
     // Flat helpers for FE
     public int TotalCommits => GitHubStats?.TotalCommits ?? 0;
     public int TotalIssues => JiraStats?.TotalIssues ?? 0;
@@ -229,4 +230,18 @@ public class AgingWipItem
     public string Summary { get; set; } = null!;
     public int DaysInProgress { get; set; }
     public string? Assignee { get; set; }
+}
+
+public class CfdItem
+{
+    public string Date { get; set; } = null!;
+    public int Todo { get; set; }
+    public int InProgress { get; set; }
+    public int Done { get; set; }
+}
+
+public class CycleTimeItem
+{
+    public string Date { get; set; } = null!;
+    public double AvgDays { get; set; }
 }

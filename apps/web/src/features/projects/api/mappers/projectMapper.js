@@ -93,6 +93,7 @@ export const mapProjectMetrics = (metrics) => {
             lastActivity: m.lastActivityDate ?? m.LastActivityDate ?? null,
             inactiveDays: m.inactiveDays ?? m.InactiveDays ?? 0,
             alert: m.alert ?? m.Alert ?? null
-        }))
+        })),
+        weeklyCommits: metrics.weeklyCommits ?? metrics.WeeklyCommits ?? []
     };
 };

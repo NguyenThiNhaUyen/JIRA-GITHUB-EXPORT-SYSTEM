@@ -19,7 +19,6 @@ const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]
 export default function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onBack, onSubmitLinks, onDeleteSRS }) {
     const [githubInput, setGithubInput] = useState(group.integration?.githubUrl || "");
     const [jiraInput, setJiraInput] = useState(group.integration?.jiraUrl || "");
-    const [topicInput, setTopicInput] = useState(group.topic || "");
 
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteAvailableStudents, setInviteAvailableStudents] = useState([]);
@@ -164,9 +163,9 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                 )}
                             </div>
                             <h3 className="text-lg font-bold text-gray-800">{group.name}</h3>
-                            {group.topic && (
+                            {group.description && (
                                 <p className="flex items-center gap-1.5 text-sm text-gray-500 mt-0.5">
-                                    <MapPin size={12} className="text-teal-500 shrink-0" />{group.topic}
+                                    <MapPin size={12} className="text-teal-500 shrink-0" />{group.description}
                                 </p>
                             )}
                         </div>
@@ -197,13 +196,6 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             {isLeader ? (
                                 <>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Đề tài</label>
-                                        <input value={topicInput} onChange={e => setTopicInput(e.target.value)}
-                                            placeholder="Tên đề tài..."
-                                            className="mt-1.5 w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all"
-                                        />
-                                    </div>
-                                    <div>
                                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Github size={10} /> GitHub Repo URL</label>
                                         <input value={githubInput} onChange={e => setGithubInput(e.target.value)}
                                             placeholder="https://github.com/..."
@@ -219,7 +211,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                     </div>
                                     {!bothApproved && (
                                         <Button
-                                            onClick={() => onSubmitLinks(group, githubInput, jiraInput, topicInput)}
+                                            onClick={() => onSubmitLinks(group, githubInput, jiraInput)}
                                             className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-9 text-sm border-0 shadow-sm mt-1"
                                         >
                                             Gửi để GV phê duyệt

@@ -512,6 +512,11 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasForeignKey(d => d.submitted_by_user_id)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_project_documents_submitted_by");
+
+            entity.HasOne(d => d.reviewer_user).WithMany()
+                .HasForeignKey(d => d.reviewer_user_id)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_project_documents_reviewer");
         });
 
         modelBuilder.Entity<project_integration>(entity =>
