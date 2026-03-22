@@ -23,6 +23,7 @@ import {
 export default function ManageGroups() {
     const { courseId: paramId } = useParams();
     const courseId = paramId;
+    const navigate = useNavigate();
     const { success, error } = useToast();
 
     const [selectedStudents, setSelectedStudents] = useState([]);
