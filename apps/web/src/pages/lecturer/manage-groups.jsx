@@ -238,7 +238,7 @@ export default function ManageGroups() {
                     </div>
                 </div>
                 <Button
-                    onClick={() => navigate("/lecturer")}
+                    onClick={() => navigate(-1)}
                     variant="outline"
                     className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm"
                 >

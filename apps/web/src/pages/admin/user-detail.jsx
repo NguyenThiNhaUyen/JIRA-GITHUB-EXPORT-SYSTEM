@@ -127,7 +127,7 @@ export default function UserDetail() {
             <div className="flex flex-wrap items-center gap-4">
                 <Button
                     variant="outline"
-                    onClick={() => navigate("/admin/users")}
+                    onClick={() => navigate(-1)}
                     className="rounded-xl border-gray-200 h-9 px-3 text-sm flex items-center gap-2"
                 >
                     <ArrowLeft size={14} /> Quay lại
