@@ -47,7 +47,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ProjectDetailResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
     {
-        var result = await _coreService.CreateProjectAsync(request, request.CourseId);
+        var result = await _coreService.CreateProjectAsync(request, request.CourseId, GetCurrentUserId());
         return CreatedAtAction(nameof(GetProjectById), new { projectId = result.Id },
             ApiResponse<ProjectDetailResponse>.SuccessResponse(result, "Project created successfully"));
     }

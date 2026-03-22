@@ -39,7 +39,7 @@ public class ProjectCoreService : IProjectCoreService
         _hub = hub;
     }
 
-    public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId)
+    public async Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId, long currentUserId)
     {
         var course = await _unitOfWork.Courses.GetByIdAsync(courseId);
         if (course == null)
@@ -57,6 +57,21 @@ public class ProjectCoreService : IProjectCoreService
             throw new BusinessException("Project with this name already exists in the course");
         }
 
+        var studentUser = await _unitOfWork.Students.FirstOrDefaultAsync(su => su.user_id == currentUserId);
+        if (studentUser == null)
+        {
+            throw new BusinessException("Only enrolled students can create a group");
+        }
+
+        // Check enrollment
+        var isEnrolled = await _unitOfWork.CourseEnrollments.Query()
+            .AnyAsync(e => e.student_user_id == studentUser.user_id && e.course_id == courseId && e.status == "ENROLLED");
+        
+        if (!isEnrolled)
+        {
+            throw new BusinessException("You must be enrolled in this course to create a group");
+        }
+
         var project = new project
         {
             course_id = courseId,
@@ -68,6 +83,18 @@ public class ProjectCoreService : IProjectCoreService
         };
 
         _unitOfWork.Projects.Add(project);
+
+        var teamMember = new team_member
+        {
+            project = project,
+            student_user_id = studentUser.user_id,
+            team_role = "LEADER",
+            participation_status = "ACTIVE",
+            joined_at = DateTime.UtcNow,
+            responsibility = "Quản lý nhóm"
+        };
+        _unitOfWork.TeamMembers.Add(teamMember);
+
         await _unitOfWork.SaveChangesAsync();
 
         try 

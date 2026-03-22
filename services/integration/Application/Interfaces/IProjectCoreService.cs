@@ -6,7 +6,7 @@ namespace JiraGithubExport.IntegrationService.Application.Interfaces;
 
 public interface IProjectCoreService
 {
-    Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId);
+    Task<ProjectDetailResponse> CreateProjectAsync(CreateProjectRequest request, long courseId, long currentUserId);
     Task<ProjectDetailResponse> UpdateProjectAsync(long projectId, UpdateProjectRequest request);
     Task DeleteProjectAsync(long projectId);
     Task<ProjectDetailResponse> GetProjectByIdAsync(long projectId);

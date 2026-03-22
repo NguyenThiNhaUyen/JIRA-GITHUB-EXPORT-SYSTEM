@@ -18,7 +18,7 @@ import { useGetCourses, useGetEnrolledStudents } from "../../features/courses/ho
 import { useGetProjects, useLinkIntegration, useAddTeamMember, useCreateProject } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
-import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations } from "../../features/student/hooks/useStudent.js";
+import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations, useGetMyProjects } from "../../features/student/hooks/useStudent.js";
 
 import CourseWorkspace from "./CourseWorkspace.jsx";
 
@@ -36,7 +36,7 @@ export default function StudentDashboard() {
 
     // Data Fetching - Real API
     const { data: coursesData = { items: [] }, isLoading: coursesLoading, refetch: refetchCourses } = useGetCourses({ pageSize: 100 });
-    const { data: projectsData = { items: [] }, isLoading: projectsLoading, refetch: refetchProjects } = useGetProjects({ pageSize: 100 });
+    const { data: projectsData = { items: [] }, isLoading: projectsLoading, refetch: refetchProjects } = useGetMyProjects({ pageSize: 100 });
     const { data: alertsData = { items: [] }, isLoading: alertsLoading, refetch: refetchAlerts } = useGetAlerts({ pageSize: 10 });
     // Personal analytics APIs
     const { data: dashboardStats } = useGetStudentDashboardStats();

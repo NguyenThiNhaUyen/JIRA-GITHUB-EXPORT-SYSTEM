@@ -12,6 +12,8 @@ import {
     useUpdateTeamMember
 } from "../../features/projects/hooks/useProjects.js";
 import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
+import { useGetProjectSrs, useUpdateSrsStatus, useProvideSrsFeedback, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
+import { SRS_STATUS } from "../../shared/permissions.js";
 
 import {
     ChevronRight, ArrowLeft, GitBranch, BookOpen,
@@ -35,6 +37,12 @@ export default function GroupDetail() {
     const updateMemberMutation = useUpdateTeamMember();
     
     const { mutate: generateSrsMutate, isPending: isGeneratingSrs } = useGenerateSrs();
+    
+    // 3. SRS Reports
+    const { data: srsReports = [], isLoading: srsLoading } = useGetProjectSrs(groupId);
+    const updateSrsStatusMutation = useUpdateSrsStatus();
+    const provideFeedbackMutation = useProvideSrsFeedback();
+    const deleteSrsMutation = useDeleteSrs();
 
     // Không còn useEffect lằng nhằng nữa, UI chỉ tập trung Render Data
     if (isLoading) {
@@ -95,6 +103,27 @@ export default function GroupDetail() {
         generateSrsMutate({ projectId: groupId, format: "PDF" }, {
             onSuccess: () => success("Hệ thống đang tự tạo và xuất báo cáo SRS!"),
             onError: (err) => error("Lỗi xuất SRS: " + (err.message || ""))
+        });
+    };
+
+    const handleUpdateSrsStatus = (reportId, newStatus) => {
+        updateSrsStatusMutation.mutate({ reportId, newStatus }, {
+            onSuccess: () => success(`Đã cập nhật trạng thái SRS thành ${newStatus}`)
+        });
+    };
+
+    const handleProvideSrsFeedback = (reportId) => {
+        const feedback = prompt("Nhập nhận xét cho bản SRS này:");
+        if (feedback === null) return;
+        provideFeedbackMutation.mutate({ reportId, feedback }, {
+            onSuccess: () => success("Đã lưu nhận xét cho SRS")
+        });
+    };
+
+    const handleDeleteSrs = (reportId) => {
+        if (!confirm("Bạn có chắc muốn xóa bản SRS này?")) return;
+        deleteSrsMutation.mutate({ reportId }, {
+            onSuccess: () => success("Đã xóa bản SRS")
         });
     };
 
@@ -317,6 +346,69 @@ export default function GroupDetail() {
                                 onApprove={() => handleApproveLink()}
                                 onReject={() => handleRejectLink()}
                             />
+                        </CardContent>
+                    </Card>
+
+
+                    {/* SRS Reports History */}
+                    <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+                        <CardHeader className="border-b border-gray-50 pb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                                        <BookOpen size={15} className="text-teal-600" />
+                                    </div>
+                                    <CardTitle className="text-base font-semibold text-gray-800">Lịch sử Báo cáo SRS</CardTitle>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-full border border-gray-100 uppercase tracking-widest">
+                                    ISO 29148
+                                </span>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-4 p-4">
+                            {srsLoading ? (
+                                <div className="py-8 text-center text-gray-400 text-sm">Đang tải danh sách báo cáo...</div>
+                            ) : srsReports.length === 0 ? (
+                                <div className="py-8 text-center text-gray-400 text-sm italic">Nhóm chưa có bản lưu SRS nào</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {srsReports.map((rp) => (
+                                        <div key={rp.id} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-teal-100 hover:bg-teal-50/10 transition-all group">
+                                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-white shadow-sm transition-colors">
+                                                <FileDown size={18} className="text-gray-400 group-hover:text-teal-600" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-sm font-bold text-gray-800 truncate">
+                                                        Bản {rp.id}
+                                                    </span>
+                                                    <Badge className={SRS_STATUS[rp.status]?.cls || ""}>
+                                                        {SRS_STATUS[rp.status]?.label || rp.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-[10px] text-gray-400 font-medium">
+                                                    <span className="flex items-center gap-1"><Clock size={10} /> {new Date(rp.submittedAt).toLocaleDateString()}</span>
+                                                    {rp.feedback && <span className="text-teal-600 bg-teal-50 px-1.5 rounded truncate max-w-[150px]">Phản hồi: {rp.feedback}</span>}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg text-teal-600 hover:bg-teal-50" title="Tải về" asChild>
+                                                    <a href={rp.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                        <ExternalLink size={14} />
+                                                    </a>
+                                                </Button>
+                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:bg-gray-100" title="Nhận xét" onClick={() => handleProvideSrsFeedback(rp.id)}>
+                                                    <BookOpen size={14} />
+                                                </Button>
+                                                <div className="w-px h-4 bg-gray-100 mx-1" />
+                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg text-red-400 hover:bg-red-50" title="Xóa" onClick={() => handleDeleteSrs(rp.id)}>
+                                                    <AlertTriangle size={14} />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

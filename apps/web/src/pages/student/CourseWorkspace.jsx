@@ -25,8 +25,10 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const [inviteSelectedIds, setInviteSelectedIds] = useState([]);
     const [isInviting, setIsInviting] = useState(false);
 
-    const myMember = groupStudents.find(m => m.studentId === userId);
-    const isLeader = myMember?.role === 'LEADER';
+    const myMember = groupStudents.find(m => String(m.studentId) === String(userId));
+    const isLeader = myMember?.role?.toUpperCase() === 'LEADER';
+
+    // console.log("[Debug] Workspace Role:", { userId, myMember, isLeader });
 
     // Links status
     const ghStatus = group.integration?.githubStatus || "NONE";

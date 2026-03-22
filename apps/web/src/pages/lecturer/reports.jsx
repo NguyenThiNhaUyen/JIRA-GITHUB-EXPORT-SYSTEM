@@ -1,5 +1,5 @@
 // Reports & Export — Lecturer
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, Download, FileSpreadsheet, FileText, Filter, CheckSquare, Loader2, Link as LinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";

@@ -22,9 +22,9 @@ export const mapProject = (project) => {
         lastCommit: project.lastCommit ?? project.LastCommit ?? null,
         lastActivity: project.lastActivity ?? project.LastActivity ?? null,
         // Team
-        team: (project.teamMembers ?? project.TeamMembers ?? project.members ?? project.Members ?? []).map(member => ({
-            studentUserId: member.studentUserId ?? member.StudentUserId,
-            studentId: member.studentUserId ?? member.StudentUserId,
+        team: (project.teamMembers ?? project.TeamMembers ?? project.members ?? project.Members ?? project.team ?? []).map(member => ({
+            studentUserId: member.studentUserId ?? member.StudentUserId ?? member.studentId,
+            studentId: member.studentUserId ?? member.StudentUserId ?? member.studentId,
             studentName: member.fullName ?? member.FullName ?? member.studentName ?? "",
             studentCode: member.studentCode ?? member.StudentCode ?? "",
             role: member.teamRole ?? member.TeamRole ?? member.role ?? member.Role ?? "MEMBER",

@@ -22,7 +22,8 @@ export function useSignalR() {
     }
 
     const token = localStorage.getItem('accessToken');
-    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+    const envUrl = import.meta.env.VITE_API_URL || "https://jira-github-export-system-production.up.railway.app";
+    const baseUrl = envUrl.replace(/\/api\/?$/, '');
     const hubUrl = `${baseUrl}/notificationHub`;
 
     // Create connection
