@@ -21,6 +21,14 @@ public static class DatabaseSeeder
         {
             seedLogger.LogInformation("Applying database migrations...");
             await dbContext.Database.MigrateAsync();
+            
+            // Auto-fix missing columns if EF migration is not yet ready
+            await dbContext.Database.ExecuteSqlRawAsync(@"
+                ALTER TABLE jira_issues 
+                ADD COLUMN IF NOT EXISTS due_date TIMESTAMP,
+                ADD COLUMN IF NOT EXISTS story_points INTEGER DEFAULT 0,
+                ADD COLUMN IF NOT EXISTS resolution_date TIMESTAMP;
+            ");
 
             await SeedRolesAsync(dbContext);
             await SeedBasicUsersAsync(dbContext, hasher);
@@ -32,6 +40,7 @@ public static class DatabaseSeeder
             await SeedPhase3Async(dbContext);
             await SeedPhase5Async(dbContext);
             await SeedPhase6Async(dbContext);
+            await SeedPhase7Async(dbContext);
 
             seedLogger.LogInformation("✅ Database seeding completed successfully!");
         }
@@ -334,19 +343,59 @@ public static class DatabaseSeeder
 
         if (!await dbContext.project_documents.AnyAsync(d => d.project_id == proj.id))
         {
-            dbContext.project_documents.Add(new project_document {
-                project_id = proj.id, doc_type = "SRS", version_no = 1, status = "APPROVED",
-                file_url = "https://example.com/srs_v1.pdf", submitted_by_user_id = student.id,
-                submitted_at = DateTime.UtcNow.AddDays(-10), reviewer_user_id = lecturer.id,
-                reviewed_at = DateTime.UtcNow.AddDays(-9), score = 9.5m
+            dbContext.project_documents.Add(new project_document
+            {
+                project_id = proj.id,
+                doc_type = "SRS",
+                version_no = 1,
+                status = "APPROVED",
+                file_url = "https://example.com/srs_v1.pdf",
+                submitted_by_user_id = student.id,
+                submitted_at = DateTime.UtcNow.AddDays(-10),
+                reviewer_user_id = lecturer.id,
+                reviewed_at = DateTime.UtcNow.AddDays(-9),
+                score = 9.5m
             });
 
-            dbContext.project_documents.Add(new project_document {
-                project_id = proj.id, doc_type = "SRS", version_no = 2, status = "DRAFT",
-                file_url = "https://example.com/srs_v1_1.pdf", submitted_by_user_id = student.id,
+            dbContext.project_documents.Add(new project_document
+            {
+                project_id = proj.id,
+                doc_type = "SRS",
+                version_no = 2,
+                status = "DRAFT",
+                file_url = "https://example.com/srs_v1_1.pdf",
+                submitted_by_user_id = student.id,
                 submitted_at = DateTime.UtcNow.AddDays(-2)
             });
             await dbContext.SaveChangesAsync();
+            }
         }
+    private static async Task SeedPhase7Async(JiraGithubToolDbContext dbContext)
+    {
+        var issues = await dbContext.jira_issues.ToListAsync();
+        bool changed = false;
+        var rand = new Random();
+
+        foreach (var i in issues)
+        {
+            if (i.story_points == 0)
+            {
+                i.story_points = rand.Next(1, 13);
+                changed = true;
+            }
+            if (!i.due_date.HasValue)
+            {
+                // Assign a due date in the current week or next
+                i.due_date = DateTime.UtcNow.AddDays(rand.Next(-3, 15));
+                changed = true;
+            }
+            if (i.status == "Done" && !i.resolution_date.HasValue)
+            {
+                i.resolution_date = i.updated_at;
+                changed = true;
+            }
+        }
+
+        if (changed) await dbContext.SaveChangesAsync();
     }
 }

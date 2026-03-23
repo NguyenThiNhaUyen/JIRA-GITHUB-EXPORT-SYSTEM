@@ -11,6 +11,8 @@ public class StudentDashboardStatsResponse
     public int TotalIssues { get; set; }        // FE expects totalIssues
     public int JiraTasksAssigned { get; set; }
     public int JiraTasksDone { get; set; }
+    public int OpenTasks { get; set; }          // FE expects openTasks
+    public int TasksDue { get; set; }           // FE expects tasksDue
     public double ContributionPercent { get; set; }
     public List<StudentProjectInfo> Projects { get; set; } = new();
 }

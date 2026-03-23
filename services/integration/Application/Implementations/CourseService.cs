@@ -156,7 +156,8 @@ public class CourseService : ICourseService
             {
                 UserId = tm.student_user_id,
                 FullName = tm.student_user?.user?.full_name ?? "Unknown",
-                StudentCode = tm.student_user?.student_code ?? "N/A"
+                StudentCode = tm.student_user?.student_code ?? "N/A",
+                StudentId = tm.student_user?.student_code ?? "N/A"
             }).ToList()
         }).ToList();
 

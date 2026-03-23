@@ -20,6 +20,15 @@ public class IntegrationStatsResponse
     public int JiraConnected { get; set; }
     public int SyncErrors { get; set; }
     public int ReportsExported { get; set; }
+    public SrsStatusSummary SrsStatus { get; set; } = new();
+}
+
+public class SrsStatusSummary
+{
+    public int Draft { get; set; }
+    public int Review { get; set; }
+    public int Approved { get; set; }
+    public int Rejected { get; set; }
 }
 
 public class DailyCommitStat
