@@ -5,7 +5,8 @@ import { ChevronRight, GitBranch, Bell, CheckCircle, AlertTriangle, Clock, BookO
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
-import { useGetProjects, useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjectMetrics } from "../../features/projects/hooks/useProjects.js";
+import { useGetMyProjects } from "../../features/student/hooks/useStudent.js";
 import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
 import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 import { SRS_STATUS, ALERT_SEVERITY } from "../../shared/permissions.js";
@@ -29,7 +30,7 @@ function Breadcrumb({ title }) {
 /* ═══════════ Contribution Page ═══════════ */
 export function StudentContributionPage() {
     const { user } = useAuth();
-    const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
+    const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
     const myGroups = projectsData?.items || [];
 
     const metricQueries = useQueries({
@@ -231,9 +232,9 @@ export function StudentAlertsPage() {
 export function StudentSrsPage() {
     const { user } = useAuth();
 
-    const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
+    const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
     const myGroups = projectsData?.items || [];
-    
+
     if (loadingProjects) {
         return (
             <div className="flex h-full items-center justify-center py-20">
@@ -323,7 +324,7 @@ export default function StudentCoursesPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { data: coursesData, isLoading: loadingCourses } = useGetCourses();
-    const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
+    const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
 
     const coursesList = coursesData?.items || [];
     const projectsList = projectsData?.items || [];
@@ -362,7 +363,7 @@ export default function StudentCoursesPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {coursesList.map(c => {
-                        const project = projectsList.find(p => p.courseId === c.id);
+                        const project = projectsList.find(p => String(p.courseId) === String(c.id));
                         const myMember = project?.team?.find(m => String(m.studentId) === String(user?.id));
                         const isLeader = myMember?.role?.toUpperCase() === "LEADER";
                         const leader = project?.team?.find(m => m.role?.toUpperCase() === "LEADER");
@@ -480,7 +481,7 @@ export default function StudentCoursesPage() {
 export function StudentMyProjectPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const { data: projectsData, isLoading } = useGetProjects();
+    const { data: projectsData, isLoading } = useGetMyProjects();
     const myGroups = projectsData?.items || [];
 
     // Auto-redirect to the first group if only one group exists

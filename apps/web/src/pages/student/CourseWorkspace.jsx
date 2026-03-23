@@ -289,7 +289,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         </CardHeader>
                         <CardContent className="pt-4 grid grid-cols-2 gap-3">
                             {[
-                                { label: "My Commits", value: metrics?.userCommits ?? metrics?.myCommits ?? "0", color: "text-blue-700 bg-blue-50" },
+                                { label: "My Commits", value: metrics?.contributions?.find(m => String(m.studentUserId) === String(userId))?.commits ?? metrics?.userCommits ?? "0", color: "text-blue-700 bg-blue-50" },
                                 { label: "Total Commits", value: metrics?.totalCommits ?? "0", color: "text-teal-700 bg-teal-50" },
                             ].map(({ label, value, color }) => (
                                 <div key={label} className={`rounded-xl px-3 py-2.5 flex flex-col items-center text-center ${color}`}>
@@ -343,7 +343,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <p className="text-xs font-bold text-gray-700">
-                                                    {metrics?.contributions?.find(m => m.studentId === stu.studentId)?.commits ?? "0"}
+                                                    {metrics?.contributions?.find(m => String(m.studentUserId) === String(stu.studentId))?.commits ?? "0"}
                                                 </p>
                                                 <p className="text-[10px] text-gray-400">commits</p>
                                             </div>
