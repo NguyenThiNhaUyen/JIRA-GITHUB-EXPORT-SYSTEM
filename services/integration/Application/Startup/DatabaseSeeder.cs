@@ -93,18 +93,35 @@ public static class DatabaseSeeder
         }
         await dbContext.SaveChangesAsync();
 
-        // Student
-        string studEmail = "sv@fpt.edu.vn";
-        if (!await dbContext.users.AnyAsync(u => u.email == studEmail))
+        // Students
+        var studentEmails = new[] { 
+            "sv@fpt.edu.vn", "kietdt@fpt.edu.vn", "tuannv@fpt.edu.vn", 
+            "anhbd@fpt.edu.vn", "sinhvnv@fpt.edu.vn", "phuonglt@fpt.edu.vn" 
+        };
+        var studentRole = await dbContext.roles.FirstAsync(r => r.role_name == "STUDENT");
+
+        foreach (var email in studentEmails)
         {
-            var role = await dbContext.roles.FirstAsync(r => r.role_name == "STUDENT");
-            var u = new user { email = studEmail, password = hasher.HashPassword("Student@123"), full_name = "Trần Thị B", enabled = true };
-            u.roles.Add(role);
-            dbContext.users.Add(u);
-            await dbContext.SaveChangesAsync();
-            dbContext.students.Add(new student { user_id = u.id, student_code = "SE123456", major = "SE", department = "IT" });
-            await dbContext.SaveChangesAsync();
+            if (!await dbContext.users.AnyAsync(u => u.email == email))
+            {
+                string name = email switch {
+                    "sv@fpt.edu.vn" => "Trần Thị B",
+                    "kietdt@fpt.edu.vn" => "Dương Tuấn Kiệt",
+                    "tuannv@fpt.edu.vn" => "Nguyễn Văn Tuấn",
+                    "anhbd@fpt.edu.vn" => "Bùi Đức Anh",
+                    "sinhvnv@fpt.edu.vn" => "Nguyễn Văn Sinh Viên",
+                    "phuonglt@fpt.edu.vn" => "Lý Thanh Phương",
+                    _ => "Sinh viên " + email.Split('@')[0]
+                };
+                var u = new user { email = email, password = hasher.HashPassword("Student@123"), full_name = name, enabled = true };
+                u.roles.Add(studentRole);
+                dbContext.users.Add(u);
+                await dbContext.SaveChangesAsync();
+                
+                dbContext.students.Add(new student { user_id = u.id, student_code = "SE" + u.id.ToString().PadLeft(6, '0'), major = "SE", department = "IT" });
+            }
         }
+        await dbContext.SaveChangesAsync();
     }
 
     private static async Task FixMissingUserRecordsAsync(JiraGithubToolDbContext dbContext)
@@ -205,12 +222,15 @@ public static class DatabaseSeeder
             await dbContext.SaveChangesAsync();
         }
 
-        var stu = await dbContext.users.FirstOrDefaultAsync(u => u.email == "sv@fpt.edu.vn");
-        if (stu != null && !await dbContext.course_enrollments.AnyAsync(ce => ce.course_id == existingCourse.id && ce.student_user_id == stu.id))
+        var allStudents = await dbContext.users.Where(u => u.roles.Any(r => r.role_name == "STUDENT")).ToListAsync();
+        foreach (var s in allStudents)
         {
-            dbContext.course_enrollments.Add(new course_enrollment { course_id = existingCourse.id, student_user_id = stu.id, status = "ACTIVE" });
-            await dbContext.SaveChangesAsync();
+            if (!await dbContext.course_enrollments.AnyAsync(ce => ce.course_id == existingCourse.id && ce.student_user_id == s.id))
+            {
+                dbContext.course_enrollments.Add(new course_enrollment { course_id = existingCourse.id, student_user_id = s.id, status = "ACTIVE" });
+            }
         }
+        await dbContext.SaveChangesAsync();
     }
 
     private static async Task SeedPhase2Async(JiraGithubToolDbContext dbContext)
@@ -228,15 +248,19 @@ public static class DatabaseSeeder
             dbContext.projects.Add(project);
             await dbContext.SaveChangesAsync();
 
-            var stu = await dbContext.users.FirstOrDefaultAsync(u => u.email == "sv@fpt.edu.vn");
-            if (stu != null)
+            var projectStudents = await dbContext.users
+                .Where(u => u.email == "sv@fpt.edu.vn" || u.email == "kietdt@fpt.edu.vn" || u.email == "tuannv@fpt.edu.vn")
+                .ToListAsync();
+
+            foreach (var stu in projectStudents)
             {
                 dbContext.team_members.Add(new team_member {
                     project_id = project.id, student_user_id = stu.id,
-                    team_role = "LEADER", participation_status = "ACTIVE"
+                    team_role = stu.email == "sv@fpt.edu.vn" ? "LEADER" : "MEMBER", 
+                    participation_status = "ACTIVE"
                 });
-                await dbContext.SaveChangesAsync();
             }
+            await dbContext.SaveChangesAsync();
         }
     }
 

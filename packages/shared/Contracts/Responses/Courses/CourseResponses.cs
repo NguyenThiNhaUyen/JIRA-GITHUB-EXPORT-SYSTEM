@@ -35,11 +35,7 @@ public class CourseGroupInfo
     public List<EnrollmentInfo> Team { get; set; } = new();
     public List<EnrollmentInfo> Members => Team; // Alias for FE mapProject
     
-    public IntegrationInfo? Integration => new IntegrationInfo 
-    { 
-        GithubStatus = GithubStatus, 
-        JiraStatus = JiraStatus 
-    };
+    public IntegrationInfo? Integration { get; set; }
 }
 
 public class SubjectInfo
