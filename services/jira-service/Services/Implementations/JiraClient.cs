@@ -135,25 +135,25 @@ public class JiraClient : IJiraClient
         }
     }
 
-    private double? ExtractStoryPoints(Dictionary<string, System.Text.Json.JsonElement>? extensionData)
+    private int ExtractStoryPoints(Dictionary<string, System.Text.Json.JsonElement>? extensionData)
     {
-        if (extensionData == null) return null;
+        if (extensionData == null) return 0;
         
         // Match custom fields known for Story Points, or first reasonable double
         if (extensionData.TryGetValue("customfield_10016", out var sp10016) && sp10016.ValueKind == System.Text.Json.JsonValueKind.Number)
-            return sp10016.GetDouble();
+            return (int)Math.Round(sp10016.GetDouble());
             
         if (extensionData.TryGetValue("customfield_10014", out var sp10014) && sp10014.ValueKind == System.Text.Json.JsonValueKind.Number)
-            return sp10014.GetDouble();
+            return (int)Math.Round(sp10014.GetDouble());
 
         foreach (var kvp in extensionData)
         {
             if (kvp.Key.StartsWith("customfield_") && kvp.Value.ValueKind == System.Text.Json.JsonValueKind.Number)
             {
-                return kvp.Value.GetDouble();
+                return (int)Math.Round(kvp.Value.GetDouble());
             }
         }
-        return null;
+        return 0;
     }
 
     public async Task<int> GetIssueCountAsync(string projectKey, string siteUrl, string status)
