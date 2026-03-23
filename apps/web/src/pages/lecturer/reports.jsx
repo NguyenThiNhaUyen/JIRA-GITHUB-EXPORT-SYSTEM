@@ -32,7 +32,7 @@ const EXPORT_TYPES = [
         id: "by-group",
         icon: FileText,
         color: "bg-blue-500",
-        title: "Danh sách nhóm (Roster)",
+        title: "Danh sách nhóm",
         desc: "Xuất danh sách thành viên và vai trò của một nhóm cụ thể.",
         formats: ["PDF", "Excel"],
         action: "team-roster",
@@ -295,11 +295,10 @@ export default function Reports() {
                                     </div>
 
                                     <div className="col-span-3 text-center">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
-                                            fmt === "DOCX" ? "text-indigo-700 bg-indigo-50 border-indigo-100" :
-                                            fmt === "PDF" ? "text-red-700 bg-red-50 border-red-100" :
-                                            "text-green-700 bg-green-50 border-green-100"
-                                        }`}>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${fmt === "DOCX" ? "text-indigo-700 bg-indigo-50 border-indigo-100" :
+                                                fmt === "PDF" ? "text-red-700 bg-red-50 border-red-100" :
+                                                    "text-green-700 bg-green-50 border-green-100"
+                                            }`}>
                                             {fmt === "DOCX" ? "Word" : fmt}
                                         </span>
                                     </div>

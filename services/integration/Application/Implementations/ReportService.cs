@@ -388,12 +388,11 @@ public class ReportService : IReportService
             if (project == null) throw new NotFoundException("Project not found");
 
             var integration = project.project_integration;
-            if (integration == null || integration.jira_project == null)
-                throw new BusinessException("Project is not integrated with Jira. SRS cannot be generated.");
-
-            var jiraProject  = integration.jira_project;
-            var githubRepo   = integration.github_repo;
-            var allIssues    = jiraProject.jira_issues ?? new List<jira_issue>();
+            
+            // If not integrated with Jira, don't throw, just allow generating an empty template
+            var jiraProject  = integration?.jira_project;
+            var githubRepo   = integration?.github_repo;
+            var allIssues    = jiraProject?.jira_issues ?? new List<jira_issue>();
 
             // GitHub stats
             int totalCommits = 0, totalPRs = 0;
@@ -469,8 +468,8 @@ public class ReportService : IReportService
             var srsData = new SrsReportData
             {
                 Project                  = project,
-                JiraProjectKey           = jiraProject.jira_project_key,
-                JiraSiteUrl              = jiraProject.jira_url ?? "",
+                JiraProjectKey           = jiraProject?.jira_project_key ?? "N/A",
+                JiraSiteUrl              = jiraProject?.jira_url ?? "",
                 GithubRepoUrl            = githubRepo?.repo_url ?? "",
                 GithubDefaultBranch      = defaultBranch,
                 GithubTotalCommits       = totalCommits,
