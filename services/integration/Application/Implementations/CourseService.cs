@@ -146,12 +146,18 @@ public class CourseService : ICourseService
             Name = p.name,
             GithubStatus = p.project_integration?.approval_status ?? "NONE",
             JiraStatus = p.project_integration?.approval_status ?? "NONE",
+            Integration = p.project_integration != null ? new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
+            {
+                GithubStatus = p.project_integration.approval_status ?? "NONE",
+                JiraStatus = p.project_integration.approval_status ?? "NONE"
+            } : null,
             Topic = p.description,
             Team = p.team_members.Select(tm => new EnrollmentInfo
             {
                 UserId = tm.student_user_id,
                 FullName = tm.student_user?.user?.full_name ?? "Unknown",
-                StudentCode = tm.student_user?.student_code ?? "N/A"
+                StudentCode = tm.student_user?.student_code ?? "N/A",
+                StudentId = tm.student_user?.student_code ?? "N/A"
             }).ToList()
         }).ToList();
 

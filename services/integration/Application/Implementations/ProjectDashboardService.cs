@@ -183,7 +183,7 @@ public class ProjectDashboardService : IProjectDashboardService
 
     private KanbanTask MapToKanban(jira_issue i) => new() {
         Id = i.jira_issue_key, Title = i.title ?? "No title", Status = i.status ?? "Open", 
-        Assignee = i.assignee_jira_account_id ?? "Unassigned", Priority = i.priority, Type = i.issue_type, StoryPoint = "0"
+        Assignee = i.assignee_jira_account_id ?? "Unassigned", Priority = i.priority, Type = i.issue_type, StoryPoint = i.story_points.ToString()
     };
 
     public async Task<CfdBoardResponse> GetProjectCfdAsync(long projectId)
@@ -241,12 +241,24 @@ public class ProjectDashboardService : IProjectDashboardService
         var issues = await _unitOfWork.JiraIssues.FindAsync(ji => ji.jira_project_id == project.project_integration.jira_project_id && ji.status == "Done");
         var doneIssues = issues.ToList();
 
-        var cycleTimes = doneIssues.Select(i => (i.updated_at - i.created_at).TotalDays).OrderBy(t => t).ToList();
+        var cycleTimes = doneIssues.Select(i => ((i.resolution_date ?? i.updated_at) - i.created_at).TotalDays).OrderBy(t => t).ToList();
+
+        var buckets = new List<CycleTimeBucket>();
+        if (cycleTimes.Any())
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                int start = i * 5;
+                int end = (i + 1) * 5;
+                buckets.Add(new CycleTimeBucket { Bucket = $"{start}-{end}d", Count = cycleTimes.Count(t => t >= start && t < end) });
+            }
+            buckets.Add(new CycleTimeBucket { Bucket = "25d+", Count = cycleTimes.Count(t => t >= 25) });
+        }
 
         return new CycleTimeResponse {
             MedianDays = cycleTimes.Any() ? (int)cycleTimes[cycleTimes.Count / 2] : 0,
             P75Days = cycleTimes.Any() ? (int)cycleTimes[(int)(cycleTimes.Count * 0.75)] : 0,
-            Histogram = new List<CycleTimeBucket>()
+            Histogram = buckets
         };
     }
 }

@@ -24,6 +24,9 @@ public partial class jira_issue
     public string? assignee_jira_account_id { get; set; }
 
     public string? reporter_jira_account_id { get; set; }
+    public int story_points { get; set; }
+    public DateTime? due_date { get; set; }
+    public DateTime? resolution_date { get; set; }
 
     public DateTime created_at { get; set; }
 

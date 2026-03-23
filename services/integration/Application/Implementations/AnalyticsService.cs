@@ -134,13 +134,26 @@ public class AnalyticsService : IAnalyticsService
                 _logger.LogWarning("Could not fetch reports exported count: {Message}", ex.Message);
             }
 
+            // SRS Status Summary
+            var srsDocs = await _unitOfWork.ProjectDocuments.Query()
+                .AsNoTracking()
+                .Where(d => d.doc_type == "SRS")
+                .ToListAsync();
+
             return new IntegrationStatsResponse
             {
                 RepoConnected = repoConnected,
                 RepoMissing = repoMissing < 0 ? 0 : repoMissing,
                 JiraConnected = jiraConnected,
                 SyncErrors = 0,
-                ReportsExported = reportsExported
+                ReportsExported = reportsExported,
+                SrsStatus = new SrsStatusSummary
+                {
+                    Draft = srsDocs.Count(d => d.status == "DRAFT"),
+                    Review = srsDocs.Count(d => d.status == "REVIEW" || d.status == "REVIEWING"),
+                    Approved = srsDocs.Count(d => d.status == "APPROVED"),
+                    Rejected = srsDocs.Count(d => d.status == "REJECTED")
+                }
             };
         }
         catch (Exception ex)
@@ -842,13 +855,22 @@ public class AnalyticsService : IAnalyticsService
 
             totalTeamCommits = repoCommits.Sum(r => r.Count);
 
-            // Student's personal commits (by matching user email to github_user email)
-            var studentUser = await _unitOfWork.Users.GetByIdAsync(studentUserId);
+            // Student's personal commits (by matching user email or linked GitHub account)
+            var studentUser = await _unitOfWork.Users.Query()
+                .Include(u => u.external_accounts)
+                .FirstOrDefaultAsync(u => u.id == studentUserId);
+
             if (studentUser != null)
             {
+                var githubLogins = studentUser.external_accounts
+                    .Where(ea => ea.provider.Equals("GITHUB", StringComparison.OrdinalIgnoreCase))
+                    .Select(ea => ea.username)
+                    .Where(u => !string.IsNullOrEmpty(u))
+                    .ToList();
+
                 var studentGithubUsers = await _unitOfWork.GitHubUsers.Query()
                     .AsNoTracking()
-                    .Where(gu => gu.email != null && gu.email == studentUser.email)
+                    .Where(gu => (gu.email != null && gu.email == studentUser.email) || githubLogins.Contains(gu.login))
                     .Select(gu => gu.id)
                     .ToListAsync();
 
@@ -894,14 +916,16 @@ public class AnalyticsService : IAnalyticsService
 
         if (jiraProjectIds.Any())
         {
-            response.JiraTasksAssigned = await _unitOfWork.JiraIssues.Query()
+            var now = DateTime.UtcNow;
+            var jiraIssues = await _unitOfWork.JiraIssues.Query()
                 .AsNoTracking()
                 .Where(i => jiraProjectIds.Contains(i.jira_project_id))
-                .CountAsync();
-            response.JiraTasksDone = await _unitOfWork.JiraIssues.Query()
-                .AsNoTracking()
-                .Where(i => jiraProjectIds.Contains(i.jira_project_id) && i.status != null && i.status.ToUpper() == "DONE")
-                .CountAsync();
+                .ToListAsync();
+
+            response.JiraTasksAssigned = jiraIssues.Count;
+            response.JiraTasksDone = jiraIssues.Count(i => i.status != null && (i.status.ToUpper() == "DONE" || i.status.ToUpper() == "COMPLETED"));
+            response.OpenTasks = jiraIssues.Count(i => i.status != null && i.status.ToUpper() != "DONE" && i.status.ToUpper() != "COMPLETED");
+            response.TasksDue = jiraIssues.Count(i => i.status != null && i.status.ToUpper() != "DONE" && i.due_date.HasValue && i.due_date.Value < now.AddDays(3));
         }
 
         response.WeeklyCommits = weeklyCommits;
@@ -1014,9 +1038,11 @@ public class AnalyticsService : IAnalyticsService
             {
                 Id = i.jira_issue_key ?? i.id.ToString(),
                 Title = i.title ?? "(no title)",
-                DueDate = i.updated_at.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                Due = "Xem Jira",
-                DaysLeft = 0,
+                DueDate = (i.due_date ?? i.updated_at).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                Due = i.due_date.HasValue 
+                    ? (i.due_date.Value > DateTime.UtcNow ? $"Hết hạn sau {(int)(i.due_date.Value - DateTime.UtcNow).TotalDays} ngày" : "Đã quá hạn")
+                    : "Chưa có deadline",
+                DaysLeft = i.due_date.HasValue ? (int)(i.due_date.Value - DateTime.UtcNow).TotalDays : 0,
                 Severity = (i.priority?.ToUpper()) switch
                 {
                     "HIGH" or "HIGHEST" or "BLOCKER" => "high",
@@ -1233,18 +1259,27 @@ public class AnalyticsService : IAnalyticsService
             // Use the stored contribution_score from project_team if available, otherwise use calculated
             decimal finalScore = member.contribution_score ?? calculatedScore;
 
-            string status = finalScore > 75 ? "Tích cực" : finalScore >= 50 ? "Ổn định" : totalCommits == 0 ? "Chưa commit" : "Cần chú ý";
+            // Calculate LastActiveDaysAgo
+            int lastActiveDaysAgo = 100; // default large value
+            if (studentActivities.Any())
+            {
+                var lastActiveDate = studentActivities.Max(a => a.activity_date);
+                lastActiveDaysAgo = (int)(DateTime.UtcNow.Date - lastActiveDate.ToDateTime(TimeOnly.MinValue)).TotalDays;
+            }
 
-            int lastActiveDaysAgo = 0;
-            var lastActivityDate = studentActivities.OrderByDescending(a => a.activity_date).FirstOrDefault();
-            if (lastActivityDate != null)
+            // Mock/Estimate OverdueTasks based on Jira issues in personal assignment
+            // (In real app, we would join with jira_issues assigned to this student)
+            int overdueTasks = 0;
+            if (member.project?.project_integration?.jira_project_id != null)
             {
-                lastActiveDaysAgo = (int)(DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - lastActivityDate.activity_date.DayNumber);
+                var jpId = member.project.project_integration.jira_project_id.Value;
+                // Since jira_issue uses jira_account_id, we'd need to link it. 
+                // For now, we count generic overdue tasks in the project to alert the lecturer.
+                overdueTasks = await _unitOfWork.JiraIssues.Query()
+                    .CountAsync(i => i.jira_project_id == jpId && i.due_date.HasValue && i.due_date.Value < DateTime.UtcNow && i.status != "Done");
             }
-            else
-            {
-                lastActiveDaysAgo = 99; // Never active
-            }
+
+            string status = finalScore > 75 ? "Tích cực" : finalScore >= 50 ? "Ổn định" : totalCommits == 0 ? "Chưa commit" : "Cần chú ý";
 
             // Fill DailyActivity for the heatmap (12 weeks = 84 days)
             var dailyActivityMap = new List<int>(new int[84]);
@@ -1272,7 +1307,7 @@ public class AnalyticsService : IAnalyticsService
                 Prs = totalPrs,
                 Reviews = totalReviews,
                 ActiveDays = activeDays,
-                OverdueTasks = 0, // Cannot easily calculate overdue from activity table, would need Jira API query or snapshot
+                OverdueTasks = overdueTasks,
                 LastActiveDaysAgo = lastActiveDaysAgo,
                 Score = finalScore,
                 Status = status,

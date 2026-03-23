@@ -240,6 +240,19 @@ public class CfdItem
     public int Done { get; set; }
 }
 
+public class CycleTimeResponse
+{
+    public double MedianDays { get; set; }
+    public double P75Days { get; set; }
+    public List<CycleTimeBucket> Histogram { get; set; } = new();
+}
+
+public class CycleTimeBucket
+{
+    public string Bucket { get; set; } = string.Empty; // e.g. "0-5d"
+    public int Count { get; set; }
+}
+
 public class CycleTimeItem
 {
     public string Date { get; set; } = null!;
