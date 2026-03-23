@@ -21,7 +21,11 @@ public class JiraIssueFields
     public DateTime Created { get; set; }
     public DateTime Updated { get; set; }
     public DateTime? Resolutiondate { get; set; }
+    public DateTime? Duedate { get; set; }
     public JiraIssueType Issuetype { get; set; } = new();
+
+    [System.Text.Json.Serialization.JsonExtensionData]
+    public Dictionary<string, System.Text.Json.JsonElement>? ExtensionData { get; set; }
 }
 
 public class JiraStatus

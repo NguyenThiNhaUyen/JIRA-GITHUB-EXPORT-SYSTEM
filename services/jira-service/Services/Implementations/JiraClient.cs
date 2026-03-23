@@ -86,11 +86,14 @@ public class JiraClient : IJiraClient
                 
                 if (existing != null)
                 {
-                    // Update existing issue
                     existing.title = jiraIssue.Fields.Summary;
                     existing.status = jiraIssue.Fields.Status.Name;
                     existing.priority = jiraIssue.Fields.Priority?.Name;
                     existing.updated_at = jiraIssue.Fields.Updated;
+                    existing.due_date = jiraIssue.Fields.Duedate;
+                    existing.resolution_date = jiraIssue.Fields.Resolutiondate;
+                    existing.story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData);
+
                     unitOfWork.JiraIssues.Update(existing);
                 }
                 else
@@ -105,7 +108,10 @@ public class JiraClient : IJiraClient
                         status = jiraIssue.Fields.Status.Name,
                         priority = jiraIssue.Fields.Priority?.Name,
                         created_at = jiraIssue.Fields.Created,
-                        updated_at = jiraIssue.Fields.Updated
+                        updated_at = jiraIssue.Fields.Updated,
+                        due_date = jiraIssue.Fields.Duedate,
+                        resolution_date = jiraIssue.Fields.Resolutiondate,
+                        story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData)
                     };
                     unitOfWork.JiraIssues.Add(issue);
                 }
@@ -127,6 +133,27 @@ public class JiraClient : IJiraClient
             _logger.LogError(ex, "Failed to sync issues for {ProjectKey}", projectKey);
             throw;
         }
+    }
+
+    private double? ExtractStoryPoints(Dictionary<string, System.Text.Json.JsonElement>? extensionData)
+    {
+        if (extensionData == null) return null;
+        
+        // Match custom fields known for Story Points, or first reasonable double
+        if (extensionData.TryGetValue("customfield_10016", out var sp10016) && sp10016.ValueKind == System.Text.Json.JsonValueKind.Number)
+            return sp10016.GetDouble();
+            
+        if (extensionData.TryGetValue("customfield_10014", out var sp10014) && sp10014.ValueKind == System.Text.Json.JsonValueKind.Number)
+            return sp10014.GetDouble();
+
+        foreach (var kvp in extensionData)
+        {
+            if (kvp.Key.StartsWith("customfield_") && kvp.Value.ValueKind == System.Text.Json.JsonValueKind.Number)
+            {
+                return kvp.Value.GetDouble();
+            }
+        }
+        return null;
     }
 
     public async Task<int> GetIssueCountAsync(string projectKey, string siteUrl, string status)

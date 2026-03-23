@@ -78,17 +78,25 @@ public class GitHubClient : IGitHubClient
                 var existing = await unitOfWork.GitHubCommits.FirstOrDefaultAsync(c => c.commit_sha == gitHubCommit.Sha);
                 if (existing != null) continue;
 
-                // Sync user if present
+                // Sync user if present or fallback to email
                 long? authorId = null;
                 if (gitHubCommit.Author != null)
                 {
-                    authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Author);
+                    authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Author, gitHubCommit.Commit.Author.Email);
+                }
+                else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Author.Email))
+                {
+                    authorId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Author.Name, gitHubCommit.Commit.Author.Email);
                 }
 
                 long? committerId = null;
                 if (gitHubCommit.Committer != null)
                 {
-                    committerId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Committer);
+                    committerId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Committer, gitHubCommit.Commit.Committer.Email);
+                }
+                else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Committer.Email))
+                {
+                    committerId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Committer.Name, gitHubCommit.Commit.Committer.Email);
                 }
 
                 var commit = new github_commit
@@ -245,16 +253,45 @@ public class GitHubClient : IGitHubClient
         }
     }
 
-    private async Task<long> EnsureGitHubUserAsync(IUnitOfWork unitOfWork, GitHubUser gitHubUser)
+    private async Task<long> EnsureGitHubUserAsync(IUnitOfWork unitOfWork, GitHubUser gitHubUser, string? email = null)
     {
         var dbUser = await unitOfWork.GitHubUsers.FirstOrDefaultAsync(u => u.github_user_id == gitHubUser.Id);
-        if (dbUser != null) return dbUser.id;
+        if (dbUser != null)
+        {
+            if (string.IsNullOrEmpty(dbUser.email) && !string.IsNullOrEmpty(email))
+            {
+                dbUser.email = email;
+                unitOfWork.GitHubUsers.Update(dbUser);
+                await unitOfWork.SaveChangesAsync();
+            }
+            return dbUser.id;
+        }
 
         dbUser = new github_user
         {
             github_user_id = gitHubUser.Id,
             login = gitHubUser.Login,
+            email = email,
             user_type = gitHubUser.Type,
+            created_at = DateTime.UtcNow,
+            updated_at = DateTime.UtcNow
+        };
+
+        unitOfWork.GitHubUsers.Add(dbUser);
+        await unitOfWork.SaveChangesAsync();
+        return dbUser.id;
+    }
+
+    private async Task<long> EnsureGitHubUserByEmailAsync(IUnitOfWork unitOfWork, string name, string email)
+    {
+        var dbUser = await unitOfWork.GitHubUsers.FirstOrDefaultAsync(u => u.email != null && u.email.ToLower() == email.ToLower());
+        if (dbUser != null) return dbUser.id;
+
+        dbUser = new github_user
+        {
+            login = string.IsNullOrEmpty(name) ? email.Split('@')[0] : name,
+            email = email,
+            user_type = "User",
             created_at = DateTime.UtcNow,
             updated_at = DateTime.UtcNow
         };
