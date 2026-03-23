@@ -18,7 +18,11 @@ import { useGetCourses, useGetEnrolledStudents } from "../../features/courses/ho
 import { useGetProjects, useLinkIntegration, useAddTeamMember, useCreateProject } from "../../features/projects/hooks/useProjects.js";
 import { useGetProjectSrs, useSubmitSrs, useDeleteSrs } from "../../features/srs/hooks/useSrs.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
-import { useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, useGetMyCommitActivity, useGetMyInvitations, useGetMyProjects } from "../../features/student/hooks/useStudent.js";
+import { 
+    useGetStudentDashboardStats, useGetMyTasks, useGetMyDeadlines, 
+    useGetMyCommitActivity, useGetMyInvitations, useGetMyProjects,
+    useAcceptInvitation, useDeclineInvitation
+} from "../../features/student/hooks/useStudent.js";
 
 import CourseWorkspace from "./CourseWorkspace.jsx";
 
@@ -44,6 +48,8 @@ export default function StudentDashboard() {
     const { data: myDeadlinesData } = useGetMyDeadlines();
     const { data: commitActivity } = useGetMyCommitActivity(7);
     const { data: myInvitationsData, refetch: refetchInvitations } = useGetMyInvitations();
+    const { mutate: acceptInvite } = useAcceptInvitation();
+    const { mutate: declineInvite } = useDeclineInvitation();
 
     const courses = coursesData.items || [];
     const myGroupsList = projectsData.items || [];
@@ -86,29 +92,18 @@ export default function StudentDashboard() {
     const myInvitations = Array.isArray(myInvitationsData) ? myInvitationsData :
         (myInvitationsData?.items ?? []);
 
-    const handleAcceptInvitation = async (invitationId) => {
-        try {
-            const client = (await import('../../api/client.js')).default;
-            const { unwrap } = await import('../../api/unwrap.js');
-            await unwrap(await client.post(`/invitations/${invitationId}/accept`));
-            success('Chấp nhận lời mời thành công!');
-            refetchInvitations();
-            refetchProjects();
-        } catch (err) {
-            showError(err.message || 'Chấp nhận không thành công');
-        }
+    const handleAcceptInvitation = (invitationId) => {
+        acceptInvite(invitationId, {
+            onSuccess: () => success('Chấp nhận lời mời thành công!'),
+            onError: (err) => showError(err.message || 'Chấp nhận không thành công')
+        });
     };
 
-    const handleDeclineInvitation = async (invitationId) => {
-        try {
-            const client = (await import('../../api/client.js')).default;
-            const { unwrap } = await import('../../api/unwrap.js');
-            await unwrap(await client.post(`/invitations/${invitationId}/reject`));
-            success('Từ chối lời mời');
-            refetchInvitations();
-        } catch (err) {
-            showError(err.message || 'Không thể từ chối lời mời');
-        }
+    const handleDeclineInvitation = (invitationId) => {
+        declineInvite(invitationId, {
+            onSuccess: () => success('Từ chối lời mời'),
+            onError: (err) => showError(err.message || 'Không thể từ chối lời mời')
+        });
     };
 
     // Projects Mutations
@@ -352,9 +347,14 @@ export default function StudentDashboard() {
                                  </div>
                                  <div className="p-4 pt-2">
                                      {!Array.isArray(myDeadlinesData) || myDeadlinesData.length === 0 ? (
-                                         <div className="flex flex-col items-center justify-center py-8 gap-2">
-                                             <CheckCircle size={24} className="text-emerald-500/30" />
-                                             <p className="text-xs text-gray-500 font-medium">Không có deadline sắp đến</p>
+                                         <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                             <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                                <CheckCircle size={24} className="text-emerald-500/40" />
+                                             </div>
+                                             <div className="text-center">
+                                                <p className="text-sm font-bold text-gray-800 uppercase tracking-tight">Tuyệt vời!</p>
+                                                <p className="text-[11px] text-gray-500 font-medium">Bạn không có deadline nào sắp đến.</p>
+                                             </div>
                                          </div>
                                      ) : (
                                          <div className="space-y-1">
@@ -392,12 +392,17 @@ export default function StudentDashboard() {
                                     </div>
                                 </div>
                                 <div className="p-4 pt-2">
-                                    {!myTasksData?.items?.length ? (
-                                        <div className="flex flex-col items-center justify-center py-8 gap-2">
-                                            <CheckCircle size={24} className="text-teal-500/30" />
-                                            <p className="text-xs text-gray-500 font-medium">Không có task nào đang thực hiện</p>
-                                        </div>
-                                    ) : (
+                                     {!myTasksData?.items?.length ? (
+                                         <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                             <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                                                <Star size={24} className="text-indigo-500/40" />
+                                             </div>
+                                             <div className="text-center">
+                                                <p className="text-sm font-bold text-gray-800 uppercase tracking-tight">Mọi việc đã xong!</p>
+                                                <p className="text-[11px] text-gray-500 font-medium">Tất cả task của bạn đã được hoàn thành.</p>
+                                             </div>
+                                         </div>
+                                     ) : (
                                         <div className="space-y-1">
                                             {myTasksData.items.slice(0, 5).map((t, i) => (
                                                 <div key={t.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">

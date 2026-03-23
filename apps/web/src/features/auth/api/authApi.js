@@ -43,3 +43,13 @@ export async function loginWithCredentials(email, password) {
 export async function loginWithGoogle(idToken) {
     return client.post("/sessions/google", { idToken });
 }
+
+/**
+ * Gửi yêu cầu khôi phục mật khẩu
+ * @param {string} email
+ * @returns {Promise<any>}
+ */
+export async function forgotPassword(email) {
+    return client.post("/auth/forgot-password", { email });
+}
+

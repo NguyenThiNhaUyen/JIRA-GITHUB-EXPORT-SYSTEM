@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
-import { useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjects, useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
 import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
 
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
@@ -42,14 +42,24 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const { mutateAsync: updateMemberMutateAsync } = useUpdateTeamMember();
 
     const { data: enrolledData = { items: [] }, isFetching: isEnrolledFetching } = useGetEnrolledStudents(course?.id, { pageSize: 500 });
+    const { data: allProjectsData = { items: [] } } = useGetProjects({ courseId: course?.id, pageSize: 100 });
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(group?.id);
 
     // Auto-generate SRS Hook
     const { mutate: generateSrsMutate, isPending: isGenerating } = useGenerateSrs();
 
-    // 1-week cooldown logic
-    const lastSrs = srsReports?.slice().sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
-    const isWithinWeek = lastSrs ? (new Date() - new Date(lastSrs.submittedAt)) / (1000 * 60 * 60 * 24) < 7 : false;
+    // 1-week cooldown logic (using UTC to avoid timezone skews)
+    const lastSrs = srsReports?.slice().sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0];
+    const { isWithinWeek, srsCooldownDays } = (() => {
+        if (!lastSrs) return { isWithinWeek: false, srsCooldownDays: 0 };
+        const now = new Date().getTime();
+        const last = new Date(lastSrs.submittedAt).getTime();
+        const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+        return { 
+            isWithinWeek: diffDays < 7, 
+            srsCooldownDays: Math.max(1, Math.ceil(7 - diffDays)) 
+        };
+    })();
 
     const handleAutoGenerateSRS = () => {
         if (!bothApproved) {
@@ -70,8 +80,15 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
 
     // Invite students functionality
     const handleOpenInvite = () => {
-        const studentIdsInGroup = new Set(groupStudents.map(m => m.studentId));
-        const available = (enrolledData.items || []).filter(s => !studentIdsInGroup.has(s.id));
+        // Build a set of studentIds who are already in ANY group of this course
+        const studentsWithGroups = new Set();
+        (allProjectsData.items || []).forEach(proj => {
+            (proj.team || []).forEach(member => {
+                studentsWithGroups.add(String(member.studentId || member.userId));
+            });
+        });
+
+        const available = (enrolledData.items || []).filter(s => !studentsWithGroups.has(String(s.id)));
 
         setInviteAvailableStudents(available);
         setInviteSelectedIds([]);
@@ -87,32 +104,41 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const handleInviteSubmit = async () => {
         if (inviteSelectedIds.length === 0) return;
         setIsInviting(true);
+        
         let successCount = 0;
-        let errorMessages = [];
-        for (const studentId of inviteSelectedIds) {
-            try {
-                // BE api/projects/{id}/members is actually an invitation flow on some versions,
-                // but our FE implementation uses it as direct add for simplicity in demo.
-                await addMemberMutateAsync({
-                    projectId: group.id,
-                    studentId: studentId,
-                    role: "MEMBER",
-                    responsibility: "Thành viên"
-                });
-                successCount++;
-            } catch (err) {
-                errorMessages.push(err?.message || `Không thể mời SV ${studentId}`);
+        let failedCount = 0;
+
+        try {
+            // BUG-64: Sequential Inviting (Stress Test Protection)
+            // Gửi tuần tự để tránh nghẽn cổ chai DB hoặc Rate Limit từ Backend
+            for (const studentId of inviteSelectedIds) {
+                try {
+                    await addMemberMutateAsync({
+                        projectId: group.id,
+                        studentId: studentId,
+                        role: "MEMBER",
+                        responsibility: "Thành viên"
+                    });
+                    successCount++;
+                } catch (e) {
+                    failedCount++;
+                    console.error(`Failed to invite student ${studentId}:`, e);
+                }
             }
+
+            if (successCount > 0) {
+                success(`Đã gửi thành công ${successCount} lời mời!`);
+            }
+            if (failedCount > 0) {
+                showError(`${failedCount} sinh viên không thể mời (đã có nhóm hoặc lỗi BE).`);
+            }
+        } catch (err) {
+            showError("Lỗi hệ thống khi gửi lời mời.");
+        } finally {
+            setIsInviting(false);
+            setShowInviteModal(false);
+            setInviteSelectedIds([]);
         }
-        setIsInviting(false);
-        if (successCount > 0) {
-            success(`Đã gửi lời mời tới ${successCount} sinh viên!`);
-        }
-        if (errorMessages.length > 0) {
-            showError(errorMessages.join(" | "));
-        }
-        setShowInviteModal(false);
-        setInviteSelectedIds([]);
     };
 
     const handleRemoveMember = async (studentId, studentName) => {
@@ -128,17 +154,18 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const handlePromoteToLeader = async (studentId, studentName) => {
         if (!window.confirm(`Bạn có chắc muốn chuyển quyền Leader cho ${studentName}? Bạn sẽ trở thành thành viên thường.`)) return;
         try {
-            // First promote the new leader
+            // BUG-67: Sequential Promotion logic - Ensure first action finishes before second starts
+            // 1. Promote new leader
             await updateMemberMutateAsync({
                 projectId: group.id, studentId, updates: { role: 'LEADER' }
             });
-            // Then demote myself (handled automatically by BE or we can do it explicitly if needed)
+            // 2. Demote myself
             await updateMemberMutateAsync({
                 projectId: group.id, studentId: userId, updates: { role: 'MEMBER' }
             });
             success(`Chúc mừng! ${studentName} đã trở thành Leader mới.`);
         } catch (err) {
-            showError(err.message || "Không thể chuyển quyền Leader");
+            showError(err.message || "Không thể chuyển quyền Leader. Hệ thống ghi nhận lỗi logic.");
         }
     };
 
@@ -352,16 +379,21 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center"><BookOpen size={14} className="text-purple-600" /></div>
-                                    <CardTitle className="text-base font-semibold text-gray-800">SRS Reports</CardTitle>
+                                    <div className="flex flex-col">
+                                        <CardTitle className="text-base font-semibold text-gray-800 leading-tight">SRS Reports</CardTitle>
+                                        {isWithinWeek && isLeader && (
+                                            <span className="text-[10px] font-medium text-orange-600">Hồi chiêu: {srsCooldownDays} ngày nữa</span>
+                                        )}
+                                    </div>
                                 </div>
                                 {isLeader && (
                                     <button 
                                         onClick={handleAutoGenerateSRS} 
                                         disabled={isGenerating || isWithinWeek}
-                                        title={isWithinWeek ? "Chỉ được xuất báo cáo SRS 1 lần/tuần." : ""}
+                                        title={isWithinWeek ? `Cần chờ thêm ${srsCooldownDays} ngày.` : ""}
                                         className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {isGenerating ? "Đang xuất..." : "+ Tự động xuất SRS"}
+                                        {isGenerating ? "Đang xuất..." : (isWithinWeek ? "Đang hồi chiêu" : "+ Tự động xuất SRS")}
                                     </button>
                                 )}
                             </div>

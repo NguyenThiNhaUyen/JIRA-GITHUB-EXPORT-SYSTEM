@@ -21,7 +21,7 @@ public class PdfReportGenerator : IPdfReportGenerator
     // ─────────────────────────────────────────────────────────
     // COMMIT STATISTICS
     // ─────────────────────────────────────────────────────────
-    public byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects)
+    public byte[] GenerateCommitStatisticsPdf(string courseName, List<project> projects, List<dynamic> activityList)
     {
         return Document.Create(container =>
         {
@@ -38,10 +38,13 @@ public class PdfReportGenerator : IPdfReportGenerator
                         c.RelativeColumn();
                         c.RelativeColumn();
                         c.RelativeColumn();
+                        c.RelativeColumn();
+                        c.RelativeColumn();
+                        c.RelativeColumn();
                     });
                     table.Header(h =>
                     {
-                        foreach (var col in new[] { "Project", "Student Name", "Student Code", "Role" })
+                        foreach (var col in new[] { "Project", "Student Name", "Student Code", "Role", "Commits", "PRs", "Issues" })
                             h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold();
                     });
 
@@ -51,11 +54,15 @@ public class PdfReportGenerator : IPdfReportGenerator
                         if (p.team_members == null) continue;
                         foreach (var tm in p.team_members)
                         {
+                            var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
                             string bg = alt ? TableRowAlt : Colors.White;
                             table.Cell().Background(bg).Padding(4).Text(p.name);
                             table.Cell().Background(bg).Padding(4).Text(tm.student_user?.user?.full_name ?? "");
                             table.Cell().Background(bg).Padding(4).Text(tm.student_user?.student_code ?? "");
                             table.Cell().Background(bg).Padding(4).Text(tm.team_role ?? "");
+                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Commits ?? 0)).ToString());
+                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.PRs ?? 0)).ToString());
+                            table.Cell().Background(bg).Padding(4).Text(((int)(stat?.Issues ?? 0)).ToString());
                             alt = !alt;
                         }
                     }

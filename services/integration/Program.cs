@@ -291,10 +291,14 @@ app.UseSwaggerUI(c =>
                 app.UseHttpsRedirection();
             }
 
-            // Ensure wwwroot exists to avoid StaticFileMiddleware warning
+            // BUG-FIX: Ensure wwwroot exists and is properly served even if created dynamically
             var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
             if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(wwwroot),
+                RequestPath = "" // Serve at root
+            });
 
 app.UseCors("AllowAll");
 

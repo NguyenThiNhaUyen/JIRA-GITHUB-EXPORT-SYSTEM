@@ -18,10 +18,12 @@ import { Modal } from "../../components/ui/interactive.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { Library, CheckCircle } from "lucide-react";
 import { useGetSubjects, useCreateSubject, useUpdateSubject, useDeleteSubject } from "../../features/system/hooks/useSystem.js";
+import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 
 export default function SubjectManagement() {
     const { success, error } = useToast();
     const { data: subjects = [], isLoading } = useGetSubjects();
+    const { data: coursesData = { items: [] } } = useGetCourses({ pageSize: 1000 });
     const createMutation = useCreateSubject();
     const updateMutation = useUpdateSubject();
     const deleteMutation = useDeleteSubject();
@@ -61,7 +63,15 @@ export default function SubjectManagement() {
     };
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn xóa môn học này?")) {
+        const subjectCourses = (coursesData.items || []).filter(c => c.subjectId === id);
+        const subName = subjects.find(s => s.id === id)?.name || "môn học này";
+
+        if (subjectCourses.length > 0) {
+            error(`Không thể xóa! Môn "${subName}" đang có ${subjectCourses.length} lớp học tham chiếu.`);
+            return;
+        }
+
+        if (window.confirm(`Bạn có chắc chắn muốn xóa môn học "${subName}"?`)) {
             try {
                 await deleteMutation.mutateAsync(id);
                 success("Xóa môn học thành công!");
@@ -301,9 +311,12 @@ export default function SubjectManagement() {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm"
+                            disabled={createMutation.isPending || updateMutation.isPending}
+                            className={`bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm ${
+                                (createMutation.isPending || updateMutation.isPending) ? "opacity-50" : ""
+                            }`}
                         >
-                            {editingSubject ? "Cập nhật" : "Tạo mới"}
+                            {(createMutation.isPending || updateMutation.isPending) ? "Đang xử lý..." : (editingSubject ? "Cập nhật" : "Tạo mới")}
                         </Button>
                     </div>
                 </form>

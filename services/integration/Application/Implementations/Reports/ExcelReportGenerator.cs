@@ -6,7 +6,7 @@ namespace JiraGithubExport.IntegrationService.Application.Implementations.Report
 
 public class ExcelReportGenerator : IExcelReportGenerator
 {
-    public byte[] GenerateCommitStatisticsReport(string courseName, List<project> projects)
+    public byte[] GenerateCommitStatisticsReport(string courseName, List<project> projects, List<dynamic> activityList)
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Commit Statistics");
@@ -14,6 +14,9 @@ public class ExcelReportGenerator : IExcelReportGenerator
         worksheet.Cell(1, 2).Value = "Student Name";
         worksheet.Cell(1, 3).Value = "Student Code";
         worksheet.Cell(1, 4).Value = "Role";
+        worksheet.Cell(1, 5).Value = "Commits";
+        worksheet.Cell(1, 6).Value = "Pull Requests";
+        worksheet.Cell(1, 7).Value = "Issues Completed";
 
         int row = 2;
         foreach (var p in projects)
@@ -22,10 +25,14 @@ public class ExcelReportGenerator : IExcelReportGenerator
             {
                 foreach (var tm in p.team_members)
                 {
+                    var stat = activityList.FirstOrDefault(a => a.StudentId == tm.student_user_id);
                     worksheet.Cell(row, 1).Value = p.name;
                     worksheet.Cell(row, 2).Value = tm.student_user?.user?.full_name ?? "";
                     worksheet.Cell(row, 3).Value = tm.student_user?.student_code ?? "";
                     worksheet.Cell(row, 4).Value = tm.team_role ?? "";
+                    worksheet.Cell(row, 5).Value = (int)(stat?.Commits ?? 0);
+                    worksheet.Cell(row, 6).Value = (int)(stat?.PRs ?? 0);
+                    worksheet.Cell(row, 7).Value = (int)(stat?.Issues ?? 0);
                     row++;
                 }
             }

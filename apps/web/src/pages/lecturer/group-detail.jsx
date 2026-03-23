@@ -60,7 +60,7 @@ export default function GroupDetail() {
         return (
             <div className="flex h-full items-center justify-center flex-col gap-4">
                 <p className="text-red-500 font-semibold">Cảnh báo: Không thể tải dữ liệu nhóm</p>
-                <Button onClick={() => navigate("/lecturer")} variant="outline">Trở về bảng tin</Button>
+                <Button onClick={() => navigate(-1)} variant="outline">Trở về</Button>
             </div>
         );
     }
@@ -174,7 +174,7 @@ export default function GroupDetail() {
                 <div className="space-y-2 min-w-0">
                     <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                         <button
-                            onClick={() => navigate("/lecturer")}
+                            onClick={() => navigate(-2)}
                             className="text-teal-700 font-semibold hover:underline"
                         >Giảng viên</button>
                         <ChevronRight size={12} />
@@ -202,7 +202,7 @@ export default function GroupDetail() {
                     )}
                 </div>
                 <Button
-                    onClick={() => navigate(`/lecturer/course/${group.courseId}/manage-groups`)}
+                    onClick={() => navigate(-1)}
                     variant="outline"
                     className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm shrink-0"
                 >

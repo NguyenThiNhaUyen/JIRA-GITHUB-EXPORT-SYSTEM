@@ -21,7 +21,8 @@ import {
 } from "../../features/projects/hooks/useProjects.js";
 
 export default function ManageGroups() {
-    const { courseId } = useParams();
+    const { courseId: paramId } = useParams();
+    const courseId = paramId;
     const navigate = useNavigate();
     const { success, error } = useToast();
 
@@ -94,9 +95,9 @@ export default function ManageGroups() {
         try {
             await updateProjectMutation.mutateAsync({
                 id: groupId,
-                body: { 
+                body: {
                     name: currentGroup?.name || `Nhóm ${groupId}`,
-                    description: newTopic 
+                    description: newTopic
                 }
             });
             success("Đã cập nhật đề tài");
@@ -176,6 +177,27 @@ export default function ManageGroups() {
         }
     };
 
+    if (!courseId) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-4">
+                    <Users size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">Quản lý nhóm</h2>
+                <p className="text-sm text-gray-500 mt-2 max-w-sm">
+                    Vui lòng chọn lớp học từ menu "Lớp của tôi" hoặc trang Dashboard để bắt đầu quản lý nhóm và thành viên.
+                </p>
+                <Button 
+                    variant="outline" 
+                    className="mt-6 rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50"
+                    onClick={() => navigate(-1)}
+                >
+                     Quay lại Dashboard
+                </Button>
+            </div>
+        );
+    }
+
     if (loadingCourse || loadingStudents) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -194,7 +216,7 @@ export default function ManageGroups() {
                 <div className="space-y-2">
                     <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
                         <button
-                            onClick={() => navigate("/lecturer")}
+                            onClick={() => navigate(-1)}
                             className="text-teal-700 font-semibold hover:underline"
                         >
                             Giảng viên
@@ -216,7 +238,7 @@ export default function ManageGroups() {
                     </div>
                 </div>
                 <Button
-                    onClick={() => navigate("/lecturer")}
+                    onClick={() => navigate(-1)}
                     variant="outline"
                     className="flex items-center gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-9 px-4 text-sm"
                 >
@@ -291,7 +313,7 @@ export default function ManageGroups() {
                                                     <p className="text-sm font-medium text-gray-700">{student.name}</p>
                                                     <p className="text-xs text-gray-400">{student.studentId}</p>
                                                 </div>
-                                                
+
                                                 {selectedStudents.includes(student.id) && (
                                                     <button
                                                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(student.id); }}
@@ -415,7 +437,7 @@ export default function ManageGroups() {
                                                         {groupStudents.map((member) => (
                                                             <div
                                                                 key={member.studentId}
-                                                                className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
+                                                                className="group inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
                                                             >
                                                                 <div className="w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold">
                                                                     {member.studentName?.charAt(0)}
@@ -471,31 +493,37 @@ export default function ManageGroups() {
                         </div>
 
                         <div className="overflow-y-auto flex-1 min-h-0 border border-gray-100 rounded-xl divide-y divide-gray-50 mb-5">
-                            {availableStudents.length === 0 ? (
+                            {students.length === 0 ? (
                                 <div className="px-4 py-8 text-center bg-gray-50/50">
-                                    <p className="text-sm text-gray-500">Tất cả sinh viên trong lớp đã có nhóm.</p>
+                                    <p className="text-sm text-gray-500">Không có sinh viên nào trong lớp.</p>
                                 </div>
                             ) : (
-                                availableStudents.map((student) => (
-                                    <label
-                                        key={student.id}
-                                        className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={forceAddSelectedIds.includes(student.id)}
-                                            onChange={() => toggleForceAddStudent(student.id)}
-                                            className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
-                                        />
-                                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                            {student.name?.charAt(0)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
-                                            <p className="text-xs text-gray-400">{student.studentCode || student.studentId}</p>
-                                        </div>
-                                    </label>
-                                ))
+                                students.map((student) => {
+                                    const isAssigned = assignedStudentIds.has(student.id);
+                                    return (
+                                        <label
+                                            key={student.id}
+                                            className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={forceAddSelectedIds.includes(student.id)}
+                                                onChange={() => toggleForceAddStudent(student.id)}
+                                                className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
+                                            />
+                                            <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                                {student.name?.charAt(0)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1">
+                                                    <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
+                                                    {isAssigned && <span className="text-[9px] text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full font-bold">ĐÃ CÓ NHÓM</span>}
+                                                </div>
+                                                <p className="text-xs text-gray-400">{student.studentCode || student.studentId}</p>
+                                            </div>
+                                        </label>
+                                    );
+                                })
                             )}
                         </div>
 

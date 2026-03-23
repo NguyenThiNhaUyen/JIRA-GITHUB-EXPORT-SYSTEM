@@ -1,7 +1,7 @@
 // Student real sub-pages — Contribution, Alerts (personal), SRS standalone view
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, GitBranch, Bell, CheckCircle, AlertTriangle, Clock, BookOpen, BarChart2, Users, Activity, FileDown } from "lucide-react";
+import { ChevronRight, GitBranch, Bell, CheckCircle, AlertTriangle, Clock, BookOpen, BarChart2, Users, Activity, FileDown, Star, ArrowRight, UserCheck, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
@@ -10,6 +10,8 @@ import { useGetAlerts } from "../../features/system/hooks/useAlerts.js";
 import { useGetProjectSrs } from "../../features/srs/hooks/useSrs.js";
 import { SRS_STATUS, ALERT_SEVERITY } from "../../shared/permissions.js";
 
+import { useQuery, useQueries } from "@tanstack/react-query";
+import { getProjectMetrics } from "../../features/projects/api/projectApi.js";
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
 
 /* ─── Shared Breadcrumb ─── */
@@ -30,11 +32,24 @@ export function StudentContributionPage() {
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
 
-    // Summary stats calculation (vẫn cần project metrics cho từng nhóm)
-    // Tạm thời hiển thị danh sách trước, metrics sẽ được fetch trong component con nếu cần
-    // hoặc fetch ở đây nếu số lượng nhóm ít.
-    const totalMyCommits = 0; // Sẽ được cập nhật từ metrics
-    const activeGroups = myGroups.length;
+    const metricQueries = useQueries({
+        queries: myGroups.map(g => ({
+            queryKey: ['projects', 'detail', g.id, 'metrics'],
+            queryFn: () => getProjectMetrics(g.id),
+            staleTime: 60000,
+        }))
+    });
+
+    const totalMyCommits = metricQueries.reduce((sum, q) => {
+        if (!q.data) return sum;
+        const myMetric = q.data.studentMetrics?.find(m => m.studentId === user?.id);
+        return sum + (myMetric?.commitCount || 0);
+    }, 0);
+
+    const activeGroups = myGroups.filter((_, i) => {
+        const q = metricQueries[i];
+        return q.data && q.data.totalCommits > 0;
+    }).length;
 
     if (loadingProjects) {
         return (
@@ -175,7 +190,7 @@ export function StudentAlertsPage() {
                 </div>
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
                     <div className="w-11 h-11 rounded-2xl bg-red-400 text-white flex items-center justify-center shrink-0"><AlertTriangle size={18} /></div>
-                    <div><p className="text-xs text-gray-500">Cần xử lý ngay</p><h3 className="text-2xl font-bold text-gray-800">{alerts.filter(a => a.sev === "high").length}</h3></div>
+                    <div><p className="text-xs text-gray-500">Cần xử lý ngay</p><h3 className="text-2xl font-bold text-gray-800">{alerts.filter(a => a.severity?.toLowerCase() === "high").length}</h3></div>
                 </div>
             </div>
 
@@ -219,9 +234,6 @@ export function StudentSrsPage() {
     const { data: projectsData, isLoading: loadingProjects } = useGetProjects();
     const myGroups = projectsData?.items || [];
     
-    // FETCH SRS for the first group for demo
-    const { data: srsList = [] } = useGetProjectSrs(myGroups[0]?.id);
-
     if (loadingProjects) {
         return (
             <div className="flex h-full items-center justify-center py-20">
@@ -238,14 +250,7 @@ export function StudentSrsPage() {
                 <p className="text-sm text-gray-500 mt-0.5">Xem lịch sử nộp SRS và nhận xét từ giảng viên</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-                {["FINAL", "REVIEW", "DRAFT"].map(s => (
-                    <div key={s} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${SRS_STATUS_CLS[s]}`}>
-                        <span className="text-xs font-semibold">{s}</span>
-                        <span className="text-xl font-bold">{srsList.filter(x => x.status === s).length}</span>
-                    </div>
-                ))}
-            </div>
+
 
             <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
                 <CardContent className="p-0">
@@ -273,30 +278,43 @@ function ProjectSrsRows({ project }) {
     if (srsList.length === 0) return null;
 
     return (
-        <>
-            {srsList.map(rpt => (
-                <div key={rpt.id} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-mono font-semibold text-gray-700">v{rpt.version}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${SRS_STATUS_CLS[rpt.status] || SRS_STATUS_CLS.DRAFT}`}>{rpt.status}</span>
+        <div className="border-b border-gray-100 last:border-0 p-5">
+            <h4 className="text-sm font-bold text-gray-800 mb-3">{project.name}</h4>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+                {["FINAL", "REVIEW", "DRAFT"].map(s => {
+                    const count = srsList.filter(x => x.status === s).length;
+                    return (
+                        <div key={s} className={`rounded-xl px-3 py-2 border flex items-center justify-between text-[10px] ${SRS_STATUS_CLS[s]} ${count === 0 ? "opacity-40" : ""}`}>
+                            <span className="font-semibold">{s}</span>
+                            <span className="text-sm font-bold">{count}</span>
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{project.name} · {project.course?.name || "Lớp"}</p>
-                        {rpt.feedback && <p className="text-xs text-blue-600 italic mt-0.5">Nhận xét GV: {rpt.feedback}</p>}
-                        <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                                <Clock size={9} />{new Date(rpt.submittedAt).toLocaleDateString("vi-VN")}
-                            </p>
-                            {rpt.fileUrl && (
-                                <a href={rpt.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-teal-600 hover:underline flex items-center gap-1">
-                                    <FileDown size={10} /> Tải file
-                                </a>
-                            )}
+                    );
+                })}
+            </div>
+            <div className="space-y-3">
+                {srsList.map(rpt => (
+                    <div key={rpt.id} className="flex items-center gap-4 py-3 border-t border-gray-50 hover:bg-gray-50/50 transition-colors rounded-lg px-2">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-xs font-mono font-semibold text-gray-700">v{rpt.version}</span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border uppercase ${SRS_STATUS_CLS[rpt.status] || SRS_STATUS_CLS.DRAFT}`}>{rpt.status}</span>
+                            </div>
+                            {rpt.feedback && <p className="text-[11px] text-blue-600 italic mt-0.5 bg-blue-50/50 px-2 py-1 rounded-md">Nhận xét GV: {rpt.feedback}</p>}
+                            <div className="flex items-center justify-between mt-1.5">
+                                <p className="text-[9px] text-gray-400 flex items-center gap-1">
+                                    <Clock size={8} />{new Date(rpt.submittedAt).toLocaleDateString("vi-VN")}
+                                </p>
+                                {rpt.fileUrl && (
+                                    <a href={rpt.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-teal-600 hover:underline flex items-center gap-1">
+                                        <FileDown size={10} /> Tải file
+                                    </a>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
-        </>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -321,41 +339,135 @@ export default function StudentCoursesPage() {
     return (
         <div className="space-y-6">
             <Breadcrumb title="Lớp của tôi" />
-            <div>
-                <h2 className="text-2xl font-bold tracking-tight text-gray-800">Lớp học của tôi</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Tất cả lớp học phần bạn đang tham gia</p>
+
+            {/* Header */}
+            <div className="flex items-end justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-800">Lớp học của tôi</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">Tất cả lớp học phần bạn đang tham gia</p>
+                </div>
+                <span className="text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-full">
+                    {coursesList.length} lớp
+                </span>
             </div>
 
             {coursesList.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <BookOpen size={36} className="text-gray-300" />
-                    <p className="text-sm text-gray-400">Bạn chưa được đăng ký lớp nào</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                    <div className="w-16 h-16 rounded-3xl bg-teal-50 flex items-center justify-center">
+                        <BookOpen size={28} className="text-teal-400" />
+                    </div>
+                    <p className="font-semibold text-gray-700">Bạn chưa được đăng ký lớp nào</p>
+                    <p className="text-sm text-gray-400">Liên hệ giảng viên để được thêm vào lớp học</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {coursesList.map(c => {
                         const project = projectsList.find(p => p.courseId === c.id);
-                        const isLeader = project?.teamLeaderId === user?.id;
+                        const myMember = project?.team?.find(m => String(m.studentId) === String(user?.id));
+                        const isLeader = myMember?.role?.toUpperCase() === "LEADER";
+                        const leader = project?.team?.find(m => m.role?.toUpperCase() === "LEADER");
+                        const ghApproved = project?.integration?.githubStatus === "APPROVED";
+                        const jiraApproved = project?.integration?.jiraStatus === "APPROVED";
+                        const bothApproved = ghApproved && jiraApproved;
+                        const memberCount = project?.team?.length || 0;
+
                         return (
-                            <Card key={c.id}
-                                className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all cursor-pointer"
-                                onClick={() => navigate("/student")}
+                            <div
+                                key={c.id}
+                                className="bg-white border border-gray-100 rounded-[24px] shadow-sm hover:shadow-md hover:border-teal-100 transition-all cursor-pointer group overflow-hidden"
+                                onClick={() => project ? navigate(`/student/project/${project.id}`) : null}
                             >
-                                <div className="h-1 bg-gradient-to-r from-teal-500 to-teal-400" />
-                                <CardContent className="p-5">
-                                    <p className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md inline-block mb-1">{c.subject?.code || c.code}</p>
-                                    <h4 className="font-bold text-gray-800 text-sm mb-2">{c.name}</h4>
-                                    <p className="text-xs text-gray-500">{c.lecturerNames?.join(", ") || "Chưa có GV"}</p>
-                                    {project && (
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${isLeader ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
-                                                {isLeader ? "Leader" : "Member"}
+                                {/* Top color bar */}
+                                <div className="h-1 bg-gradient-to-r from-teal-500 to-emerald-400" />
+
+                                <div className="p-5">
+                                    {/* Badges row */}
+                                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                        <span className="text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded-lg">
+                                            {c.subject?.code || c.code || "N/A"}
+                                        </span>
+                                        {project && (
+                                            <span className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border uppercase ${isLeader
+                                                ? "bg-amber-50 text-amber-700 border-amber-100"
+                                                : "bg-gray-50 text-gray-500 border-gray-200"
+                                                }`}>
+                                                {isLeader ? <><Crown size={10} /> Leader</> : <><Users size={10} /> Member</>}
                                             </span>
-                                            <span className="text-[10px] text-gray-400">{project.name}</span>
-                                        </div>
+                                        )}
+                                        {!project && (
+                                            <span className="text-[11px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-lg">
+                                                Chưa có nhóm
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Course + Group Name */}
+                                    <h4 className="font-bold text-gray-800 text-base leading-snug mb-0.5">
+                                        {project ? project.name : c.name}
+                                    </h4>
+                                    {project && (
+                                        <p className="text-xs text-gray-400 mb-4">{c.name}</p>
                                     )}
-                                </CardContent>
-                            </Card>
+
+                                    {project ? (
+                                        <>
+                                            {/* Leader info */}
+                                            {leader && (
+                                                <div className="flex items-center gap-2.5 mb-3">
+                                                    <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                                        {leader.studentName?.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-800">{leader.studentName}</p>
+                                                        <p className="text-[10px] text-gray-400">Team Leader</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Member count */}
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-4">
+                                                <Users size={13} className="text-gray-300" />
+                                                <span>{memberCount} thành viên</span>
+                                            </div>
+
+                                            {/* Divider */}
+                                            <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
+                                                {/* Status */}
+                                                <div className="flex items-center gap-2">
+                                                    {bothApproved ? (
+                                                        <span className="flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full">
+                                                            <CheckCircle size={11} /> Đã duyệt
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            {ghApproved
+                                                                ? <span className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full"><CheckCircle size={9} /> GitHub</span>
+                                                                : <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full"><Clock size={9} /> GitHub</span>
+                                                            }
+                                                            {jiraApproved
+                                                                ? <span className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 border border-green-100 px-2 py-0.5 rounded-full"><CheckCircle size={9} /> Jira</span>
+                                                                : <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full"><Clock size={9} /> Jira</span>
+                                                            }
+                                                        </>
+                                                    )}
+                                                </div>
+                                                {/* Arrow */}
+                                                <div className="w-8 h-8 rounded-full bg-gray-50 group-hover:bg-teal-50 border border-gray-100 group-hover:border-teal-200 flex items-center justify-center transition-colors">
+                                                    <ArrowRight size={14} className="text-gray-400 group-hover:text-teal-600 transition-colors" />
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* No project state */}
+                                            <p className="text-xs text-gray-400 mb-3">GV: {c.lecturerNames?.join(", ") || "Chưa có giảng viên"}</p>
+                                            <div className="border-t border-gray-50 pt-3">
+                                                <span className="text-[11px] text-gray-400 italic">Bạn chưa được thêm vào nhóm của lớp này</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
@@ -364,5 +476,98 @@ export default function StudentCoursesPage() {
     );
 }
 
-/* Re-export as alias for convenience */
-export { StudentContributionPage as StudentMyProjectPage };
+/* ═══════════ My Project Page ═══════════ */
+export function StudentMyProjectPage() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { data: projectsData, isLoading } = useGetProjects();
+    const myGroups = projectsData?.items || [];
+
+    // Auto-redirect to the first group if only one group exists
+    useEffect(() => {
+        if (!isLoading && myGroups.length === 1) {
+            navigate(`/student/project/${myGroups[0].id}`, { replace: true });
+        }
+    }, [isLoading, myGroups, navigate]);
+
+    if (isLoading) {
+        return (
+            <div className="flex h-full items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+            </div>
+        );
+    }
+
+    if (myGroups.length === 0) {
+        return (
+            <div className="space-y-6">
+                <Breadcrumb title="Nhóm của tôi" />
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-800">Nhóm của tôi</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">Nhóm dự án bạn đang tham gia trong các lớp học</p>
+                </div>
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                    <GitBranch size={36} className="text-gray-300" />
+                    <p className="text-sm text-gray-400">Bạn chưa thuộc nhóm nào</p>
+                    <button
+                        onClick={() => navigate("/student/courses")}
+                        className="text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-4 py-2 rounded-xl transition-colors"
+                    >
+                        Xem danh sách lớp học
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Multiple groups: show picker list
+    return (
+        <div className="space-y-6">
+            <Breadcrumb title="Nhóm của tôi" />
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight text-gray-800">Nhóm của tôi</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Nhóm dự án bạn đang tham gia trong các lớp học</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {myGroups.map(g => {
+                    const myMember = (g.team || []).find(m => String(m.studentId) === String(user?.id));
+                    const isLeader = myMember?.role?.toUpperCase() === "LEADER";
+                    const ghApproved = g.integration?.githubStatus === "APPROVED";
+                    const jiraApproved = g.integration?.jiraStatus === "APPROVED";
+                    return (
+                        <Card
+                            key={g.id}
+                            className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => navigate(`/student/project/${g.id}`)}
+                        >
+                            <div className="h-1 bg-gradient-to-r from-teal-500 to-teal-400" />
+                            <CardContent className="p-5">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                    <div>
+                                        <p className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md inline-block mb-1">
+                                            {g.course?.subject?.code || g.course?.code || "Lớp học"}
+                                        </p>
+                                        <h4 className="font-bold text-gray-800">{g.name}</h4>
+                                        {g.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{g.description}</p>}
+                                    </div>
+                                    <span className={`shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${isLeader ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                                        {isLeader ? "Leader" : "Member"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${ghApproved ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-100 text-gray-400 border-gray-200"}`}>
+                                        <GitBranch size={9} /> GitHub: {ghApproved ? "Đã duyệt" : "Chờ duyệt"}
+                                    </span>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 ${jiraApproved ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-gray-100 text-gray-400 border-gray-200"}`}>
+                                        <BookOpen size={9} /> Jira: {jiraApproved ? "Đã duyệt" : "Chờ duyệt"}
+                                    </span>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-2">{(g.team || []).length} thành viên</p>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}

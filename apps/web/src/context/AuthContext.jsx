@@ -1,5 +1,6 @@
 // AuthContext: Quản lý authentication state — Real API (ASP.NET BE)
 import { createContext, useContext, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query"; // BUG-63: Import query client
 import { loginWithCredentials, loginWithGoogle } from "../features/auth/api/authApi.js";
 
 /* eslint-disable react-refresh/only-export-components */
@@ -38,19 +39,22 @@ function mapBEUserToFEUser(loginResponse) {
  */
 function restoreUserFromStorage() {
   try {
-    const savedUser = localStorage.getItem("user");
-    const savedToken = localStorage.getItem("accessToken");
+    const savedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const savedToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     if (savedUser && savedToken) {
       return JSON.parse(savedUser);
     }
   } catch {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
   }
   return null;
 }
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(restoreUserFromStorage);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +63,7 @@ export function AuthProvider({ children }) {
    * Trả về { success, redirectPath } hoặc { success: false, error }
    * Giao diện giống hệt mock cũ để Login.jsx không cần sửa.
    */
-  const login = async (email, password) => {
+  const login = async (email, password, remember = false) => {
     setLoading(true);
     try {
       // client.js interceptor đã bóc vỏ ApiResponse<T>
@@ -80,9 +84,10 @@ export function AuthProvider({ children }) {
       const feUser = mapBEUserToFEUser(loginResponse);
       const redirect = ROLE_REDIRECTS[feUser.role] ?? "/";
 
-      // Lưu vào localStorage (key "accessToken" để client.js interceptor tự đính)
-      localStorage.setItem("accessToken", token);
-      localStorage.setItem("user", JSON.stringify(feUser));
+      // Lưu vào storage tương ứng (mặc định là false nếu không truyền)
+      const storage = remember === true ? localStorage : sessionStorage;
+      storage.setItem("accessToken", token);
+      storage.setItem("user", JSON.stringify(feUser));
       setUser(feUser);
 
       return { success: true, redirectPath: redirect };
@@ -94,7 +99,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginGoogle = async (idToken) => {
+  const loginGoogle = async (idToken, remember = true) => {
     setLoading(true);
     try {
       const apiRes = await loginWithGoogle(idToken);
@@ -108,8 +113,10 @@ export function AuthProvider({ children }) {
       const feUser = mapBEUserToFEUser(loginResponse);
       const redirect = ROLE_REDIRECTS[feUser.role] ?? "/";
 
-      localStorage.setItem("accessToken", token);
-      localStorage.setItem("user", JSON.stringify(feUser));
+      // Google login mặc định remember = true (hoặc truyền qua args)
+      const storage = remember === false ? sessionStorage : localStorage;
+      storage.setItem("accessToken", token);
+      storage.setItem("user", JSON.stringify(feUser));
       setUser(feUser);
 
       return { success: true, redirectPath: redirect };
@@ -122,11 +129,15 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    // BUG-63: Important - clear all cached data on logout for security & state consistency
+    queryClient.clear();
+
     setUser(null);
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
-    // Xóa key cũ nếu còn (từ mock)
     localStorage.removeItem("token");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("user");
   };
 
   const value = {

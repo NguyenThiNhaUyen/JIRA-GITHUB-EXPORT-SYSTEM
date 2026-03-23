@@ -154,7 +154,7 @@ export default function Alerts() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {filtered.map((a) => {
-                                const sev = SEV[a.severity] || SEV.medium;
+                                const sev = SEV[a.severity.toLowerCase()] || SEV.medium;
                                 const reminded = remindedIds.has(a.id);
                                 return (
                                     <div
@@ -162,12 +162,12 @@ export default function Alerts() {
                                         className={`px-5 py-4 hover:bg-gray-50/50 transition-colors flex items-start gap-4 ${a.status === "RESOLVED" ? "opacity-60" : ""
                                             }`}
                                     >
-                                        <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${sev[a.severity.toLowerCase()]?.dot || sev.medium.dot}`} />
+                                        <div className={`w-2 h-2 mt-2 rounded-full shrink-0 ${sev.dot}`} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <p className="text-sm font-semibold text-gray-800">{a.groupName} · {a.courseCode}</p>
                                                 <span
-                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${sev[a.severity.toLowerCase()]?.cls || sev.medium.cls}`}
+                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${sev.cls}`}
                                                 >
                                                     {a.severity}
                                                 </span>
