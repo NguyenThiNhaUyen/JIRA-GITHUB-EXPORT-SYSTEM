@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useGetEnrolledStudents } from "../../features/courses/hooks/useCourses.js";
-import { useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
+import { useGetProjects, useAddTeamMember, useGetProjectMetrics, useRemoveTeamMember, useUpdateTeamMember } from "../../features/projects/hooks/useProjects.js";
 import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
 
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));

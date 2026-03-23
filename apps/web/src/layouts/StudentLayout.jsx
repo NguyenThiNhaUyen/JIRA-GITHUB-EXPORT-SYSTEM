@@ -21,7 +21,6 @@ const NAV = [
         label: "Học tập",
         items: [
             { to: "/student/courses", icon: Library, label: "Lớp của tôi" },
-            { to: "/student/my-project", icon: GitBranch, label: "Nhóm của tôi" },
         ],
     },
     {
