@@ -3,20 +3,64 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card.jsx";
 import { Button } from "../../components/ui/button.jsx";
-import { useToast } from "../../components/ui/toast.jsx";
 import { ChevronRight, GraduationCap, Users, BookOpen, Settings2, Search } from "lucide-react";
 
 // Feature Hooks
 import { useGetCourses } from "../../features/courses/hooks/useCourses.js";
 
+function getCourseStudentCount(course) {
+    if (Array.isArray(course?.enrolledStudents)) return course.enrolledStudents.length;
+    if (Array.isArray(course?.enrollments)) return course.enrollments.length;
+    if (Array.isArray(course?.students)) return course.students.length;
+    return course?.studentCount ?? course?.currentStudents ?? 0;
+}
+
+function getCourseGroupCount(course) {
+    if (typeof course?.projectsCount === "number") return course.projectsCount;
+    if (typeof course?.projectCount === "number") return course.projectCount;
+    if (Array.isArray(course?.groups)) return course.groups.length;
+    return 0;
+}
+
+function lecturerPersonDisplayName(person) {
+    if (!person || typeof person !== "object") return null;
+    const raw = person.fullName ?? person.name;
+    if (typeof raw !== "string" || raw.trim().length === 0) return null;
+    const t = raw.trim();
+    if (t.includes("GV (ID:")) return null;
+    return t;
+}
+
+function cleanLecturerString(value) {
+    if (typeof value !== "string") return null;
+    const t = value.trim();
+    if (!t || t.includes("GV (ID:")) return null;
+    return t;
+}
+
+function getLecturerLabel(course) {
+    const single = course?.lecturer;
+    if (typeof single === "string") {
+        const s = cleanLecturerString(single);
+        if (s) return s;
+    }
+    if (single && !Array.isArray(single)) {
+        const n = lecturerPersonDisplayName(single);
+        if (n) return n;
+    }
+    const lecs = course?.lecturers;
+    if (!Array.isArray(lecs) || lecs.length === 0) return null;
+    const first = lecturerPersonDisplayName(lecs[0]);
+    return first ?? null;
+}
+
 export default function MyCourses() {
     const navigate = useNavigate();
-    const { error: showError } = useToast();
     const [search, setSearch] = useState("");
 
-    // Data Fetching - Backend automatically filters by lecturer based on token role
     const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
     const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
+    console.log("DEBUG_COURSES_UI", courses);
 
     const filtered = courses.filter((c) =>
         (c?.code?.toLowerCase?.() ?? "").includes(search.toLowerCase()) ||
@@ -24,8 +68,8 @@ export default function MyCourses() {
         (c?.subjectName?.toLowerCase?.() ?? "").includes(search.toLowerCase())
     );
 
-    const totalGroups = courses.reduce((a, c) => a + (c?.projects?.length ?? 0), 0);
-    const totalStudents = courses.reduce((a, c) => a + (c?.currentStudents ?? 0), 0);
+    const totalGroups = courses.reduce((a, c) => a + getCourseGroupCount(c), 0);
+    const totalStudents = courses.reduce((a, c) => a + getCourseStudentCount(c), 0);
 
     return (
         <div className="space-y-6">
@@ -66,13 +110,16 @@ export default function MyCourses() {
                 <EmptyState message={search ? "Không tìm thấy lớp học phù hợp" : "Bạn chưa được giao lớp nào"} />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {filtered.map((course) => (
-                        <CourseCard
-                            key={course?.id}
-                            course={course}
-                            onManage={() => navigate(`/lecturer/course/${course?.id}/manage-groups`)}
-                        />
-                    ))}
+                    {filtered.map((course) => {
+                        const cid = course?.id != null ? String(course.id) : "";
+                        return (
+                                <CourseCard
+                                    key={course?.id}
+                                    course={course}
+                                    onManage={() => navigate(`/lecturer/course/${course?.id}/manage-groups`)}
+                                />
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -80,8 +127,9 @@ export default function MyCourses() {
 }
 
 function CourseCard({ course, onManage }) {
-    const groupCount = course?.projects?.length ?? 0;
-    const lecturerDisplayName = course?.lecturerName ?? course?.lecturer?.name ?? `GV (ID: ${course?.lecturerId ?? "N/A"})`;
+    const groupCount = getCourseGroupCount(course);
+    const studentCount = getCourseStudentCount(course);
+    const lecturerDisplayName = getLecturerLabel(course);
     return (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all duration-200 group">
             {/* Color bar */}
@@ -98,10 +146,19 @@ function CourseCard({ course, onManage }) {
                 <div>
                     <h3 className="font-bold text-gray-800 leading-snug">{course?.code ?? "N/A"}</h3>
                     <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{course?.name ?? course?.subjectName ?? `Lớp (ID: ${course?.id ?? "N/A"})`}</p>
-                    <p className="text-xs text-gray-400 mt-1">GV phụ trách: {lecturerDisplayName}</p>
+                    <p className="text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="font-medium text-gray-500">GV phụ trách:</span>
+                        {lecturerDisplayName ? (
+                            <span className="text-gray-600">{lecturerDisplayName}</span>
+                        ) : (
+                            <span className="inline-flex items-center rounded-lg border border-gray-100 bg-white px-2 py-0.5 text-gray-400">
+                                Chưa phân công
+                            </span>
+                        )}
+                    </p>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Users size={11} />{course?.currentStudents ?? 0} sinh viên</span>
+                    <span className="flex items-center gap-1"><Users size={11} />{studentCount} sinh viên</span>
                     <span className="flex items-center gap-1"><BookOpen size={11} />{groupCount} nhóm</span>
                 </div>
                 <Button

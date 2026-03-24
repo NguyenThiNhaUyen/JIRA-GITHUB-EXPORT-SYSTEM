@@ -28,10 +28,11 @@ export const PROJECT_KEYS = {
 };
 
 export const useGetProjects = (params) => {
+    const { enabled = true, ...apiParams } = params ?? {};
     return useQuery({
-        queryKey: PROJECT_KEYS.list(params),
-        queryFn: () => getProjects(params ?? {}),
-        enabled: true,
+        queryKey: PROJECT_KEYS.list(apiParams),
+        queryFn: () => getProjects(apiParams),
+        enabled,
     });
 };
 
@@ -96,6 +97,7 @@ export const useRemoveTeamMember = () => {
         mutationFn: ({ projectId, studentId }) => removeTeamMember(projectId, studentId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
     });
 };
@@ -106,6 +108,7 @@ export const useUpdateTeamMember = () => {
         mutationFn: ({ projectId, studentId, updates }) => updateTeamMember(projectId, studentId, updates),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
+            queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
         },
     });
 };

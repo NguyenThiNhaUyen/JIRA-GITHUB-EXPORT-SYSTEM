@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
-    ChevronRight, UserPlus, Users, GitBranch, BookOpen,
+    ChevronRight, UserPlus, Users,
     Trash2, Eye, PenLine, ArrowLeft, Star
 } from "lucide-react";
 
@@ -17,7 +17,8 @@ import {
     useUpdateProject,
     useAddTeamMember,
     useRemoveTeamMember,
-    useUpdateTeamMember
+    useUpdateTeamMember,
+    useGetProjects
 } from "../../features/projects/hooks/useProjects.js";
 
 export default function ManageGroups() {
@@ -37,6 +38,11 @@ export default function ManageGroups() {
     // Data Fetching
     const { data: course, isLoading: loadingCourse } = useGetCourseById(courseId);
     const { data: studentsData = { items: [] }, isLoading: loadingStudents } = useGetEnrolledStudents(courseId);
+    const { data: projectsData, isLoading: loadingProjects } = useGetProjects({
+        courseId,
+        pageSize: 100,
+        enabled: !!courseId
+    });
 
     // Mutations
     const createProjectMutation = useCreateProject();
@@ -46,8 +52,16 @@ export default function ManageGroups() {
     const removeTeamMemberMutation = useRemoveTeamMember();
     const updateTeamMemberMutation = useUpdateTeamMember();
 
-    const students = Array.isArray(studentsData?.items) ? studentsData.items : [];
-    const groups = Array.isArray(course?.groups) ? course.groups : [];
+    const students = Array.isArray(studentsData?.items)
+        ? studentsData.items
+        : Array.isArray(studentsData?.enrolledStudents)
+            ? studentsData.enrolledStudents
+            : Array.isArray(studentsData)
+                ? studentsData
+                : [];
+    const groups = Array.isArray(projectsData?.items)
+        ? projectsData.items
+        : (Array.isArray(course?.groups) ? course.groups : []);
 
     const handleCreateGroup = async () => {
         if (selectedStudents.length === 0) { error("Vui lòng chọn ít nhất 1 học sinh"); return; }
@@ -191,18 +205,18 @@ export default function ManageGroups() {
                 <p className="text-sm text-gray-500 mt-2 max-w-sm">
                     Vui lòng chọn lớp học từ menu "Lớp của tôi" hoặc trang Dashboard để bắt đầu quản lý nhóm và thành viên.
                 </p>
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     className="mt-6 rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50"
                     onClick={() => navigate(-1)}
                 >
-                     Quay lại Dashboard
+                    Quay lại Dashboard
                 </Button>
             </div>
         );
     }
 
-    if (loadingCourse || loadingStudents) {
+    if (loadingCourse || loadingStudents || loadingProjects) {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600" />
@@ -303,34 +317,36 @@ export default function ManageGroups() {
                                         </div>
                                     ) : (
                                         availableStudents.map((student) => {
+                                            const studentUniqueId = student?.id ?? student?.studentId;
                                             const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
                                             return (
-                                            <label
-                                                key={student?.id ?? student?.studentId}
-                                                className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedStudents.includes(student?.id)}
-                                                    onChange={() => toggleStudentSelection(student?.id)}
-                                                    className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
-                                                />
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-medium text-gray-700">{displayName}</p>
-                                                    <p className="text-xs text-gray-400">{student?.studentId ?? student?.id ?? "N/A"}</p>
-                                                </div>
+                                                <label
+                                                    key={studentUniqueId}
+                                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedStudents.includes(studentUniqueId)}
+                                                        onChange={() => toggleStudentSelection(studentUniqueId)}
+                                                        className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium text-gray-700">{displayName}</p>
+                                                        <p className="text-xs text-gray-400">{student?.studentId ?? student?.id ?? "N/A"}</p>
+                                                    </div>
 
-                                                {selectedStudents.includes(student?.id) && (
-                                                    <button
-                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(student?.id); }}
-                                                        className={`p-1.5 rounded-lg transition-all ${selectedLeaderId === student?.id ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-amber-400'}`}
-                                                        title="Chọn làm Trưởng nhóm"
-                                                    >
-                                                        <Star size={14} fill={selectedLeaderId === student?.id ? "currentColor" : "none"} />
-                                                    </button>
-                                                )}
-                                            </label>
-                                        )})
+                                                    {selectedStudents.includes(studentUniqueId) && (
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(studentUniqueId); }}
+                                                            className={`p-1.5 rounded-lg transition-all ${selectedLeaderId === studentUniqueId ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-amber-400'}`}
+                                                            title="Chọn làm Trưởng nhóm"
+                                                        >
+                                                            <Star size={14} fill={selectedLeaderId === studentUniqueId ? "currentColor" : "none"} />
+                                                        </button>
+                                                    )}
+                                                </label>
+                                            )
+                                        })
                                     )}
                                 </div>
                                 {selectedStudents.length > 0 && (
@@ -381,6 +397,8 @@ export default function ManageGroups() {
                                 <div className="divide-y divide-gray-50">
                                     {groups.map((group) => {
                                         const groupStudents = Array.isArray(group?.team) ? group.team : [];
+                                        const groupTopic = group?.topic ?? group?.description ?? "";
+                                        const memberCount = groupStudents?.length ?? group?.teamSize ?? 0;
                                         return (
                                             <div key={group.id} className="p-5 hover:bg-gray-50/50 transition-colors">
                                                 {/* Group header row */}
@@ -388,8 +406,6 @@ export default function ManageGroups() {
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h3 className="font-bold text-gray-900">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</h3>
-                                                            <StatusBadge status={group.integration?.githubStatus} icon={<GitBranch size={9} />} label="GitHub" />
-                                                            <StatusBadge status={group.integration?.jiraStatus} icon={<BookOpen size={9} />} label="Jira" />
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 shrink-0">
@@ -415,9 +431,10 @@ export default function ManageGroups() {
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        defaultValue={group.description}
+                                                        key={`${group.id}-topic-${groupTopic}`}
+                                                        defaultValue={groupTopic}
                                                         onBlur={(e) => {
-                                                            if (e.target.value !== group.description)
+                                                            if (e.target.value !== groupTopic)
                                                                 handleUpdateGroupTopic(group.id, e.target.value);
                                                         }}
                                                         placeholder="Chưa có đề tài..."
@@ -429,7 +446,7 @@ export default function ManageGroups() {
                                                 <div>
                                                     <div className="flex items-center justify-between mb-2">
                                                         <label className="block text-xs text-gray-400 font-medium">
-                                                            Thành viên ({groupStudents?.length ?? 0})
+                                                            Thành viên ({memberCount})
                                                         </label>
                                                         <Button
                                                             size="sm"
@@ -443,37 +460,38 @@ export default function ManageGroups() {
                                                         {groupStudents.map((member, idx) => {
                                                             const displayName = member?.studentName ?? member?.name ?? member?.fullName ?? `SV (ID: ${member?.studentId ?? member?.id ?? "N/A"})`;
                                                             return (
-                                                            <div
-                                                                key={member?.studentId ?? member?.id ?? idx}
-                                                                className="group inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
-                                                            >
-                                                                <div className="w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold">
-                                                                    {displayName?.charAt?.(0) ?? "S"}
-                                                                </div>
-                                                                {displayName}
-                                                                {member?.role === "LEADER" && (
-                                                                    <span className="text-[9px] font-bold text-teal-600 uppercase">★</span>
-                                                                )}
-                                                                <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    {member?.role !== "LEADER" && (
-                                                                        <button
-                                                                            onClick={() => handlePromoteLeader(group?.id, member?.studentId ?? member?.id, displayName)}
-                                                                            title="Chuyển quyền Leader"
-                                                                            className="text-amber-500 hover:text-amber-600 transition-colors p-0.5"
-                                                                        >
-                                                                            <Star size={10} fill="currentColor" />
-                                                                        </button>
+                                                                <div
+                                                                    key={member?.studentId ?? member?.id ?? idx}
+                                                                    className="group inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
+                                                                >
+                                                                    <div className="w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold">
+                                                                        {displayName?.charAt?.(0) ?? "S"}
+                                                                    </div>
+                                                                    {displayName}
+                                                                    {member?.role === "LEADER" && (
+                                                                        <span className="text-[9px] font-bold text-teal-600 uppercase">★</span>
                                                                     )}
-                                                                    <button
-                                                                        onClick={() => handleRemoveStudentFromGroup(group?.id, member?.studentId ?? member?.id)}
-                                                                        title="Xóa SV khỏi nhóm"
-                                                                        className="text-gray-300 hover:text-red-500 transition-colors p-0.5 font-bold"
-                                                                    >
-                                                                        ×
-                                                                    </button>
+                                                                    <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        {member?.role !== "LEADER" && (
+                                                                            <button
+                                                                                onClick={() => handlePromoteLeader(group?.id, member?.studentId ?? member?.id, displayName)}
+                                                                                title="Chuyển quyền Leader"
+                                                                                className="text-amber-500 hover:text-amber-600 transition-colors p-0.5"
+                                                                            >
+                                                                                <Star size={10} fill="currentColor" />
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={() => handleRemoveStudentFromGroup(group?.id, member?.studentId ?? member?.id)}
+                                                                            title="Xóa SV khỏi nhóm"
+                                                                            className="text-gray-300 hover:text-red-500 transition-colors p-0.5 font-bold"
+                                                                        >
+                                                                            ×
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )})}
+                                                            )
+                                                        })}
                                                     </div>
                                                 </div>
                                             </div>
@@ -560,15 +578,5 @@ function MiniStat({ label, value, color }) {
             <span className="text-xs font-semibold opacity-80">{label}</span>
             <span className="text-xl font-bold">{value}</span>
         </div>
-    );
-}
-
-function StatusBadge({ status, icon, label }) {
-    const approved = status === "APPROVED";
-    return (
-        <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${approved ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
-            }`}>
-            {icon}{label}{approved ? " ✓" : ""}
-        </span>
     );
 }

@@ -227,8 +227,14 @@ export default function CourseManagement() {
   };
 
   const getCourseLecturerName = (course) => {
+    if (typeof course?.lecturer === "string") {
+      const s = course.lecturer.trim();
+      if (s) return s;
+    }
     const lecs = getCourseLecturers(course);
-    return lecs.length > 0 ? getFallbackPersonName(lecs[0], "GV") : null;
+    if (lecs.length === 0) return null;
+    const p = lecs[0];
+    return p?.fullName || p?.name || getFallbackPersonName(p, "GV");
   };
 
   const handleRemoveLecturer = async (course) => {
@@ -236,7 +242,10 @@ export default function CourseManagement() {
     if (lecs.length === 0) return;
     if (!confirm(`Xóa giảng viên ${getFallbackPersonName(lecs[0], "GV")} khỏi lớp ${course?.code || "Không có dữ liệu"}?`)) return;
     try {
-      await removeLecturerMutation.mutateAsync({ courseId: String(course?.id), lecturerUserId: String(lecs[0]?.id) });
+      await removeLecturerMutation.mutateAsync({
+        courseId: String(course?.id),
+        lecturerUserId: String(lecs[0]?.userId ?? lecs[0]?.id),
+      });
       success(`Đã xóa GV khỏi lớp ${course?.code || "Không có dữ liệu"}`);
     } catch (err) {
       showError(err.message || "Xóa giảng viên thất bại");

@@ -19,8 +19,60 @@ import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAl
 import { useGetLecturerActivityLogs, useGetGroupRadarMetrics } from "../../features/admin/hooks/useAnalytics.js";
 import { getProjectKanban, getProjectMetrics, getProjectRoadmap, getProjects } from "../../features/projects/api/projectApi.js";
 
-// Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
+function getCourseStudentCount(course) {
+  if (Array.isArray(course?.enrolledStudents)) return course.enrolledStudents.length;
+  if (Array.isArray(course?.enrollments)) return course.enrollments.length;
+  if (Array.isArray(course?.students)) return course.students.length;
+  return course?.studentCount ?? course?.currentStudents ?? 0;
+}
 
+function getCourseGroupCount(course) {
+  if (typeof course?.projectsCount === "number") return course.projectsCount;
+  if (typeof course?.projectCount === "number") return course.projectCount;
+  if (Array.isArray(course?.groups)) return course.groups.length;
+  return 0;
+}
+
+function lecturerPersonDisplayName(person) {
+  if (!person || typeof person !== "object") return null;
+  const raw = person.fullName ?? person.name;
+  if (typeof raw !== "string" || raw.trim().length === 0) return null;
+  const t = raw.trim();
+  if (t.includes("GV (ID:")) return null;
+  return t;
+}
+
+function cleanLecturerString(value) {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (!t || t.includes("GV (ID:")) return null;
+  return t;
+}
+
+function getLecturerLabel(course) {
+  const single = course?.lecturer;
+  if (typeof single === "string") {
+    const s = cleanLecturerString(single);
+    if (s) return s;
+  }
+  if (single && !Array.isArray(single)) {
+    const n = lecturerPersonDisplayName(single);
+    if (n) return n;
+  }
+  const lecs = course?.lecturers;
+  if (!Array.isArray(lecs) || lecs.length === 0) return null;
+  const first = lecturerPersonDisplayName(lecs[0]);
+  return first ?? null;
+}
+
+function tableMemberDisplayName(member) {
+  const raw = member?.name ?? member?.studentName ?? member?.fullName;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (t && !t.includes("GV (ID:")) return t;
+  }
+  return `SV (ID: ${member?.studentId ?? member?.id ?? "N/A"})`;
+}
 
 export default function LecturerDashboard() {
   const navigate = useNavigate();
@@ -40,9 +92,13 @@ export default function LecturerDashboard() {
 
   const { data: subjects = [] } = useGetSubjects();
   const { data: coursesData = { items: [] } } = useGetCourses();
-  const { data: course, isLoading: loadingCourse } = useGetCourseById(selectedCourseId);
+  const { data: course } = useGetCourseById(selectedCourseId);
   const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourseId);
-  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({ courseId: selectedCourseId });
+  const { data: projectsData, isLoading: loadingProjects } = useGetProjects({
+    courseId: selectedCourseId ?? undefined,
+    pageSize: 100,
+    enabled: !!selectedCourseId,
+  });
   const { data: alertsData } = useGetAlerts({ pageSize: 5 });
   const { data: activityLogRaw } = useGetLecturerActivityLogs(8);
 
@@ -127,6 +183,10 @@ export default function LecturerDashboard() {
   });
   const currentSubject = (Array.isArray(subjects) ? subjects : []).find((s) => String(s?.id) === String(selectedSubjectId));
   const currentCourse = courses.find((c) => String(c?.id) === String(selectedCourseId));
+  const courseMeta = course ?? currentCourse ?? null;
+  const courseStudentTotal = selectedCourseId ? getCourseStudentCount(courseMeta) : null;
+  const courseGroupTotal = selectedCourseId ? getCourseGroupCount(courseMeta) : null;
+  const courseLecturerLabel = selectedCourseId ? getLecturerLabel(courseMeta) : null;
   const selectedProject = useMemo(
     () => groups.find((g) => String(g.id) === String(selectedProjectId)),
     [groups, selectedProjectId]
@@ -262,12 +322,29 @@ export default function LecturerDashboard() {
               <option value="inactive-groups">Chưa hoàn thành</option>
             </SelectField>
           </div>
+          {selectedCourse && (
+            <div className="mt-5 pt-5 border-t border-gray-50 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-500">
+              <span className="flex flex-wrap items-center gap-1.5">
+                <span className="font-semibold text-gray-600">GV phụ trách:</span>
+                {courseLecturerLabel ? (
+                  <span className="text-gray-600">{courseLecturerLabel}</span>
+                ) : (
+                  <span className="inline-flex items-center rounded-lg border border-gray-100 bg-white px-2 py-0.5 text-gray-400">
+                    Chưa phân công
+                  </span>
+                )}
+              </span>
+              <span><span className="font-semibold text-gray-600">Sinh viên:</span> {courseStudentTotal ?? 0}</span>
+              <span><span className="font-semibold text-gray-600">Nhóm:</span> {courseGroupTotal ?? 0}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* ── A. Summary Stats ────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Tổng nhóm" value={selectedCourse ? stats.total : "—"} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Tổng nhóm" value={selectedCourse ? courseGroupTotal ?? stats.total : "—"} />
+        <StatCard icon={<Users size={20} />} color="bg-violet-500" label="Sinh viên lớp" value={selectedCourse ? courseStudentTotal ?? 0 : "—"} />
         <StatCard icon={<GitBranch size={20} />} color="bg-teal-500" label="GitHub đã duyệt" value={selectedCourse ? stats.github : "—"} />
         <StatCard icon={<BookOpen size={20} />} color="bg-indigo-500" label="Jira đã duyệt" value={selectedCourse ? stats.jira : "—"} />
         <StatCard icon={<AlertTriangle size={20} />} color="bg-orange-400" label="Cần cảnh báo" value={selectedCourse ? stats.alerts : "—"} />
@@ -401,7 +478,7 @@ export default function LecturerDashboard() {
                 Nhóm {currentCourse && <span className="text-gray-400 font-normal ml-1">— {currentCourse.code}</span>}
               </CardTitle>
               <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-3 py-1 font-medium border border-gray-100">
-                {groups.length} nhóm
+                {courseGroupTotal ?? groups.length} nhóm
               </span>
             </div>
           </CardHeader>
@@ -415,7 +492,7 @@ export default function LecturerDashboard() {
           </div>
 
           <CardContent className="p-0">
-            {loadingCourse ? (
+            {loadingProjects ? (
               <LoadingRows />
             ) : groups.length === 0 ? (
               <EmptyGroups onAction={handleManageGroups} />
@@ -530,7 +607,7 @@ export default function LecturerDashboard() {
               </div>
               <CardTitle className="text-base font-semibold text-gray-800">So sánh Nhóm</CardTitle>
               <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-3 py-1 font-medium border border-gray-100 ml-auto">
-                {radarData.length} nhóm · {currentCourse?.code}
+                {Math.max(courseGroupTotal ?? 0, radarData.length)} nhóm · {currentCourse?.code}
               </span>
             </div>
           </CardHeader>
@@ -584,21 +661,38 @@ function SelectField({ label, children, ...props }) {
   );
 }
 
+function cleanGroupTitle(group) {
+  const raw = group?.name;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (t && !t.includes("GV (ID:")) return t;
+  }
+  return `Nhóm (ID: ${group?.id ?? "N/A"})`;
+}
+
+function cleanGroupTopic(group) {
+  const raw = group?.topic ?? group?.description;
+  if (typeof raw !== "string") return "";
+  const t = raw.trim();
+  if (!t || t.includes("GV (ID:")) return "";
+  return t;
+}
+
 function GroupRow({ group, students, githubOk, jiraOk, onDetail, onWarn, onSelect }) {
   const safeStudents = Array.isArray(students) ? students : [];
   const hasAlert = !githubOk || !jiraOk;
   return (
     <div onClick={onSelect} className={`grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors border-l-4 cursor-pointer ${hasAlert ? "border-l-orange-300" : "border-l-transparent"}`}>
       <div className="col-span-7 md:col-span-4">
-        <p className="font-semibold text-gray-800 text-sm leading-snug">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</p>
+        <p className="font-semibold text-gray-800 text-sm leading-snug">{cleanGroupTitle(group)}</p>
         <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">
-          {group.topic || <span className="italic">Chưa có đề tài</span>}
+          {cleanGroupTopic(group) || <span className="italic">Chưa có đề tài</span>}
         </p>
       </div>
       <div className="col-span-3 hidden md:flex items-center justify-center gap-1">
         <div className="flex -space-x-2">
           {safeStudents.slice(0, 3).map((s, idx) => {
-            const displayName = s?.name ?? s?.studentName ?? s?.fullName ?? `SV (ID: ${s?.studentId ?? s?.id ?? "N/A"})`;
+            const displayName = tableMemberDisplayName(s);
             return (
             <div key={s?.id ?? s?.studentId ?? idx} className="w-7 h-7 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-teal-700" title={displayName}>
               {displayName?.charAt?.(0) ?? "S"}

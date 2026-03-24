@@ -159,7 +159,7 @@ public class CourseService : ICourseService
                 FullName = tm.student_user?.user?.full_name ?? "Unknown",
                 StudentCode = tm.student_user?.student_code ?? "N/A",
                 StudentId = tm.student_user?.student_code ?? "N/A",
-                Role = tm.role
+                Role = tm.team_role
             }).ToList()
         }).ToList();
 
@@ -243,12 +243,8 @@ public class CourseService : ICourseService
             throw new NotFoundException($"Lecturer with UserID {lecturerUserId} not found in lecturers table");
         }
 
-        // Check if already assigned
-        if (course.lecturer_users.Any(l => l.user_id == lecturerUserId))
-        {
-            throw new BusinessException("Lecturer already assigned to this course");
-        }
-
+        // Limit to 1 lecturer per course
+        course.lecturer_users.Clear();
         course.lecturer_users.Add(lecturer);
         
         // Add Audit Log for notification bell
