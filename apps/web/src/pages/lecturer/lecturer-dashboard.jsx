@@ -1,6 +1,6 @@
 // Lecturer Dashboard — Enterprise SaaS (Real API)
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
@@ -17,25 +17,23 @@ import { useGetCourses, useGetCourseById, useGetCourseProjectsMetrics } from "..
 import { useGetProjects, useApproveIntegration, useRejectIntegration } from "../../features/projects/hooks/useProjects.js";
 import { useGetAlerts, useResolveAlert } from "../../features/system/hooks/useAlerts.js";
 import { useGetLecturerActivityLogs, useGetGroupRadarMetrics } from "../../features/admin/hooks/useAnalytics.js";
+import { getProjectKanban, getProjectMetrics, getProjectRoadmap, getProjects } from "../../features/projects/api/projectApi.js";
 
 // Tạm thời để buildAlerts cũ cho dashboard nhỏ, hoặc dùng useGetAlerts
 
 
-/* ─── Derived mock recent activity (keep for UI) ────────────────── */
-const MOCK_ACTIVITY = [
-  { id: 1, icon: GitBranch, color: "text-teal-600 bg-teal-50", msg: "Nhóm A đã submit GitHub repo", time: "5 phút trước" },
-  { id: 2, icon: BookOpen, color: "text-blue-600 bg-blue-50", msg: "Nhóm B đã kết nối Jira project", time: "1 giờ trước" },
-  { id: 3, icon: FileText, color: "text-indigo-600 bg-indigo-50", msg: "SRS Draft từ Nhóm C đang chờ review", time: "3 giờ trước" },
-  { id: 4, icon: CheckCircle, color: "text-green-600 bg-green-50", msg: "Nhóm D: GitHub đã được phê duyệt", time: "Hôm qua" },
-];
-
 export default function LecturerDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { success, error } = useToast();
 
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [filter, setFilter] = useState("all");
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projectOverview, setProjectOverview] = useState({ metrics: null, kanban: null, roadmap: null });
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState("");
 
   const selectedSubjectId = selectedSubject ? parseInt(selectedSubject) : null;
   const selectedCourseId = selectedCourse ? parseInt(selectedCourse) : null;
@@ -67,15 +65,18 @@ export default function LecturerDashboard() {
   const rejectIntMutation = useRejectIntegration();
   const resolveAlertMutation = useResolveAlert();
 
-  const courses = (coursesData.items || []).filter(c => !selectedSubjectId || c.subjectId === selectedSubjectId);
-  const groups = projectsData?.items || [];
+  const courses = (Array.isArray(coursesData?.items) ? coursesData.items : []).filter(
+    (c) => !selectedSubjectId || String(c?.subjectId) === String(selectedSubjectId)
+  );
+  const groups = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
   const handleManageGroups = () => {
     if (!selectedCourse) { error("Vui lòng chọn lớp học"); return; }
     navigate(`/lecturer/course/${selectedCourse}/manage-groups`);
   };
 
-  const handleSendWarning = (group) => success(`Đã gửi cảnh báo đến nhóm "${group.name}"`);
+  const handleSendWarning = (group) =>
+    success(`Đã gửi cảnh báo đến nhóm "${group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}"`);
 
   const handleApprovePending = async (groupId, type) => {
     try {
@@ -113,19 +114,84 @@ export default function LecturerDashboard() {
     jira: groups.filter(g => g.integration?.jiraStatus === "APPROVED").length,
     alerts: groups.filter(g => g.integration?.githubStatus !== "APPROVED" || g.integration?.jiraStatus !== "APPROVED").length,
   };
-  const alertsList = (alertsData?.items || []).filter(a => a.status === "OPEN").map(a => {
+  const alertsList = (Array.isArray(alertsData?.items) ? alertsData.items : []).filter((a) => a?.status === "OPEN").map((a) => {
     // BUG-43: Standardized severity mapping (CRITICAL, HIGH, URGENT -> error)
     const sev = a.severity?.toUpperCase() || "";
     const isCritical = ["HIGH", "CRITICAL", "URGENT"].includes(sev);
     return {
       id: a.id,
-      name: a.groupName,
+      name: a?.groupName ?? `Nhóm (ID: ${a?.groupId ?? "N/A"})`,
       msg: a.message,
       severity: isCritical ? "error" : "warning"
     };
   });
-  const currentSubject = subjects.find(s => s.id === selectedSubjectId);
-  const currentCourse = courses.find(c => c.id === selectedCourseId);
+  const currentSubject = (Array.isArray(subjects) ? subjects : []).find((s) => String(s?.id) === String(selectedSubjectId));
+  const currentCourse = courses.find((c) => String(c?.id) === String(selectedCourseId));
+  const selectedProject = useMemo(
+    () => groups.find((g) => String(g.id) === String(selectedProjectId)),
+    [groups, selectedProjectId]
+  );
+
+  useEffect(() => {
+    const projectIdFromUrl = searchParams.get("projectId");
+    if (projectIdFromUrl) {
+      setSelectedProjectId(projectIdFromUrl);
+      return;
+    }
+    if (!selectedCourseId) {
+      setSelectedProjectId(null);
+      return;
+    }
+    if (groups.length > 0) {
+      setSelectedProjectId(String(groups[0].id));
+      return;
+    }
+    let isMounted = true;
+    async function resolveByCourse() {
+      try {
+        const data = await getProjects({ courseId: selectedCourseId, pageSize: 100 });
+        const first = data?.items?.[0];
+        if (isMounted) setSelectedProjectId(first ? String(first.id) : null);
+      } catch {
+        if (isMounted) setSelectedProjectId(null);
+      }
+    }
+    resolveByCourse();
+    return () => {
+      isMounted = false;
+    };
+  }, [searchParams, selectedCourseId, groups]);
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setProjectOverview({ metrics: null, kanban: null, roadmap: null });
+      setOverviewError("");
+      return;
+    }
+    let isMounted = true;
+    async function loadProjectOverview() {
+      setOverviewLoading(true);
+      setOverviewError("");
+      try {
+        const [metrics, kanban, roadmap] = await Promise.all([
+          getProjectMetrics(selectedProjectId),
+          getProjectKanban(selectedProjectId),
+          getProjectRoadmap(selectedProjectId),
+        ]);
+        if (!isMounted) return;
+        setProjectOverview({ metrics, kanban, roadmap });
+      } catch (err) {
+        if (!isMounted) return;
+        setOverviewError(err?.message || "Không thể tải dữ liệu overview của project");
+      } finally {
+        if (isMounted) setOverviewLoading(false);
+      }
+    }
+    loadProjectOverview();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedProjectId]);
 
   const pendingIntegrations = groups.filter(
     g => g.integration?.githubStatus === "PENDING" || g.integration?.jiraStatus === "PENDING"
@@ -184,11 +250,11 @@ export default function LecturerDashboard() {
               }}
             >
               <option value="">— Chọn môn học —</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.code} – {s.name}</option>)}
+              {(Array.isArray(subjects) ? subjects : []).map((s) => <option key={s?.id} value={s?.id}>{s?.code} – {s?.name}</option>)}
             </SelectField>
             <SelectField label="Lớp học" value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} disabled={!selectedSubject || courses.length === 0}>
               <option value="">— Chọn lớp học —</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
+              {courses.map((c) => <option key={c?.id} value={c?.id}>{c?.code}</option>)}
             </SelectField>
             <SelectField label="Bộ lọc" value={filter} onChange={e => setFilter(e.target.value)} disabled={!selectedCourse}>
               <option value="all">Tất cả nhóm</option>
@@ -206,6 +272,45 @@ export default function LecturerDashboard() {
         <StatCard icon={<BookOpen size={20} />} color="bg-indigo-500" label="Jira đã duyệt" value={selectedCourse ? stats.jira : "—"} />
         <StatCard icon={<AlertTriangle size={20} />} color="bg-orange-400" label="Cần cảnh báo" value={selectedCourse ? stats.alerts : "—"} />
       </div>
+
+      {selectedCourse && (
+        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+          <CardHeader className="border-b border-gray-50 pb-4">
+            <CardTitle className="text-base font-semibold text-gray-800">
+              Project Overview
+              {selectedProject && <span className="ml-1 text-sm font-normal text-gray-400">— {selectedProject?.name ?? `Nhóm (ID: ${selectedProject?.id ?? "N/A"})`}</span>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-5">
+            {overviewLoading ? (
+              <div className="flex items-center justify-center py-8 text-sm text-gray-400">Đang tải metrics/kanban/roadmap...</div>
+            ) : overviewError ? (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{overviewError}</div>
+            ) : !selectedProjectId ? (
+              <div className="text-sm text-gray-400">Chưa có project để hiển thị overview.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-xl border border-gray-100 p-4 bg-gray-50/40">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Metrics</p>
+                  <p className="mt-2 text-sm text-gray-700">Commits: <span className="font-bold">{projectOverview.metrics?.totalCommits ?? 0}</span></p>
+                  <p className="text-sm text-gray-700">Issues: <span className="font-bold">{projectOverview.metrics?.totalIssues ?? 0}</span></p>
+                </div>
+                <div className="rounded-xl border border-gray-100 p-4 bg-gray-50/40">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Kanban</p>
+                  <p className="mt-2 text-sm text-gray-700">To do: <span className="font-bold">{projectOverview.kanban?.todo?.length ?? 0}</span></p>
+                  <p className="text-sm text-gray-700">In progress: <span className="font-bold">{projectOverview.kanban?.in_progress?.length ?? 0}</span></p>
+                  <p className="text-sm text-gray-700">Done: <span className="font-bold">{projectOverview.kanban?.done?.length ?? 0}</span></p>
+                </div>
+                <div className="rounded-xl border border-gray-100 p-4 bg-gray-50/40">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Roadmap</p>
+                  <p className="mt-2 text-sm text-gray-700">Milestones: <span className="font-bold">{projectOverview.roadmap?.milestones?.length ?? 0}</span></p>
+                  <p className="text-sm text-gray-700">Sprints: <span className="font-bold">{projectOverview.roadmap?.sprints?.length ?? 0}</span></p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── B. Activity & Alerts (2-col) ─────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -319,15 +424,17 @@ export default function LecturerDashboard() {
                 {groups.map(group => {
                   const githubOk = group.integration?.githubStatus === "APPROVED";
                   const jiraOk = group.integration?.jiraStatus === "APPROVED";
+                  const safeStudents = Array.isArray(group?.team) ? group.team : [];
                   return (
                     <GroupRow
                       key={group.id}
                       group={group}
-                      students={group.team || []}
+                      students={safeStudents}
                       githubOk={githubOk}
                       jiraOk={jiraOk}
                       onDetail={() => navigate(`/lecturer/group/${group.id}`)}
                       onWarn={() => handleSendWarning(group)}
+                      onSelect={() => setSelectedProjectId(String(group.id))}
                     />
                   );
                 })}
@@ -356,7 +463,7 @@ export default function LecturerDashboard() {
               {pendingIntegrations.map(group => (
                 <div key={`pending-${group.id}`} className="px-6 py-4 hover:bg-amber-50/20 transition-colors">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="font-bold text-gray-800">{group.name}</p>
+                    <p className="font-bold text-gray-800">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</p>
                     <button
                       onClick={() => navigate(`/lecturer/group/${group.id}`)}
                       className="text-[10px] font-semibold text-teal-600 hover:underline"
@@ -477,30 +584,33 @@ function SelectField({ label, children, ...props }) {
   );
 }
 
-function GroupRow({ group, students, githubOk, jiraOk, onDetail, onWarn }) {
+function GroupRow({ group, students, githubOk, jiraOk, onDetail, onWarn, onSelect }) {
+  const safeStudents = Array.isArray(students) ? students : [];
   const hasAlert = !githubOk || !jiraOk;
   return (
-    <div className={`grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors border-l-4 ${hasAlert ? "border-l-orange-300" : "border-l-transparent"}`}>
+    <div onClick={onSelect} className={`grid grid-cols-12 gap-3 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors border-l-4 cursor-pointer ${hasAlert ? "border-l-orange-300" : "border-l-transparent"}`}>
       <div className="col-span-7 md:col-span-4">
-        <p className="font-semibold text-gray-800 text-sm leading-snug">{group.name}</p>
+        <p className="font-semibold text-gray-800 text-sm leading-snug">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</p>
         <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">
           {group.topic || <span className="italic">Chưa có đề tài</span>}
         </p>
       </div>
       <div className="col-span-3 hidden md:flex items-center justify-center gap-1">
         <div className="flex -space-x-2">
-          {students.slice(0, 3).map(s => (
-            <div key={s.id} className="w-7 h-7 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-teal-700" title={s.name}>
-              {s.name?.charAt(0)}
+          {safeStudents.slice(0, 3).map((s, idx) => {
+            const displayName = s?.name ?? s?.studentName ?? s?.fullName ?? `SV (ID: ${s?.studentId ?? s?.id ?? "N/A"})`;
+            return (
+            <div key={s?.id ?? s?.studentId ?? idx} className="w-7 h-7 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-teal-700" title={displayName}>
+              {displayName?.charAt?.(0) ?? "S"}
             </div>
-          ))}
-          {students.length > 3 && (
+          )})}
+          {safeStudents.length > 3 && (
             <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-gray-500">
-              +{students.length - 3}
+              +{safeStudents.length - 3}
             </div>
           )}
         </div>
-        <span className="text-xs text-gray-400 ml-1">{students.length} SV</span>
+        <span className="text-xs text-gray-400 ml-1">{safeStudents.length} SV</span>
       </div>
       <div className="col-span-3 hidden md:flex items-center justify-center gap-2">
         <StatusPill ok={githubOk} icon={<GitBranch size={10} />} label="GitHub" />

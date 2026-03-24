@@ -46,13 +46,13 @@ public class GitHubClient : IGitHubClient
         }
     }
 
-    public async Task SyncCommitsAsync(long repositoryId, string owner, string repo)
+    public async Task SyncCommitsAsync(long repositoryId, string owner, string repo, string? githubToken = null)
     {
         try
         {
             _logger.LogInformation("Syncing commits for {Owner}/{Repo}", owner, repo);
             
-            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/commits?per_page=100");
+            var response = await SendGetAsync($"repos/{owner}/{repo}/commits?per_page=100", githubToken);
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -124,13 +124,13 @@ public class GitHubClient : IGitHubClient
         }
     }
 
-    public async Task SyncPullRequestsAsync(long repositoryId, string owner, string repo)
+    public async Task SyncPullRequestsAsync(long repositoryId, string owner, string repo, string? githubToken = null)
     {
         try
         {
             _logger.LogInformation("Syncing pull requests for {Owner}/{Repo}", owner, repo);
             
-            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/pulls?state=all&per_page=100");
+            var response = await SendGetAsync($"repos/{owner}/{repo}/pulls?state=all&per_page=100", githubToken);
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -204,7 +204,7 @@ public class GitHubClient : IGitHubClient
         try
         {
             var sinceParam = since.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/commits?since={sinceParam}&per_page=1");
+            var response = await SendGetAsync($"repos/{owner}/{repo}/commits?since={sinceParam}&per_page=1");
             
             if (response.IsSuccessStatusCode)
             {
@@ -237,7 +237,7 @@ public class GitHubClient : IGitHubClient
     {
         try
         {
-            var response = await _httpClient.GetAsync($"repos/{owner}/{repo}/commits?per_page=1");
+            var response = await SendGetAsync($"repos/{owner}/{repo}/commits?per_page=1");
             if (response.IsSuccessStatusCode)
             {
                 var commits = await response.Content.ReadFromJsonAsync<List<GitHubCommitResponse>>();
@@ -299,6 +299,18 @@ public class GitHubClient : IGitHubClient
         unitOfWork.GitHubUsers.Add(dbUser);
         await unitOfWork.SaveChangesAsync();
         return dbUser.id;
+    }
+
+    private async Task<HttpResponseMessage> SendGetAsync(string relativeUrl, string? githubToken = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
+        var token = string.IsNullOrWhiteSpace(githubToken) ? _githubToken : githubToken.Trim();
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        return await _httpClient.SendAsync(request);
     }
 }
 

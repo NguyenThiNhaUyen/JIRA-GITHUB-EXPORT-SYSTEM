@@ -33,6 +33,8 @@ export default function SrsReports() {
     const { data: projectsData = { items: [] } } = useGetProjects(
         selectedCourse ? { courseId: selectedCourse, pageSize: 100 } : null
     );
+    const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
+    const projects = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     useEffect(() => {
         let isCancelled = false;
@@ -47,7 +49,7 @@ export default function SrsReports() {
 
     useEffect(() => {
         if (selected) {
-            const s = srsList.find(s => s.id === selected);
+            const s = (Array.isArray(srsList) ? srsList : []).find((x) => String(x?.id) === String(selected));
             if (s) setFeedbackText(s.feedback || "");
         }
     }, [selected, srsList]);
@@ -59,19 +61,19 @@ export default function SrsReports() {
             const results = await getProjectSrs(projectId);
             if (isCancelled) return; // BUG-51: Race condition guard
             
-            const project = projectsData.items.find(p => p.id === parseInt(projectId));
-            const course = coursesData?.items.find(c => c.id === project?.courseId);
+            const project = projects.find((p) => String(p?.id) === String(projectId));
+            const course = courses.find((c) => String(c?.id) === String(project?.courseId));
 
-            const mappedSrs = results.map(srs => ({
-                id: srs.id,
-                group: project?.name || 'Nhóm',
-                project: course?.code || `Project #${projectId}`,
-                version: srs.version,
-                status: srs.status,
-                date: srs.submittedAt,
-                reviewer: srs.reviewerName || '—',
-                feedback: srs.feedback || '',
-                fileUrl: srs.fileUrl,
+            const mappedSrs = (Array.isArray(results) ? results : []).map((srs) => ({
+                id: srs?.id,
+                group: project?.name ?? `Nhóm (ID: ${project?.id ?? projectId ?? "N/A"})`,
+                project: course?.code ?? `Project #${projectId}`,
+                version: srs?.version ?? "N/A",
+                status: srs?.status ?? "DRAFT",
+                date: srs?.submittedAt,
+                reviewer: srs?.reviewerName ?? 'GV (ID: N/A)',
+                feedback: srs?.feedback ?? '',
+                fileUrl: srs?.fileUrl,
                 rawSrs: srs
             }));
 
@@ -120,8 +122,9 @@ export default function SrsReports() {
 
     const isUpdating = updateStatusMutation.isPending || feedbackMutation.isPending;
 
-    const filtered = filter === "all" ? srsList : srsList.filter(s => s.status === filter);
-    const selectedSrs = srsList.find(s => s.id === selected);
+    const safeSrsList = Array.isArray(srsList) ? srsList : [];
+    const filtered = filter === "all" ? safeSrsList : safeSrsList.filter((s) => s?.status === filter);
+    const selectedSrs = safeSrsList.find((s) => String(s?.id) === String(selected));
 
     return (
         <div className="space-y-6">
@@ -147,7 +150,7 @@ export default function SrsReports() {
                             className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[160px]"
                         >
                             <option value="">-- Chọn lớp --</option>
-                            {coursesData?.items?.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
+                            {courses.map((c) => <option key={c?.id} value={c?.id}>{c?.code}</option>)}
                         </select>
                     </div>
 
@@ -160,7 +163,7 @@ export default function SrsReports() {
                             className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none min-w-[160px] disabled:opacity-50"
                         >
                             <option value="">-- Chọn nhóm --</option>
-                            {projectsData.items.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            {projects.map((p) => <option key={p?.id} value={p?.id}>{p?.name ?? `Nhóm (ID: ${p?.id ?? "N/A"})`}</option>)}
                         </select>
                     </div>
 
@@ -182,9 +185,9 @@ export default function SrsReports() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: "Final", count: srsList.filter(s => s.status === "FINAL").length, color: "text-green-700 bg-green-50 border-green-100" },
-                    { label: "Review", count: srsList.filter(s => s.status === "REVIEW").length, color: "text-blue-700 bg-blue-50 border-blue-100" },
-                    { label: "Draft", count: srsList.filter(s => s.status === "DRAFT").length, color: "text-gray-500 bg-gray-100 border-gray-200" },
+                    { label: "Final", count: safeSrsList.filter((s) => s?.status === "FINAL").length, color: "text-green-700 bg-green-50 border-green-100" },
+                    { label: "Review", count: safeSrsList.filter((s) => s?.status === "REVIEW").length, color: "text-blue-700 bg-blue-50 border-blue-100" },
+                    { label: "Draft", count: safeSrsList.filter((s) => s?.status === "DRAFT").length, color: "text-gray-500 bg-gray-100 border-gray-200" },
                 ].map(({ label, count, color }) => (
                     <div key={label} className={`rounded-2xl px-4 py-3 border flex items-center justify-between ${color}`}>
                         <span className="text-xs font-semibold">{label}</span>
@@ -241,7 +244,7 @@ export default function SrsReports() {
                                         key={srs.id}
                                         onClick={() => {
                                             // BUG-54: Check for unsaved feedback (Stress Test Protection)
-                                            const originalFeedback = srsList.find(s => s.id === selected)?.feedback || "";
+                                            const originalFeedback = safeSrsList.find((s) => String(s?.id) === String(selected))?.feedback || "";
                                             if (selected && selected !== srs.id && feedbackText !== originalFeedback) {
                                                 if (!window.confirm("Bạn có thay đổi nhận xét chưa lưu. Tiếp tục chuyển?")) return;
                                             }
@@ -250,11 +253,11 @@ export default function SrsReports() {
                                         className={`grid grid-cols-12 gap-2 px-5 py-3.5 items-center border-b border-gray-50 hover:bg-gray-50/60 transition-colors last:border-0 cursor-pointer ${selected === srs.id ? "bg-teal-50/40" : ""}`}
                                     >
                                         <div className="col-span-4">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{srs.group}</p>
-                                            <p className="text-[11px] text-gray-400 truncate">{srs.project}</p>
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{srs?.group ?? `Nhóm (ID: ${srs?.id ?? "N/A"})`}</p>
+                                            <p className="text-[11px] text-gray-400 truncate">{srs?.project ?? "N/A"}</p>
                                         </div>
                                         <div className="col-span-2 text-center">
-                                            <span className="text-xs font-mono text-gray-600">{srs.version}</span>
+                                            <span className="text-xs font-mono text-gray-600">{srs?.version ?? "N/A"}</span>
                                         </div>
                                         <div className="col-span-2 text-center">
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${s.cls}`}>
@@ -268,7 +271,7 @@ export default function SrsReports() {
                                             >
                                                 <Eye size={11} />View
                                             </button>
-                                            {srs.status === "REVIEW" && (
+                                            {srs?.status === "REVIEW" && (
                                                 <button
                                                     disabled={isUpdating}
                                                     onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'FINAL'); }}
@@ -277,7 +280,7 @@ export default function SrsReports() {
                                                     <CheckCircle size={11} />Approve
                                                 </button>
                                             )}
-                                            {srs.status === "REVIEW" && (
+                                            {srs?.status === "REVIEW" && (
                                                 <button
                                                     disabled={isUpdating}
                                                     onClick={e => { e.stopPropagation(); handleStatusUpdate(srs.id, 'DRAFT'); }}
@@ -329,15 +332,15 @@ export default function SrsReports() {
                                         <div>
                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Trạng thái</label>
                                             <div className="mt-0.5">
-                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider ${STATUS[selectedSrs.status].cls}`}>
-                                                    {selectedSrs.status}
+                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider ${(STATUS[selectedSrs?.status] || STATUS.DRAFT)?.cls ?? "bg-gray-50 text-gray-500 border-gray-100"}`}>
+                                                    {selectedSrs?.status ?? "DRAFT"}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Người review</label>
-                                        <p className="text-sm text-gray-700 mt-0.5">{selectedSrs.reviewer}</p>
+                                        <p className="text-sm text-gray-700 mt-0.5">{selectedSrs?.reviewer ?? "GV (ID: N/A)"}</p>
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">File đính kèm</label>

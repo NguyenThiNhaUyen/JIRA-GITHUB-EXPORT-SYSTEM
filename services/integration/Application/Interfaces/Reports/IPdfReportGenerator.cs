@@ -8,6 +8,7 @@ public interface IPdfReportGenerator
     byte[] GenerateTeamRosterPdf(project project);
     byte[] GenerateActivitySummaryPdf(project project, List<dynamic> activityList);
     byte[] GenerateSrsReportPdf(SrsReportData data);
+    byte[] GenerateCourseSrsReportPdf(string courseName, List<SrsReportData> reports);
 }
 
 /// <summary>
@@ -17,6 +18,8 @@ public class SrsReportData
 {
     // Project info
     public project Project { get; set; } = null!;
+    public string ProjectName { get; set; } = "";
+    public string CourseCode { get; set; } = "";
     public string JiraProjectKey { get; set; } = "";
     public string JiraSiteUrl { get; set; } = "";
     public string GithubRepoUrl { get; set; } = "";

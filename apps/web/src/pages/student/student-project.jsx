@@ -2,16 +2,17 @@
 // Logic: giữ nguyên (useParams, useAuth, getProjectById, getCommitsByProject, getSrsReportsByProject...)
 // UI: redesign theo design system Admin/Lecturer
 
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
 import { Badge } from "../../components/ui/badge.jsx";
 import { Modal } from "../../components/ui/interactive.jsx";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/interactive.jsx";
-import { useGetProjectById, useGetProjectMetrics, useLinkIntegration } from "../../features/projects/hooks/useProjects.js";
-import { useGetProjectCommits } from "../../features/github/hooks/useGithub.js";
+import { useLinkIntegration } from "../../features/projects/hooks/useProjects.js";
+import { getProjectById, getProjectKanban, getProjectMetrics, getProjectCommits, getProjectRoadmap, getProjects } from "../../features/projects/api/projectApi.js";
+import { getProjectSrs } from "../../features/srs/api/srsApi.js";
 import { useToast } from "../../components/ui/toast.jsx";
 import {
   ChevronRight, GitCommit, Link2, BarChart2,
@@ -21,43 +22,152 @@ import {
 
 export default function StudentProject() {
   const { projectId } = useParams();
+  const projectIdParam = projectId == null ? null : String(projectId);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("commits");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [project, setProject] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [commitData, setCommitData] = useState(null);
+  const [jiraBoard, setJiraBoard] = useState(null);
+  const [roadmap, setRoadmap] = useState(null);
+  const [srsReports, setSrsReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [resolvedProjectId, setResolvedProjectId] = useState(projectIdParam || String(user?.projectId ?? user?.project?.id ?? "") || null);
   
   const [githubUrl, setGithubUrl] = useState("");
   const [jiraUrl, setJiraUrl] = useState("");
+  const [jiraToken, setJiraToken] = useState("");
+  const [githubToken, setGithubToken] = useState("");
 
   const { success, error: showError } = useToast();
 
-  /* ── Data Fetching (Real API) ── */
-  const { data: project, isLoading: loadingProject } = useGetProjectById(projectId);
-  const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(projectId);
-  const { data: commitData, isLoading: loadingCommits } = useGetProjectCommits(projectId, { pageSize: 50 });
-  
   const { mutate: linkIntegrationMutate } = useLinkIntegration();
 
-  const allCommits = commitData?.items || [];
+  useEffect(() => {
+    let isMounted = true;
+    async function resolveProjectId() {
+      const role = user?.role;
+      if (role === "LECTURER") {
+        const fromUrl = projectIdParam || searchParams.get("projectId");
+        if (isMounted) setResolvedProjectId(fromUrl || null);
+        return;
+      }
+      const fromUser = user?.projectId || user?.project?.id;
+      if (fromUser) {
+        if (isMounted) setResolvedProjectId(String(fromUser));
+        return;
+      }
+      const courseId = searchParams.get("courseId");
+      if (courseId) {
+        try {
+          const list = await getProjects({ courseId, pageSize: 100 });
+          const first = list?.items?.[0];
+          if (isMounted) setResolvedProjectId(first ? String(first.id) : null);
+          return;
+        } catch {
+          if (isMounted) setResolvedProjectId(null);
+          return;
+        }
+      }
+      if (isMounted) setResolvedProjectId(projectIdParam || null);
+    }
+    resolveProjectId();
+    return () => {
+      isMounted = false;
+    };
+  }, [projectIdParam, searchParams, user]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProjectData() {
+      if (!resolvedProjectId) {
+        setIsLoading(false);
+        setError("Không tìm thấy projectId phù hợp cho tài khoản hiện tại");
+        return;
+      }
+      setIsLoading(true);
+      setError("");
+      try {
+        const [projectRes, metricsRes, commitsRes, kanbanRes, roadmapRes, srsRes] = await Promise.all([
+          getProjectById(resolvedProjectId),
+          getProjectMetrics(resolvedProjectId),
+          getProjectCommits(resolvedProjectId, { page: 1, pageSize: 50 }),
+          getProjectKanban(resolvedProjectId),
+          getProjectRoadmap(resolvedProjectId),
+          getProjectSrs(resolvedProjectId),
+        ]);
+        if (!isMounted) return;
+        setProject(projectRes);
+        setMetrics(metricsRes);
+        setCommitData(commitsRes);
+        setJiraBoard(kanbanRes);
+        setRoadmap(roadmapRes);
+        setSrsReports(Array.isArray(srsRes) ? srsRes : []);
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err?.message || "Không thể tải dữ liệu project");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadProjectData();
+    return () => {
+      isMounted = false;
+    };
+  }, [resolvedProjectId]);
+
+  const allCommits = Array.isArray(commitData?.items) ? commitData.items : [];
   // Filter commits for current student using email or name if student_user is joined
-  const myCommits = allCommits.filter(c => 
-    c.authorName?.toLowerCase().includes(user?.fullName?.toLowerCase()) || 
-    c.authorName?.toLowerCase().includes(user?.email?.split('@')[0].toLowerCase())
+  const myCommits = allCommits.filter(c => {
+    const author = c?.authorName?.toLowerCase?.() ?? "";
+    const userName = (user?.name ?? user?.fullName ?? "").toLowerCase();
+    const emailPrefix = (user?.email?.split?.("@")?.[0] ?? "").toLowerCase();
+    return (userName && author.includes(userName)) || (emailPrefix && author.includes(emailPrefix));
+  }
   );
   
-  const srsReports = []; // TODO: Connect to Reports API when available
+  const jiraIssues = useMemo(() => {
+    if (!jiraBoard) return [];
+    const todo = Array.isArray(jiraBoard?.todo) ? jiraBoard.todo : [];
+    const inProgress = Array.isArray(jiraBoard?.in_progress) ? jiraBoard.in_progress : [];
+    const done = Array.isArray(jiraBoard?.done) ? jiraBoard.done : [];
+    return [
+      ...todo.map((x) => ({ ...x, _status: "To Do" })),
+      ...inProgress.map((x) => ({ ...x, _status: "In Progress" })),
+      ...done.map((x) => ({ ...x, _status: "Done" })),
+    ];
+  }, [jiraBoard]);
+  const safeJiraIssues = Array.isArray(jiraIssues) ? jiraIssues : [];
 
-  const myTeamMember = project?.team?.find(m => m.studentUserId === user?.id);
+  const myTeamMember = (Array.isArray(project?.team) ? project.team : []).find(
+    (m) => String(m?.studentUserId ?? m?.studentId ?? m?.userId) === String(user?.id)
+  );
   const myRole = myTeamMember?.role || "MEMBER";
   const isLeader = myRole === "LEADER";
 
-  if (loadingProject || loadingMetrics) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-3">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
         <p className="text-sm text-gray-500 font-medium">Đang tải dữ liệu dự án...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-3">
+        <AlertCircle size={36} className="text-red-300" />
+        <p className="text-sm text-red-600 font-medium">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-sm font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-5 py-2 rounded-xl transition-colors">
+          Tải lại
+        </button>
       </div>
     );
   }
@@ -89,7 +199,7 @@ export default function StudentProject() {
       <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
         <span className="text-teal-700 font-semibold cursor-pointer hover:underline" onClick={() => navigate("/student")}>Sinh viên</span>
         <ChevronRight size={12} />
-        <span className="text-gray-800 font-semibold truncate">{project.name}</span>
+        <span className="text-gray-800 font-semibold truncate">{project?.name ?? `Project (ID: ${project?.id ?? "N/A"})`}</span>
       </nav>
 
       {/* ── A. Project Header ── */}
@@ -104,7 +214,7 @@ export default function StudentProject() {
                   {isLeader ? "⭐ Team Leader" : "Team Member"}
                 </span>
               </div>
-              <h2 className="text-xl font-black tracking-tight text-gray-800">{project.name}</h2>
+              <h2 className="text-xl font-black tracking-tight text-gray-800">{project?.name ?? `Project (ID: ${project?.id ?? "N/A"})`}</h2>
               {project.description && <p className="text-sm text-gray-500 mt-0.5">{project.description}</p>}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -120,6 +230,8 @@ export default function StudentProject() {
                   onClick={() => {
                     setGithubUrl(project.integration?.githubUrl || "");
                     setJiraUrl(project.integration?.jiraUrl || "");
+                    setJiraToken("");
+                    setGithubToken("");
                     setIsLinkModalOpen(true);
                   }}
                   className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
@@ -145,7 +257,7 @@ export default function StudentProject() {
           { label: "My Commits", value: myCommits.length, color: "bg-blue-500", icon: <GitCommit size={18} /> },
           { label: "Total Commits", value: metrics?.githubStats?.totalCommits || 0, color: "bg-teal-500", icon: <BarChart2 size={18} /> },
           { label: "Issues Done", value: metrics?.jiraStats?.done || 0, color: "bg-indigo-500", icon: <Star size={18} /> },
-          { label: "Thành viên", value: project.team?.length || 0, color: "bg-purple-500", icon: <Users size={18} /> },
+          { label: "Thành viên", value: Array.isArray(project?.team) ? project.team.length : 0, color: "bg-purple-500", icon: <Users size={18} /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
             <div className={`w-11 h-11 rounded-2xl ${color} text-white flex items-center justify-center shrink-0`}>{icon}</div>
@@ -163,6 +275,7 @@ export default function StudentProject() {
           <TabsTrigger value="commits">Commits ({myCommits.length})</TabsTrigger>
           <TabsTrigger value="jira">Jira Tasks</TabsTrigger>
           <TabsTrigger value="team">Nhóm</TabsTrigger>
+          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
           <TabsTrigger value="srs">SRS</TabsTrigger>
         </TabsList>
 
@@ -188,14 +301,19 @@ export default function StudentProject() {
                     <div className="col-span-1 text-center">Files</div>
                   </div>
                   <div className="divide-y divide-gray-50">
-                    {myCommits.map(commit => (
+                    {myCommits.map((commit, idx) => (
                       <div key={commit.id} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors">
                         <div className="col-span-2 font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md w-fit">
                           {commit.sha?.substring(0, 7)}
                         </div>
-                        <div className="col-span-5 text-sm text-gray-700 font-medium truncate">{commit.message}</div>
+                        <div className="col-span-5 min-w-0">
+                          <p className="text-sm text-gray-700 font-medium truncate">{commit?.message ?? commit?.commitMessage ?? `Commit #${commit?.id ?? idx + 1}`}</p>
+                          <p className="text-[11px] text-gray-500 truncate">
+                            {commit?.authorName ?? commit?.author?.name ?? commit?.author?.login ?? "Unknown Author"}
+                          </p>
+                        </div>
                         <div className="col-span-2 text-center text-xs text-gray-500">
-                          {new Date(commit.date).toLocaleDateString("vi-VN")}
+                          {new Date(commit.date || commit.committedAt || Date.now()).toLocaleDateString("vi-VN")}
                         </div>
                         <div className="col-span-2 text-center text-xs">
                           <span className="text-green-600 font-semibold">+{commit.additions}</span>
@@ -206,6 +324,42 @@ export default function StudentProject() {
                     ))}
                   </div>
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="roadmap">
+          <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-50 pb-4">
+              <CardTitle className="text-base font-semibold text-gray-800">Roadmap</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {!roadmap ? (
+                <div className="text-sm text-gray-400 py-8 text-center">Không có dữ liệu roadmap cho project này</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border border-gray-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase">Sprints</p>
+                    {(roadmap.sprints || []).length === 0 ? (
+                      <p className="text-sm text-gray-400 mt-2">Chưa có sprint</p>
+                    ) : (roadmap.sprints || []).map((sp, i) => (
+                      <div key={sp.id ?? i} className="mt-2 text-sm text-gray-700">
+                        {sp.name ?? `Sprint ${i + 1}`}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border border-gray-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase">Milestones</p>
+                    {(roadmap.milestones || []).length === 0 ? (
+                      <p className="text-sm text-gray-400 mt-2">Chưa có milestone</p>
+                    ) : (roadmap.milestones || []).map((ms, i) => (
+                      <div key={ms.id ?? i} className="mt-2 text-sm text-gray-700">
+                        {ms.name ?? `Milestone ${i + 1}`}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -241,25 +395,23 @@ export default function StudentProject() {
                     <div className="flex items-center gap-2 mb-3">
                       <p className="text-sm font-semibold text-gray-700">Project Key: {project.integration?.jiraProjectKey}</p>
                     </div>
-                    {/* Mock issues for now as they are not mapped yet */}
                     <div className="space-y-2">
-                      {[
-                        { type: "TASK", title: "Implement user authentication", status: "Done", statusCls: "bg-green-50 text-green-700 border-green-100" },
-                        { type: "BUG", title: "Fix login validation error", status: "In Progress", statusCls: "bg-orange-50 text-orange-700 border-orange-100" },
-                        { type: "STORY", title: "Add payment gateway integration", status: "To Do", statusCls: "bg-gray-100 text-gray-500 border-gray-200" },
-                      ].map((issue, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors">
+                      {safeJiraIssues.length === 0 && (
+                        <div className="text-xs text-gray-400 py-2">Chưa có issue từ Jira/Kanban.</div>
+                      )}
+                      {safeJiraIssues.map((issue, i) => (
+                        <div key={issue.id ?? i} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50/50 transition-colors">
                           <div className="flex items-center gap-3">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${issue.type === "BUG" ? "bg-red-50 text-red-700 border-red-100" :
                                 issue.type === "STORY" ? "bg-purple-50 text-purple-700 border-purple-100" :
                                   "bg-blue-50 text-blue-700 border-blue-100"
                               }`}>{issue.type}</span>
                             <div>
-                              <p className="text-sm font-medium text-gray-800">{issue.title}</p>
-                              <p className="text-xs text-gray-400">Assignee: {user?.fullName}</p>
+                              <p className="text-sm font-medium text-gray-800">{issue?.title ?? issue?.summary ?? `Task #${issue?.id ?? i + 1}`}</p>
+                              <p className="text-xs text-gray-400">Assignee: {issue.assigneeName || user?.fullName || "N/A"}</p>
                             </div>
                           </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${issue.statusCls}`}>{issue.status}</span>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${issue._status === "Done" ? "bg-green-50 text-green-700 border-green-100" : issue._status === "In Progress" ? "bg-orange-50 text-orange-700 border-orange-100" : "bg-gray-100 text-gray-500 border-gray-200"}`}>{issue._status}</span>
                         </div>
                       ))}
                     </div>
@@ -277,21 +429,24 @@ export default function StudentProject() {
               <CardTitle className="text-base font-semibold text-gray-800">Thành viên nhóm</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {(project.team || []).map(m => {
-                const isMe = m.studentUserId === user?.id;
+              {(Array.isArray(project?.team) ? project.team : []).map((m, idx) => {
+                const isMe = String(m?.studentUserId ?? m?.studentId ?? m?.userId) === String(user?.id);
                 const isLeadM = m.role === "LEADER";
-                const contribution = metrics?.contributions?.find(c => c.studentCode === m.studentCode);
+                const contribution = (Array.isArray(metrics?.contributions) ? metrics.contributions : []).find(
+                  (c) => String(c?.studentCode ?? c?.studentId ?? c?.studentUserId) === String(m?.studentCode ?? m?.studentId ?? m?.studentUserId)
+                );
                 const commitsCount = contribution?.commits || 0;
+                const displayName = m?.studentName ?? m?.student?.name ?? `SV (ID: ${m?.studentId ?? m?.studentUserId ?? m?.userId ?? "N/A"})`;
                 
                 return (
-                  <div key={m.studentUserId} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                  <div key={m?.studentUserId ?? m?.studentId ?? m?.userId ?? idx} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${isLeadM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
-                      {m.studentName?.charAt(0)}
+                      {displayName?.charAt?.(0) ?? "S"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-semibold text-gray-800">
-                          {m.studentName}
+                          {displayName}
                         </p>
                         {isLeadM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                         {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
@@ -349,10 +504,10 @@ export default function StudentProject() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${statusCls}`}>{rpt.status}</span>
                       </div>
                       <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1"><Clock size={10} />Nộp: {new Date(rpt.submittedDate).toLocaleDateString("vi-VN")}</span>
-                        <span>Reviewer: {rpt.reviewedBy ? mockUsers?.lecturers?.find(l => l.id === rpt.reviewedBy)?.name || rpt.reviewedBy : "Chưa review"}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} />Nộp: {rpt.submittedAt ? new Date(rpt.submittedAt).toLocaleDateString("vi-VN") : "N/A"}</span>
+                        <span>Reviewer: {rpt.reviewerName || "Chưa review"}</span>
                       </div>
-                      {rpt.comments && <p className="text-xs text-gray-500 italic mt-1.5">"{rpt.comments}"</p>}
+                      {rpt.feedback && <p className="text-xs text-gray-500 italic mt-1.5">"{rpt.feedback}"</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button className="text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1.5 rounded-lg transition-colors">Download</button>
@@ -455,6 +610,28 @@ export default function StudentProject() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Jira API Token</label>
+            <input
+              type="password"
+              value={jiraToken}
+              onChange={(e) => setJiraToken(e.target.value)}
+              placeholder="Nhập Jira API token (optional)"
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">GitHub Personal Access Token</label>
+            <input
+              type="password"
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+              placeholder="Nhập GitHub PAT (optional)"
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
+            />
+          </div>
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => setIsLinkModalOpen(false)} className="flex-1 rounded-xl border-gray-200 text-gray-600 h-10">Hủy</Button>
             <Button 
@@ -464,11 +641,31 @@ export default function StudentProject() {
                     return;
                   }
                   linkIntegrationMutate({
-                    projectId: projectId,
-                    body: { githubUrl: githubUrl.trim(), jiraUrl: jiraUrl.trim() }
+                    projectId: resolvedProjectId,
+                    body: {
+                      githubRepoUrl: githubUrl.trim(),
+                      jiraSiteUrl: jiraUrl.trim(),
+                      jiraProjectKey: extractJiraProjectKey(jiraUrl.trim()),
+                      jiraToken: jiraToken.trim() || null,
+                      githubToken: githubToken.trim() || null
+                    }
                   }, {
                     onSuccess: () => {
                       success("Đã gửi yêu cầu kết nối! Đang chờ giảng viên phê duyệt.");
+                      setProject((prev) => {
+                        if (!prev) return prev;
+                        return {
+                          ...prev,
+                          integration: {
+                            ...(prev.integration || {}),
+                            githubUrl: githubUrl.trim(),
+                            jiraUrl: jiraUrl.trim(),
+                            githubStatus: "PENDING",
+                            jiraStatus: "PENDING",
+                            approvalStatus: "PENDING",
+                          },
+                        };
+                      });
                       setIsLinkModalOpen(false);
                     },
                     onError: (err) => showError(err.message || "Không thể gửi yêu cầu")
@@ -483,4 +680,26 @@ export default function StudentProject() {
       </Modal>
     </div>
   );
+}
+
+function extractJiraProjectKey(jiraInput) {
+  if (!jiraInput) return "";
+  try {
+    const normalized = jiraInput.startsWith("http") ? jiraInput : `https://${jiraInput}`;
+    const url = new URL(normalized);
+    const segments = url.pathname.split("/").filter(Boolean);
+    const browseIdx = segments.findIndex((s) => s.toLowerCase() === "browse");
+    if (browseIdx >= 0 && segments[browseIdx + 1]) {
+      return segments[browseIdx + 1].split("-")[0].toUpperCase();
+    }
+    const projectsIdx = segments.findIndex((s) => s.toLowerCase() === "projects");
+    if (projectsIdx >= 0 && segments[projectsIdx + 1]) {
+      return segments[projectsIdx + 1].split("-")[0].toUpperCase();
+    }
+  } catch {
+    // Fallback below
+  }
+
+  const fallback = jiraInput.trim().split("/").filter(Boolean).pop() || "";
+  return fallback.split("-")[0].toUpperCase();
 }

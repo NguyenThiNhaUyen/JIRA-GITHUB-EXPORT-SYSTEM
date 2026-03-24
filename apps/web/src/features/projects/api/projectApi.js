@@ -142,3 +142,19 @@ export async function getProjectCycleTime(projectId) {
     const res = await client.get(`/projects/${projectId}/cycle-time`);
     return unwrap(res);
 }
+
+export async function getProjectCommits(projectId, params = {}) {
+    const {
+        page = 1,
+        pageSize = 50
+    } = params;
+    const res = await client.get(`/projects/${projectId}/commits`, {
+        params: { page, pageSize }
+    });
+    return unwrap(res);
+}
+
+export async function getProjectCommitHistory(projectId) {
+    const res = await client.get(`/projects/${projectId}/commit-history`);
+    return unwrap(res);
+}

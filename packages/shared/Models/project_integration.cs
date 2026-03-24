@@ -11,6 +11,10 @@ public partial class project_integration
 
     public long? github_repo_id { get; set; }
 
+    public string? jira_token { get; set; }
+
+    public string? github_token { get; set; }
+
     // Approval workflow
     public string approval_status { get; set; } = "PENDING"; // PENDING | APPROVED | REJECTED
 

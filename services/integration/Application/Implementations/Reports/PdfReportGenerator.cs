@@ -157,6 +157,10 @@ public class PdfReportGenerator : IPdfReportGenerator
     // ─────────────────────────────────────────────────────────
     public byte[] GenerateSrsReportPdf(SrsReportData data)
     {
+        var projectName = !string.IsNullOrWhiteSpace(data.ProjectName)
+            ? data.ProjectName
+            : data.Project?.name ?? "N/A";
+
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -178,7 +182,8 @@ public class PdfReportGenerator : IPdfReportGenerator
                         });
                         row.ConstantItem(140).AlignRight().Column(inner =>
                         {
-                            inner.Item().Text($"Project: {data.Project.name}").Bold().FontSize(10);
+                            inner.Item().Text($"Project: {projectName}").Bold().FontSize(10);
+                            inner.Item().Text($"Course: {data.CourseCode}").FontSize(9).FontColor(TextGray);
                             inner.Item().Text($"Generated: {data.GeneratedAt:dd MMM yyyy}").FontSize(9).FontColor(TextGray);
                             inner.Item().Text($"Version: 1.0").FontSize(9).FontColor(TextGray);
                         });
@@ -208,7 +213,8 @@ public class PdfReportGenerator : IPdfReportGenerator
                             t.Cell().Padding(5).Text(value).FontSize(9);
                         }
                         InfoRow("Document Title", "Software Requirements Specification (SRS)");
-                        InfoRow("Project", data.Project.name);
+                        InfoRow("Project", projectName);
+                        InfoRow("Course Code", data.CourseCode);
                         InfoRow("Jira Project Key", data.JiraProjectKey);
                         InfoRow("GitHub Repository", data.GithubRepoUrl);
                         InfoRow("Date", data.GeneratedAt.ToString("dd MMMM yyyy"));
@@ -230,7 +236,7 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "1.2 Scope");
                     doc.Item().PaddingLeft(10).Text(
-                        $"The system is the '{data.Project.name}' software project. It integrates with " +
+                        $"The system is the '{projectName}' software project. It integrates with " +
                         $"Jira ({data.JiraSiteUrl}) for issue tracking and GitHub ({data.GithubRepoUrl}) " +
                         "for source code management. The system aims to automate reporting and monitoring " +
                         "of student project activities.").FontSize(10).FontColor(TextGray);
@@ -558,6 +564,86 @@ public class PdfReportGenerator : IPdfReportGenerator
                     });
                 });
             });
+        }).GeneratePdf();
+    }
+
+    public byte[] GenerateCourseSrsReportPdf(string courseName, List<SrsReportData> reports)
+    {
+        return Document.Create(container =>
+        {
+            foreach (var report in reports)
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(2, Unit.Centimetre);
+
+                    var projectName = !string.IsNullOrWhiteSpace(report.ProjectName)
+                        ? report.ProjectName
+                        : report.Project?.name ?? "N/A";
+
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Text($"SRS Summary - {courseName}")
+                            .Bold().FontSize(18).FontColor(PrimaryColor);
+                        col.Item().Text($"Project: {projectName} | Course: {report.CourseCode}")
+                            .FontSize(10).FontColor(TextGray);
+                    });
+
+                    page.Content().Column(content =>
+                    {
+                        content.Spacing(8);
+                        content.Item().Text("Project Information").Bold().FontSize(12).FontColor(AccentColor);
+                        content.Item().Text($"Jira Key: {report.JiraProjectKey}");
+                        content.Item().Text($"Jira URL: {report.JiraSiteUrl}");
+                        content.Item().Text($"GitHub Repository: {report.GithubRepoUrl}");
+                        content.Item().Text($"Generated At: {report.GeneratedAt:dd MMM yyyy HH:mm}");
+
+                        content.Item().PaddingTop(4).Text("Team Members").Bold().FontSize(12).FontColor(AccentColor);
+                        if (report.TeamMembers.Count > 0)
+                        {
+                            foreach (var member in report.TeamMembers)
+                                content.Item().Text($"- {member}").FontSize(10);
+                        }
+                        else
+                        {
+                            content.Item().Text("No team members found.").Italic().FontColor(TextGray);
+                        }
+
+                        content.Item().PaddingTop(4).Text("System Features").Bold().FontSize(12).FontColor(AccentColor);
+                        if (report.SystemFeatures.Count > 0)
+                        {
+                            foreach (var feature in report.SystemFeatures)
+                                content.Item().Text($"- [{feature.IssueKey}] {feature.Title} ({feature.IssueType})").FontSize(10);
+                        }
+                        else
+                        {
+                            content.Item().Text("No Jira features found.").Italic().FontColor(TextGray);
+                        }
+
+                        content.Item().PaddingTop(4).Row(row =>
+                        {
+                            row.RelativeItem().Border(1).BorderColor(BorderGray).Padding(8).Column(c =>
+                            {
+                                c.Item().Text(report.GithubTotalCommits.ToString()).Bold().FontSize(16).FontColor(AccentColor).AlignCenter();
+                                c.Item().Text("Total Commits").FontSize(9).FontColor(TextGray).AlignCenter();
+                            });
+                            row.RelativeItem().Border(1).BorderColor(BorderGray).Padding(8).Column(c =>
+                            {
+                                c.Item().Text(report.GithubTotalPRs.ToString()).Bold().FontSize(16).FontColor(AccentColor).AlignCenter();
+                                c.Item().Text("Total Pull Requests").FontSize(9).FontColor(TextGray).AlignCenter();
+                            });
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(txt =>
+                    {
+                        txt.Span("JIRA-GITHUB Export System  |  ").FontSize(8).FontColor(TextGray);
+                        txt.Span("Page ").FontSize(8).FontColor(TextGray);
+                        txt.CurrentPageNumber().FontSize(8).FontColor(TextGray);
+                    });
+                });
+            }
         }).GeneratePdf();
     }
 

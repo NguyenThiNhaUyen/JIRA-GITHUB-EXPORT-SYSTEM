@@ -18,8 +18,8 @@ export default function GroupDetails({
     onEditReport,
     onDeleteReport,
 }) {
-    const reports = srsReports[group.groupId] || [];
-    const isLeader = group.role === "LEADER";
+    const reports = Array.isArray(srsReports?.[group?.groupId]) ? srsReports[group.groupId] : [];
+    const isLeader = group?.role === "LEADER";
 
     return (
         <div className="space-y-6">
@@ -35,16 +35,16 @@ export default function GroupDetails({
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle className="text-2xl text-orange-900">
-                                {course.code} - {course.name}
+                                {course?.code ?? `COURSE-${course?.id ?? "N/A"}`} - {course?.name ?? "Môn học chưa có tên"}
                             </CardTitle>
-                            <p className="text-gray-600 mt-1">{course.lecturer}</p>
+                            <p className="text-gray-600 mt-1">{course?.lecturer ?? `GV (ID: ${course?.lecturerId ?? "N/A"})`}</p>
                             <div className="flex gap-2 mt-3">
                                 <Badge variant={group.role === "LEADER" ? "default" : "outline"} className="bg-orange-600 text-white flex items-center gap-1.5">
                                     {group.role === "LEADER" && <Crown className="w-3.5 h-3.5" />}
                                     {group.role === "LEADER" ? "Trưởng nhóm" : "Thành viên"}
                                 </Badge>
                                 <Badge variant="outline" className="border-orange-300 text-orange-700">
-                                    {group.groupName}
+                                    {group?.groupName ?? `Nhóm (ID: ${group?.groupId ?? group?.id ?? "N/A"})`}
                                 </Badge>
                             </div>
                         </div>
@@ -54,18 +54,18 @@ export default function GroupDetails({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <p className="text-sm text-gray-500">Chủ đề project</p>
-                            <p className="font-semibold text-gray-900">{group.topic || "Chưa chọn"}</p>
+                            <p className="font-semibold text-gray-900">{group?.topic ?? "Chưa chọn"}</p>
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">GitHub Repository</p>
-                            {group.githubUrl ? (
+                            {group?.githubUrl ? (
                                 <a
                                     href={group.githubUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-orange-600 hover:underline text-sm font-medium"
                                 >
-                                    {group.githubUrl.split("/").pop()}
+                                    {group?.githubUrl?.split?.("/")?.pop?.() ?? "Repository"}
                                 </a>
                             ) : (
                                 <p className="text-sm text-gray-400">Chưa submit</p>
@@ -73,7 +73,7 @@ export default function GroupDetails({
                         </div>
                         <div>
                             <p className="text-sm text-gray-500">Jira Project</p>
-                            {group.jiraUrl ? (
+                            {group?.jiraUrl ? (
                                 <a
                                     href={group.jiraUrl}
                                     target="_blank"
@@ -106,10 +106,10 @@ export default function GroupDetails({
                                 Thành viên nhóm
                             </h4>
                             <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
-                                {group.teamMembers?.length || 0} thành viên
+                                {Array.isArray(group?.teamMembers) ? group.teamMembers.length : 0} thành viên
                             </Badge>
                         </div>
-                        <TeamMembersTable members={group.teamMembers} />
+                        <TeamMembersTable members={group?.teamMembers} />
                     </div>
 
                     {/* SRS Reports Section */}

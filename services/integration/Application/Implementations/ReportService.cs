@@ -175,13 +175,132 @@ public class ReportService : IReportService
 
     public async Task<long> GenerateSrsForCourseAsync(long courseId, string format)
     {
-        // This would normally generate a bundle (ZIP) of all SRS PDFs
-        // For now, we'll just create a dummy "COMPLETED" report entry so the UI doesn't break
         try
         {
-            string fileName = $"course_{courseId}_srs_bundle_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf";
+            var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
+            if (course == null) throw new NotFoundException("Course not found");
+
+            var projects = await _unitOfWork.Projects.Query()
+                .Include(p => p.course)
+                .Include(p => p.team_members)
+                    .ThenInclude(tm => tm.student_user)
+                        .ThenInclude(s => s.user)
+                .Include(p => p.project_integration)
+                    .ThenInclude(pi => pi!.jira_project)
+                        .ThenInclude(jp => jp!.jira_issues)
+                            .ThenInclude(i => i.jira_issue_linkparent_issues)
+                                .ThenInclude(cl => cl.child_issue)
+                .Include(p => p.project_integration)
+                    .ThenInclude(pi => pi!.github_repo)
+                .Where(p => p.course_id == courseId)
+                .ToListAsync();
+
+            var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
+            var taskTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
+            var nfrKeywords = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
+            var interfaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
+
+            var srsReports = new List<SrsReportData>();
+            foreach (var project in projects)
+            {
+                var integration = project.project_integration;
+                var jiraProject = integration?.jira_project;
+                var githubRepo = integration?.github_repo;
+                var allIssues = jiraProject?.jira_issues ?? new List<jira_issue>();
+
+                int totalCommits = 0;
+                int totalPRs = 0;
+                if (githubRepo != null)
+                {
+                    totalCommits = await _unitOfWork.GitHubCommits.Query().CountAsync(c => c.repo_id == githubRepo.id);
+                    totalPRs = await _unitOfWork.GitHubPullRequests.Query().CountAsync(pr => pr.repo_id == githubRepo.id);
+                }
+
+                var systemFeatures = allIssues
+                    .Where(i => i.issue_type != null && epicAndStoryTypes.Contains(i.issue_type))
+                    .OrderBy(i => i.issue_type)
+                    .ThenBy(i => i.jira_issue_key)
+                    .Select(i => new SrsFeature
+                    {
+                        IssueKey = i.jira_issue_key,
+                        Title = i.title ?? "(no title)",
+                        Description = i.description,
+                        IssueType = i.issue_type ?? "",
+                        Status = i.status,
+                        SubTasks = allIssues
+                            .Where(sub => sub.issue_type != null && taskTypes.Contains(sub.issue_type)
+                                && i.jira_issue_linkparent_issues != null
+                                && i.jira_issue_linkparent_issues.Any(cl => cl.child_issue_id == sub.id))
+                            .Select(sub => new SrsIssueRow
+                            {
+                                IssueKey = sub.jira_issue_key,
+                                Title = sub.title ?? "",
+                                Description = sub.description,
+                                Priority = sub.priority,
+                                Status = sub.status
+                            }).ToList()
+                    }).ToList();
+
+                var nfrs = allIssues
+                    .Where(i => i.issue_type?.ToUpper() == "NFR"
+                        || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                    .Select(i => new SrsIssueRow
+                    {
+                        IssueKey = i.jira_issue_key,
+                        Title = i.title ?? "",
+                        Description = i.description,
+                        Priority = i.priority,
+                        Status = i.status
+                    }).ToList();
+
+                var externalInterfaces = allIssues
+                    .Where(i => interfaceKeywords.Any(kw =>
+                        (i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                        || (i.description != null && i.description.Contains(kw, StringComparison.OrdinalIgnoreCase))))
+                    .Where(i => nfrs.All(n => n.IssueKey != i.jira_issue_key))
+                    .Select(i => new SrsIssueRow
+                    {
+                        IssueKey = i.jira_issue_key,
+                        Title = i.title ?? "",
+                        Description = i.description,
+                        Priority = i.priority,
+                        Status = i.status
+                    }).ToList();
+
+                var teamMembers = project.team_members
+                    ?.Select(tm => $"{tm.student_user?.user?.full_name ?? "Unknown"} [{tm.student_user?.student_code ?? ""}] — {tm.team_role}")
+                    .ToList() ?? new List<string>();
+
+                srsReports.Add(new SrsReportData
+                {
+                    Project = project,
+                    ProjectName = project.name ?? "Unknown Project",
+                    CourseCode = project.course?.course_code ?? "",
+                    JiraProjectKey = jiraProject?.jira_project_key ?? "N/A",
+                    JiraSiteUrl = jiraProject?.jira_url ?? "",
+                    GithubRepoUrl = githubRepo?.repo_url ?? "",
+                    GithubDefaultBranch = githubRepo?.default_branch,
+                    GithubTotalCommits = totalCommits,
+                    GithubTotalPRs = totalPRs,
+                    TeamMembers = teamMembers,
+                    SystemFeatures = systemFeatures,
+                    NonFunctionalRequirements = nfrs,
+                    ExternalInterfaces = externalInterfaces,
+                    GeneratedAt = DateTime.UtcNow
+                });
+            }
+
+            string extension = format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xlsx" : format.ToLower();
+            string fileName = $"course_{courseId}_srs_bundle_{DateTime.UtcNow:yyyyMMddHHmmss}.{extension}";
             string filePath = Path.Combine(GetReportDirectory(), fileName);
-            await File.WriteAllBytesAsync(filePath, new byte[0]); 
+
+            if (!format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("SRS course report currently supports PDF format only.");
+
+            var fileBytes = _pdfReportGenerator.GenerateCourseSrsReportPdf(
+                course.course_name ?? course.course_code ?? $"Course {courseId}",
+                srsReports);
+            await File.WriteAllBytesAsync(filePath, fileBytes);
 
             var reportExport = new report_export
             {
@@ -196,6 +315,7 @@ public class ReportService : IReportService
             };
             _unitOfWork.ReportExports.Add(reportExport);
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Generated course SRS PDF for {CourseId} with {ProjectCount} projects", courseId, srsReports.Count);
             return reportExport.id;
         }
         catch (Exception ex)
@@ -468,6 +588,8 @@ public class ReportService : IReportService
             var srsData = new SrsReportData
             {
                 Project                  = project,
+                ProjectName              = project.name ?? "Unknown Project",
+                CourseCode               = project.course?.course_code ?? "",
                 JiraProjectKey           = jiraProject?.jira_project_key ?? "N/A",
                 JiraSiteUrl              = jiraProject?.jira_url ?? "",
                 GithubRepoUrl            = githubRepo?.repo_url ?? "",

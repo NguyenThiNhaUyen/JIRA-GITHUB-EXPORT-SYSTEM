@@ -168,8 +168,8 @@ export default function Reports() {
     };
 
     // AUDITED: safe defaults
-    const courses = coursesData?.items ?? [];
-    const projects = projectsData?.items ?? [];
+    const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
+    const projects = Array.isArray(projectsData?.items) ? projectsData.items : [];
     const history = Array.isArray(myReports) ? myReports : [];
 
     return (
@@ -197,7 +197,7 @@ export default function Reports() {
                         >
                             <option value="">-- Chọn lớp --</option>
                             {/* AUDITED: c.code, c.name — khớp với API course object */}
-                            {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                            {courses.map((c) => <option key={c?.id} value={c?.id}>{c?.code ?? "N/A"} - {c?.name ?? `Lớp (ID: ${c?.id ?? "N/A"})`}</option>)}
                         </select>
                     </div>
 
@@ -211,7 +211,7 @@ export default function Reports() {
                         >
                             <option value="">-- Chọn nhóm --</option>
                             {/* AUDITED: p.name — khớp với API project object */}
-                            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            {projects.map((p) => <option key={p?.id} value={p?.id}>{p?.name ?? `Nhóm (ID: ${p?.id ?? "N/A"})`}</option>)}
                         </select>
                     </div>
                 </div>
@@ -289,7 +289,7 @@ export default function Reports() {
                                     <div className="col-span-4 flex flex-col">
                                         <span className="text-sm font-medium text-gray-700">
                                             {/* AUDITED: field 'type' theo API response đã xác nhận */}
-                                            {ex.type ?? ex.reportType ?? ex.report_type ?? "Báo cáo"}
+                                            {ex?.type ?? ex?.reportType ?? ex?.report_type ?? "Báo cáo"}
                                         </span>
                                         <span className="text-[10px] text-gray-400">#{ex.id ?? "—"}</span>
                                     </div>
@@ -305,7 +305,7 @@ export default function Reports() {
 
                                     <div className="col-span-3 text-center text-xs text-gray-500">
                                         {/* AUDITED: field 'createdAt' theo API response đã xác nhận */}
-                                        {ex.createdAt ? new Date(ex.createdAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                                        {ex?.createdAt ? new Date(ex.createdAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—"}
                                     </div>
 
                                     <div className="col-span-2 text-right">

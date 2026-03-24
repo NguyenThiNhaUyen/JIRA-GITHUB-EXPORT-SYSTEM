@@ -116,23 +116,7 @@ export default function Login() {
                 </Alert>
               )}
 
-              <div className="flex items-center justify-between px-2 pt-1 pb-2">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0"
-                  />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Duy trì đăng nhập</span>
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-teal-600 hover:text-teal-700 hover:underline font-semibold transition-colors"
-                >
-                  Quên mật khẩu?
-                </Link>
-              </div>
+
 
               <Button
                 type="submit"

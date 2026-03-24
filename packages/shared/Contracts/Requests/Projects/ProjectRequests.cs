@@ -31,6 +31,8 @@ public class LinkIntegrationRequest
     public string? GithubRepoUrl { get; set; }
     public string? JiraProjectKey { get; set; }
     public string? JiraSiteUrl { get; set; }
+    public string? JiraToken { get; set; }
+    public string? GithubToken { get; set; }
 }
 
 public class ApproveIntegrationRequest

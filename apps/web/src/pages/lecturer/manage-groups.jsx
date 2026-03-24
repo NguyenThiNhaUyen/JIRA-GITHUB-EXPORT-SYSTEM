@@ -46,8 +46,8 @@ export default function ManageGroups() {
     const removeTeamMemberMutation = useRemoveTeamMember();
     const updateTeamMemberMutation = useUpdateTeamMember();
 
-    const students = studentsData.items || [];
-    const groups = course?.groups || [];
+    const students = Array.isArray(studentsData?.items) ? studentsData.items : [];
+    const groups = Array.isArray(course?.groups) ? course.groups : [];
 
     const handleCreateGroup = async () => {
         if (selectedStudents.length === 0) { error("Vui lòng chọn ít nhất 1 học sinh"); return; }
@@ -56,7 +56,7 @@ export default function ManageGroups() {
         try {
             const project = await createProjectMutation.mutateAsync({
                 courseId: parseInt(courseId),
-                name: `Nhóm ${groups.length + 1}`,
+                name: `Nhóm ${(groups?.length ?? 0) + 1}`,
                 description: newGroupTopic,
                 startDate: new Date().toISOString(),
                 endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // Default 3 months
@@ -65,13 +65,13 @@ export default function ManageGroups() {
             // Add selected members
             for (const studentId of selectedStudents) {
                 await addTeamMemberMutation.mutateAsync({
-                    projectId: project.id,
+                    projectId: project?.id,
                     studentId,
                     role: studentId === selectedLeaderId ? "LEADER" : "MEMBER"
                 });
             }
 
-            success(`Đã tạo nhóm "${project.name}"`);
+            success(`Đã tạo nhóm "${project?.name ?? `Nhóm (ID: ${project?.id ?? "N/A"})`}"`);
             setSelectedStudents([]);
             setSelectedLeaderId(null);
             setNewGroupTopic("");
@@ -91,7 +91,7 @@ export default function ManageGroups() {
     };
 
     const handleUpdateGroupTopic = async (groupId, newTopic) => {
-        const currentGroup = groups.find(g => g.id === groupId);
+        const currentGroup = groups.find((g) => String(g?.id) === String(groupId));
         try {
             await updateProjectMutation.mutateAsync({
                 id: groupId,
@@ -142,8 +142,12 @@ export default function ManageGroups() {
         });
 
     // Calculate students not in any group
-    const assignedStudentIds = new Set(groups.flatMap((g) => (g.team || []).map(m => m.studentId)));
-    const availableStudents = students.filter((s) => !assignedStudentIds.has(s.id));
+    const assignedStudentIds = new Set(
+        groups.flatMap((g) =>
+            (Array.isArray(g?.team) ? g.team : []).map((m) => String(m?.studentId ?? m?.id))
+        )
+    );
+    const availableStudents = students.filter((s) => !assignedStudentIds.has(String(s?.id ?? s?.studentId)));
 
     const handleOpenForceAdd = (groupId) => {
         setForceAddGroupId(groupId);
@@ -249,9 +253,9 @@ export default function ManageGroups() {
 
             {/* ── Stats row ────────────────────────────── */}
             <div className="grid grid-cols-3 gap-4">
-                <MiniStat label="Tổng học sinh" value={students.length} color="text-blue-600 bg-blue-50" />
-                <MiniStat label="Chưa phân nhóm" value={availableStudents.length} color="text-orange-600 bg-orange-50" />
-                <MiniStat label="Nhóm hiện có" value={groups.length} color="text-teal-600 bg-teal-50" />
+                <MiniStat label="Tổng học sinh" value={students?.length ?? 0} color="text-blue-600 bg-blue-50" />
+                <MiniStat label="Chưa phân nhóm" value={availableStudents?.length ?? 0} color="text-orange-600 bg-orange-50" />
+                <MiniStat label="Nhóm hiện có" value={groups?.length ?? 0} color="text-teal-600 bg-teal-50" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -289,42 +293,44 @@ export default function ManageGroups() {
                                         Học sinh chưa phân nhóm
                                     </label>
                                     <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">
-                                        {availableStudents.length} có sẵn
+                                        {availableStudents?.length ?? 0} có sẵn
                                     </span>
                                 </div>
                                 <div className="border border-gray-100 rounded-xl overflow-hidden max-h-52 overflow-y-auto">
-                                    {availableStudents.length === 0 ? (
+                                    {(availableStudents?.length ?? 0) === 0 ? (
                                         <div className="px-4 py-6 text-center">
                                             <p className="text-xs text-gray-400">Tất cả học sinh đã được phân nhóm</p>
                                         </div>
                                     ) : (
-                                        availableStudents.map((student) => (
+                                        availableStudents.map((student) => {
+                                            const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
+                                            return (
                                             <label
-                                                key={student.id}
+                                                key={student?.id ?? student?.studentId}
                                                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
                                             >
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedStudents.includes(student.id)}
-                                                    onChange={() => toggleStudentSelection(student.id)}
+                                                    checked={selectedStudents.includes(student?.id)}
+                                                    onChange={() => toggleStudentSelection(student?.id)}
                                                     className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
                                                 />
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium text-gray-700">{student.name}</p>
-                                                    <p className="text-xs text-gray-400">{student.studentId}</p>
+                                                    <p className="text-sm font-medium text-gray-700">{displayName}</p>
+                                                    <p className="text-xs text-gray-400">{student?.studentId ?? student?.id ?? "N/A"}</p>
                                                 </div>
 
-                                                {selectedStudents.includes(student.id) && (
+                                                {selectedStudents.includes(student?.id) && (
                                                     <button
-                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(student.id); }}
-                                                        className={`p-1.5 rounded-lg transition-all ${selectedLeaderId === student.id ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-amber-400'}`}
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedLeaderId(student?.id); }}
+                                                        className={`p-1.5 rounded-lg transition-all ${selectedLeaderId === student?.id ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-amber-400'}`}
                                                         title="Chọn làm Trưởng nhóm"
                                                     >
-                                                        <Star size={14} fill={selectedLeaderId === student.id ? "currentColor" : "none"} />
+                                                        <Star size={14} fill={selectedLeaderId === student?.id ? "currentColor" : "none"} />
                                                     </button>
                                                 )}
                                             </label>
-                                        ))
+                                        )})
                                     )}
                                 </div>
                                 {selectedStudents.length > 0 && (
@@ -359,12 +365,12 @@ export default function ManageGroups() {
                                     </CardTitle>
                                 </div>
                                 <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-3 py-1 font-medium">
-                                    {groups.length} nhóm
+                                    {groups?.length ?? 0} nhóm
                                 </span>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {groups.length === 0 ? (
+                            {(groups?.length ?? 0) === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
                                         <Users size={20} className="text-gray-400" />
@@ -374,14 +380,14 @@ export default function ManageGroups() {
                             ) : (
                                 <div className="divide-y divide-gray-50">
                                     {groups.map((group) => {
-                                        const groupStudents = group.team || [];
+                                        const groupStudents = Array.isArray(group?.team) ? group.team : [];
                                         return (
                                             <div key={group.id} className="p-5 hover:bg-gray-50/50 transition-colors">
                                                 {/* Group header row */}
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-1">
-                                                            <h3 className="font-bold text-gray-900">{group.name}</h3>
+                                                            <h3 className="font-bold text-gray-900">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</h3>
                                                             <StatusBadge status={group.integration?.githubStatus} icon={<GitBranch size={9} />} label="GitHub" />
                                                             <StatusBadge status={group.integration?.jiraStatus} icon={<BookOpen size={9} />} label="Jira" />
                                                         </div>
@@ -423,7 +429,7 @@ export default function ManageGroups() {
                                                 <div>
                                                     <div className="flex items-center justify-between mb-2">
                                                         <label className="block text-xs text-gray-400 font-medium">
-                                                            Thành viên ({groupStudents.length})
+                                                            Thành viên ({groupStudents?.length ?? 0})
                                                         </label>
                                                         <Button
                                                             size="sm"
@@ -434,22 +440,24 @@ export default function ManageGroups() {
                                                         </Button>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {groupStudents.map((member) => (
+                                                        {groupStudents.map((member, idx) => {
+                                                            const displayName = member?.studentName ?? member?.name ?? member?.fullName ?? `SV (ID: ${member?.studentId ?? member?.id ?? "N/A"})`;
+                                                            return (
                                                             <div
-                                                                key={member.studentId}
+                                                                key={member?.studentId ?? member?.id ?? idx}
                                                                 className="group inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full text-xs font-medium text-gray-700 shadow-sm"
                                                             >
                                                                 <div className="w-4 h-4 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold">
-                                                                    {member.studentName?.charAt(0)}
+                                                                    {displayName?.charAt?.(0) ?? "S"}
                                                                 </div>
-                                                                {member.studentName}
-                                                                {member.role === "LEADER" && (
+                                                                {displayName}
+                                                                {member?.role === "LEADER" && (
                                                                     <span className="text-[9px] font-bold text-teal-600 uppercase">★</span>
                                                                 )}
                                                                 <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    {member.role !== "LEADER" && (
+                                                                    {member?.role !== "LEADER" && (
                                                                         <button
-                                                                            onClick={() => handlePromoteLeader(group.id, member.studentId, member.studentName)}
+                                                                            onClick={() => handlePromoteLeader(group?.id, member?.studentId ?? member?.id, displayName)}
                                                                             title="Chuyển quyền Leader"
                                                                             className="text-amber-500 hover:text-amber-600 transition-colors p-0.5"
                                                                         >
@@ -457,7 +465,7 @@ export default function ManageGroups() {
                                                                         </button>
                                                                     )}
                                                                     <button
-                                                                        onClick={() => handleRemoveStudentFromGroup(group.id, member.studentId)}
+                                                                        onClick={() => handleRemoveStudentFromGroup(group?.id, member?.studentId ?? member?.id)}
                                                                         title="Xóa SV khỏi nhóm"
                                                                         className="text-gray-300 hover:text-red-500 transition-colors p-0.5 font-bold"
                                                                     >
@@ -465,7 +473,7 @@ export default function ManageGroups() {
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                        ))}
+                                                        )})}
                                                     </div>
                                                 </div>
                                             </div>
@@ -493,33 +501,34 @@ export default function ManageGroups() {
                         </div>
 
                         <div className="overflow-y-auto flex-1 min-h-0 border border-gray-100 rounded-xl divide-y divide-gray-50 mb-5">
-                            {students.length === 0 ? (
+                            {(students?.length ?? 0) === 0 ? (
                                 <div className="px-4 py-8 text-center bg-gray-50/50">
                                     <p className="text-sm text-gray-500">Không có sinh viên nào trong lớp.</p>
                                 </div>
                             ) : (
                                 students.map((student) => {
-                                    const isAssigned = assignedStudentIds.has(student.id);
+                                    const isAssigned = assignedStudentIds.has(String(student?.id ?? student?.studentId));
+                                    const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
                                     return (
                                         <label
-                                            key={student.id}
+                                            key={student?.id ?? student?.studentId}
                                             className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
                                         >
                                             <input
                                                 type="checkbox"
-                                                checked={forceAddSelectedIds.includes(student.id)}
-                                                onChange={() => toggleForceAddStudent(student.id)}
+                                                checked={forceAddSelectedIds.includes(student?.id)}
+                                                onChange={() => toggleForceAddStudent(student?.id)}
                                                 className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
                                             />
                                             <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                                {student.name?.charAt(0)}
+                                                {displayName?.charAt?.(0) ?? "S"}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1">
-                                                    <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
+                                                    <p className="text-sm font-medium text-gray-800 truncate">{displayName}</p>
                                                     {isAssigned && <span className="text-[9px] text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full font-bold">ĐÃ CÓ NHÓM</span>}
                                                 </div>
-                                                <p className="text-xs text-gray-400">{student.studentCode || student.studentId}</p>
+                                                <p className="text-xs text-gray-400">{student?.studentCode ?? student?.studentId ?? student?.id ?? "N/A"}</p>
                                             </div>
                                         </label>
                                     );

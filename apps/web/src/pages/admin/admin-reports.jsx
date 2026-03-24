@@ -44,12 +44,12 @@ export default function AdminReports() {
   const { data: inactiveTeamsRaw } = useGetInactiveTeams();
   const { data: integrationStats } = useGetIntegrationStats();
 
-  const semesters = semestersData || [];
-  const allCourses = coursesData?.items || [];
+  const semesters = Array.isArray(semestersData) ? semestersData : [];
+  const allCourses = Array.isArray(coursesData?.items) ? coursesData.items : [];
 
   // Filter courses based on local selection if needed
   const filteredCourses = selectedCourse
-    ? allCourses.filter(c => c.id === selectedCourse)
+    ? allCourses.filter((c) => String(c?.id) === String(selectedCourse))
     : allCourses;
 
   // Calculate overall stats dynamically
@@ -98,10 +98,10 @@ export default function AdminReports() {
   const loading = loadingSemesters || loadingCourses;
 
   // Prepare chart data from real commit trends
-  const projectDistribution = filteredCourses.map(course => ({
-    name: course.code,
-    projects: course.projectsCount || 0,
-    students: course.currentStudents
+  const projectDistribution = (Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
+    name: course?.code ?? `Course-${course?.id ?? "N/A"}`,
+    projects: course?.projectsCount ?? 0,
+    students: course?.currentStudents ?? 0
   }));
 
   const srsStatusData = [
@@ -139,9 +139,9 @@ export default function AdminReports() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
               >
                 <option value="">Tất cả học kỳ</option>
-                {semesters.map(semester => (
-                  <option key={semester.id} value={semester.id}>
-                    {semester.name}
+                {semesters.map((semester) => (
+                  <option key={semester?.id} value={semester?.id}>
+                    {semester?.name ?? `Học kỳ (ID: ${semester?.id ?? "N/A"})`}
                   </option>
                 ))}
               </select>
@@ -156,9 +156,9 @@ export default function AdminReports() {
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
               >
                 <option value="">Tất cả lớp học</option>
-                {allCourses.map(course => (
-                  <option key={course.id} value={course.id}>
-                    {course.code} - {course.name}
+                {allCourses.map((course) => (
+                  <option key={course?.id} value={course?.id}>
+                    {course?.code ?? "N/A"} - {course?.name ?? `Lớp (ID: ${course?.id ?? "N/A"})`}
                   </option>
                 ))}
               </select>
@@ -259,8 +259,8 @@ export default function AdminReports() {
           <CardContent className="p-6">
             <div className="h-64">
               <BurndownChart
-                data={filteredCourses.map(course => ({
-                  name: course.code,
+                data={(Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
+                  name: course?.code ?? `Course-${course?.id ?? "N/A"}`,
                   completed: 10, // Mock for status visualization
                   remaining: 5
                 }))}
@@ -294,34 +294,34 @@ export default function AdminReports() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filteredCourses.map((course) => (
-                    <React.Fragment key={course.id}>
+                  {(Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => (
+                    <React.Fragment key={course?.id}>
                       <tr 
                         className="hover:bg-gray-50/50 transition-colors cursor-pointer"
-                        onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}
+                        onClick={() => setExpandedCourse(expandedCourse === course?.id ? null : course?.id)}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                             <ChevronRight size={14} className={`transition-transform ${expandedCourse === course.id ? 'rotate-90' : ''}`} />
+                             <ChevronRight size={14} className={`transition-transform ${expandedCourse === course?.id ? 'rotate-90' : ''}`} />
                              <div>
-                                <div className="font-semibold text-gray-800">{course.code}</div>
-                                <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course.name}</div>
+                                <div className="font-semibold text-gray-800">{course?.code ?? "N/A"}</div>
+                                <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course?.name ?? `Lớp (ID: ${course?.id ?? "N/A"})`}</div>
                              </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="font-medium text-gray-700">{course.currentStudents}</span>
-                          <span className="text-gray-400 text-xs ml-1">/{course.maxStudents}</span>
+                          <span className="font-medium text-gray-700">{course?.currentStudents ?? 0}</span>
+                          <span className="text-gray-400 text-xs ml-1">/{course?.maxStudents ?? "N/A"}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="font-medium text-gray-700">{course.projectsCount || 0}</span>
+                          <span className="font-medium text-gray-700">{course?.projectsCount ?? 0}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                           <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${course.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
                             course.status === 'UPCOMING' ? 'text-blue-600 bg-blue-50' :
                               'text-gray-600 bg-gray-100'
                             }`}>
-                            {course.status === 'ACTIVE' ? 'ĐANG MỞ' : course.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
+                            {course?.status === 'ACTIVE' ? 'ĐANG MỞ' : course?.status === 'UPCOMING' ? 'SẮP MỞ' : 'ĐÃ ĐÓNG'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right space-x-2">
@@ -330,7 +330,7 @@ export default function AdminReports() {
                             variant="ghost"
                             className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50"
                             title="Báo cáo Commit"
-                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('COMMIT', course.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('COMMIT', course?.id); }}
                           >
                             <Printer size={16} />
                           </Button>
@@ -339,7 +339,7 @@ export default function AdminReports() {
                             variant="ghost"
                             className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
                             title="Báo cáo Team Roster"
-                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('ROSTER', course.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('ROSTER', course?.id); }}
                           >
                             <Users size={16} />
                           </Button>
@@ -348,26 +348,26 @@ export default function AdminReports() {
                             variant="ghost"
                             className="h-8 w-8 p-0 text-indigo-600 hover:bg-indigo-50"
                             title="Xuất SRS ISO (Giả lập)"
-                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('SRS', course.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleGenerateReport('SRS', course?.id); }}
                           >
                             <FileText size={16} />
                           </Button>
                         </td>
                       </tr>
-                      {expandedCourse === course.id && (
+                      {expandedCourse === course?.id && (
                         <tr className="bg-gray-50/30">
                           <td colSpan={5} className="px-12 py-4 border-l-4 border-blue-400">
                              <div className="space-y-3">
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Danh sách dự án ({course.projectsCount || 0})</h4>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Danh sách dự án ({course?.projectsCount ?? 0})</h4>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                   {(course.groups || []).length > 0 ? (
-                                     course.groups.map(p => (
-                                       <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
+                                   {(Array.isArray(course?.groups) ? course.groups : []).length > 0 ? (
+                                     (Array.isArray(course?.groups) ? course.groups : []).map((p, idx) => (
+                                       <div key={p?.id ?? idx} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
                                           <div>
-                                             <div className="text-sm font-bold text-teal-700">{p.name}</div>
-                                             <div className="text-[10px] text-gray-500 mt-0.5 truncate max-w-[150px]">{p.description || "Chưa có đề tài"}</div>
+                                             <div className="text-sm font-bold text-teal-700">{p?.name ?? `Nhóm (ID: ${p?.id ?? "N/A"})`}</div>
+                                             <div className="text-[10px] text-gray-500 mt-0.5 truncate max-w-[150px]">{p?.description ?? "Chưa có đề tài"}</div>
                                           </div>
-                                          <Badge variant="outline" className="text-[9px] h-5">{p.status || "ACTIVE"}</Badge>
+                                          <Badge variant="outline" className="text-[9px] h-5">{p?.status ?? "ACTIVE"}</Badge>
                                        </div>
                                      ))
                                    ) : (

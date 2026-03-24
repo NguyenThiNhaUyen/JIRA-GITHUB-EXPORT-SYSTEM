@@ -16,16 +16,16 @@ export default function MyCourses() {
 
     // Data Fetching - Backend automatically filters by lecturer based on token role
     const { data: coursesData = { items: [] }, isLoading } = useGetCourses({ pageSize: 100 });
-    const courses = coursesData.items || [];
+    const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
 
-    const filtered = courses.filter(c =>
-        c.code?.toLowerCase().includes(search.toLowerCase()) ||
-        c.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.subjectName?.toLowerCase().includes(search.toLowerCase())
+    const filtered = courses.filter((c) =>
+        (c?.code?.toLowerCase?.() ?? "").includes(search.toLowerCase()) ||
+        (c?.name?.toLowerCase?.() ?? "").includes(search.toLowerCase()) ||
+        (c?.subjectName?.toLowerCase?.() ?? "").includes(search.toLowerCase())
     );
 
-    const totalGroups = courses.reduce((a, c) => a + (c.projects?.length || 0), 0);
-    const totalStudents = courses.reduce((a, c) => a + (c.currentStudents || 0), 0);
+    const totalGroups = courses.reduce((a, c) => a + (c?.projects?.length ?? 0), 0);
+    const totalStudents = courses.reduce((a, c) => a + (c?.currentStudents ?? 0), 0);
 
     return (
         <div className="space-y-6">
@@ -66,11 +66,11 @@ export default function MyCourses() {
                 <EmptyState message={search ? "Không tìm thấy lớp học phù hợp" : "Bạn chưa được giao lớp nào"} />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {filtered.map(course => (
+                    {filtered.map((course) => (
                         <CourseCard
-                            key={course.id}
+                            key={course?.id}
                             course={course}
-                            onManage={() => navigate(`/lecturer/course/${course.id}/manage-groups`)}
+                            onManage={() => navigate(`/lecturer/course/${course?.id}/manage-groups`)}
                         />
                     ))}
                 </div>
@@ -80,7 +80,8 @@ export default function MyCourses() {
 }
 
 function CourseCard({ course, onManage }) {
-    const groupCount = course.projects?.length || 0;
+    const groupCount = course?.projects?.length ?? 0;
+    const lecturerDisplayName = course?.lecturerName ?? course?.lecturer?.name ?? `GV (ID: ${course?.lecturerId ?? "N/A"})`;
     return (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white hover:shadow-md transition-all duration-200 group">
             {/* Color bar */}
@@ -91,15 +92,16 @@ function CourseCard({ course, onManage }) {
                         <GraduationCap size={18} className="text-teal-700" />
                     </div>
                     <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        {course.subjectCode || "—"}
+                        {course?.subjectCode ?? "—"}
                     </span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-gray-800 leading-snug">{course.code}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{course.name || course.subjectName}</p>
+                    <h3 className="font-bold text-gray-800 leading-snug">{course?.code ?? "N/A"}</h3>
+                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{course?.name ?? course?.subjectName ?? `Lớp (ID: ${course?.id ?? "N/A"})`}</p>
+                    <p className="text-xs text-gray-400 mt-1">GV phụ trách: {lecturerDisplayName}</p>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Users size={11} />{course.currentStudents} sinh viên</span>
+                    <span className="flex items-center gap-1"><Users size={11} />{course?.currentStudents ?? 0} sinh viên</span>
                     <span className="flex items-center gap-1"><BookOpen size={11} />{groupCount} nhóm</span>
                 </div>
                 <Button

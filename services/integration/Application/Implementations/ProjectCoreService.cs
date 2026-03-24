@@ -531,12 +531,14 @@ public class ProjectCoreService : IProjectCoreService
                     await _githubClient.SyncCommitsAsync(
                         integration.github_repo.id, 
                         integration.github_repo.owner_login, 
-                        integration.github_repo.name);
+                        integration.github_repo.name,
+                        integration.github_token);
                     
                     await _githubClient.SyncPullRequestsAsync(
                         integration.github_repo.id, 
                         integration.github_repo.owner_login, 
-                        integration.github_repo.name);
+                        integration.github_repo.name,
+                        integration.github_token);
                 }
 
                 if (integration.jira_project != null)
@@ -544,7 +546,8 @@ public class ProjectCoreService : IProjectCoreService
                     await _jiraClient.SyncIssuesAsync(
                         integration.jira_project.id, 
                         integration.jira_project.jira_project_key, 
-                        integration.jira_project.jira_url ?? "https://atlassian.net");
+                        integration.jira_project.jira_url ?? "https://atlassian.net",
+                        integration.jira_token);
                 }
 
                 _logger.LogInformation("[ManualSync] Successfully completed sync for project {ProjectId}", projectId);

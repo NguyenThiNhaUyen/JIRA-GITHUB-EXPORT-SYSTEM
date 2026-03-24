@@ -529,6 +529,8 @@ public partial class JiraGithubToolDbContext : DbContext
 
             entity.Property(e => e.project_id).ValueGeneratedNever();
             entity.Property(e => e.created_at).HasDefaultValueSql("now()");
+            entity.Property(e => e.github_token).HasColumnType("text");
+            entity.Property(e => e.jira_token).HasColumnType("text");
             entity.Property(e => e.updated_at).HasDefaultValueSql("now()");
 
             entity.HasOne(d => d.github_repo).WithOne(p => p.project_integration)

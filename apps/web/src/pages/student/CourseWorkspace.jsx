@@ -17,22 +17,23 @@ import { useGenerateSrs } from "../../features/admin/hooks/useReports.js";
 const SRS_STATUS_CLS = Object.fromEntries(Object.entries(SRS_STATUS).map(([k, v]) => [k, v.cls]));
 
 export default function CourseWorkspace({ course, group, groupStudents, srsReports, userId, onBack, onSubmitLinks, onDeleteSRS }) {
-    const [githubInput, setGithubInput] = useState(group.integration?.githubUrl || "");
-    const [jiraInput, setJiraInput] = useState(group.integration?.jiraUrl || "");
+    const [githubInput, setGithubInput] = useState(group?.integration?.githubUrl ?? "");
+    const [jiraInput, setJiraInput] = useState(group?.integration?.jiraUrl ?? "");
 
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteAvailableStudents, setInviteAvailableStudents] = useState([]);
     const [inviteSelectedIds, setInviteSelectedIds] = useState([]);
     const [isInviting, setIsInviting] = useState(false);
 
-    const myMember = groupStudents.find(m => String(m.studentId) === String(userId));
+    const normalizedGroupStudents = Array.isArray(groupStudents) ? groupStudents : [];
+    const myMember = normalizedGroupStudents.find(m => String(m?.studentId) === String(userId));
     const isLeader = myMember?.role?.toUpperCase() === 'LEADER';
 
     // console.log("[Debug] Workspace Role:", { userId, myMember, isLeader });
 
     // Links status
-    const ghStatus = group.integration?.githubStatus || "NONE";
-    const jiraStatus = group.integration?.jiraStatus || "NONE";
+    const ghStatus = group?.integration?.githubStatus ?? "NONE";
+    const jiraStatus = group?.integration?.jiraStatus ?? "NONE";
     const bothApproved = ghStatus === "APPROVED" && jiraStatus === "APPROVED";
 
     const { success, error: showError } = useToast();
@@ -49,7 +50,8 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const { mutate: generateSrsMutate, isPending: isGenerating } = useGenerateSrs();
 
     // 1-week cooldown logic (using UTC to avoid timezone skews)
-    const lastSrs = srsReports?.slice().sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())[0];
+    const normalizedSrsReports = Array.isArray(srsReports) ? srsReports : [];
+    const lastSrs = normalizedSrsReports.slice().sort((a, b) => new Date(b?.submittedAt).getTime() - new Date(a?.submittedAt).getTime())[0];
     const { isWithinWeek, srsCooldownDays } = (() => {
         if (!lastSrs) return { isWithinWeek: false, srsCooldownDays: 0 };
         const now = new Date().getTime();
@@ -82,13 +84,15 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const handleOpenInvite = () => {
         // Build a set of studentIds who are already in ANY group of this course
         const studentsWithGroups = new Set();
-        (allProjectsData.items || []).forEach(proj => {
-            (proj.team || []).forEach(member => {
+        (Array.isArray(allProjectsData?.items) ? allProjectsData.items : []).forEach((proj) => {
+            (Array.isArray(proj?.team) ? proj.team : []).forEach((member) => {
                 studentsWithGroups.add(String(member.studentId || member.userId));
             });
         });
 
-        const available = (enrolledData.items || []).filter(s => !studentsWithGroups.has(String(s.id)));
+        const available = (Array.isArray(enrolledData?.items) ? enrolledData.items : []).filter(
+            (s) => !studentsWithGroups.has(String(s?.id))
+        );
 
         setInviteAvailableStudents(available);
         setInviteSelectedIds([]);
@@ -312,7 +316,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center"><Users size={14} className="text-teal-600" /></div>
                                 <CardTitle className="text-base font-semibold text-gray-800">Thành viên nhóm</CardTitle>
-                                <span className="ml-auto text-xs font-semibold text-gray-400 mr-2">{groupStudents.length} người</span>
+                                <span className="ml-auto text-xs font-semibold text-gray-400 mr-2">{normalizedGroupStudents.length} người</span>
                                 {isLeader && (
                                     <button
                                         onClick={handleOpenInvite}
@@ -324,21 +328,24 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {groupStudents.map(stu => {
-                                const isMe = stu.studentId === userId;
+                            {normalizedGroupStudents.map((stu, idx) => {
+                                const displayName = stu?.studentName ?? stu?.name ?? `SV (ID: ${stu?.studentId ?? "N/A"})`;
+                                const displayCode = stu?.studentCode || `ID: ${stu?.studentId ?? "N/A"}`;
+                                const displayInitial = displayName?.charAt(0) || "T";
+                                const isMe = String(stu?.studentId) === String(userId);
                                 const isLeaderM = stu.role === 'LEADER';
                                 return (
-                                    <div key={stu.studentId} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group">
+                                    <div key={stu?.studentId ?? idx} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isLeaderM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
-                                            {stu.studentName?.charAt(0)}
+                                            {displayInitial}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className="text-sm font-semibold text-gray-800 truncate">{stu.studentName}</p>
+                                                <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
                                                 {isLeaderM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                                                 {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
                                             </div>
-                                            <p className="text-xs text-gray-400">{stu.studentCode}</p>
+                                            <p className="text-xs text-gray-400">{displayCode}</p>
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
@@ -351,14 +358,14 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                             {isLeader && !isMe && (
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => handlePromoteToLeader(stu.studentId, stu.studentName)}
+                                                        onClick={() => handlePromoteToLeader(stu?.studentId, displayName)}
                                                         className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                         title="Chuyển quyền Leader"
                                                     >
                                                         <Crown size={14} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleRemoveMember(stu.studentId, stu.studentName)}
+                                                        onClick={() => handleRemoveMember(stu?.studentId, displayName)}
                                                         className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Xóa khỏi nhóm"
                                                     >
@@ -405,7 +412,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                     Chỉ Team Leader mới được thao tác quản lý SRS.
                                 </div>
                             )}
-                            {srsReports.length === 0 ? (
+                            {normalizedSrsReports.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                                     <BookOpen size={24} className="text-gray-300" />
                                     <p className="text-sm text-gray-400">Chưa có SRS nào</p>
@@ -419,7 +426,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                         </button>
                                     )}
                                 </div>
-                            ) : srsReports.map(rpt => (
+                            ) : normalizedSrsReports.map((rpt) => (
                                 <div key={rpt.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-0.5">
@@ -449,7 +456,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         <div className="flex items-center justify-between mb-4 shrink-0">
                             <div>
                                 <h3 className="text-lg font-bold text-gray-800">Mời Sinh Viên</h3>
-                                <p className="text-xs text-gray-500">Gửi lời mời tham gia nhóm {group.name}</p>
+                                <p className="text-xs text-gray-500">Gửi lời mời tham gia nhóm {group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</p>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => setShowInviteModal(false)} className="h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100">
                                 ×
@@ -464,21 +471,21 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             ) : (
                                 inviteAvailableStudents.map((student) => (
                                     <label
-                                        key={student.id}
+                                        key={student?.id}
                                         className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
                                     >
                                         <input
                                             type="checkbox"
-                                            checked={inviteSelectedIds.includes(student.id)}
-                                            onChange={() => toggleInviteStudent(student.id)}
+                                            checked={inviteSelectedIds.includes(student?.id)}
+                                            onChange={() => toggleInviteStudent(student?.id)}
                                             className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
                                         />
                                         <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                            {student.name?.charAt(0)}
+                                            {(student?.name ?? `SV (ID: ${student?.id ?? "N/A"})`)?.charAt(0)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
-                                            <p className="text-xs text-gray-400">{student.studentId}</p>
+                                            <p className="text-sm font-medium text-gray-800 truncate">{student?.name ?? `SV (ID: ${student?.id ?? "N/A"})`}</p>
+                                            <p className="text-xs text-gray-400">{student?.studentId ?? student?.id ?? "N/A"}</p>
                                         </div>
                                     </label>
                                 ))

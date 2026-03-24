@@ -19,17 +19,26 @@ const ROLE_REDIRECTS = {
  * FE cần:    { id, email, name, role, studentCode?, lecturerCode? }
  */
 function mapBEUserToFEUser(loginResponse) {
-  const beUser = loginResponse.user ?? loginResponse.User; // camelCase hoặc PascalCase
-  const roles = beUser.roles ?? beUser.Roles ?? [];
+  const beUser = loginResponse?.user ?? loginResponse?.User ?? {}; // camelCase hoặc PascalCase
+  const roles = beUser?.roles ?? beUser?.Roles ?? [];
   const primaryRole = roles[0] ?? "STUDENT"; // Lấy role đầu tiên (BE trả array)
+  const projectObj = beUser?.project ?? beUser?.Project ?? null;
+  const projectId = beUser?.projectId ?? beUser?.ProjectId ?? projectObj?.id ?? projectObj?.Id;
 
   return {
-    id: beUser.id ?? beUser.Id,
-    email: beUser.email ?? beUser.Email,
-    name: beUser.fullName ?? beUser.FullName,
+    id: beUser?.id ?? beUser?.Id,
+    email: beUser?.email ?? beUser?.Email,
+    name: beUser?.fullName ?? beUser?.FullName ?? `SV (ID: ${beUser?.id ?? beUser?.Id ?? "N/A"})`,
     role: primaryRole.toUpperCase(),
-    ...(beUser.studentCode && { studentCode: beUser.studentCode }),
-    ...(beUser.lecturerCode && { lecturerCode: beUser.lecturerCode }),
+    ...(projectId != null && { projectId }),
+    ...(projectObj && {
+      project: {
+        id: projectObj.id ?? projectObj.Id,
+        name: projectObj.name ?? projectObj.Name,
+      },
+    }),
+    ...(beUser?.studentCode && { studentCode: beUser.studentCode }),
+    ...(beUser?.lecturerCode && { lecturerCode: beUser.lecturerCode }),
   };
 }
 
@@ -63,7 +72,7 @@ export function AuthProvider({ children }) {
    * Trả về { success, redirectPath } hoặc { success: false, error }
    * Giao diện giống hệt mock cũ để Login.jsx không cần sửa.
    */
-  const login = async (email, password, remember = false) => {
+  const login = async (email, password, remember = true) => {
     setLoading(true);
     try {
       // client.js interceptor đã bóc vỏ ApiResponse<T>
@@ -84,10 +93,8 @@ export function AuthProvider({ children }) {
       const feUser = mapBEUserToFEUser(loginResponse);
       const redirect = ROLE_REDIRECTS[feUser.role] ?? "/";
 
-      // Lưu vào storage tương ứng (mặc định là false nếu không truyền)
-      const storage = remember === true ? localStorage : sessionStorage;
-      storage.setItem("accessToken", token);
-      storage.setItem("user", JSON.stringify(feUser));
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("user", JSON.stringify(feUser));
       setUser(feUser);
 
       return { success: true, redirectPath: redirect };
@@ -99,7 +106,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginGoogle = async (idToken, remember = true) => {
+  const loginGoogle = async (idToken) => {
     setLoading(true);
     try {
       const apiRes = await loginWithGoogle(idToken);
@@ -113,10 +120,8 @@ export function AuthProvider({ children }) {
       const feUser = mapBEUserToFEUser(loginResponse);
       const redirect = ROLE_REDIRECTS[feUser.role] ?? "/";
 
-      // Google login mặc định remember = true (hoặc truyền qua args)
-      const storage = remember === false ? sessionStorage : localStorage;
-      storage.setItem("accessToken", token);
-      storage.setItem("user", JSON.stringify(feUser));
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("user", JSON.stringify(feUser));
       setUser(feUser);
 
       return { success: true, redirectPath: redirect };

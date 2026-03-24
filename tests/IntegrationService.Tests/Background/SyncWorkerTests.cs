@@ -98,7 +98,9 @@ namespace IntegrationService.Tests.Background
             // Assert
             // UnitOfWork and Clients should NOT be requested or called
             _mockUnitOfWork.Verify(x => x.ProjectIntegrations, Times.Never);
-            _mockGithubClient.Verify(x => x.SyncCommitsAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockGithubClient.Verify(
+                x => x.SyncCommitsAsync(It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()),
+                Times.Never);
         }
     }
 

@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
 using JiraGithubExport.IntegrationService.Hubs;
+using JiraGithubExport.IntegrationService.Application.Interfaces;
 using Moq;
 using Xunit;
 
@@ -25,6 +26,7 @@ namespace IntegrationService.Tests.Services
         private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
         private readonly Mock<ILogger<ProjectIntegrationService>> _mockLogger;
         private readonly Mock<IHubContext<NotificationHub>> _mockHub;
+        private readonly Mock<IAnalyticsService> _mockAnalyticsService;
         private readonly ProjectIntegrationService _service;
 
         public ProjectIntegrationServiceTests()
@@ -50,6 +52,7 @@ namespace IntegrationService.Tests.Services
             _mockScopeFactory = new Mock<IServiceScopeFactory>();
             _mockLogger = new Mock<ILogger<ProjectIntegrationService>>();
             _mockHub = new Mock<IHubContext<NotificationHub>>();
+            _mockAnalyticsService = new Mock<IAnalyticsService>();
             
             // Setup a fake scope for the background worker kick-off
             var mockScope = new Mock<IServiceScope>();
@@ -62,7 +65,12 @@ namespace IntegrationService.Tests.Services
             mockScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             _mockScopeFactory.Setup(s => s.CreateScope()).Returns(mockScope.Object);
 
-            _service = new ProjectIntegrationService(_unitOfWork, _mockScopeFactory.Object, _mockLogger.Object, _mockHub.Object);
+            _service = new ProjectIntegrationService(
+                _unitOfWork,
+                _mockScopeFactory.Object,
+                _mockLogger.Object,
+                _mockHub.Object,
+                _mockAnalyticsService.Object);
         }
 
         public void Dispose()

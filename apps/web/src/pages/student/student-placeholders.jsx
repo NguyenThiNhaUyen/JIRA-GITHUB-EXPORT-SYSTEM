@@ -31,10 +31,10 @@ function Breadcrumb({ title }) {
 export function StudentContributionPage() {
     const { user } = useAuth();
     const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
-    const myGroups = projectsData?.items || [];
+    const myGroups = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     const metricQueries = useQueries({
-        queries: myGroups.map(g => ({
+        queries: myGroups.map((g) => ({
             queryKey: ['projects', 'detail', g.id, 'metrics'],
             queryFn: () => getProjectMetrics(g.id),
             staleTime: 60000,
@@ -43,7 +43,9 @@ export function StudentContributionPage() {
 
     const totalMyCommits = metricQueries.reduce((sum, q) => {
         if (!q.data) return sum;
-        const myMetric = q.data.studentMetrics?.find(m => m.studentId === user?.id);
+        const myMetric = (Array.isArray(q?.data?.studentMetrics) ? q.data.studentMetrics : []).find(
+            (m) => String(m?.studentId) === String(user?.id)
+        );
         return sum + (myMetric?.commitCount || 0);
     }, 0);
 
@@ -92,7 +94,7 @@ export function StudentContributionPage() {
                     <BarChart2 size={36} className="text-gray-300" />
                     <p className="text-sm text-gray-400">Bạn chưa tham gia nhóm nào</p>
                 </div>
-            ) : myGroups.map(g => (
+            ) : myGroups.map((g) => (
                 <ProjectContributionCard key={g.id} project={g} userId={user?.id} />
             ))}
         </div>
@@ -101,20 +103,21 @@ export function StudentContributionPage() {
 
 function ProjectContributionCard({ project, userId }) {
     const { data: metrics, isLoading } = useGetProjectMetrics(project.id);
-    const members = project.team || [];
+    const members = Array.isArray(project?.team) ? project.team : [];
 
     if (isLoading || !metrics) return null;
 
-    const myMetric = metrics.studentMetrics?.find(m => m.studentId === userId) || { commitCount: 0 };
-    const maxCommits = Math.max(...(metrics.studentMetrics?.map(m => m.commitCount) || [1]), 1);
+    const studentMetrics = Array.isArray(metrics?.studentMetrics) ? metrics.studentMetrics : [];
+    const myMetric = studentMetrics.find((m) => String(m?.studentId) === String(userId)) || { commitCount: 0 };
+    const maxCommits = Math.max(...(studentMetrics.map((m) => m?.commitCount ?? 0) || [1]), 1);
 
     return (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
             <CardHeader className="border-b border-gray-50 pb-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-base font-semibold text-gray-800">{project.name}</CardTitle>
-                        <p className="text-xs text-gray-400 mt-0.5">{project.course?.name || "Lớp học"}</p>
+                        <CardTitle className="text-base font-semibold text-gray-800">{project?.name ?? `Nhóm (ID: ${project?.id ?? "N/A"})`}</CardTitle>
+                        <p className="text-xs text-gray-400 mt-0.5">{project?.course?.name ?? `Khóa học (ID: ${project?.courseId ?? "N/A"})`}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
@@ -129,25 +132,28 @@ function ProjectContributionCard({ project, userId }) {
                 </div>
             </CardHeader>
             <CardContent className="py-4 px-5 space-y-3">
-                {metrics.studentMetrics?.map(m => {
-                    const student = members.find(s => s.studentId === m.studentId) || { studentName: "Unknown", studentCode: m.studentId };
-                    const isMe = m.studentId === userId;
+                {studentMetrics.map((m) => {
+                    const student =
+                        members.find((s) => String(s?.studentId ?? s?.id) === String(m?.studentId)) ||
+                        { studentName: `SV (ID: ${m?.studentId ?? "N/A"})`, studentCode: m?.studentId };
+                    const displayName = student?.studentName ?? student?.name ?? student?.fullName ?? `SV (ID: ${m?.studentId ?? "N/A"})`;
+                    const isMe = String(m?.studentId) === String(userId);
                     return (
-                        <div key={m.studentId} className="flex items-center gap-3">
+                        <div key={m?.studentId} className="flex items-center gap-3">
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"}`}>
-                                {student.studentName?.charAt(0)}
+                                {displayName?.charAt?.(0) ?? "S"}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 mb-1">
-                                    <span className="text-xs font-semibold text-gray-700">{student.studentName}</span>
+                                    <span className="text-xs font-semibold text-gray-700">{displayName}</span>
                                     {isMe && <span className="text-[9px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
                                 </div>
                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div className={`h-full rounded-full ${isMe ? "bg-teal-500" : "bg-gray-300"}`}
-                                        style={{ width: `${(m.commitCount / maxCommits) * 100}%` }} />
+                                        style={{ width: `${((m?.commitCount ?? 0) / maxCommits) * 100}%` }} />
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-gray-600 shrink-0">{m.commitCount}</span>
+                            <span className="text-xs font-bold text-gray-600 shrink-0">{m?.commitCount ?? 0}</span>
                         </div>
                     );
                 })}
@@ -160,7 +166,7 @@ function ProjectContributionCard({ project, userId }) {
 export function StudentAlertsPage() {
     const { user } = useAuth();
     const { data: alertsData, isLoading } = useGetAlerts({ studentId: user?.id, status: "OPEN" });
-    const alerts = alertsData?.items || [];
+    const alerts = Array.isArray(alertsData?.items) ? alertsData.items : [];
 
     if (isLoading) {
         return (
@@ -208,14 +214,14 @@ export function StudentAlertsPage() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {alerts.map((a, i) => {
-                                const severity = a.severity.toLowerCase();
+                                const severity = a?.severity?.toLowerCase?.() ?? "info";
                                 const cls = sevCls[severity] || sevCls.info;
                                 return (
                                     <div key={i} className={`flex items-start gap-3 px-5 py-4 ${cls.border} border-b last:border-0`}>
                                         <AlertTriangle size={15} className={`shrink-0 mt-0.5 ${cls.icon}`} />
                                         <div className="flex-1">
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{a.groupName}</p>
-                                            <p className={`text-sm ${cls.text}`}>{a.message}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{a?.groupName ?? `Nhóm (ID: ${a?.groupId ?? "N/A"})`}</p>
+                                            <p className={`text-sm ${cls.text}`}>{a?.message ?? "Không có nội dung cảnh báo"}</p>
                                         </div>
                                     </div>
                                 );
@@ -233,7 +239,7 @@ export function StudentSrsPage() {
     const { user } = useAuth();
 
     const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
-    const myGroups = projectsData?.items || [];
+    const myGroups = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     if (loadingProjects) {
         return (
@@ -276,14 +282,15 @@ export function StudentSrsPage() {
 function ProjectSrsRows({ project }) {
     const { data: srsList = [], isLoading } = useGetProjectSrs(project.id);
     if (isLoading) return <div className="p-4 animate-pulse bg-gray-50 h-10" />;
-    if (srsList.length === 0) return null;
+    const normalizedSrsList = Array.isArray(srsList) ? srsList : [];
+    if (normalizedSrsList.length === 0) return null;
 
     return (
         <div className="border-b border-gray-100 last:border-0 p-5">
-            <h4 className="text-sm font-bold text-gray-800 mb-3">{project.name}</h4>
+            <h4 className="text-sm font-bold text-gray-800 mb-3">{project?.name ?? `Nhóm (ID: ${project?.id ?? "N/A"})`}</h4>
             <div className="grid grid-cols-3 gap-3 mb-4">
                 {["FINAL", "REVIEW", "DRAFT"].map(s => {
-                    const count = srsList.filter(x => x.status === s).length;
+                    const count = normalizedSrsList.filter((x) => x?.status === s).length;
                     return (
                         <div key={s} className={`rounded-xl px-3 py-2 border flex items-center justify-between text-[10px] ${SRS_STATUS_CLS[s]} ${count === 0 ? "opacity-40" : ""}`}>
                             <span className="font-semibold">{s}</span>
@@ -293,7 +300,7 @@ function ProjectSrsRows({ project }) {
                 })}
             </div>
             <div className="space-y-3">
-                {srsList.map(rpt => (
+                {normalizedSrsList.map((rpt) => (
                     <div key={rpt.id} className="flex items-center gap-4 py-3 border-t border-gray-50 hover:bg-gray-50/50 transition-colors rounded-lg px-2">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
@@ -326,8 +333,8 @@ export default function StudentCoursesPage() {
     const { data: coursesData, isLoading: loadingCourses } = useGetCourses();
     const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
 
-    const coursesList = coursesData?.items || [];
-    const projectsList = projectsData?.items || [];
+    const coursesList = Array.isArray(coursesData?.items) ? coursesData.items : [];
+    const projectsList = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     if (loadingCourses || loadingProjects) {
         return (
@@ -362,15 +369,16 @@ export default function StudentCoursesPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {coursesList.map(c => {
+                    {coursesList.map((c) => {
                         const project = projectsList.find(p => String(p.courseId) === String(c.id));
-                        const myMember = project?.team?.find(m => String(m.studentId) === String(user?.id));
+                        const safeTeam = Array.isArray(project?.team) ? project.team : [];
+                        const myMember = safeTeam.find((m) => String(m?.studentId ?? m?.id) === String(user?.id));
                         const isLeader = myMember?.role?.toUpperCase() === "LEADER";
-                        const leader = project?.team?.find(m => m.role?.toUpperCase() === "LEADER");
+                        const leader = safeTeam.find((m) => m?.role?.toUpperCase?.() === "LEADER");
                         const ghApproved = project?.integration?.githubStatus === "APPROVED";
                         const jiraApproved = project?.integration?.jiraStatus === "APPROVED";
                         const bothApproved = ghApproved && jiraApproved;
-                        const memberCount = project?.team?.length || 0;
+                        const memberCount = safeTeam?.length ?? 0;
 
                         return (
                             <div
@@ -416,10 +424,10 @@ export default function StudentCoursesPage() {
                                             {leader && (
                                                 <div className="flex items-center gap-2.5 mb-3">
                                                     <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                                        {leader.studentName?.charAt(0)}
+                                                        {(leader?.studentName ?? leader?.name ?? leader?.fullName ?? `SV (ID: ${leader?.studentId ?? leader?.id ?? "N/A"})`)?.charAt?.(0) ?? "S"}
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-semibold text-gray-800">{leader.studentName}</p>
+                                                        <p className="text-xs font-semibold text-gray-800">{leader?.studentName ?? leader?.name ?? leader?.fullName ?? `SV (ID: ${leader?.studentId ?? leader?.id ?? "N/A"})`}</p>
                                                         <p className="text-[10px] text-gray-400">Team Leader</p>
                                                     </div>
                                                 </div>
@@ -461,7 +469,9 @@ export default function StudentCoursesPage() {
                                     ) : (
                                         <>
                                             {/* No project state */}
-                                            <p className="text-xs text-gray-400 mb-3">GV: {c.lecturerNames?.join(", ") || "Chưa có giảng viên"}</p>
+                                            <p className="text-xs text-gray-400 mb-3">
+                                                GV: {Array.isArray(c?.lecturerNames) && c.lecturerNames.length > 0 ? c.lecturerNames.join(", ") : `GV (ID: ${c?.lecturerId ?? "N/A"})`}
+                                            </p>
                                             <div className="border-t border-gray-50 pt-3">
                                                 <span className="text-[11px] text-gray-400 italic">Bạn chưa được thêm vào nhóm của lớp này</span>
                                             </div>
@@ -482,7 +492,7 @@ export function StudentMyProjectPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { data: projectsData, isLoading } = useGetMyProjects();
-    const myGroups = projectsData?.items || [];
+    const myGroups = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     // Auto-redirect to the first group if only one group exists
     useEffect(() => {
@@ -530,8 +540,9 @@ export function StudentMyProjectPage() {
                 <p className="text-sm text-gray-500 mt-0.5">Nhóm dự án bạn đang tham gia trong các lớp học</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {myGroups.map(g => {
-                    const myMember = (g.team || []).find(m => String(m.studentId) === String(user?.id));
+                {myGroups.map((g) => {
+                    const safeTeam = Array.isArray(g?.team) ? g.team : [];
+                    const myMember = safeTeam.find((m) => String(m?.studentId ?? m?.id) === String(user?.id));
                     const isLeader = myMember?.role?.toUpperCase() === "LEADER";
                     const ghApproved = g.integration?.githubStatus === "APPROVED";
                     const jiraApproved = g.integration?.jiraStatus === "APPROVED";
@@ -563,7 +574,7 @@ export function StudentMyProjectPage() {
                                         <BookOpen size={9} /> Jira: {jiraApproved ? "Đã duyệt" : "Chờ duyệt"}
                                     </span>
                                 </div>
-                                <p className="text-[10px] text-gray-400 mt-2">{(g.team || []).length} thành viên</p>
+                                <p className="text-[10px] text-gray-400 mt-2">{safeTeam?.length ?? 0} thành viên</p>
                             </CardContent>
                         </Card>
                     );

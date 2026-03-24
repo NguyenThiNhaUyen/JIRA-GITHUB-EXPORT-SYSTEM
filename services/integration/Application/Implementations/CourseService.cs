@@ -127,6 +127,7 @@ public class CourseService : ICourseService
             .Include(c => c.semester)
             .Include(c => c.lecturer_users).ThenInclude(l => l.user)
             .Include(c => c.projects).ThenInclude(p => p.project_integration)
+            .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
             .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
             .FirstOrDefaultAsync(c => c.id == courseId);
 
@@ -157,7 +158,8 @@ public class CourseService : ICourseService
                 UserId = tm.student_user_id,
                 FullName = tm.student_user?.user?.full_name ?? "Unknown",
                 StudentCode = tm.student_user?.student_code ?? "N/A",
-                StudentId = tm.student_user?.student_code ?? "N/A"
+                StudentId = tm.student_user?.student_code ?? "N/A",
+                Role = tm.role
             }).ToList()
         }).ToList();
 

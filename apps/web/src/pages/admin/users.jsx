@@ -5,7 +5,7 @@ import { useToast } from "../../components/ui/toast.jsx";
 import { useGetUsers, useUpdateUserRole, useUpdateUserStatus, useResetUserPassword } from "../../features/users/hooks/useUsers.js";
 import {
     ChevronRight, Users, Search, Filter, MoreHorizontal,
-    Shield, UserX, Key, CheckCircle, XCircle
+    Shield, UserX, Key, CheckCircle, XCircle, Activity
 } from "lucide-react";
 
 const ROLE_CFG = {
@@ -33,9 +33,9 @@ export default function UserManagement() {
 
     // BUG-47: Aggregate users reactively as they load (Parallel Loading)
     const allUsers = useMemo(() => {
-        const admins = (adminsRaw || []).map(u => ({ ...u, role: "ADMIN" }));
-        const lects = (lectsRaw || []).map(u => ({ ...u, role: "LECTURER" }));
-        const students = (studentsRaw || []).map(u => ({ ...u, role: "STUDENT" }));
+        const admins = (Array.isArray(adminsRaw) ? adminsRaw : []).map((u) => ({ ...u, role: "ADMIN" }));
+        const lects = (Array.isArray(lectsRaw) ? lectsRaw : []).map((u) => ({ ...u, role: "LECTURER" }));
+        const students = (Array.isArray(studentsRaw) ? studentsRaw : []).map((u) => ({ ...u, role: "STUDENT" }));
         return [...admins, ...lects, ...students];
     }, [adminsRaw, lectsRaw, studentsRaw]);
 
@@ -80,9 +80,10 @@ export default function UserManagement() {
     };
 
     const filtered = allUsers.filter(u => {
+        const displayName = u?.name ?? u?.fullName ?? (u?.role === "LECTURER" ? `GV (ID: ${u?.id ?? "N/A"})` : `SV (ID: ${u?.id ?? "N/A"})`);
         const matchSearch = !debouncedSearch ||
-            u.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            u.email?.toLowerCase().includes(debouncedSearch.toLowerCase());
+            displayName?.toLowerCase?.().includes(debouncedSearch.toLowerCase()) ||
+            u?.email?.toLowerCase?.().includes(debouncedSearch.toLowerCase());
         const matchRole = filterRole === "all" || u.role === filterRole;
         return matchSearch && matchRole;
     });
@@ -173,6 +174,7 @@ export default function UserManagement() {
                             {filtered.map(u => {
                                 const roleCfg = ROLE_CFG[u.role] || ROLE_CFG.STUDENT;
                                 const isActive = u.status !== "DISABLED";
+                                const displayName = u?.name ?? u?.fullName ?? (u?.role === "LECTURER" ? `GV (ID: ${u?.id ?? "N/A"})` : `SV (ID: ${u?.id ?? "N/A"})`);
                                 return (
                                     <div
                                         key={u.id}
@@ -184,17 +186,17 @@ export default function UserManagement() {
                                                 u.role === "LECTURER" ? "bg-teal-100 text-teal-700" :
                                                     "bg-blue-100 text-blue-700"
                                                 }`}>
-                                                {u.name?.charAt(0)}
+                                                {displayName?.charAt?.(0) ?? "U"}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-gray-800 truncate">{u.name}</p>
-                                                {u.studentId && <p className="text-[11px] text-gray-400">{u.studentId}</p>}
+                                                <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
+                                                {(u?.studentId ?? u?.lecturerId) && <p className="text-[11px] text-gray-400">{u?.studentId ?? u?.lecturerId}</p>}
                                             </div>
                                         </div>
 
                                         {/* Email */}
                                         <div className="col-span-3 hidden md:block">
-                                            <p className="text-xs text-gray-500 truncate">{u.email || "—"}</p>
+                                            <p className="text-xs text-gray-500 truncate">{u?.email ?? "—"}</p>
                                         </div>
 
                                         {/* Role badge */}
@@ -258,7 +260,7 @@ export default function UserManagement() {
                                                         {isActive ? "Vô hiệu hóa TK" : "Kích hoạt TK"}
                                                     </button>
                                                     <button
-                                                        onClick={() => handleResetPassword(u.id, u.name)}
+                                                        onClick={() => handleResetPassword(u.id, displayName)}
                                                         className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 transition-colors"
                                                     >
                                                         <Key size={13} className="text-gray-400" />

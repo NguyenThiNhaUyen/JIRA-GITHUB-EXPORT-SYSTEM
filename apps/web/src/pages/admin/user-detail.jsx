@@ -27,16 +27,17 @@ export default function UserDetail() {
     const { userId } = useParams();
     const navigate = useNavigate();
     const { success, error: showError } = useToast();
+    const safeArray = (value) => (Array.isArray(value) ? value : []);
 
     // Lấy user từ danh sách (không có API GET /users/:id riêng thì lọc từ list)
-    const { data: adminList = [] }    = useGetUsers("ADMIN");
-    const { data: lecturerList = [] } = useGetUsers("LECTURER");
-    const { data: studentList = [] }  = useGetUsers("STUDENT");
+    const { data: adminList, isLoading: loadingAdmins }    = useGetUsers("ADMIN");
+    const { data: lecturerList, isLoading: loadingLecturers } = useGetUsers("LECTURER");
+    const { data: studentList, isLoading: loadingStudents }  = useGetUsers("STUDENT");
 
     const allUsers = [
-        ...adminList.map(u => ({ ...u, role: "ADMIN" })),
-        ...lecturerList.map(u => ({ ...u, role: "LECTURER" })),
-        ...studentList.map(u => ({ ...u, role: "STUDENT" })),
+        ...safeArray(adminList).map(u => ({ ...u, role: "ADMIN" })),
+        ...safeArray(lecturerList).map(u => ({ ...u, role: "LECTURER" })),
+        ...safeArray(studentList).map(u => ({ ...u, role: "STUDENT" })),
     ];
 
     const user = allUsers.find(u => String(u.id) === String(userId));
@@ -45,11 +46,11 @@ export default function UserDetail() {
     const { data: coursesData } = useGetCourses({ pageSize: 100 });
     const { data: projectsData } = useGetProjects({ pageSize: 100 });
 
-    const userCourses = (coursesData?.items || []).filter(c =>
+    const userCourses = safeArray(coursesData?.items).filter(c =>
         c.lecturers?.some(l => String(l.id) === String(userId)) ||
         String(c.studentId) === String(userId)
     );
-    const userProjects = (projectsData?.items || []).filter(p =>
+    const userProjects = safeArray(projectsData?.items).filter(p =>
         p.members?.some(m => String(m.userId ?? m.id) === String(userId)) ||
         String(p.leaderId) === String(userId)
     );
@@ -60,6 +61,19 @@ export default function UserDetail() {
     const passMutation    = useResetUserPassword();
 
     const [confirmReset, setConfirmReset] = useState(false);
+    const isLoadingUserLists = loadingAdmins || loadingLecturers || loadingStudents;
+
+    if (isLoadingUserLists) {
+        return (
+            <div className="space-y-4">
+                <div className="h-10 w-48 rounded-xl bg-gray-100 animate-pulse" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="h-80 rounded-2xl bg-gray-100 animate-pulse" />
+                    <div className="lg:col-span-2 h-80 rounded-2xl bg-gray-100 animate-pulse" />
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
         return (
@@ -79,7 +93,7 @@ export default function UserDetail() {
     const handleChangeRole = async (newRole) => {
         if (newRole === user.role) return;
         try {
-            await roleMutation.mutateAsync({ id: userId, role: newRole });
+            await roleMutation.mutateAsync({ id: String(userId), role: newRole });
             success(`Đã đổi quyền thành ${ROLE_CFG[newRole]?.label}`);
         } catch (err) {
             showError(err.message || "Đổi quyền thất bại");
@@ -88,7 +102,7 @@ export default function UserDetail() {
 
     const handleToggleStatus = async () => {
         try {
-            await statusMutation.mutateAsync({ id: userId, enabled: !isActive });
+            await statusMutation.mutateAsync({ id: String(userId), enabled: !isActive });
             success(isActive ? "Đã vô hiệu hóa tài khoản" : "Đã kích hoạt tài khoản");
         } catch (err) {
             showError(err.message || "Cập nhật trạng thái thất bại");
@@ -98,7 +112,7 @@ export default function UserDetail() {
     const handleResetPassword = async () => {
         if (!confirmReset) { setConfirmReset(true); return; }
         try {
-            await passMutation.mutateAsync({ id: userId });
+            await passMutation.mutateAsync({ id: String(userId) });
             success("Đã gửi email đặt lại mật khẩu");
             setConfirmReset(false);
         } catch (err) {
@@ -266,8 +280,8 @@ export default function UserDetail() {
                                     {userCourses.map(c => (
                                         <div key={c.id} className="flex items-center gap-3 px-5 py-3">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-gray-800">{c.code}</p>
-                                                <p className="text-xs text-gray-400 truncate">{c.name}</p>
+                                                <p className="text-sm font-semibold text-gray-800">{c.code || "Không có dữ liệu"}</p>
+                                                <p className="text-xs text-gray-400 truncate">{c.name || "Không có dữ liệu"}</p>
                                             </div>
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase ${
                                                 c.status === "ACTIVE" ? "bg-green-50 text-green-700" :
@@ -304,7 +318,7 @@ export default function UserDetail() {
                                     {userProjects.map(p => (
                                         <div key={p.id} className="flex items-center gap-3 px-5 py-3">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-gray-800">{p.name}</p>
+                                                <p className="text-sm font-semibold text-gray-800">{p.name || "Không có dữ liệu"}</p>
                                                 <p className="text-xs text-gray-400">
                                                     {p.isGithubLinked && "GitHub ✓"}{p.isJiraLinked && " · Jira ✓"}
                                                     {!p.isGithubLinked && !p.isJiraLinked && "Chưa kết nối"}

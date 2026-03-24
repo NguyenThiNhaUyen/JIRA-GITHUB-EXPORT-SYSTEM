@@ -52,29 +52,31 @@ export default function AdminDashboard() {
   const inactiveTeams = Array.isArray(inactiveTeamsRaw) ? inactiveTeamsRaw : [];
 
 
-  const recentCourses = coursesData?.items || [];
+  const safeSemesters = Array.isArray(semesters) ? semesters : [];
+  const safeSubjects = Array.isArray(subjects) ? subjects : [];
+  const recentCourses = Array.isArray(coursesData?.items) ? coursesData.items : [];
   const isLoading = loadingStats || loadingCourses || loadingSems || loadingSubs || loadingProjects;
 
   const stats = {
-    semesters: semesters.length,
-    subjects: dashboardStats?.totalSubjects || subjects.length,
+    semesters: safeSemesters.length,
+    subjects: dashboardStats?.totalSubjects || safeSubjects.length,
     courses: dashboardStats?.totalCourses || coursesData?.totalCount || 0,
     lecturers: dashboardStats?.totalLecturers || 0,
     students: dashboardStats?.totalStudents || 0,
     projects: dashboardStats?.totalProjects || projectsData?.totalCount || 0,
   };
 
-  const activeSemesters = semesters.filter(s => s.status === "ACTIVE").length;
+  const activeSemesters = safeSemesters.filter((s) => s?.status === "ACTIVE").length;
 
   const getSemesterName = (id) => {
     if (!id) return "N/A";
-    const found = semesters.find(s => String(s.id) === String(id));
+    const found = safeSemesters.find((s) => String(s?.id) === String(id));
     return found?.name || "N/A";
   };
 
   const getSubjectName = (id) => {
     if (!id) return "N/A";
-    const found = subjects.find(s => String(s.id) === String(id));
+    const found = safeSubjects.find((s) => String(s?.id) === String(id));
     return found?.code || "N/A";
   };
 
@@ -215,12 +217,12 @@ export default function AdminDashboard() {
                 const semesterName = course.semester?.name ?? getSemesterName(course.semesterId);
 
                 return (
-                  <div key={course.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
+                  <div key={course?.id ?? i} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors">
                     <div className="col-span-4 flex items-center gap-3">
                       <span className="text-xs text-gray-400 font-medium w-5 shrink-0">{i + 1}</span>
                       <div>
-                        <p className="font-semibold text-sm text-gray-800">{course.code}</p>
-                        <p className="text-xs text-gray-400 truncate max-w-[140px]">{course.name}</p>
+                        <p className="font-semibold text-sm text-gray-800">{course?.code ?? "N/A"}</p>
+                        <p className="text-xs text-gray-400 truncate max-w-[140px]">{course?.name ?? `Lớp (ID: ${course?.id ?? "N/A"})`}</p>
                       </div>
                     </div>
                     <div className="col-span-3 hidden md:flex flex-col items-center gap-1">
@@ -230,11 +232,11 @@ export default function AdminDashboard() {
                       <span className="text-[11px] text-gray-500">{semesterName}</span>
                     </div>
                     <div className="col-span-2 text-center text-sm font-semibold text-gray-700">
-                      {course.currentStudents}
-                      <span className="text-gray-400 text-xs font-normal">/{course.maxStudents}</span>
+                      {course?.currentStudents ?? 0}
+                      <span className="text-gray-400 text-xs font-normal">/{course?.maxStudents ?? "N/A"}</span>
                     </div>
                     <div className="col-span-3 flex items-center justify-center">
-                      <CourseStatusBadge status={course.status} />
+                      <CourseStatusBadge status={course?.status} />
                     </div>
                   </div>
                 );

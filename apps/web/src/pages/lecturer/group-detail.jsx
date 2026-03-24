@@ -29,7 +29,7 @@ export default function GroupDetail() {
 
     // 1. Dữ liệu thực từ useGetProjectById (Project thực chất là Group)
     const { data: group, isLoading, isError } = useGetProjectById(groupId);
-    const students = group?.team || [];
+    const students = Array.isArray(group?.team) ? group.team : [];
 
     // 2. Khai báo các Mutation thay đổi trạng thái
     const approveMutation = useApproveIntegration();
@@ -40,6 +40,7 @@ export default function GroupDetail() {
     
     // 3. SRS Reports
     const { data: srsReports = [], isLoading: srsLoading } = useGetProjectSrs(groupId);
+    const normalizedSrsReports = Array.isArray(srsReports) ? srsReports : [];
     const updateSrsStatusMutation = useUpdateSrsStatus();
     const provideFeedbackMutation = useProvideSrsFeedback();
     const deleteSrsMutation = useDeleteSrs();
@@ -133,12 +134,13 @@ export default function GroupDetail() {
             const headers = ["MSSV", "Họ Tên", "Vai Trò", "Điểm Đóng Góp"];
 
             // 2. Prepare CSV rows from students data
-            const rows = students.map(student => {
+            const rows = students.map((student) => {
+                const displayName = student?.studentName ?? student?.name ?? student?.fullName ?? `SV (ID: ${student?.studentId ?? student?.id ?? "N/A"})`;
                 return [
-                    student.studentCode,
-                    student.studentName,
-                    student.role,
-                    student.contributionScore || 0
+                    student?.studentCode ?? student?.studentId ?? student?.id ?? "N/A",
+                    displayName,
+                    student?.role ?? "MEMBER",
+                    student?.contributionScore ?? 0
                 ].map(val => `"${val}"`).join(",");
             });
 
@@ -150,7 +152,7 @@ export default function GroupDetail() {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `DanhSachNhom_${group.name}_${new Date().getTime()}.csv`);
+            link.setAttribute("download", `DanhSachNhom_${group?.name ?? group?.id ?? "N/A"}_${new Date().getTime()}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -183,10 +185,10 @@ export default function GroupDetail() {
                             className="text-gray-600 hover:underline"
                         >Quản lý Nhóm</button>
                         <ChevronRight size={12} />
-                        <span className="text-gray-800 font-semibold truncate">{group.name}</span>
+                        <span className="text-gray-800 font-semibold truncate">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</span>
                     </nav>
                     <div className="flex items-center gap-3 flex-wrap">
-                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">{group.name}</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-gray-800">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</h2>
                         {fullyApproved ? (
                             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 border border-green-100 px-3 py-1 rounded-full">
                                 <CheckCircle size={12} /> Hoàn thành
@@ -198,7 +200,7 @@ export default function GroupDetail() {
                         )}
                     </div>
                     {course && (
-                        <p className="text-sm text-gray-400">{course.code} — {course.name}</p>
+                        <p className="text-sm text-gray-400">{course?.code ?? "N/A"} — {course?.name ?? `Khóa học (ID: ${group?.courseId ?? "N/A"})`}</p>
                     )}
                 </div>
                 <Button
@@ -216,7 +218,7 @@ export default function GroupDetail() {
                 <QuickStat
                     icon={<Users size={15} />}
                     label="Thành viên"
-                    value={students.length}
+                    value={students?.length ?? 0}
                     color="text-blue-600 bg-blue-50 border-blue-100"
                 />
                 <QuickStat
@@ -251,7 +253,7 @@ export default function GroupDetail() {
                             <CardTitle className="text-base font-semibold text-gray-800">Thông tin Nhóm</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-5 space-y-5">
-                            <InfoRow label="Tên nhóm" value={<span className="font-semibold text-gray-900">{group.name}</span>} />
+                            <InfoRow label="Tên nhóm" value={<span className="font-semibold text-gray-900">{group?.name ?? `Nhóm (ID: ${group?.id ?? "N/A"})`}</span>} />
                             <InfoRow
                                 label="Đề tài"
                                 value={
@@ -269,26 +271,28 @@ export default function GroupDetail() {
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-base font-semibold text-gray-800">Thành viên</CardTitle>
                                 <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-2.5 py-1 font-medium border border-gray-100">
-                                    {students.length} người
+                                    {students?.length ?? 0} người
                                 </span>
                             </div>
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3 p-4">
-                            {students.map((student) => (
-                                <div key={student.studentId} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                            {students.map((student, idx) => {
+                                const displayName = student?.studentName ?? student?.name ?? student?.fullName ?? `SV (ID: ${student?.studentId ?? student?.id ?? "N/A"})`;
+                                return (
+                                <div key={student?.studentId ?? student?.id ?? idx} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
                                     <div className="w-10 h-10 rounded-full bg-teal-100 border-2 border-white shadow-sm flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
-                                        {student.studentName?.charAt(0)}
+                                        {displayName?.charAt?.(0) ?? "S"}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                            <p className="text-sm font-semibold text-gray-800 truncate">{student.studentName}</p>
-                                            {student.role === "LEADER" && (
+                                            <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
+                                            {(student?.role ?? "").toUpperCase() === "LEADER" && (
                                                 <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
                                                     Leader
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400">{student.studentCode}</p>
+                                        <p className="text-xs text-gray-400">{student?.studentCode ?? student?.studentId ?? student?.id ?? "N/A"}</p>
                                     </div>
                                     <div className="shrink-0 flex items-center gap-2">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm</label>
@@ -296,16 +300,16 @@ export default function GroupDetail() {
                                             type="number"
                                             min="0" max="100"
                                             placeholder="--"
-                                            defaultValue={student.contributionScore}
+                                            defaultValue={student?.contributionScore}
                                             onBlur={(e) => {
-                                                if (e.target.value !== "" && e.target.value !== String(student.contributionScore))
-                                                    handleUpdateScore(student.studentId, e.target.value);
+                                                if (e.target.value !== "" && e.target.value !== String(student?.contributionScore))
+                                                    handleUpdateScore(student?.studentId ?? student?.id, e.target.value);
                                             }}
                                             className="w-14 px-2 py-1.5 text-sm text-center font-bold text-teal-700 bg-teal-50/50 border border-teal-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
                                         />
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </CardContent>
                     </Card>
                 </div>
@@ -368,11 +372,11 @@ export default function GroupDetail() {
                         <CardContent className="pt-4 p-4">
                             {srsLoading ? (
                                 <div className="py-8 text-center text-gray-400 text-sm">Đang tải danh sách báo cáo...</div>
-                            ) : srsReports.length === 0 ? (
+                            ) : normalizedSrsReports.length === 0 ? (
                                 <div className="py-8 text-center text-gray-400 text-sm italic">Nhóm chưa có bản lưu SRS nào</div>
                             ) : (
                                 <div className="space-y-3">
-                                    {srsReports.map((rp) => (
+                                    {normalizedSrsReports.map((rp) => (
                                         <div key={rp.id} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-teal-100 hover:bg-teal-50/10 transition-all group">
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-white shadow-sm transition-colors">
                                                 <FileDown size={18} className="text-gray-400 group-hover:text-teal-600" />

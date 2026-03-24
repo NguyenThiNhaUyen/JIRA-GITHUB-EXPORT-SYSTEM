@@ -37,6 +37,8 @@ public class ProjectIntegrationService : IProjectIntegrationService
 
     public async Task LinkIntegrationAsync(long projectId, long submittedByUserId, LinkIntegrationRequest request)
     {
+        NormalizeLinkIntegrationRequest(request);
+
         var project = await _unitOfWork.Projects.FirstOrDefaultAsync(p => p.id == projectId);
         if (project == null)
         {
@@ -48,7 +50,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
 
         if (existingIntegration != null)
         {
-            if (!string.IsNullOrEmpty(request.GithubRepoUrl))
+            if (!string.IsNullOrWhiteSpace(request.GithubRepoUrl))
             {
                 var (owner, repoName) = ParseGitHubUrl(request.GithubRepoUrl);
                 var githubRepo = await _unitOfWork.GitHubRepositories.FirstOrDefaultAsync(gr =>
@@ -72,7 +74,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
                 existingIntegration.github_repo_id = githubRepo.id;
             }
 
-            if (!string.IsNullOrEmpty(request.JiraProjectKey))
+            if (!string.IsNullOrWhiteSpace(request.JiraProjectKey))
             {
                 var jiraProject = await _unitOfWork.JiraProjects.FirstOrDefaultAsync(jp =>
                     jp.jira_project_key == request.JiraProjectKey);
@@ -95,6 +97,8 @@ public class ProjectIntegrationService : IProjectIntegrationService
             }
 
             // Reset to PENDING when leader re-submits
+            existingIntegration.jira_token = request.JiraToken;
+            existingIntegration.github_token = request.GithubToken;
             existingIntegration.approval_status = "PENDING";
             existingIntegration.submitted_by_user_id = submittedByUserId;
             existingIntegration.submitted_at = DateTime.UtcNow;
@@ -109,7 +113,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
             long? githubRepoId = null;
             long? jiraProjectId = null;
 
-            if (!string.IsNullOrEmpty(request.GithubRepoUrl))
+            if (!string.IsNullOrWhiteSpace(request.GithubRepoUrl))
             {
                 var (owner, repoName) = ParseGitHubUrl(request.GithubRepoUrl);
                 var githubRepo = new github_repository
@@ -126,7 +130,7 @@ public class ProjectIntegrationService : IProjectIntegrationService
                 githubRepoId = githubRepo.id;
             }
 
-            if (!string.IsNullOrEmpty(request.JiraProjectKey))
+            if (!string.IsNullOrWhiteSpace(request.JiraProjectKey))
             {
                 var jiraProject = new jira_project
                 {
@@ -146,6 +150,8 @@ public class ProjectIntegrationService : IProjectIntegrationService
                 project_id = projectId,
                 github_repo_id = githubRepoId,
                 jira_project_id = jiraProjectId,
+                jira_token = request.JiraToken,
+                github_token = request.GithubToken,
                 approval_status = "PENDING",
                 submitted_by_user_id = submittedByUserId,
                 submitted_at = DateTime.UtcNow,
@@ -224,18 +230,46 @@ public class ProjectIntegrationService : IProjectIntegrationService
             var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
             var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<ProjectIntegrationService>>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             try
             {
-                if (integration.github_repo != null)
+                // Re-fetch in background scope to avoid using potentially stale entity instance
+                var approvedIntegration = await unitOfWork.ProjectIntegrations.Query()
+                    .Include(pi => pi.github_repo)
+                    .Include(pi => pi.jira_project)
+                    .FirstOrDefaultAsync(pi => pi.project_id == projectId && pi.approval_status == "APPROVED");
+
+                if (approvedIntegration == null)
                 {
-                    await githubClient.SyncCommitsAsync(integration.github_repo.id, integration.github_repo.owner_login, integration.github_repo.name);
-                    await githubClient.SyncPullRequestsAsync(integration.github_repo.id, integration.github_repo.owner_login, integration.github_repo.name);
+                    logger.LogWarning("Approved integration not found in background sync for project {ProjectId}", projectId);
+                    return;
                 }
 
-                if (integration.jira_project != null)
+                if (approvedIntegration.github_repo != null)
                 {
-                    await jiraClient.SyncIssuesAsync(integration.jira_project.id, integration.jira_project.jira_project_key, integration.jira_project.jira_url ?? "https://atlassian.net");
+                    await githubClient.SyncCommitsAsync(
+                        approvedIntegration.github_repo.id,
+                        approvedIntegration.github_repo.owner_login,
+                        approvedIntegration.github_repo.name,
+                        approvedIntegration.github_token
+                    );
+                    await githubClient.SyncPullRequestsAsync(
+                        approvedIntegration.github_repo.id,
+                        approvedIntegration.github_repo.owner_login,
+                        approvedIntegration.github_repo.name,
+                        approvedIntegration.github_token
+                    );
+                }
+
+                if (approvedIntegration.jira_project != null)
+                {
+                    await jiraClient.SyncIssuesAsync(
+                        approvedIntegration.jira_project.id,
+                        approvedIntegration.jira_project.jira_project_key,
+                        approvedIntegration.jira_project.jira_url ?? "https://atlassian.net",
+                        approvedIntegration.jira_token
+                    );
                 }
             }
             catch (Exception ex)
@@ -321,5 +355,60 @@ public class ProjectIntegrationService : IProjectIntegrationService
         }
 
         return (segments[0], segments[1].Replace(".git", ""));
+    }
+
+    private static void NormalizeLinkIntegrationRequest(LinkIntegrationRequest request)
+    {
+        request.GithubRepoUrl = string.IsNullOrWhiteSpace(request.GithubRepoUrl) ? null : request.GithubRepoUrl.Trim();
+        request.JiraSiteUrl = string.IsNullOrWhiteSpace(request.JiraSiteUrl) ? null : request.JiraSiteUrl.Trim();
+        request.JiraProjectKey = string.IsNullOrWhiteSpace(request.JiraProjectKey) ? null : request.JiraProjectKey.Trim().ToUpperInvariant();
+        request.JiraToken = string.IsNullOrWhiteSpace(request.JiraToken) ? null : request.JiraToken.Trim();
+        request.GithubToken = string.IsNullOrWhiteSpace(request.GithubToken) ? null : request.GithubToken.Trim();
+
+        if (!string.IsNullOrWhiteSpace(request.JiraSiteUrl))
+        {
+            var (siteUrl, projectKey) = ParseJiraUrlOrKey(request.JiraSiteUrl);
+            request.JiraSiteUrl = siteUrl;
+            if (string.IsNullOrWhiteSpace(request.JiraProjectKey) && !string.IsNullOrWhiteSpace(projectKey))
+            {
+                request.JiraProjectKey = projectKey;
+            }
+        }
+    }
+
+    private static (string siteUrl, string? projectKey) ParseJiraUrlOrKey(string input)
+    {
+        var trimmed = input.Trim();
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+        {
+            // Input can be only project key (e.g. "PBL123")
+            return ("https://atlassian.net", trimmed.ToUpperInvariant());
+        }
+
+        var siteUrl = $"{uri.Scheme}://{uri.Host}";
+        var segments = uri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var projectKey = TryExtractJiraProjectKey(segments);
+        return (siteUrl, projectKey);
+    }
+
+    private static string? TryExtractJiraProjectKey(string[] segments)
+    {
+        if (segments.Length == 0) return null;
+
+        for (var i = 0; i < segments.Length - 1; i++)
+        {
+            if (segments[i].Equals("browse", StringComparison.OrdinalIgnoreCase) ||
+                segments[i].Equals("projects", StringComparison.OrdinalIgnoreCase))
+            {
+                var next = segments[i + 1];
+                if (!string.IsNullOrWhiteSpace(next))
+                {
+                    var key = next.Split('-', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? next;
+                    return key.ToUpperInvariant();
+                }
+            }
+        }
+
+        return null;
     }
 }

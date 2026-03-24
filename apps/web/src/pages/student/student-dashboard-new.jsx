@@ -51,8 +51,8 @@ export default function StudentDashboard() {
     const { mutate: acceptInvite } = useAcceptInvitation();
     const { mutate: declineInvite } = useDeclineInvitation();
 
-    const courses = coursesData.items || [];
-    const myGroupsList = projectsData.items || [];
+    const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
+    const myGroupsList = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
     // Map projects to a courseId keyed object for easy lookup in Workspace
     // Dùng String() để đảm bảo key type nhất quán với selectedCourseId (cũng là String)
@@ -91,6 +91,7 @@ export default function StudentDashboard() {
     // Invitations helpers
     const myInvitations = Array.isArray(myInvitationsData) ? myInvitationsData :
         (myInvitationsData?.items ?? []);
+    const myTasks = Array.isArray(myTasksData?.items) ? myTasksData.items : [];
 
     const handleAcceptInvitation = (invitationId) => {
         acceptInvite(invitationId, {
@@ -112,7 +113,7 @@ export default function StudentDashboard() {
 
 
     /* ── Alerts (personal): drive from real API ── */
-    const alerts = (alertsData?.items || []).filter(a => a.status === "OPEN");
+    const alerts = (Array.isArray(alertsData?.items) ? alertsData.items : []).filter((a) => a?.status === "OPEN");
 
     const { mutate: linkMutate } = useLinkIntegration();
     const resolveAlertMutation = useResolveAlert();
@@ -128,15 +129,22 @@ export default function StudentDashboard() {
 
     /* ── Link submit (Leader only) ── */
     const handleSubmitLinks = (group, githubUrl, jiraUrl) => {
-        const err = requireLeader({ ...group, teamLeaderId: group.team?.find(m => m.role === 'LEADER')?.studentId }, user?.id);
+        const err = requireLeader(
+            {
+                ...group,
+                teamLeaderId: (Array.isArray(group?.team) ? group.team : []).find((m) => m?.role === 'LEADER')?.studentId,
+            },
+            user?.id
+        );
         if (err) { showError(err); return; }
         if (!githubUrl.trim() || !jiraUrl.trim()) { showError("Vui lòng nhập đầy đủ GitHub URL và Jira URL!"); return; }
 
         linkMutate({
             projectId: group.id,
             body: {
-                githubUrl: githubUrl.trim(),
-                jiraUrl: jiraUrl.trim()
+                githubRepoUrl: githubUrl.trim(),
+                jiraSiteUrl: jiraUrl.trim(),
+                jiraProjectKey: extractJiraProjectKey(jiraUrl.trim())
             }
         }, {
             onSuccess: () => {
@@ -175,8 +183,8 @@ export default function StudentDashboard() {
         g.integration?.jiraStatus === "APPROVED"
     ).length;
 
-    const selectedCourse = selectedCourseId ? courses.find(c => String(c.id) === selectedCourseId) : null;
-    const groupStudents = selectedGroup ? (selectedGroup.team || []) : [];
+    const selectedCourse = selectedCourseId ? courses.find((c) => String(c?.id) === String(selectedCourseId)) : null;
+    const groupStudents = selectedGroup ? (Array.isArray(selectedGroup?.team) ? selectedGroup.team : []) : [];
 
 
 
@@ -197,7 +205,7 @@ export default function StudentDashboard() {
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-gray-800 uppercase">
-                                Xin chào, {user?.name || "Sinh viên"}
+                                Xin chào, {user?.name ?? `SV (ID: ${user?.id ?? "N/A"})`}
                             </h2>
                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                                 <span className="bg-teal-500/10 text-teal-600 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-500/20 uppercase">Auth: Active</span>
@@ -253,7 +261,7 @@ export default function StudentDashboard() {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     {courses.map(course => {
-                                        const grp = groupsMapByCourse[course.id];
+                                        const grp = groupsMapByCourse[String(course.id)];
                                         // Determine overall link status
                                         let linkStatus = "NONE";
                                         if (grp?.integration?.githubStatus === "APPROVED" && grp?.integration?.jiraStatus === "APPROVED") {
@@ -266,7 +274,9 @@ export default function StudentDashboard() {
                                             }
                                         }
                                         const lsCfg = LINK_STATUS_CFG[linkStatus] || LINK_STATUS_CFG.NONE;
-                                        const isLeader = grp?.team?.find(m => m.studentId === user?.id)?.role === 'LEADER';
+                                        const isLeader = (Array.isArray(grp?.team) ? grp.team : []).find(
+                                            (m) => String(m?.studentId ?? m?.studentUserId ?? m?.userId) === String(user?.id)
+                                        )?.role === 'LEADER';
                                         
                                         // Card layout inspired by the screenshot: Minimal, Dark/Clean
                                         return (
@@ -283,7 +293,9 @@ export default function StudentDashboard() {
                                                                 </span>
                                                                 {isLeader && <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded uppercase flex items-center gap-1"><Crown size={8}/>Leader</span>}
                                                             </div>
-                                                            <h4 className="text-base font-bold text-gray-800 group-hover:text-teal-600 transition-colors uppercase tracking-tight">{course.name}</h4>
+                                                            <h4 className="text-base font-bold text-gray-800 group-hover:text-teal-600 transition-colors uppercase tracking-tight">
+                                                                {course?.name ?? `Course (ID: ${course?.id ?? "N/A"})`}
+                                                            </h4>
                                                         </div>
                                                     </div>
 
@@ -292,14 +304,15 @@ export default function StudentDashboard() {
                                                             <div className="w-5 h-5 rounded bg-gray-50 flex items-center justify-center text-[10px] font-bold text-gray-600">
                                                                 {course.lecturers?.[0]?.name?.charAt(0) || "G"}
                                                             </div>
-                                                            <span className="truncate">{course.lecturers?.[0]?.name || "Chưa có GV"}</span>
+                                                            <span className="truncate">{course?.lecturers?.[0]?.name ?? `GV (ID: ${course?.lecturers?.[0]?.id ?? "N/A"})`}</span>
                                                         </div>
                                                         {grp && (
                                                             <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
                                                                 <div className="w-5 h-5 rounded bg-teal-400/10 flex items-center justify-center text-teal-500">
                                                                     <Users size={10} />
                                                                 </div>
-                                                                <span className="truncate">{grp.name}</span>
+                                                                <span className="truncate">{grp?.name ?? `Nhóm (ID: ${grp?.id ?? "N/A"})`}</span>
+                                                                <span className="text-[10px] text-gray-400">({Array.isArray(grp?.team) ? grp.team.length : 0} thành viên)</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -392,7 +405,7 @@ export default function StudentDashboard() {
                                     </div>
                                 </div>
                                 <div className="p-4 pt-2">
-                                     {!myTasksData?.items?.length ? (
+                                     {myTasks.length === 0 ? (
                                          <div className="flex flex-col items-center justify-center py-12 gap-3">
                                              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center">
                                                 <Star size={24} className="text-indigo-500/40" />
@@ -404,15 +417,15 @@ export default function StudentDashboard() {
                                          </div>
                                      ) : (
                                         <div className="space-y-1">
-                                            {myTasksData.items.slice(0, 5).map((t, i) => (
+                                            {myTasks.slice(0, 5).map((t, i) => (
                                                 <div key={t.id || i} className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-gray-50 transition-colors group">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-600 transition-colors uppercase tracking-tight">{t.summary || t.title || t.name}</p>
+                                                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-600 transition-colors uppercase tracking-tight">{t?.summary ?? t?.title ?? t?.name ?? `Task #${t?.id ?? i + 1}`}</p>
                                                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t.projectKey || t.project || ''}</p>
                                                     </div>
                                                     <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded border bg-teal-500/10 text-teal-600 border-teal-500/20 uppercase tracking-tighter">
-                                                        {t.status || 'IN PROGRESS'}
+                                                        {t?.status ?? 'IN PROGRESS'}
                                                     </span>
                                                 </div>
                                             ))}
@@ -521,6 +534,28 @@ export default function StudentDashboard() {
 
         </>
     );
+}
+
+function extractJiraProjectKey(jiraInput) {
+    if (!jiraInput) return "";
+    try {
+        const normalized = jiraInput.startsWith("http") ? jiraInput : `https://${jiraInput}`;
+        const url = new URL(normalized);
+        const segments = url.pathname.split("/").filter(Boolean);
+        const browseIdx = segments.findIndex((s) => s.toLowerCase() === "browse");
+        if (browseIdx >= 0 && segments[browseIdx + 1]) {
+            return segments[browseIdx + 1].split("-")[0].toUpperCase();
+        }
+        const projectsIdx = segments.findIndex((s) => s.toLowerCase() === "projects");
+        if (projectsIdx >= 0 && segments[projectsIdx + 1]) {
+            return segments[projectsIdx + 1].split("-")[0].toUpperCase();
+        }
+    } catch {
+        // Fallback below
+    }
+
+    const fallback = jiraInput.trim().split("/").filter(Boolean).pop() || "";
+    return fallback.split("-")[0].toUpperCase();
 }
 
 /* ─────── StatCard ─────── */

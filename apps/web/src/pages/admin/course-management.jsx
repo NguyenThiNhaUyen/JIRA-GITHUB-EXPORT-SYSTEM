@@ -27,15 +27,22 @@ import { useGetUsers } from "../../features/users/hooks/useUsers.js";
 export default function CourseManagement() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const safeArray = (value) => (Array.isArray(value) ? value : []);
+  const getFallbackPersonName = (person, prefix) =>
+    person?.name || `${prefix} ${person?.studentId || person?.studentCode || person?.id || "N/A"}`;
 
   // Data Fetching
   const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
-  const courses = coursesData.items || [];
+  const courses = safeArray(coursesData?.items);
 
-  const { data: semesters = [], isLoading: loadingSems } = useGetSemesters();
-  const { data: subjects = [], isLoading: loadingSubs } = useGetSubjects();
-  const { data: lecturers = [], isLoading: loadingLects } = useGetUsers("LECTURER");
-  const { data: allStudents = [], isLoading: loadingStus } = useGetUsers("STUDENT");
+  const { data: semestersData = [], isLoading: loadingSems } = useGetSemesters();
+  const { data: subjectsData = [], isLoading: loadingSubs } = useGetSubjects();
+  const { data: lecturersData = [], isLoading: loadingLects } = useGetUsers("LECTURER");
+  const { data: allStudentsData = [], isLoading: loadingStus } = useGetUsers("STUDENT");
+  const semesters = safeArray(semestersData);
+  const subjects = safeArray(subjectsData);
+  const lecturers = safeArray(lecturersData);
+  const allStudents = safeArray(allStudentsData);
 
   // Mutations
   const createMutation = useCreateCourse();
@@ -158,7 +165,7 @@ export default function CourseManagement() {
   const handleDelete = async (id) => {
     if (confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
       try {
-        await deleteMutation.mutateAsync(id);
+        await deleteMutation.mutateAsync(String(id));
         success("Xóa lớp học thành công!");
       } catch (err) {
         showError(err.message || "Xóa thất bại");
@@ -170,7 +177,7 @@ export default function CourseManagement() {
     e.preventDefault();
     try {
       if (editingCourse) {
-        await updateMutation.mutateAsync({ id: editingCourse.id, body: formData });
+        await updateMutation.mutateAsync({ id: String(editingCourse.id), body: formData });
         success("Cập nhật lớp học thành công!");
       } else {
         await createMutation.mutateAsync(formData);
@@ -194,11 +201,11 @@ export default function CourseManagement() {
     e.preventDefault();
     try {
       await assignMutation.mutateAsync({
-        courseId: selectedCourse.id,
-        lecturerUserId: assignForm.lecturerId
+        courseId: String(selectedCourse?.id),
+        lecturerUserId: String(assignForm.lecturerId)
       });
-      const lecturer = lecturers.find((l) => l.id === assignForm.lecturerId);
-      success(`Đã phân công GV ${lecturer?.name} cho lớp ${selectedCourse.code}!`);
+      const lecturer = lecturers.find((l) => String(l.id) === String(assignForm.lecturerId));
+      success(`Đã phân công GV ${getFallbackPersonName(lecturer, "GV")} cho lớp ${selectedCourse?.code || "Không có dữ liệu"}!`);
       setShowAssignModal(false);
     } catch (err) {
       showError(err.message || "Phân công thất bại");
@@ -216,21 +223,21 @@ export default function CourseManagement() {
   };
 
   const getCourseLecturers = (course) => {
-    return course.lecturers || [];
+    return safeArray(course?.lecturers);
   };
 
   const getCourseLecturerName = (course) => {
     const lecs = getCourseLecturers(course);
-    return lecs.length > 0 ? lecs[0].name : null;
+    return lecs.length > 0 ? getFallbackPersonName(lecs[0], "GV") : null;
   };
 
   const handleRemoveLecturer = async (course) => {
     const lecs = getCourseLecturers(course);
     if (lecs.length === 0) return;
-    if (!confirm(`Xóa giảng viên ${lecs[0].name} khỏi lớp ${course.code}?`)) return;
+    if (!confirm(`Xóa giảng viên ${getFallbackPersonName(lecs[0], "GV")} khỏi lớp ${course?.code || "Không có dữ liệu"}?`)) return;
     try {
-      await removeLecturerMutation.mutateAsync({ courseId: course.id, lecturerUserId: lecs[0].id });
-      success(`Đã xóa GV khỏi lớp ${course.code}`);
+      await removeLecturerMutation.mutateAsync({ courseId: String(course?.id), lecturerUserId: String(lecs[0]?.id) });
+      success(`Đã xóa GV khỏi lớp ${course?.code || "Không có dữ liệu"}`);
     } catch (err) {
       showError(err.message || "Xóa giảng viên thất bại");
     }
@@ -248,13 +255,13 @@ export default function CourseManagement() {
     (viewStudentsCourse?.id || importCourse?.id),
     { pageSize: 500 }
   );
-  const enrolledStudentsList = enrolledStudentsData?.items || [];
+  const enrolledStudentsList = safeArray(enrolledStudentsData?.items);
 
   const handleKickStudent = async (studentUserId, studentName) => {
     if (!confirm(`Xóa sinh viên ${studentName} khỏi lớp này?`)) return;
     try {
-      await unenrollMutation.mutateAsync({ courseId: viewStudentsCourse.id, studentUserId });
-      success(`Đã xóa ${studentName} khỏi lớp thành công.`);
+      await unenrollMutation.mutateAsync({ courseId: String(viewStudentsCourse?.id), studentUserId: String(studentUserId) });
+      success(`Đã xóa ${studentName || "SV"} khỏi lớp thành công.`);
       refetchEnrolled();
     } catch (err) {
       showError(err.message || "Xóa sinh viên thất bại");
@@ -268,7 +275,7 @@ export default function CourseManagement() {
     setShowImportModal(true);
   };
 
-  const importAvailableStudents = allStudents.filter(stu => {
+  const importAvailableStudents = safeArray(allStudents).filter(stu => {
     // 1. Filter out already enrolled
     const isEnrolled = enrolledStudentsList.some(e => String(e.id) === String(stu.id));
     if (isEnrolled) return false;
@@ -294,10 +301,10 @@ export default function CourseManagement() {
     }
     try {
       await enrollMutation.mutateAsync({
-        courseId: importCourse.id,
-        studentUserIds: importSelectedIds.map(id => Number(id)),
+        courseId: String(importCourse?.id),
+        studentUserIds: importSelectedIds.map(id => String(id)),
       });
-      success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse.code}!`);
+      success(`Đã thêm ${importSelectedIds.length} sinh viên vào lớp ${importCourse?.code || "Không có dữ liệu"}!`);
       setShowImportModal(false);
     } catch (err) {
       showError(err.message || "Import thất bại");
@@ -360,7 +367,7 @@ export default function CourseManagement() {
                 onChange={(e) => setFilterSemester(e.target.value)}
               >
                 <option value="">Tất cả học kỳ</option>
-                {semesters.map(sem => (
+                {safeArray(semesters).map(sem => (
                   <option key={sem.id} value={sem.id}>{sem.name}</option>
                 ))}
               </select>
@@ -390,7 +397,7 @@ export default function CourseManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-gray-50">
-                  {courses
+                  {safeArray(courses)
                     .filter(c => !filterSemester || String(c.semesterId) === String(filterSemester))
                     .map((course, index) => {
                       const lecturerName = getCourseLecturerName(course);
@@ -403,10 +410,10 @@ export default function CourseManagement() {
                               </div>
                               <div className="text-left">
                                 <div className="font-semibold text-gray-800 text-sm">
-                                  {course.code}
+                                  {course.code || "Không có dữ liệu"}
                                 </div>
                                 <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
-                                  {course.name}
+                                  {course.name || "Không có dữ liệu"}
                                 </div>
                               </div>
                             </div>
@@ -560,7 +567,7 @@ export default function CourseManagement() {
                 required
               >
                 <option value="">-- Chọn môn học --</option>
-                {subjects.map((subject) => (
+                {safeArray(subjects).map((subject) => (
                   <option key={subject.id} value={subject.id}>
                     {subject.code} - {subject.name}
                   </option>
@@ -581,7 +588,7 @@ export default function CourseManagement() {
                 required
               >
                 <option value="">-- Chọn học kỳ --</option>
-                {semesters.map((semester) => (
+                {safeArray(semesters).map((semester) => (
                   <option key={semester.id} value={semester.id}>
                     {semester.name}
                   </option>
@@ -601,6 +608,7 @@ export default function CourseManagement() {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
+              placeholder="Không có dữ liệu"
             />
           </div>
 
@@ -697,9 +705,9 @@ export default function CourseManagement() {
               required
             >
               <option value="">-- Chọn giảng viên --</option>
-              {lecturers.map((lecturer) => (
+              {safeArray(lecturers).map((lecturer) => (
                 <option key={lecturer.id} value={lecturer.id}>
-                  {lecturer.name} - {lecturer.email}
+                  {getFallbackPersonName(lecturer, "GV")} - {lecturer.email || "Không có dữ liệu"}
                 </option>
               ))}
             </select>
@@ -768,7 +776,7 @@ export default function CourseManagement() {
                       e.stopPropagation();
                       if (!importCourse) return;
                       try {
-                        const res = await importMutation.mutateAsync({ courseId: importCourse.id, file: importFile });
+                        const res = await importMutation.mutateAsync({ courseId: String(importCourse?.id), file: importFile });
                         const enrolled = res?.enrolled ?? res?.count ?? '?';
                         const skipped = res?.skipped ?? 0;
                         success(`Import thành công! ${enrolled} SV được thêm, ${skipped} bỏ qua.`);
@@ -828,7 +836,7 @@ export default function CourseManagement() {
                 <p className="text-sm text-gray-400 text-center py-6">Tất cả sinh viên đã có trong lớp này.</p>
               ) : (
                 <div className="max-h-[280px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
-                  {importAvailableStudents.map((stu) => (
+                  {safeArray(importAvailableStudents).map((stu) => (
                     <label
                       key={stu.id}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-purple-50/40 transition-colors ${importSelectedIds.includes(stu.id) ? 'bg-purple-50' : ''
@@ -841,11 +849,11 @@ export default function CourseManagement() {
                         className="accent-purple-600 w-4 h-4"
                       />
                       <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                        {stu.name?.charAt(0)}
+                        {getFallbackPersonName(stu, "SV")?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
-                        <p className="text-xs text-gray-400">{stu.studentId} · {stu.email}</p>
+                        <p className="text-sm font-medium text-gray-800 truncate">{getFallbackPersonName(stu, "SV")}</p>
+                        <p className="text-xs text-gray-400">{stu.studentId || "Không có dữ liệu"} · {stu.email || "Không có dữ liệu"}</p>
                       </div>
                     </label>
                   ))}
@@ -880,7 +888,9 @@ export default function CourseManagement() {
         title="Danh sách Sinh viên trong lớp"
         size="lg"
       >
-        {viewStudentsCourse && (
+        {!viewStudentsCourse ? (
+          <p className="text-sm text-gray-400 text-center py-8">Không có dữ liệu</p>
+        ) : (
           <div className="space-y-4">
             <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100/60">
               <p className="text-sm text-gray-600">
@@ -892,17 +902,17 @@ export default function CourseManagement() {
               <p className="text-sm text-gray-400 text-center py-8">Chưa có sinh viên nào trong lớp.</p>
             ) : (
               <div className="max-h-[360px] overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50">
-                {enrolledStudentsList.map((stu) => (
+                {safeArray(enrolledStudentsList).map((stu) => (
                   <div key={stu.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50/30 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
-                      {stu.name?.charAt(0)}
+                      {getFallbackPersonName(stu, "SV")?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{stu.name}</p>
-                      <p className="text-xs text-gray-400">{stu.studentCode || stu.studentId} · {stu.email}</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{getFallbackPersonName(stu, "SV")}</p>
+                      <p className="text-xs text-gray-400">{stu.studentCode || stu.studentId || "Không có dữ liệu"} · {stu.email || "Không có dữ liệu"}</p>
                     </div>
                     <button
-                      onClick={() => handleKickStudent(stu.id, stu.name)}
+                      onClick={() => handleKickStudent(stu.id, getFallbackPersonName(stu, "SV"))}
                       className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
                     >
                       Xóa

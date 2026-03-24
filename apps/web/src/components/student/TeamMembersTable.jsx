@@ -2,7 +2,9 @@ import React from "react";
 import { Badge } from "../ui/badge.jsx";
 
 export default function TeamMembersTable({ members }) {
-    if (!members || members.length === 0) {
+    const safeMembers = Array.isArray(members) ? members : [];
+
+    if (safeMembers.length === 0) {
         return <p className="text-sm text-gray-500 text-center py-3">Chưa có thành viên nào</p>;
     }
 
@@ -17,21 +19,23 @@ export default function TeamMembersTable({ members }) {
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                    {members.map((member) => (
+                    {safeMembers.map((member, index) => (
                         <tr
-                            key={member.studentId}
-                            className={`hover:bg-gray-50 transition-colors ${member.isLeader ? "bg-orange-50/30" : ""}`}
+                            key={member?.studentId ?? member?.id ?? index}
+                            className={`hover:bg-gray-50 transition-colors ${member?.isLeader ? "bg-orange-50/30" : ""}`}
                         >
                             <td className="px-4 py-3 font-mono text-xs text-gray-900">
-                                {member.studentCode}
-                                {member.isLeader && (
+                                {member?.studentCode ?? `ID: ${member?.studentId ?? member?.id ?? "N/A"}`}
+                                {member?.isLeader && (
                                     <Badge variant="outline" className="ml-2 text-xs bg-orange-100 text-orange-700 border-orange-300">
                                         Nhóm trưởng
                                     </Badge>
                                 )}
                             </td>
-                            <td className="px-4 py-3 font-medium text-gray-900">{member.name}</td>
-                            <td className="px-4 py-3 text-gray-600 text-xs">{member.email}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">
+                                {member?.name ?? member?.studentName ?? `SV (ID: ${member?.studentId ?? member?.id ?? "N/A"})`}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 text-xs">{member?.email ?? "-"}</td>
                         </tr>
                     ))}
                 </tbody>

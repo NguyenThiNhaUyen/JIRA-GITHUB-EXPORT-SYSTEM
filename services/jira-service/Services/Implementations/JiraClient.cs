@@ -52,7 +52,7 @@ public class JiraClient : IJiraClient
         }
     }
 
-    public async Task SyncIssuesAsync(long jiraProjectId, string projectKey, string siteUrl)
+    public async Task SyncIssuesAsync(long jiraProjectId, string projectKey, string siteUrl, string? jiraToken = null)
     {
         try
         {
@@ -66,7 +66,7 @@ public class JiraClient : IJiraClient
             }
 
             var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql=project={projectKey}&maxResults=100";
-            var response = await _httpClient.GetAsync(url);
+            var response = await SendGetAsync(url, jiraToken);
             
             if (!response.IsSuccessStatusCode)
             {
@@ -162,7 +162,7 @@ public class JiraClient : IJiraClient
         {
             var jql = $"project={projectKey} AND status='{status}'";
             var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql={Uri.EscapeDataString(jql)}&maxResults=0";
-            var response = await _httpClient.GetAsync(url);
+            var response = await SendGetAsync(url);
             
             if (response.IsSuccessStatusCode)
             {
@@ -184,7 +184,7 @@ public class JiraClient : IJiraClient
         {
             var jql = $"project={projectKey} ORDER BY updated DESC";
             var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql={Uri.EscapeDataString(jql)}&maxResults=1";
-            var response = await _httpClient.GetAsync(url);
+            var response = await SendGetAsync(url);
             
             if (response.IsSuccessStatusCode)
             {
@@ -207,7 +207,7 @@ public class JiraClient : IJiraClient
         {
             // Jira Agile API returns boards associated with a project if queried correctly
             var url = $"{siteUrl.TrimEnd('/')}/rest/agile/1.0/board?projectKeyOrId={projectKey.Trim()}";
-            var response = await _httpClient.GetAsync(url);
+            var response = await SendGetAsync(url);
             
             if (response.IsSuccessStatusCode)
             {
@@ -241,7 +241,7 @@ public class JiraClient : IJiraClient
             while (!isLast)
             {
                 var url = $"{siteUrl.TrimEnd('/')}/rest/agile/1.0/board/{boardId}/sprint?startAt={startAt}&maxResults={maxResults}";
-                var response = await _httpClient.GetAsync(url);
+                var response = await SendGetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -266,5 +266,28 @@ public class JiraClient : IJiraClient
             _logger.LogError(ex, "Error fetching Jira sprints for board {BoardId}", boardId);
         }
         return sprints;
+    }
+
+    private async Task<HttpResponseMessage> SendGetAsync(string url, string? jiraToken = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        SetAuthHeader(request, jiraToken);
+        return await _httpClient.SendAsync(request);
+    }
+
+    private void SetAuthHeader(HttpRequestMessage request, string? jiraToken = null)
+    {
+        var projectToken = string.IsNullOrWhiteSpace(jiraToken) ? null : jiraToken.Trim();
+        if (!string.IsNullOrEmpty(projectToken))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", projectToken);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_jiraEmail) && !string.IsNullOrEmpty(_jiraApiToken))
+        {
+            var authString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_jiraEmail}:{_jiraApiToken}"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", authString);
+        }
     }
 }
