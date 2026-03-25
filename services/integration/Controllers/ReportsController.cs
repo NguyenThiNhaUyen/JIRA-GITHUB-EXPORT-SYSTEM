@@ -129,4 +129,28 @@ public class ReportsController : ControllerBase
         if (url == null) return NotFound(ApiResponse.ErrorResponse("Report not found or not ready"));
         return Ok(ApiResponse<object>.SuccessResponse(new { DownloadUrl = url }));
     }
+
+    /// <summary>
+    /// Download report file — tái tạo on-demand, không phụ thuộc disk
+    /// </summary>
+    [HttpGet("{id}/download")]
+    public async Task<IActionResult> DownloadReport(long id)
+    {
+        try
+        {
+            var result = await _reportService.RegenerateAndGetBytesAsync(id);
+            if (result == null)
+                return NotFound(ApiResponse.ErrorResponse("Báo cáo không tồn tại hoặc không thể tái tạo."));
+
+            var (bytes, fileName, contentType) = result.Value;
+            Response.Headers["Content-Disposition"] = $"attachment; filename=\"{fileName}\"";
+            return File(bytes, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download/regenerate report {ReportId}", id);
+            return StatusCode(500, ApiResponse.ErrorResponse("Lỗi khi tạo file báo cáo: " + ex.Message));
+        }
+    }
 }
+

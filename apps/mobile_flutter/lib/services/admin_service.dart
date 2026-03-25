@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
+import 'admin_field_mapper.dart';
 
 class AdminService {
   final AuthService _auth = AuthService();
@@ -8,21 +9,69 @@ class AdminService {
   // ─── GET Methods ──────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getSemesters() async {
-    return _getList('/semesters?pageSize=1000');
+    final raw = await _getList('/semesters?pageSize=1000');
+    return raw
+        .map((s) => {
+              ...s,
+              'id': AdminFieldMapper.pick(s, ['id', 'Id'], 0),
+              'name': AdminFieldMapper.pickString(s, ['name', 'Name'], 'N/A'),
+              'code': AdminFieldMapper.pickString(s, ['code', 'Code'], ''),
+              'startDate': AdminFieldMapper.pickString(s, ['startDate', 'start_date', 'StartDate'], ''),
+              'endDate': AdminFieldMapper.pickString(s, ['endDate', 'end_date', 'EndDate'], ''),
+              'status': AdminFieldMapper.pickString(s, ['status', 'Status'], 'UPCOMING').toUpperCase(),
+            })
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getSubjects() async {
-    return _getList('/subjects?pageSize=1000');
+    final raw = await _getList('/subjects?pageSize=1000');
+    return raw
+        .map((s) => {
+              ...s,
+              'id': AdminFieldMapper.pick(s, ['id', 'Id'], 0),
+              'subjectCode': AdminFieldMapper.pickString(s, ['subjectCode', 'code', 'SubjectCode'], ''),
+              'subjectName': AdminFieldMapper.pickString(s, ['subjectName', 'name', 'SubjectName'], ''),
+              'department': AdminFieldMapper.pickString(s, ['department', 'Department'], 'N/A'),
+              'description': AdminFieldMapper.pickString(s, ['description', 'Description'], ''),
+              'credits': AdminFieldMapper.pickInt(s, ['credits', 'Credits'], 0),
+              'maxStudents': AdminFieldMapper.pickInt(s, ['maxStudents', 'max_students', 'MaxStudents'], 40),
+              'status': AdminFieldMapper.pickString(s, ['status', 'Status'], 'ACTIVE').toUpperCase(),
+              // Backward-compatible aliases for existing UI
+              'code': AdminFieldMapper.pickString(s, ['subjectCode', 'code', 'SubjectCode'], ''),
+              'name': AdminFieldMapper.pickString(s, ['subjectName', 'name', 'SubjectName'], ''),
+            })
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getCourses() async {
-    return _getList('/courses?pageSize=1000');
+    final raw = await _getList('/courses?pageSize=1000');
+    return raw.map(_normalizeCourse).toList();
   }
 
   Future<List<Map<String, dynamic>>> getUsers({String? role}) async {
     String url = '/users?pageSize=1000';
     if (role != null) url += '&role=$role';
-    return _getList(url);
+    final raw = await _getList(url);
+    return raw
+        .map((u) => {
+              ...u,
+              'id': AdminFieldMapper.pick(u, ['id', 'Id'], 0),
+              'fullName': AdminFieldMapper.pickString(u, ['fullName', 'name', 'FullName'], 'N/A'),
+              'email': AdminFieldMapper.pickString(u, ['email', 'Email'], ''),
+              'role': AdminFieldMapper.pickString(u, ['role', 'Role'], '').toUpperCase().isNotEmpty
+                  ? AdminFieldMapper.pickString(u, ['role', 'Role'], '').toUpperCase()
+                  : ((u['roles'] is List && (u['roles'] as List).isNotEmpty)
+                      ? (u['roles'] as List).first.toString().toUpperCase()
+                      : 'STUDENT'),
+              'enabled': u['status'] != null
+                  ? AdminFieldMapper.pickString(u, ['status']).toUpperCase() != 'DISABLED'
+                  : AdminFieldMapper.pickBool(u, ['enabled', 'isEnabled'], true),
+              'studentCode': AdminFieldMapper.pick(u, ['studentCode', 'StudentCode', 'studentId']),
+              // Backward-compatible aliases
+              'name': AdminFieldMapper.pickString(u, ['fullName', 'name', 'FullName'], 'N/A'),
+              'studentId': AdminFieldMapper.pick(u, ['studentId', 'studentCode', 'StudentCode']),
+            })
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getGroups() async {
@@ -64,11 +113,11 @@ class AdminService {
   // ─── POST / PUT / DELETE Methods (Courses) ───────────────
 
   Future<Map<String, dynamic>?> createCourse(Map<String, dynamic> data) async {
-    return _post('/courses', data);
+    return _post('/courses', _normalizeCoursePayload(data));
   }
 
   Future<bool> updateCourse(int id, Map<String, dynamic> data) async {
-    return _request('PUT', '/courses/$id', body: data);
+    return _request('PUT', '/courses/$id', body: _normalizeCoursePayload(data));
   }
 
   Future<bool> deleteCourse(int id) async {
@@ -205,5 +254,58 @@ class AdminService {
       print('AdminService $method Error ($endpoint): $e');
       return false;
     }
+  }
+
+  Map<String, dynamic> _normalizeCoursePayload(Map<String, dynamic> data) {
+    // Keep compatibility with existing UI payload keys while sending backend contract names.
+    return {
+      if (data['subjectId'] != null) 'subjectId': data['subjectId'],
+      if (data['semesterId'] != null) 'semesterId': data['semesterId'],
+      if ((data['courseCode'] ?? data['code']) != null)
+        'courseCode': (data['courseCode'] ?? data['code']).toString(),
+      if ((data['courseName'] ?? data['name']) != null)
+        'courseName': (data['courseName'] ?? data['name']).toString(),
+      if (data['maxStudents'] != null) 'maxStudents': data['maxStudents'],
+      if (data['status'] != null) 'status': data['status'],
+    };
+  }
+
+  Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
+    final lecturers = (c['lecturers'] is List) ? List.from(c['lecturers']) : const <dynamic>[];
+    final enrollments = (c['enrollments'] is List) ? List.from(c['enrollments']) : const <dynamic>[];
+
+    return {
+      ...c,
+      // Canonical camelCase values from backend contracts
+      'id': c['id'] ?? c['Id'],
+      'courseCode': c['courseCode'] ?? c['code'] ?? c['CourseCode'],
+      'courseName': c['courseName'] ?? c['name'] ?? c['CourseName'],
+      'subjectId': c['subjectId'] ?? c['subject_id'] ?? c['SubjectId'],
+      'semesterId': c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'],
+      'status': c['status'] ?? c['Status'],
+      'maxStudents': c['maxStudents'] ?? c['max_students'] ?? c['MaxStudents'],
+      'currentStudents': c['currentStudents'] ?? c['current_students'] ?? c['CurrentStudents'] ?? 0,
+      'projectsCount': c['projectsCount'] ?? c['projects_count'] ?? c['ProjectsCount'] ?? 0,
+      // Backward-compatible aliases used by existing screens
+      'code': c['courseCode'] ?? c['code'] ?? c['CourseCode'],
+      'name': c['courseName'] ?? c['name'] ?? c['CourseName'],
+      'lecturers': lecturers
+          .map((l) => {
+                ...Map<String, dynamic>.from(l as Map),
+                'id': (l as Map)['id'] ?? l['userId'] ?? l['Id'] ?? l['UserId'],
+                'name': l['name'] ?? l['fullName'] ?? l['FullName'],
+              })
+          .toList(),
+      'enrollments': enrollments
+          .map((e) => {
+                ...Map<String, dynamic>.from(e as Map),
+                'user': {
+                  ...((e as Map)['user'] is Map ? Map<String, dynamic>.from(e['user']) : <String, dynamic>{}),
+                  'id': (e['user'] is Map ? e['user']['id'] : null) ?? e['userId'] ?? e['Id'] ?? e['UserId'],
+                  'name': (e['user'] is Map ? e['user']['name'] : null) ?? e['fullName'] ?? e['FullName'],
+                }
+              })
+          .toList(),
+    };
   }
 }

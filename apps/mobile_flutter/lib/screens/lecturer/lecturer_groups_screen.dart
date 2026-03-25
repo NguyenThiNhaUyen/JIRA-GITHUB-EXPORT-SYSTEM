@@ -104,31 +104,31 @@ class _LecturerGroupsScreenState extends State<LecturerGroupsScreen> {
 
   Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
     return {
-      'id': (s['id'] ?? s['Id'] ?? s['userId'] ?? 0) as int,
-      'name': (s['name'] ?? s['fullName'] ?? s['FullName'] ?? 'N/A').toString(),
-      'studentCode': (s['studentCode'] ?? s['studentId'] ?? s['StudentCode'] ?? '').toString(),
+      'id': (s['userId'] ?? s['id'] ?? 0) as int,
+      'name': (s['fullName'] ?? s['name'] ?? 'N/A').toString(),
+      'studentCode': (s['studentCode'] ?? s['studentId'] ?? '').toString(),
     };
   }
 
   Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
-    final integration = g['integration'] ?? g['Integration'] ?? {};
+    final integration = g['integration'] ?? {};
     return {
-      'id': (g['id'] ?? g['Id'] ?? 0) as int,
-      'name': (g['name'] ?? g['groupName'] ?? g['GroupName'] ?? 'N/A').toString(),
-      'description': (g['description'] ?? g['topic'] ?? g['projectName'] ?? g['ProjectName'] ?? '').toString(),
-      'team': g['team'] ?? g['members'] ?? g['Members'] ?? g['students'] ?? g['Students'] ?? [],
+      'id': (g['id'] ?? 0) as int,
+      'name': (g['name'] ?? 'N/A').toString(),
+      'description': (g['description'] ?? g['topic'] ?? '').toString(),
+      'team': g['team'] ?? g['members'] ?? g['students'] ?? [],
       'integration': {
-        'githubStatus': (integration['githubStatus'] ?? integration['github_status'] ?? g['githubStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
-        'jiraStatus': (integration['jiraStatus'] ?? integration['jira_status'] ?? g['jiraStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+        'githubStatus': (g['githubStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+        'jiraStatus': (g['jiraStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
       },
     };
   }
 
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
     return {
-      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? c['ClassName'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'id': (c['id'] ?? 0).toString(),
+      'name': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? 'N/A').toString(),
     };
   }
 

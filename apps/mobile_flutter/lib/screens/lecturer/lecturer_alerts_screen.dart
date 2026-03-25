@@ -81,23 +81,23 @@ class _LecturerAlertsScreenState extends State<LecturerAlertsScreen> {
   }
 
   Map<String, dynamic> _normalizeAlert(Map<String, dynamic> a) {
-    final integration = a['integration'] ?? a['Integration'] ?? a['metrics'] ?? {};
+    final integration = a['integration'] ?? a['metrics'] ?? {};
     return {
-      'id': (a['id'] ?? a['Id'] ?? 0).toString(),
-      'groupName': (a['groupName'] ?? a['teamName'] ?? a['GroupName'] ?? 'N/A').toString(),
-      'courseCode': (a['courseCode'] ?? a['CourseCode'] ?? 'N/A').toString(),
+      'id': (a['id'] ?? 0).toString(),
+      'groupName': (a['groupName'] ?? a['teamName'] ?? 'N/A').toString(),
+      'courseCode': (a['courseCode'] ?? 'N/A').toString(),
       'targetName': (a['targetName'] ?? a['fullName'] ?? a['groupName'] ?? 'N/A').toString(),
       'message': (a['message'] ?? a['content'] ?? a['msg'] ?? 'Không có nội dung').toString(),
       'type': (a['type'] ?? a['alertType'] ?? 'LOW_ACTIVITY').toString().toUpperCase(),
-      'status': (a['status'] ?? a['Status'] ?? 'OPEN').toString().toUpperCase(),
-      'severity': (a['severity'] ?? a['Severity'] ?? 'MEDIUM').toString().toUpperCase(),
-      'createdAt': (a['createdAt'] ?? a['created_at'] ?? '2025-03-15').toString(),
-      'groupId': (a['groupId'] ?? a['GroupId'] ?? a['id']).toString(),
-      'suggestion': (a['suggestion'] ?? a['suggested_action'] ?? 'Nên liên hệ trực tiếp để xác minh lý do tham gia kém và cập nhật lại phân chia công việc.').toString(),
+      'status': (a['status'] ?? 'OPEN').toString().toUpperCase(),
+      'severity': (a['severity'] ?? 'MEDIUM').toString().toUpperCase(),
+      'createdAt': (a['createdAt'] ?? '2025-03-15').toString(),
+      'groupId': (a['groupId'] ?? a['id']).toString(),
+      'suggestion': (a['suggestion'] ?? 'Nên liên hệ trực tiếp để xác minh lý do tham gia kém và cập nhật lại phân chia công việc.').toString(),
       'metrics': {
-        'score': (a['contributionScore'] ?? integration['score'] ?? integration['contributionScore'] ?? 0) as int,
-        'commits': (a['commitsCount'] ?? integration['commits'] ?? integration['commitsCount'] ?? 0) as int,
-        'jiraDone': (a['jiraTasksDone'] ?? integration['jiraDone'] ?? integration['jiraTasksDone'] ?? 0) as int,
+        'score': (a['contributionScore'] ?? integration['score'] ?? 0) as int,
+        'commits': (a['commitsCount'] ?? integration['commits'] ?? 0) as int,
+        'jiraDone': (a['jiraTasksDone'] ?? integration['jiraDone'] ?? 0) as int,
       },
     };
   }

@@ -76,7 +76,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
           final wk = results[0] as Map<String, dynamic>? ?? {};
           _subjects = (results[1] as List).map((e) => _normalizeSubject(e as Map<String, dynamic>)).toList();
           _courses  = (results[2] as List).map((e) => _normalizeCourse(e as Map<String, dynamic>)).toList();
-          _alerts   = (results[3] as List).where((a) => (a['status'] ?? a['Status'] ?? 'OPEN') == 'OPEN').map((e) => _normalizeAlert(e as Map<String, dynamic>)).toList();
+          _alerts   = (results[3] as List).where((a) => (a['status'] ?? 'OPEN') == 'OPEN').map((e) => _normalizeAlert(e as Map<String, dynamic>)).toList();
           _activities = (results[4] as List).map((e) => _normalizeActivity(e as Map<String, dynamic>)).toList();
           
           _stats = {
@@ -137,47 +137,47 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
 
   // ─── Normalizers ─────────────────────────────────────
   Map<String, dynamic> _normalizeSubject(Map<String, dynamic> s) => {
-    'id': (s['id'] ?? s['Id'] ?? 0).toString(),
+    'id': (s['id'] ?? 0).toString(),
     'name': (s['name'] ?? s['subjectName'] ?? 'N/A').toString(),
     'code': (s['code'] ?? s['subjectCode'] ?? 'N/A').toString(),
   };
 
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) => {
-    'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-    'code': (c['code'] ?? c['courseCode'] ?? c['className'] ?? 'N/A').toString(),
-    'name': (c['name'] ?? c['courseName'] ?? 'N/A').toString(),
-    'subjectId': (c['subjectId'] ?? c['subject_id'] ?? 0).toString(),
+    'id': (c['id'] ?? 0).toString(),
+    'code': (c['courseCode'] ?? c['code'] ?? 'N/A').toString(),
+    'name': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
+    'subjectId': (c['subjectId'] ?? 0).toString(),
   };
 
   Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
-    final integration = g['integration'] ?? g['Integration'] ?? {};
-    final stats = g['stats'] ?? g['Stats'] ?? {};
+    final integration = g['integration'] ?? {};
+    final stats = g['stats'] ?? {};
     return {
-      'id': (g['id'] ?? g['Id'] ?? 0).toString(),
-      'name': (g['name'] ?? g['groupName'] ?? g['GroupName'] ?? 'N/A').toString(),
-      'topic': (g['topic'] ?? g['projectName'] ?? g['ProjectName'] ?? g['description'] ?? g['Description'] ?? '').toString(),
-      'githubStatus': (g['githubStatus'] ?? integration['github_status'] ?? integration['githubStatus'] ?? 'NONE').toString().toUpperCase(),
-      'jiraStatus': (g['jiraStatus'] ?? integration['jira_status'] ?? integration['jiraStatus'] ?? 'NONE').toString().toUpperCase(),
-      'githubOk': (g['githubStatus'] ?? integration['github_status'] ?? integration['githubStatus'] ?? g['github_status']) == 'APPROVED',
-      'jiraOk': (g['jiraStatus'] ?? integration['jira_status'] ?? integration['jiraStatus'] ?? g['jira_status']) == 'APPROVED',
-      'team': g['students'] ?? g['members'] ?? g['team'] ?? g['Students'] ?? g['Members'] ?? [],
+      'id': (g['id'] ?? 0).toString(),
+      'name': (g['name'] ?? 'N/A').toString(),
+      'topic': (g['description'] ?? g['topic'] ?? '').toString(),
+      'githubStatus': (g['githubStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase(),
+      'jiraStatus': (g['jiraStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase(),
+      'githubOk': (g['githubStatus'] ?? integration['approvalStatus']) == 'APPROVED',
+      'jiraOk': (g['jiraStatus'] ?? integration['approvalStatus']) == 'APPROVED',
+      'team': g['students'] ?? g['members'] ?? g['team'] ?? [],
       'integration': integration,
       'stats': {
-        'commits': stats['commitsCount'] ?? stats['commits'] ?? stats['CommitsCount'] ?? 0,
-        'srsDone': stats['srsCompletionPercent'] ?? stats['SrsCompletionPercent'] ?? 0,
+        'commits': stats['commitsCount'] ?? stats['commits'] ?? 0,
+        'srsDone': stats['srsCompletionPercent'] ?? 0,
       }
     };
   }
 
   Map<String, dynamic> _normalizeAlert(Map<String, dynamic> a) => {
-    'id': (a['id'] ?? a['Id'] ?? 0).toString(),
-    'name': (a['groupName'] ?? a['projectName'] ?? a['ProjectName'] ?? a['group_name'] ?? 'Thông báo').toString(),
-    'msg': (a['message'] ?? a['msg'] ?? a['Message'] ?? '').toString(),
-    'severity': (a['severity'] ?? a['Severity'] ?? 'MEDIUM').toString().toUpperCase(),
+    'id': (a['id'] ?? 0).toString(),
+    'name': (a['groupName'] ?? a['projectName'] ?? 'Thông báo').toString(),
+    'msg': (a['message'] ?? a['msg'] ?? '').toString(),
+    'severity': (a['severity'] ?? 'MEDIUM').toString().toUpperCase(),
   };
 
   Map<String, dynamic> _normalizeActivity(Map<String, dynamic> a) {
-    final type = (a['type'] ?? a['Type'] ?? 'INFO').toString().toUpperCase();
+    final type = (a['type'] ?? 'INFO').toString().toUpperCase();
     IconData icon = Icons.info_outline;
     Color color = Colors.blue;
     
@@ -189,9 +189,9 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
     else if (type.contains('ALERT') || type.contains('WARN'))   { icon = Icons.warning_amber_rounded; color = Colors.orange; }
 
     return {
-      'id': (a['id'] ?? a['Id'] ?? 0).toString(),
-      'msg': (a['message'] ?? a['msg'] ?? a['Message'] ?? a['description'] ?? a['Description'] ?? '').toString(),
-      'time': (a['createdAt'] ?? a['time'] ?? a['Timestamp'] ?? 'Vừa xong').toString(),
+      'id': (a['id'] ?? 0).toString(),
+      'msg': (a['message'] ?? a['msg'] ?? a['description'] ?? '').toString(),
+      'time': (a['createdAt'] ?? a['time'] ?? 'Vừa xong').toString(),
       'icon': icon,
       'color': color,
     };
@@ -338,20 +338,28 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Dashboard Giảng viên', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx)),
-                  Text('Chào mừng trở lại, ${_currentUser?.fullName ?? "Giảng viên"}!', style: const TextStyle(fontSize: 13, color: kTxtSx)),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Dashboard Giảng viên', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx)),
+                Text('Chào mừng trở lại, ${_currentUser?.fullName ?? "Giảng viên"}!', style: const TextStyle(fontSize: 13, color: kTxtSx)),
+              ],
             ),
-            _circleAction(Icons.notifications_none_rounded, () => context.go('/lecturer/alerts'), badge: _alerts.isNotEmpty),
-            const SizedBox(width: 12),
-            _actionBtn(Icons.shield_outlined, 'Phát cảnh báo', _showSendAlert, color: Colors.redAccent),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _circleAction(Icons.notifications_none_rounded, () => context.go('/lecturer/alerts'), badge: _alerts.isNotEmpty),
+                const SizedBox(width: 12),
+                _actionBtn(Icons.shield_outlined, 'Phát cảnh báo', _showSendAlert, color: Colors.redAccent),
+              ],
+            ),
           ],
         )
       ],
@@ -601,7 +609,7 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         Container(width: 44, height: 44, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: Colors.white, size: 20)),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(val, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx, height: 1.1)),
+          Text(val, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: kTxtPx, height: 1.1), overflow: TextOverflow.ellipsis, maxLines: 1),
           Text(lbl, style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
         ]))
       ]));
@@ -628,12 +636,26 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(a['msg'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: kTxtPx)),
           const SizedBox(height: 6),
-          Row(children: [
-            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: kBdr)), 
-              child: Row(children: [const Icon(Icons.access_time, size: 10, color: Color(0xFFCBD5E1)), const SizedBox(width: 4), Text(a['time'], style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold))])),
-            const SizedBox(width: 8),
-            const Text('VERIFIED EVENT', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFFE2E8F0), letterSpacing: 1.2)),
-          ])
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: kBdr)), 
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time, size: 10, color: Color(0xFFCBD5E1)),
+                    const SizedBox(width: 4),
+                    Text(a['time'], style: const TextStyle(fontSize: 10, color: kTxtSx, fontWeight: FontWeight.bold))
+                  ],
+                ),
+              ),
+              const Text('VERIFIED EVENT', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFFE2E8F0), letterSpacing: 1.2)),
+            ],
+          )
         ])),
         const SizedBox(width: 8),
         TextButton(onPressed: () => _snack('Chi tiết'), child: const Text('Chi tiết', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: kTeal))),
@@ -658,8 +680,8 @@ class _LecturerDashboardScreenState extends State<LecturerDashboardScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(g['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: kTxtPx)),
         const SizedBox(height: 12),
-        if (!g['githubOk']) _linkApprovalRow(Icons.account_tree_outlined, g['integration']['github_url'] ?? g['integration']['githubUrl'] ?? 'Link GitHub', () => _handleApprove(g['id'])),
-        if (!g['jiraOk']) _linkApprovalRow(Icons.book_outlined, g['integration']['jira_url'] ?? g['integration']['jiraUrl'] ?? 'Link Jira', () => _handleApprove(g['id'])),
+        if (!g['githubOk']) _linkApprovalRow(Icons.account_tree_outlined, g['integration']['githubRepoUrl'] ?? 'Link GitHub', () => _handleApprove(g['id'])),
+        if (!g['jiraOk']) _linkApprovalRow(Icons.book_outlined, g['integration']['jiraSiteUrl'] ?? 'Link Jira', () => _handleApprove(g['id'])),
       ]));
   }
 

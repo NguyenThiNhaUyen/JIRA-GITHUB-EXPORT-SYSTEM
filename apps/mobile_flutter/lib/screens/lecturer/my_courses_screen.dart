@@ -59,11 +59,11 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
   }
 
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
-    final rawProjects = (c['projects'] ?? c['groups'] ?? c['Groups'] ?? c['Projects'] ?? []) as List;
+    final rawProjects = (c['projects'] ?? c['groups'] ?? []) as List;
     final projects = rawProjects.map((p) {
-      final integration = p['integration'] ?? p['Integration'] ?? {};
-      final githubStatus = (p['githubStatus'] ?? integration['githubStatus'] ?? integration['github_status'] ?? 'NONE').toString().toUpperCase();
-      final jiraStatus = (p['jiraStatus'] ?? integration['jiraStatus'] ?? integration['jira_status'] ?? 'NONE').toString().toUpperCase();
+      final integration = p['integration'] ?? {};
+      final githubStatus = (p['githubStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase();
+      final jiraStatus = (p['jiraStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase();
       return {
         ...p,
         'repoConnected': githubStatus == 'APPROVED',
@@ -72,15 +72,15 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> {
     }).toList();
 
     return {
-      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? c['className'] ?? c['ClassName'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
-      'subjectCode': (c['subjectCode'] ?? c['SubjectCode'] ?? 'N/A').toString(),
-      'semester': (c['semester'] ?? c['Semester'] ?? 'N/A').toString(),
+      'id': (c['id'] ?? 0).toString(),
+      'name': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? 'N/A').toString(),
+      'subjectCode': (c['subjectCode'] ?? 'N/A').toString(),
+      'semester': (c['semesterName'] ?? c['semester'] ?? 'N/A').toString(),
       'currentStudents': (c['currentStudents'] ?? c['enrollmentCount'] ?? c['studentsCount'] ?? (c['enrollments'] as List?)?.length ?? 0) as int,
       'projectsCount': (c['projectsCount'] ?? c['groupCount'] ?? projects.length).toInt(),
       'projects': projects,
-      'lastCommit': (c['lastCommit'] ?? c['last_activity'] ?? 'No activity').toString(),
+      'lastCommit': (c['lastCommit'] ?? 'No activity').toString(),
       'archived': c['archived'] ?? c['isArchived'] ?? false,
       'commits': c['commits'] ?? c['commitHistory'] ?? [],
     };

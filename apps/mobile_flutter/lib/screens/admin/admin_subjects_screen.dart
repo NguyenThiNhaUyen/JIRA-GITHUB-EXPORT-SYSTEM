@@ -41,17 +41,17 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
 
   List<Map<String, dynamic>> get _filteredSubjects {
     return _subjects.where((s) {
-      final name = (s['name'] ?? s['subjectName'] ?? s['SubjectName'] ?? "").toString();
-      final code = (s['code'] ?? s['subjectCode'] ?? s['SubjectCode'] ?? "").toString();
-      final dept = (s['department'] ?? s['Department'] ?? "ALL").toString();
+      final name = (s['subjectName'] ?? s['name'] ?? "").toString();
+      final code = (s['subjectCode'] ?? s['code'] ?? "").toString();
+      final dept = (s['department'] ?? "ALL").toString();
       
       final matchesSearch = name.toLowerCase().contains(_search.toLowerCase()) || 
                            code.toLowerCase().contains(_search.toLowerCase());
       final matchesDept = _deptFilter == "ALL" || dept == _deptFilter;
       return matchesSearch && matchesDept;
     }).toList()..sort((a, b) {
-      final codeA = (a['code'] ?? a['subjectCode'] ?? a['SubjectCode'] ?? "").toString();
-      final codeB = (b['code'] ?? b['subjectCode'] ?? b['SubjectCode'] ?? "").toString();
+      final codeA = (a['subjectCode'] ?? a['code'] ?? "").toString();
+      final codeB = (b['subjectCode'] ?? b['code'] ?? "").toString();
       return codeA.compareTo(codeB);
     });
   }
@@ -154,15 +154,15 @@ class _AdminSubjectsScreenState extends State<AdminSubjectsScreen> {
   }
   Map<String, dynamic> _normalizeSubjectData(Map<String, dynamic> s) {
     return {
-      'id': s['id'] ?? s['Id'] ?? 0,
-      'name': (s['name'] ?? s['subjectName'] ?? s['SubjectName'] ?? "").toString(),
-      'code': (s['code'] ?? s['subjectCode'] ?? s['SubjectCode'] ?? "").toString(),
-      'department': (s['department'] ?? s['Department'] ?? "N/A").toString(),
-      'credits': (s['credits'] ?? s['Credits'] ?? 0) as num,
-      'maxStudents': (s['maxStudents'] ?? s['max_students'] ?? s['MaxStudents'] ?? 40) as num,
-      'status': (s['status'] ?? s['Status'] ?? "ACTIVE").toString().toUpperCase(),
-      'description': (s['description'] ?? s['Description'] ?? "").toString(),
-      'courseNumber': (s['courseNumber'] ?? s['course_number'] ?? s['CourseNumber'] ?? "").toString(),
+      'id': s['id'] ?? 0,
+      'name': (s['subjectName'] ?? s['name'] ?? "").toString(),
+      'code': (s['subjectCode'] ?? s['code'] ?? "").toString(),
+      'department': (s['department'] ?? "N/A").toString(),
+      'credits': (s['credits'] ?? 0) as num,
+      'maxStudents': (s['maxStudents'] ?? 40) as num,
+      'status': (s['status'] ?? "ACTIVE").toString().toUpperCase(),
+      'description': (s['description'] ?? "").toString(),
+      'courseNumber': (s['courseNumber'] ?? "").toString(),
     };
   }
 

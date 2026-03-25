@@ -101,11 +101,11 @@ class _ContributionsScreenState extends State<ContributionsScreen> {
       // Map group name to integration status
       final Map<String, Map<String, String>> groupIntegrations = {};
       for (var g in groupsRaw) {
-        final gName = (g['name'] ?? g['groupName'] ?? 'N/A').toString();
-        final integration = g['integration'] ?? g['Integration'] ?? {};
+        final gName = (g['name'] ?? 'N/A').toString();
+        final integration = g['integration'] ?? {};
         groupIntegrations[gName] = {
-          'github': (integration['githubStatus'] ?? integration['github_status'] ?? g['githubStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
-          'jira': (integration['jiraStatus'] ?? integration['jira_status'] ?? g['jiraStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+          'github': (g['githubStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
+          'jira': (g['jiraStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString().toUpperCase(),
         };
       }
 

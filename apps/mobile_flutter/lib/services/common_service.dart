@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'auth_service.dart';
+import 'api_mapper.dart';
 
 class CommonService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -30,9 +31,8 @@ class CommonService {
         headers: await _headers(),
       );
       if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
-        final data = json['data'] ?? json['Data'] ?? json;
-        if (data is List) return data.cast<Map<String, dynamic>>();
+        final data = ApiMapper.extractData(ApiMapper.decodeBody(response.body));
+        return ApiMapper.extractItems(data);
       }
       return [];
     } catch (e) {
@@ -63,9 +63,16 @@ class CommonService {
         headers: await _headers(auth: false),
       );
       if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
-        final data = json['data'] ?? json['Data'] ?? json;
-        if (data is List) return data.cast<Map<String, dynamic>>();
+        final data = ApiMapper.extractData(ApiMapper.decodeBody(response.body));
+        return ApiMapper.extractItems(data).map((s) => {
+              ...s,
+              'id': s['id'],
+              'name': s['name'],
+              'code': s['code'] ?? s['name'],
+              'startDate': s['startDate'],
+              'endDate': s['endDate'],
+              'status': (s['status'] ?? 'UPCOMING').toString().toUpperCase(),
+            }).toList();
       }
       return [];
     } catch (e) {
@@ -81,9 +88,15 @@ class CommonService {
         headers: await _headers(auth: false),
       );
       if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
-        final data = json['data'] ?? json['Data'] ?? json;
-        if (data is List) return data.cast<Map<String, dynamic>>();
+        final data = ApiMapper.extractData(ApiMapper.decodeBody(response.body));
+        return ApiMapper.extractItems(data).map((s) => {
+              ...s,
+              'id': s['id'],
+              'subjectCode': s['subjectCode'] ?? s['code'],
+              'subjectName': s['subjectName'] ?? s['name'],
+              'code': s['subjectCode'] ?? s['code'],
+              'name': s['subjectName'] ?? s['name'],
+            }).toList();
       }
       return [];
     } catch (e) {

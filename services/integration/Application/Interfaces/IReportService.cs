@@ -13,6 +13,8 @@ public interface IReportService
     Task<long> GenerateSrsForCourseAsync(long courseId, string format);
     Task<string?> GetReportFileUrlAsync(long reportExportId);
     Task<List<ReportExportResponse>> GetUserReportsAsync(long userId);
+    /// <summary>Tái tạo file bytes từ report_export record (bỏ qua disk cache)</summary>
+    Task<(byte[] Bytes, string FileName, string ContentType)?> RegenerateAndGetBytesAsync(long reportExportId);
 }
 
 

@@ -429,38 +429,43 @@ class _FormSection extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => onRememberChanged(!rememberMe),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Checkbox(
-                      value: rememberMe,
-                      onChanged: (value) =>
-                          onRememberChanged(value ?? false),
-                      activeColor: const Color(0xFF11998E),
-                      side: const BorderSide(color: Color(0xFF97AAA8)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => onRememberChanged(!rememberMe),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: rememberMe,
+                        onChanged: (value) =>
+                            onRememberChanged(value ?? false),
+                        activeColor: const Color(0xFF11998E),
+                        side: const BorderSide(color: Color(0xFF97AAA8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Duy trì đăng nhập',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF5B6665),
+                    const SizedBox(width: 10),
+                    const Flexible(
+                      child: Text(
+                        'Duy trì đăng nhập',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF5B6665),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             TextButton(
               onPressed: onForgotPassword,
               style: TextButton.styleFrom(
@@ -705,7 +710,31 @@ class _DemoAccountsCard extends StatelessWidget {
         color: const Color(0xFFF8FBFB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2ECEB)),
-      )
+      ),
+      child: Column(
+        children: [
+          _DemoAccountTile(
+            role: 'ADMIN',
+            email: 'admin@gmail.com',
+            password: '123',
+            onTap: onDemoTap,
+          ),
+          const SizedBox(height: 8),
+          _DemoAccountTile(
+            role: 'LECTURER',
+            email: 'lecturer@gmail.com',
+            password: '123',
+            onTap: onDemoTap,
+          ),
+          const SizedBox(height: 8),
+          _DemoAccountTile(
+            role: 'STUDENT',
+            email: 'student@gmail.com',
+            password: '123',
+            onTap: onDemoTap,
+          ),
+        ],
+      ),
     );
   }
 }

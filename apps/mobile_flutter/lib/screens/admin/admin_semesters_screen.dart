@@ -89,9 +89,9 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   List<Map<String, dynamic>> get _filteredSemesters {
     return _semesters.where((s) {
-      final name = (s["name"] ?? s["Name"] ?? "").toString();
-      final code = (s["code"] ?? s["Code"] ?? "").toString();
-      final status = (s["status"] ?? s["Status"] ?? "UPCOMING").toString().toUpperCase();
+      final name = (s["name"] ?? "").toString();
+      final code = (s["code"] ?? "").toString();
+      final status = (s["status"] ?? "UPCOMING").toString().toUpperCase();
       
       final nameMatches = name.toLowerCase().contains(_search.toLowerCase());
       final codeMatches = code.toLowerCase().contains(_search.toLowerCase());
@@ -237,7 +237,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
       children: [
         Expanded(child: headerText),
         const SizedBox(width: 16),
-        actions,
+        Flexible(child: actions),
       ],
     );
   }
@@ -248,7 +248,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
     int completedCount = 0;
 
     for (var s in _semesters) {
-      final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
+      final status = (s["status"] ?? "").toString().toUpperCase();
       if (status == "ACTIVE") activeCount++;
       else if (status == "UPCOMING") upcomingCount++;
       else if (status == "COMPLETED") completedCount++;
@@ -300,8 +300,8 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               const Center(child: Text("Không có dữ liệu", style: TextStyle(color: Colors.grey, fontSize: 12)))
             else
               ..._semesters.take(3).map((s) {
-                final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
-                final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
+                final startStr = s["startDate"] ?? "";
+                final endStr = s["endDate"] ?? "";
                 final start = DateTime.tryParse(startStr) ?? DateTime.now();
                 final end = DateTime.tryParse(endStr) ?? DateTime.now();
                 final totalDays = end.difference(start).inDays;
@@ -315,7 +315,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                          Expanded(child: Text(s["name"] ?? "N/A", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis)),
                           Text("${(progress * 100).toInt()}%", style: const TextStyle(color: Colors.indigo, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -363,7 +363,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               ..._semesters.take(3).map((s) {
                 final sId = s["id"] ?? s["Id"] ?? 0;
                 final count = _getCourseCount(sId);
-                final sName = s["name"] ?? s["Name"] ?? "N/A";
+                final sName = s["name"] ?? "N/A";
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -402,8 +402,11 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                     _buildTableControls(),
                   ],
                 )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              : Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 16,
+                  runSpacing: 12,
                   children: [
                     const Text("Danh sách Chi tiết", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     _buildTableControls(),
@@ -435,11 +438,11 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                 rows: _filteredSemesters.map((s) {
                   final sId = s["id"] ?? s["Id"] ?? 0;
                   final count = _getCourseCount(sId);
-                  final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
-                  final sName = s["name"] ?? s["Name"] ?? "N/A";
-                  final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
-                  final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"];
-                  final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"];
+                  final status = (s["status"] ?? "").toString().toUpperCase();
+                  final sName = s["name"] ?? "N/A";
+                  final sCode = (s["code"] ?? "").toString().toUpperCase();
+                  final startStr = s["startDate"];
+                  final endStr = s["endDate"];
 
                   return DataRow(cells: [
                     DataCell(Column(
@@ -467,6 +470,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                         fontSize: 10, fontWeight: FontWeight.bold)),
                     )),
                     DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: () => _showSemesterModal(semester: s)),
                         IconButton(icon: const Icon(Icons.delete, size: 18, color: Colors.red), onPressed: () => _handleDelete(sId)),
@@ -490,12 +494,12 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   Widget _buildSemesterCard(Map<String, dynamic> s) {
     final sId = s["id"] ?? s["Id"] ?? 0;
     final count = _getCourseCount(sId);
-    final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
+    final status = (s["status"] ?? "").toString().toUpperCase();
     final Color statusColor = status == "ACTIVE" ? Colors.teal : (status == "UPCOMING" ? Colors.blue : Colors.grey);
-    final sName = s["name"] ?? s["Name"] ?? "N/A";
-    final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
-    final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
-    final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
+    final sName = s["name"] ?? "N/A";
+    final sCode = (s["code"] ?? "").toString().toUpperCase();
+    final startStr = s["startDate"] ?? "";
+    final endStr = s["endDate"] ?? "";
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -509,12 +513,14 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(sName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+                    Text(sCode, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -563,8 +569,10 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   }
 
   Widget _buildTableControls() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         SizedBox(
           width: 180,
@@ -580,7 +588,6 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
         DropdownButton<String>(
           value: _filterStatus,
           underline: const SizedBox(),
