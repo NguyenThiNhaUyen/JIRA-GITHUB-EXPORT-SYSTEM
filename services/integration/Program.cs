@@ -254,10 +254,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) 
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); 
+        policy.WithOrigins(
+                "https://jira-github-export-system-2n2bcm67i-nguyenthinhauyens-projects.vercel.app",
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://localhost:5173",
+                "https://localhost:3000"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 

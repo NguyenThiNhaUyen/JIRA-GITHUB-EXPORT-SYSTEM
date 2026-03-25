@@ -12,6 +12,11 @@ import {
     useGenerateSrs,
     useGetMyReports,
 } from "../../features/admin/hooks/useReports.js";
+import {
+    downloadCommitStats,
+    downloadTeamRoster,
+    downloadSrs
+} from "../../features/admin/api/reportApi.js";
 
 /**
  * AUDITED: Danh sách loại report có thể xuất
@@ -75,6 +80,17 @@ function triggerDownload(url, filename) {
     document.body.removeChild(a);
 }
 
+function triggerBlobDownload(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || `report_${Date.now()}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+}
+
 export default function Reports() {
     const { success, error, info } = useToast();
     const [selectedCourse, setSelectedCourse] = useState("");
@@ -119,23 +135,25 @@ export default function Reports() {
         const format = FORMAT_MAP[formatLabel] ?? formatLabel;
 
         try {
-            info(`Đang khởi tạo báo cáo ${formatLabel}...`);
+            info(`Đang tạo & tải báo cáo ${formatLabel}...`);
 
             if (action === "commit-stats") {
-                await genCommitStats.mutateAsync({ courseId: selectedCourse, format });
+                const { blob, filename } = await downloadCommitStats(selectedCourse, format);
+                triggerBlobDownload(blob, filename ?? `commit_statistics_${selectedCourse}_${Date.now()}.${format.toLowerCase() === "excel" ? "xlsx" : "pdf"}`);
             } else if (action === "team-roster") {
-                await genTeamRoster.mutateAsync({ projectId: selectedProject, format });
+                const { blob, filename } = await downloadTeamRoster({ projectId: selectedProject, format });
+                triggerBlobDownload(blob, filename ?? `team_roster_${selectedProject}_${Date.now()}.${format.toLowerCase() === "excel" ? "xlsx" : "pdf"}`);
             } else if (action === "srs") {
-                await genSrs.mutateAsync({ projectId: selectedProject, format });
+                const { blob, filename } = await downloadSrs({ projectId: selectedProject, format });
+                triggerBlobDownload(blob, filename ?? `srs_iso_${selectedProject}_${Date.now()}.pdf`);
             }
 
-            success("Yêu cầu đã được gửi! File sẽ xuất hiện trong lịch sử bên dưới.");
-            // Refresh sau 2s để BE kịp xử lý
+            success("Đã tải file về. Lịch sử sẽ được cập nhật tự động.");
             setTimeout(() => refetchReports(), 2000);
             setTimeout(() => refetchReports(), 5000);
         } catch (err) {
             // interceptor đã normalize thành err.message (BUG-71)
-            error("Lỗi khi tạo báo cáo: " + (err?.message ?? "Vui lòng thử lại"));
+            error("Lỗi khi tải báo cáo: " + (err?.message ?? "Vui lòng thử lại"));
         }
     };
 
