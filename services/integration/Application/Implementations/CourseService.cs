@@ -123,49 +123,95 @@ public class CourseService : ICourseService
     {
         try
         {
-            var course = await _unitOfWork.Courses.Query()
-                .AsNoTracking()
-                .Include(c => c.subject)
-                .Include(c => c.semester)
-                .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-                .Include(c => c.projects).ThenInclude(p => p.project_integration)
-                .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
-                .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
-                .FirstOrDefaultAsync(c => c.id == courseId);
-
-            if (course == null)
+            // Full query: includes project_integration (may fail on schema mismatch)
+            try
             {
-                throw new NotFoundException("Course not found");
-            }
+                var course = await _unitOfWork.Courses.Query()
+                    .AsNoTracking()
+                    .Include(c => c.subject)
+                    .Include(c => c.semester)
+                    .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+                    .Include(c => c.projects).ThenInclude(p => p.project_integration)
+                    .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
+                    .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+                    .FirstOrDefaultAsync(c => c.id == courseId);
 
-            var response = _mapper.Map<CourseDetailResponse>(course);
-
-            // Manual mapping for groups with clear status and team members
-            response.Groups = (course.projects ?? new List<project>())
-                .Where(p => p.status == "ACTIVE")
-                .Select(p => new CourseGroupInfo
+                if (course == null)
                 {
-                    Id = p.id,
-                    Name = p.name,
-                    GithubStatus = p.project_integration?.approval_status ?? "NONE",
-                    JiraStatus = p.project_integration?.approval_status ?? "NONE",
-                    Integration = p.project_integration != null ? new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
-                    {
-                        GithubStatus = p.project_integration.approval_status ?? "NONE",
-                        JiraStatus = p.project_integration.approval_status ?? "NONE"
-                    } : null,
-                    Topic = p.description,
-                    Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
-                    {
-                        UserId = tm.student_user_id,
-                        FullName = tm.student_user?.user?.full_name ?? "Unknown",
-                        StudentCode = tm.student_user?.student_code ?? "N/A",
-                        StudentId = tm.student_user?.student_code ?? "N/A",
-                        Role = tm.team_role
-                    }).ToList()
-                }).ToList();
+                    throw new NotFoundException("Course not found");
+                }
 
-            return response;
+                var response = _mapper.Map<CourseDetailResponse>(course);
+
+                // Manual mapping for groups with clear status and team members
+                response.Groups = (course.projects ?? new List<project>())
+                    .Where(p => p.status == "ACTIVE")
+                    .Select(p => new CourseGroupInfo
+                    {
+                        Id = p.id,
+                        Name = p.name,
+                        GithubStatus = p.project_integration?.approval_status ?? "NONE",
+                        JiraStatus = p.project_integration?.approval_status ?? "NONE",
+                        Integration = p.project_integration != null ? new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
+                        {
+                            GithubStatus = p.project_integration.approval_status ?? "NONE",
+                            JiraStatus = p.project_integration.approval_status ?? "NONE"
+                        } : null,
+                        Topic = p.description,
+                        Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
+                        {
+                            UserId = tm.student_user_id,
+                            FullName = tm.student_user?.user?.full_name ?? "Unknown",
+                            StudentCode = tm.student_user?.student_code ?? "N/A",
+                            StudentId = tm.student_user?.student_code ?? "N/A",
+                            Role = tm.team_role
+                        }).ToList()
+                    }).ToList();
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                // Fallback: retry without project_integration include so group list survives
+                _logger.LogWarning(ex, "[GetCourseByIdAsync] Full query failed, retrying without project_integration. courseId={CourseId}", courseId);
+
+                var fallbackCourse = await _unitOfWork.Courses.Query()
+                    .AsNoTracking()
+                    .Include(c => c.subject)
+                    .Include(c => c.semester)
+                    .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+                    .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
+                    .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+                    .FirstOrDefaultAsync(c => c.id == courseId);
+
+                if (fallbackCourse == null)
+                {
+                    throw new NotFoundException("Course not found");
+                }
+
+                var fallbackResponse = _mapper.Map<CourseDetailResponse>(fallbackCourse);
+                fallbackResponse.Groups = (fallbackCourse.projects ?? new List<project>())
+                    .Where(p => p.status == "ACTIVE")
+                    .Select(p => new CourseGroupInfo
+                    {
+                        Id = p.id,
+                        Name = p.name,
+                        GithubStatus = "NONE",
+                        JiraStatus = "NONE",
+                        Integration = null,
+                        Topic = p.description,
+                        Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
+                        {
+                            UserId = tm.student_user_id,
+                            FullName = tm.student_user?.user?.full_name ?? "Unknown",
+                            StudentCode = tm.student_user?.student_code ?? "N/A",
+                            StudentId = tm.student_user?.student_code ?? "N/A",
+                            Role = tm.team_role
+                        }).ToList()
+                    }).ToList();
+
+                return fallbackResponse;
+            }
         }
         catch (Exception ex)
         {

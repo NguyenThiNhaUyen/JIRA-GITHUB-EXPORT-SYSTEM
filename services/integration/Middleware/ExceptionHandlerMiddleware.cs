@@ -58,7 +58,9 @@ public class ExceptionHandlerMiddleware
             _ => new
             {
                 statusCode = (int)HttpStatusCode.InternalServerError,
-                response = ApiResponse.ErrorResponse("An internal server error occurred")
+                // Important for DB/schema mismatch debugging:
+                // upstream services intentionally rethrow with the exact missing column/table message.
+                response = ApiResponse.ErrorResponse(exception.Message)
             }
         };
 
