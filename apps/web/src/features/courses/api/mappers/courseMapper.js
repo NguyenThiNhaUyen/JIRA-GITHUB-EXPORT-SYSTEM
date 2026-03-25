@@ -40,6 +40,7 @@ export function mapCourse(beCourse) {
 
         // ── Students & capacity ────────────────────────────────────
         currentStudents: beCourse.enrolledStudentsCount ?? beCourse.EnrolledStudentsCount ?? 0,
+        studentCount: beCourse.enrolledStudentsCount ?? beCourse.EnrolledStudentsCount ?? 0,
         maxStudents: beCourse.maxStudents ?? beCourse.MaxStudents ?? 40,
 
         // ── Status ────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
+import { mapProject, mapProjectList } from "../../projects/api/mappers/projectMapper.js";
 
 /**
  * studentApi.js — All /api/student/me/* endpoints
@@ -21,7 +22,18 @@ export async function getMyCourses(params = {}) {
 /** GET /api/student/me/projects — Nhóm dự án của tôi */
 export async function getMyProjects(params = {}) {
     const res = await client.get("/student/me/projects", { params });
-    return unwrap(res);
+    const raw = unwrap(res);
+
+    // Some BE variants return:
+    // - paged response: { items: [...] }
+    // - plain array: [...]
+    if (Array.isArray(raw)) {
+        const items = raw.map(mapProject).filter(Boolean);
+        return { items, totalCount: items.length, page: 1, pageSize: items.length };
+    }
+
+    // Fallback to paged mapper (supports items/Items/results legacy)
+    return mapProjectList(raw);
 }
 
 /** GET /api/student/me/commits — Commits của tôi */

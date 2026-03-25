@@ -52,13 +52,18 @@ export default function StudentDashboard() {
     const { mutate: declineInvite } = useDeclineInvitation();
 
     const courses = Array.isArray(coursesData?.items) ? coursesData.items : [];
-    const myGroupsList = Array.isArray(projectsData?.items) ? projectsData.items : [];
+    // BE có thể trả về { items: [...] } hoặc trả thẳng array
+    const myGroupsList = Array.isArray(projectsData?.items)
+        ? projectsData.items
+        : (Array.isArray(projectsData) ? projectsData : []);
 
     // Map projects to a courseId keyed object for easy lookup in Workspace
     // Dùng String() để đảm bảo key type nhất quán với selectedCourseId (cũng là String)
     const groupsMapByCourse = {};
     myGroupsList.forEach(p => {
-        groupsMapByCourse[String(p.courseId)] = p;
+        const cid = p?.courseId ?? p?.course_id ?? p?.CourseId ?? p?.course?.id;
+        if (cid === null || cid === undefined || cid === "") return;
+        groupsMapByCourse[String(cid)] = p;
     });
 
     const selectedGroup = selectedCourseId ? groupsMapByCourse[selectedCourseId] : null;

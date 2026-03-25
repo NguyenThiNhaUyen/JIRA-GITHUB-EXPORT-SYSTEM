@@ -184,8 +184,12 @@ export default function LecturerDashboard() {
   const currentSubject = (Array.isArray(subjects) ? subjects : []).find((s) => String(s?.id) === String(selectedSubjectId));
   const currentCourse = courses.find((c) => String(c?.id) === String(selectedCourseId));
   const courseMeta = course ?? currentCourse ?? null;
-  const courseStudentTotal = selectedCourseId ? getCourseStudentCount(courseMeta) : null;
-  const courseGroupTotal = selectedCourseId ? getCourseGroupCount(courseMeta) : null;
+  const courseStudentTotal = selectedCourseId
+    ? (getCourseStudentCount(courseMeta) || null)
+    : null;
+  const courseGroupTotal = selectedCourseId
+    ? (getCourseGroupCount(courseMeta) || groups.length || null)
+    : null;
   const courseLecturerLabel = selectedCourseId ? getLecturerLabel(courseMeta) : null;
   const selectedProject = useMemo(
     () => groups.find((g) => String(g.id) === String(selectedProjectId)),
@@ -343,8 +347,8 @@ export default function LecturerDashboard() {
 
       {/* ── A. Summary Stats ────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Tổng nhóm" value={selectedCourse ? courseGroupTotal ?? stats.total : "—"} />
-        <StatCard icon={<Users size={20} />} color="bg-violet-500" label="Sinh viên lớp" value={selectedCourse ? courseStudentTotal ?? 0 : "—"} />
+        <StatCard icon={<LayoutList size={20} />} color="bg-blue-500" label="Tổng nhóm" value={selectedCourse ? (courseGroupTotal ?? groups.length ?? 0) : "—"} />
+        <StatCard icon={<Users size={20} />} color="bg-violet-500" label="Sinh viên lớp" value={selectedCourse ? (courseStudentTotal ?? 0) : "—"} />
         <StatCard icon={<GitBranch size={20} />} color="bg-teal-500" label="GitHub đã duyệt" value={selectedCourse ? stats.github : "—"} />
         <StatCard icon={<BookOpen size={20} />} color="bg-indigo-500" label="Jira đã duyệt" value={selectedCourse ? stats.jira : "—"} />
         <StatCard icon={<AlertTriangle size={20} />} color="bg-orange-400" label="Cần cảnh báo" value={selectedCourse ? stats.alerts : "—"} />

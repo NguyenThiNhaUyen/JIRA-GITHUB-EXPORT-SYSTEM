@@ -153,7 +153,7 @@ public class CourseService : ICourseService
                 JiraStatus = p.project_integration.approval_status ?? "NONE"
             } : null,
             Topic = p.description,
-            Team = p.team_members.Select(tm => new EnrollmentInfo
+            Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
             {
                 UserId = tm.student_user_id,
                 FullName = tm.student_user?.user?.full_name ?? "Unknown",

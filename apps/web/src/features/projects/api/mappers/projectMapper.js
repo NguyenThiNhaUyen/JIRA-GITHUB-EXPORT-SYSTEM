@@ -5,7 +5,13 @@ export const mapProject = (project) => {
         name: project.name ?? project.Name ?? "",
         description: project.description ?? project.Description ?? "",
         status: project.status ?? project.Status ?? "ACTIVE",
-        courseId: project.courseId ?? project.CourseId,
+        // BE có thể trả courseId dưới nhiều key (camel/pascal/snake) hoặc nested course object
+        courseId: project.courseId
+            ?? project.CourseId
+            ?? project.course_id
+            ?? project.Course_Id
+            ?? project.course?.id
+            ?? project.course?.courseId,
         courseName: project.courseName ?? project.CourseName ?? "",
         courseCode: project.courseCode ?? project.CourseCode ?? "",
         // Stats

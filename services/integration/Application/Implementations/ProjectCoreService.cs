@@ -306,7 +306,7 @@ public class ProjectCoreService : IProjectCoreService
                 dto.RiskScore = 0;
                 dto.CourseCode = project.course?.course_code ?? "";
                 dto.CourseName = project.course?.course_name ?? dto.CourseName;
-                dto.TeamSize = project.team_members.Count(tm => tm.participation_status == "ACTIVE");
+                dto.TeamSize = (project.team_members ?? new List<team_member>()).Count(tm => tm.participation_status == "ACTIVE");
 
                 if (project.project_integration?.github_repo_id != null)
                 {

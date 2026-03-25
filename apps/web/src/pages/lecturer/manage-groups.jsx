@@ -1,5 +1,5 @@
 // Manage Groups - Enterprise UI (Real API)
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card.jsx";
@@ -24,6 +24,7 @@ import {
 export default function ManageGroups() {
     const { courseId: paramId } = useParams();
     const courseId = paramId;
+    const courseIdNum = courseId ? Number.parseInt(courseId, 10) : null;
     const navigate = useNavigate();
     const { success, error } = useToast();
 
@@ -34,14 +35,13 @@ export default function ManageGroups() {
     const [showForceAddModal, setShowForceAddModal] = useState(false);
     const [forceAddGroupId, setForceAddGroupId] = useState(null);
     const [forceAddSelectedIds, setForceAddSelectedIds] = useState([]);
+    const [localGroups, setLocalGroups] = useState([]);
 
     // Data Fetching
     const { data: course, isLoading: loadingCourse } = useGetCourseById(courseId);
     const { data: studentsData = { items: [] }, isLoading: loadingStudents } = useGetEnrolledStudents(courseId);
-    const { data: projectsData, isLoading: loadingProjects } = useGetProjects({
-        courseId,
-        pageSize: 100,
-        enabled: !!courseId
+    const { data: projectsData, isLoading: loadingProjects, isError: projectsError, refetch: refetchProjects } = useGetProjects({
+        courseId: courseIdNum ?? undefined, pageSize: 100, enabled: !!courseId
     });
 
     // Mutations
@@ -59,22 +59,65 @@ export default function ManageGroups() {
             : Array.isArray(studentsData)
                 ? studentsData
                 : [];
-    const groups = Array.isArray(projectsData?.items)
+
+    const apiGroups = (Array.isArray(projectsData?.items) && projectsData.items.length > 0)
         ? projectsData.items
-        : (Array.isArray(course?.groups) ? course.groups : []);
+        : (Array.isArray(course?.groups) && course.groups.length > 0 ? course.groups : []);
+    const allGroupIds = new Set(apiGroups.map(g => String(g.id)));
+    const groups = [...apiGroups, ...localGroups.filter(g => !allGroupIds.has(String(g.id)))];
+
+    useEffect(() => {
+        setLocalGroups([]);
+    }, [courseId]);
+
+    const computeNextGroupNumber = () => {
+        const safeGroups = Array.isArray(groups) ? groups : [];
+        if (safeGroups.length === 0) return 1;
+        const max = Math.max(
+            ...safeGroups.map((g) => {
+                const match = g?.name?.match?.(/Nhóm\s+(\d+)/i);
+                return match ? Number.parseInt(match[1], 10) : 0;
+            })
+        );
+        return (Number.isFinite(max) ? max : 0) + 1;
+    };
+
+    const buildGroupName = ({ groupNumber, attempt = 0 }) => {
+        const base = `Nhóm ${groupNumber}`;
+        if (attempt <= 0) return `${base} - ${Date.now().toString().slice(-4)}`;
+        return `${base} - ${Date.now().toString().slice(-4)}-${attempt}`;
+    };
 
     const handleCreateGroup = async () => {
         if (selectedStudents.length === 0) { error("Vui lòng chọn ít nhất 1 học sinh"); return; }
         if (!newGroupTopic.trim()) { error("Vui lòng nhập đề tài cho nhóm"); return; }
 
         try {
-            const project = await createProjectMutation.mutateAsync({
-                courseId: parseInt(courseId),
-                name: `Nhóm ${(groups?.length ?? 0) + 1}`,
-                description: newGroupTopic,
-                startDate: new Date().toISOString(),
-                endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // Default 3 months
-            });
+            const groupNumber = computeNextGroupNumber();
+
+            let project = null;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const name = buildGroupName({ groupNumber, attempt });
+                try {
+                    project = await createProjectMutation.mutateAsync({
+                        courseId: Number.isFinite(courseIdNum) ? courseIdNum : parseInt(courseId),
+                        name,
+                        description: newGroupTopic,
+                        startDate: new Date().toISOString(),
+                        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // Default 3 months
+                    });
+                    break;
+                } catch (err) {
+                    const msg = err?.message || "Lỗi hệ thống";
+                    const isDuplicate = msg.includes("already exists") || msg.includes("đã tồn tại");
+                    if (isDuplicate && attempt < 2) {
+                        error("Tên nhóm đã tồn tại, đang thử lại với tên mới...");
+                        continue;
+                    }
+                    throw err;
+                }
+            }
+            if (!project) throw new Error("Không thể tạo nhóm (retry exhausted)");
 
             // Add selected members
             for (const studentId of selectedStudents) {
@@ -89,8 +132,19 @@ export default function ManageGroups() {
             setSelectedStudents([]);
             setSelectedLeaderId(null);
             setNewGroupTopic("");
+            setLocalGroups(prev => [...prev, {
+                id: project?.id, name: project?.name, description: newGroupTopic,
+                team: selectedStudents.map(sid => ({ studentId: sid, role: sid === selectedLeaderId ? "LEADER" : "MEMBER" })),
+                integration: null
+            }]);
+            setTimeout(() => refetchProjects(), 1500);
         } catch (err) {
-            error("Không thể tạo nhóm: " + (err.message || "Lỗi hệ thống"));
+            const msg = err?.message || "Lỗi hệ thống";
+            if (msg.includes("already exists") || msg.includes("đã tồn tại")) {
+                error("Tên nhóm đã tồn tại, vui lòng thử lại.");
+            } else {
+                error("Không thể tạo nhóm: " + msg);
+            }
         }
     };
 
@@ -157,11 +211,10 @@ export default function ManageGroups() {
 
     // Calculate students not in any group
     const assignedStudentIds = new Set(
-        groups.flatMap((g) =>
-            (Array.isArray(g?.team) ? g.team : []).map((m) => String(m?.studentId ?? m?.id))
-        )
+        groups.flatMap(g => (Array.isArray(g?.team) ? g.team : [])
+            .map(m => String(m?.studentId ?? m?.id ?? m?.studentUserId)))
     );
-    const availableStudents = students.filter((s) => !assignedStudentIds.has(String(s?.id ?? s?.studentId)));
+    const availableStudents = students; // show all, disable assigned ones in UI
 
     const handleOpenForceAdd = (groupId) => {
         setForceAddGroupId(groupId);
@@ -226,8 +279,16 @@ export default function ManageGroups() {
     }
 
 
+    const showApiError = projectsError && !loadingProjects && localGroups.length === 0;
+
     return (
         <div className="space-y-6">
+            {showApiError && (
+                <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl text-sm">
+                    <span className="text-amber-700">⚠ Không thể tải danh sách nhóm từ server.</span>
+                    <button onClick={() => refetchProjects()} className="text-xs font-semibold text-teal-700 hover:underline ml-4">Thử lại</button>
+                </div>
+            )}
 
             {/* ── Breadcrumb + page header ─────────────── */}
             <div className="flex items-start justify-between">
@@ -319,19 +380,22 @@ export default function ManageGroups() {
                                         availableStudents.map((student) => {
                                             const studentUniqueId = student?.id ?? student?.studentId;
                                             const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
+                                            const isAlreadyAssigned = assignedStudentIds.has(String(studentUniqueId));
                                             return (
                                                 <label
                                                     key={studentUniqueId}
-                                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+                                                    className={`flex items-center gap-3 px-4 py-2.5 transition-colors border-b border-gray-50 last:border-0 ${isAlreadyAssigned ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50 cursor-pointer"}`}
                                                 >
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedStudents.includes(studentUniqueId)}
-                                                        onChange={() => toggleStudentSelection(studentUniqueId)}
+                                                        disabled={isAlreadyAssigned}
+                                                        onChange={() => !isAlreadyAssigned && toggleStudentSelection(studentUniqueId)}
                                                         className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
                                                     />
                                                     <div className="flex-1">
                                                         <p className="text-sm font-medium text-gray-700">{displayName}</p>
+                                                        {isAlreadyAssigned && <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">Đã có nhóm</span>}
                                                         <p className="text-xs text-gray-400">{student?.studentId ?? student?.id ?? "N/A"}</p>
                                                     </div>
 
