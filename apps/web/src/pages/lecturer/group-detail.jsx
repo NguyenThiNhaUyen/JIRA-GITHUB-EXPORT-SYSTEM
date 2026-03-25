@@ -508,6 +508,7 @@ function LinkApprovalSection({ icon, label, url, status, approvedAt, onApprove, 
     const isApproved = status === "APPROVED";
     const isRejected = status === "REJECTED";
     const isPending = status === "PENDING";
+    const hasUrl = typeof url === "string" ? url.trim().length > 0 : !!url;
 
     return (
         <div>
@@ -516,9 +517,34 @@ function LinkApprovalSection({ icon, label, url, status, approvedAt, onApprove, 
                     {icon}
                     <span className="text-sm font-semibold text-gray-700">{label}</span>
                 </div>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${isApproved ? "bg-green-50 text-green-700 border border-green-100" : isRejected ? "bg-red-50 text-red-700 border border-red-100" : "bg-gray-100 text-gray-500 border border-gray-200"
-                    }`}>
-                    {isApproved ? <><CheckCircle size={10} /> Đã duyệt</> : isRejected ? <><Shield size={10} /> Đã từ chối</> : <><Clock size={10} /> Chờ duyệt</>}
+                <span
+                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                        !hasUrl
+                            ? "bg-gray-50 text-gray-500 border border-gray-200"
+                            : isApproved
+                                ? "bg-green-50 text-green-700 border border-green-100"
+                                : isRejected
+                                    ? "bg-red-50 text-red-700 border border-red-100"
+                                    : "bg-amber-50 text-amber-700 border border-amber-100"
+                    }`}
+                >
+                    {!hasUrl ? (
+                        <>
+                            <Clock size={10} /> CHƯA NỘP
+                        </>
+                    ) : isApproved ? (
+                        <>
+                            <CheckCircle size={10} /> ĐÃ DUYỆT
+                        </>
+                    ) : isRejected ? (
+                        <>
+                            <Shield size={10} /> TỪ CHỐI
+                        </>
+                    ) : (
+                        <>
+                            <Clock size={10} /> CHỜ DUYỆT
+                        </>
+                    )}
                 </span>
             </div>
 

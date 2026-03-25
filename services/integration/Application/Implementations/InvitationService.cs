@@ -99,7 +99,9 @@ public class InvitationService : IInvitationService
         var query = _context.team_invitations
             .Include(i => i.project).ThenInclude(p => p.course)
             .Include(i => i.invited_by_user)
-            .Include(i => i.invited_student_user.user)
+            // EF Core cần ThenInclude cho chuỗi navigation chain
+            .Include(i => i.invited_student_user)
+            .ThenInclude(s => s.user)
             .Where(i => i.invited_student_user_id == studentUserId && i.status == "PENDING")
             .OrderByDescending(i => i.created_at)
             .AsQueryable();
@@ -199,7 +201,9 @@ public class InvitationService : IInvitationService
         var i = await _context.team_invitations
             .Include(inv => inv.project).ThenInclude(p => p.course)
             .Include(inv => inv.invited_by_user)
-            .Include(inv => inv.invited_student_user.user)
+            // EF Core cần ThenInclude cho chuỗi navigation chain
+            .Include(inv => inv.invited_student_user)
+            .ThenInclude(s => s.user)
             .FirstOrDefaultAsync(inv => inv.id == invitationId)
             ?? throw new NotFoundException($"Invitation {invitationId} not found");
 

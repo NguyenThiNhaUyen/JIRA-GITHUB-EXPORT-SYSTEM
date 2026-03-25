@@ -261,8 +261,8 @@ export default function AdminReports() {
               <BurndownChart
                 data={(Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
                   name: course?.code ?? `Course-${course?.id ?? "N/A"}`,
-                  completed: 10, // Mock for status visualization
-                  remaining: 5
+                  completed: course?.projectsCount ?? 0,
+                  remaining: Math.max(0, (course?.maxStudents || 0) - (course?.currentStudents || 0))
                 }))}
               />
             </div>
