@@ -24,9 +24,23 @@ public class ProjectInvitationsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SendInvitation(long projectId, [FromBody] CreateInvitationRequest request)
     {
-        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        if (!TryGetCurrentUserId(User, out var userId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
         var result = await _invitationService.SendInvitationAsync(projectId, userId, request);
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation sent successfully"));
+    }
+
+    private static bool TryGetCurrentUserId(ClaimsPrincipal user, out long userId)
+    {
+        var claimValue =
+            user.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            user.FindFirst("nameid")?.Value ??
+            user.FindFirst("sub")?.Value ??
+            user.FindFirst("user_id")?.Value ??
+            user.FindFirst("userid")?.Value ??
+            user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+        return long.TryParse(claimValue, out userId);
     }
 }
 
@@ -52,7 +66,8 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SendInvitationFlat([FromBody] SendInvitationFlatRequest request)
     {
-        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        if (!TryGetCurrentUserId(User, out var userId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
         var createRequest = new CreateInvitationRequest { StudentUserId = request.InvitedStudentId };
         var result = await _invitationService.SendInvitationAsync(request.GroupId, userId, createRequest);
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation sent successfully"));
@@ -63,7 +78,8 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<InvitationResponse>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyPendingInvitations([FromQuery] PagedRequest request)
     {
-        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        if (!TryGetCurrentUserId(User, out var userId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
         var result = await _invitationService.GetMyPendingInvitationsAsync(userId, request);
         return Ok(ApiResponse<PagedResponse<InvitationResponse>>.SuccessResponse(result));
     }
@@ -74,7 +90,8 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> AcceptInvitation(long id)
     {
-        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        if (!TryGetCurrentUserId(User, out var userId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
         var result = await _invitationService.AcceptInvitationAsync(id, userId);
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation accepted"));
     }
@@ -85,8 +102,22 @@ public class InvitationsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<InvitationResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> RejectInvitation(long id)
     {
-        var userId = long.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        if (!TryGetCurrentUserId(User, out var userId))
+            return Unauthorized(ApiResponse<object>.ErrorResponse("Invalid user token"));
         var result = await _invitationService.RejectInvitationAsync(id, userId);
         return Ok(ApiResponse<InvitationResponse>.SuccessResponse(result, "Invitation rejected"));
+    }
+
+    private static bool TryGetCurrentUserId(ClaimsPrincipal user, out long userId)
+    {
+        var claimValue =
+            user.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            user.FindFirst("nameid")?.Value ??
+            user.FindFirst("sub")?.Value ??
+            user.FindFirst("user_id")?.Value ??
+            user.FindFirst("userid")?.Value ??
+            user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+        return long.TryParse(claimValue, out userId);
     }
 }

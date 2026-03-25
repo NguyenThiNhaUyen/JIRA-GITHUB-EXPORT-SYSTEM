@@ -23,8 +23,14 @@ public class StudentController : ControllerBase
 
     private long GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return long.Parse(userIdClaim ?? "0");
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+            User.FindFirst("nameid")?.Value ??
+            User.FindFirst("sub")?.Value ??
+            User.FindFirst("user_id")?.Value ??
+            User.FindFirst("userid")?.Value ??
+            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+        return long.TryParse(userIdClaim, out var userId) ? userId : 0;
     }
 
     [HttpGet("me/stats")]
