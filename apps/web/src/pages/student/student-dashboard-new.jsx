@@ -511,8 +511,8 @@ export default function StudentDashboard() {
                                 ) : (
                                     <div className="space-y-2 pt-1">
                                         {alerts.map((a, i) => {
-                                            const isError = a.severity?.toLowerCase() === "high";
-                                            const isInfo = a.severity?.toLowerCase() === "low";
+                                            const isError = a.severity.toLowerCase() === "high";
+                                            const isInfo = a.severity.toLowerCase() === "low";
                                             return (
                                                 <div key={a.id} className={`flex items-start gap-3 px-4 py-4 rounded-xl border group transition-all ${isError ? "bg-rose-500/5 border-rose-500/20" : isInfo ? "bg-blue-500/5 border-blue-500/20" : "bg-amber-500/5 border-amber-500/20"}`}>
                                                     <AlertTriangle size={14} className={`shrink-0 mt-0.5 ${isError ? "text-rose-500" : isInfo ? "text-blue-500" : "text-amber-500"}`} />

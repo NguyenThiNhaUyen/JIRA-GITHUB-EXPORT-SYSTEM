@@ -20,20 +20,16 @@ const NAV = [
     {
         label: "Học tập",
         items: [
-            { to: "/student/project", icon: Library, label: "Dự án của tôi" },
-            { to: "/student/groups", icon: Users, label: "Nhóm của tôi" },
+            { to: "/student/courses", icon: Library, label: "Môn học" },
+            { to: "/student/my-project", icon: GitBranch, label: "Dự án của tôi" },
+            { to: "/student/contribution", icon: Users, label: "Đóng góp" },
         ],
     },
     {
-        label: "Tài liệu",
+        label: "Theo dõi",
         items: [
-            { to: "/student/srs", icon: FileText, label: "Tài liệu SRS" },
-        ],
-    },
-    {
-        label: "Thông báo",
-        items: [
-            { to: "/student/notifications", icon: Bell, label: "Thông báo" },
+            { to: "/student/alerts", icon: Bell, label: "Thông báo" },
+            { to: "/student/srs", icon: FileText, label: "Báo cáo SRS" },
         ],
     },
 ];

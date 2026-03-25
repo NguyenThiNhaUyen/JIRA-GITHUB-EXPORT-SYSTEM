@@ -186,12 +186,12 @@ export default function StudentProject() {
   }
 
   /* ── Status helpers ── */
-  const ghStatus = project.integration?.githubUrl
-    ? { cls: "bg-green-50 text-green-700 border-green-100", label: "Đã liên kết" }
-    : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Chưa nộp" };
-  const jiraStatus = project.integration?.jiraUrl
-    ? { cls: "bg-blue-50 text-blue-700 border-blue-100", label: "Đã liên kết" }
-    : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Chưa nộp" };
+  const ghStatus = project.integration?.githubRepoName
+    ? { cls: "bg-green-50 text-green-700 border-green-100", label: "Linked" }
+    : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Not linked" };
+  const jiraStatus = project.integration?.jiraProjectKey
+    ? { cls: "bg-blue-50 text-blue-700 border-blue-100", label: "Linked" }
+    : { cls: "bg-gray-100 text-gray-400 border-gray-200", label: "Not linked" };
 
   return (
     <div className="space-y-6">
