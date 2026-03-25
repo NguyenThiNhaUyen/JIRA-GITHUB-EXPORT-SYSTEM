@@ -285,6 +285,8 @@ var app = builder.Build();
 // ============================================
 
 app.UseForwardedHeaders();
+app.UseRouting();
+app.UseCors("AllowAll");
 app.UseCustomExceptionHandler();
 
 
@@ -312,9 +314,6 @@ app.UseSwaggerUI(c =>
                 FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(wwwroot),
                 RequestPath = "" // Serve at root
             });
-
-app.UseRouting();
-app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
