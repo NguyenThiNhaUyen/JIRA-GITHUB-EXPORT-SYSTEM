@@ -1,17 +1,21 @@
 // Tabs Component - Part of UI Kit
 import React, { useState } from 'react';
 
-export function Tabs({ children, defaultValue, className = '', ...props }) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+export function Tabs({ children, defaultValue, className = '', activeTab: controlledActiveTab, setActiveTab: controlledSetActiveTab, value, onValueChange, ...props }) {
+  const [internalTab, setInternalTab] = useState(defaultValue);
+  
+  const currentTab = controlledActiveTab !== undefined ? controlledActiveTab : (value !== undefined ? value : internalTab);
+  const setCurrentTab = controlledSetActiveTab || onValueChange || setInternalTab;
 
   return (
     <div className={className} {...props}>
-      {children.map((child, index) => {
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return child;
         if (child.type === TabsList) {
-          return React.cloneElement(child, { activeTab, setActiveTab });
+          return React.cloneElement(child, { activeTab: currentTab, setActiveTab: setCurrentTab });
         }
         if (child.type === TabsContent) {
-          return React.cloneElement(child, { activeTab });
+          return React.cloneElement(child, { activeTab: currentTab });
         }
         return child;
       })}
@@ -20,11 +24,14 @@ export function Tabs({ children, defaultValue, className = '', ...props }) {
 }
 
 export function TabsList({ children, activeTab, setActiveTab, className = '', ...props }) {
+  const { activeTab: _activeTab, setActiveTab: _setActiveTab, ...domProps } = props;
   return (
-    <div className={`flex space-x-1 border-b border-secondary-200 ${className}`} {...props}>
-      {children.map((child, index) => {
+    <div className={`flex space-x-1 border-b border-secondary-200 ${className}`} {...domProps}>
+      {React.Children.map(children, (child, index) => {
+        if (!React.isValidElement(child)) return child;
         if (child.type === TabsTrigger) {
           return React.cloneElement(child, { 
+            key: child.key ?? index,
             isActive: child.props.value === activeTab,
             onClick: () => setActiveTab(child.props.value)
           });

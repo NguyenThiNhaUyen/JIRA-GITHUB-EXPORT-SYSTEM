@@ -12,12 +12,21 @@ export function useSignalR() {
     const { isAuthenticated, user } = useAuth();
     const { info, success, warning } = useToast();
     const connectionRef = useRef(null);
+    const startPromiseRef = useRef(null);
 
     useEffect(() => {
+        let didCancel = false;
+        const safeStop = (conn) => {
+            const startPromise = startPromiseRef.current;
+            void (async () => {
+                try { await startPromise; } catch { /* ignore */ }
+                try { await conn.stop(); } catch { /* ignore */ }
+            })();
+        };
         // Only connect if authenticated
         if (!isAuthenticated || !user) {
             if (connectionRef.current) {
-                connectionRef.current.stop();
+                safeStop(connectionRef.current);
                 connectionRef.current = null;
             }
             return;
@@ -88,9 +97,14 @@ export function useSignalR() {
         // Start connection
         const startConnection = async () => {
             try {
-                await connection.start();
+                const p = connection.start();
+                startPromiseRef.current = p;
+                await p;
+                if (didCancel) return;
                 console.log('SignalR Connected to Hub');
             } catch (err) {
+                if (didCancel) return;
+                if (err?.name === 'AbortError') return;
                 console.error('SignalR Connection Error: ', err);
             }
         };
@@ -99,8 +113,9 @@ export function useSignalR() {
 
         // Cleanup on unmount or logout
         return () => {
+            didCancel = true;
             if (connectionRef.current) {
-                connectionRef.current.stop();
+                safeStop(connectionRef.current);
                 connectionRef.current = null;
             }
         };

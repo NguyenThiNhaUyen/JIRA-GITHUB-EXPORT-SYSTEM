@@ -272,11 +272,11 @@ export default function StudentProject() {
       {/* ── Tabs: Commits / Jira / Team / SRS ── */}
       <Tabs defaultValue="commits" activeTab={activeTab} setActiveTab={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="commits">Commits ({myCommits.length})</TabsTrigger>
-          <TabsTrigger value="jira">Jira Tasks</TabsTrigger>
-          <TabsTrigger value="team">Nhóm</TabsTrigger>
-          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-          <TabsTrigger value="srs">SRS</TabsTrigger>
+          <TabsTrigger key="commits" value="commits">Commits ({myCommits.length})</TabsTrigger>
+          <TabsTrigger key="jira" value="jira">Jira Tasks</TabsTrigger>
+          <TabsTrigger key="team" value="team">Nhóm</TabsTrigger>
+          <TabsTrigger key="roadmap" value="roadmap">Roadmap</TabsTrigger>
+          <TabsTrigger key="srs" value="srs">SRS</TabsTrigger>
         </TabsList>
 
         {/* ── Commits tab ── */}
