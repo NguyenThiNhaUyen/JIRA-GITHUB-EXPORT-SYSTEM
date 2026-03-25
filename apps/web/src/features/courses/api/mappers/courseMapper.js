@@ -1,7 +1,7 @@
 /**
  * courseMapper.js — Adapter: BE CourseDetailResponse → FE Mock shape
  */
-import { mapProject } from "../../projects/api/mappers/projectMapper.js";
+import { mapProject } from "../../../projects/api/mappers/projectMapper.js";
 
 /**
  * Map một CourseDetailResponse từ BE sang FE course shape
