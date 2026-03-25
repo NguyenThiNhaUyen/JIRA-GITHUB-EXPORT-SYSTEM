@@ -121,49 +121,57 @@ public class CourseService : ICourseService
 
     public async Task<CourseDetailResponse> GetCourseByIdAsync(long courseId)
     {
-        var course = await _unitOfWork.Courses.Query()
-            .AsNoTracking()
-            .Include(c => c.subject)
-            .Include(c => c.semester)
-            .Include(c => c.lecturer_users).ThenInclude(l => l.user)
-            .Include(c => c.projects).ThenInclude(p => p.project_integration)
-            .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
-            .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
-            .FirstOrDefaultAsync(c => c.id == courseId);
-
-        if (course == null)
+        try
         {
-            throw new NotFoundException("Course not found");
+            var course = await _unitOfWork.Courses.Query()
+                .AsNoTracking()
+                .Include(c => c.subject)
+                .Include(c => c.semester)
+                .Include(c => c.lecturer_users).ThenInclude(l => l.user)
+                .Include(c => c.projects).ThenInclude(p => p.project_integration)
+                .Include(c => c.projects).ThenInclude(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
+                .Include(c => c.course_enrollments).ThenInclude(e => e.student_user).ThenInclude(s => s.user)
+                .FirstOrDefaultAsync(c => c.id == courseId);
+
+            if (course == null)
+            {
+                throw new NotFoundException("Course not found");
+            }
+
+            var response = _mapper.Map<CourseDetailResponse>(course);
+
+            // Manual mapping for groups with clear status and team members
+            response.Groups = (course.projects ?? new List<project>())
+                .Where(p => p.status == "ACTIVE")
+                .Select(p => new CourseGroupInfo
+                {
+                    Id = p.id,
+                    Name = p.name,
+                    GithubStatus = p.project_integration?.approval_status ?? "NONE",
+                    JiraStatus = p.project_integration?.approval_status ?? "NONE",
+                    Integration = p.project_integration != null ? new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
+                    {
+                        GithubStatus = p.project_integration.approval_status ?? "NONE",
+                        JiraStatus = p.project_integration.approval_status ?? "NONE"
+                    } : null,
+                    Topic = p.description,
+                    Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
+                    {
+                        UserId = tm.student_user_id,
+                        FullName = tm.student_user?.user?.full_name ?? "Unknown",
+                        StudentCode = tm.student_user?.student_code ?? "N/A",
+                        StudentId = tm.student_user?.student_code ?? "N/A",
+                        Role = tm.team_role
+                    }).ToList()
+                }).ToList();
+
+            return response;
         }
-
-        var response = _mapper.Map<CourseDetailResponse>(course);
-        
-        // Manual mapping for groups with clear status and team members
-        response.Groups = (course.projects ?? new List<project>())
-            .Where(p => p.status == "ACTIVE")
-            .Select(p => new CourseGroupInfo
+        catch (Exception ex)
         {
-            Id = p.id,
-            Name = p.name,
-            GithubStatus = p.project_integration?.approval_status ?? "NONE",
-            JiraStatus = p.project_integration?.approval_status ?? "NONE",
-            Integration = p.project_integration != null ? new JiraGithubExport.Shared.Contracts.Responses.Projects.IntegrationInfo
-            {
-                GithubStatus = p.project_integration.approval_status ?? "NONE",
-                JiraStatus = p.project_integration.approval_status ?? "NONE"
-            } : null,
-            Topic = p.description,
-            Team = (p.team_members ?? new List<team_member>()).Select(tm => new EnrollmentInfo
-            {
-                UserId = tm.student_user_id,
-                FullName = tm.student_user?.user?.full_name ?? "Unknown",
-                StudentCode = tm.student_user?.student_code ?? "N/A",
-                StudentId = tm.student_user?.student_code ?? "N/A",
-                Role = tm.team_role
-            }).ToList()
-        }).ToList();
-
-        return response;
+            _logger.LogError(ex, "[GetCourseByIdAsync] Failed courseId={CourseId}", courseId);
+            throw new Exception(ex.InnerException?.Message ?? ex.Message);
+        }
     }
 
     public async Task<PagedResponse<CourseDetailResponse>> GetAllCoursesAsync(PagedRequest request)

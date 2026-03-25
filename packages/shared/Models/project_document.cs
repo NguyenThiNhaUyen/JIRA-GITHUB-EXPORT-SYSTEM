@@ -23,6 +23,10 @@ public partial class project_document
 
     public long? reviewer_user_id { get; set; }
 
+    // NOTE: Migration snapshot creates an extra column/index named `reviewer_userid` (missing underscore).
+    // Adding it here lets EF tooling infer the type and prevents migrations scaffolding from failing.
+    public long? reviewer_userid { get; set; }
+
     public decimal? score { get; set; }
 
     public string? feedback { get; set; }

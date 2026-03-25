@@ -46,7 +46,7 @@ export function mapCourse(beCourse) {
         // ── Status ────────────────────────────────────────────────
         status: beCourse.status ?? beCourse.Status ?? "ACTIVE",
 
-        // ── Lecturers ──────────────────────────────────────────────
+        // ── Lecturers ────────────────────────────────────────────── 
         lecturers: lecs.map(l => ({
             id: String(l.userId ?? l.UserId ?? ""),
             name: l.fullName ?? l.FullName ?? "",

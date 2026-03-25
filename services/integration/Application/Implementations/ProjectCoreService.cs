@@ -213,7 +213,9 @@ public class ProjectCoreService : IProjectCoreService
 
     public async Task<PagedResponse<ProjectDetailResponse>> GetProjectsByCourseAsync(long courseId, PagedRequest request)
     {
-        var (items, totalItems) = await _unitOfWork.Projects.GetPagedProjectsByCourseAsync(
+        try
+        {
+            var (items, totalItems) = await _unitOfWork.Projects.GetPagedProjectsByCourseAsync(
             courseId,
             request.Q,
             request.SortDir,
@@ -235,28 +237,44 @@ public class ProjectCoreService : IProjectCoreService
             var commitCounts = new Dictionary<long, int>();
             if (repoIds.Any())
             {
-                commitCounts = await _unitOfWork.GitHubCommits.Query()
-                    .Where(c => repoIds.Contains(c.repo_id))
-                    .GroupBy(c => c.repo_id)
-                    .ToDictionaryAsync(g => g.Key, g => g.Count());
+                try
+                {
+                    commitCounts = await _unitOfWork.GitHubCommits.Query()
+                        .Where(c => repoIds.Contains(c.repo_id))
+                        .GroupBy(c => c.repo_id)
+                        .ToDictionaryAsync(g => g.Key, g => g.Count());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubCommits commitCounts query failed, using empty dict");
+                    commitCounts = new Dictionary<long, int>();
+                }
             }
 
             var issueStats = new Dictionary<long, (int Total, int Done)>();
             if (jiraIds.Any())
             {
-                var stats = await _unitOfWork.JiraIssues.Query()
-                    .Where(i => jiraIds.Contains(i.jira_project_id))
-                    .GroupBy(i => i.jira_project_id)
-                    .Select(g => new {
-                        JiraId = g.Key,
-                        Total = g.Count(),
-                        Done = g.Count(i => i.status != null && i.status.ToUpper() == "DONE")
-                    })
-                    .ToListAsync();
-
-                foreach (var s in stats)
+                try
                 {
-                    issueStats[s.JiraId] = (s.Total, s.Done);
+                    var stats = await _unitOfWork.JiraIssues.Query()
+                        .Where(i => jiraIds.Contains(i.jira_project_id))
+                        .GroupBy(i => i.jira_project_id)
+                        .Select(g => new {
+                            JiraId = g.Key,
+                            Total = g.Count(),
+                            Done = g.Count(i => i.status != null && i.status.ToUpper() == "DONE")
+                        })
+                        .ToListAsync();
+
+                    foreach (var s in stats)
+                    {
+                        issueStats[s.JiraId] = (s.Total, s.Done);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[GetProjectsByCourse] JiraIssues issueStats query failed, using empty dict");
+                    issueStats = new Dictionary<long, (int Total, int Done)>();
                 }
             }
 
@@ -264,18 +282,34 @@ public class ProjectCoreService : IProjectCoreService
             var prCounts2 = new Dictionary<long, int>();
             if (repoIds.Any())
             {
-                prCounts2 = await _unitOfWork.GitHubPullRequests.Query()
-                    .Where(pr => repoIds.Contains(pr.repo_id))
-                    .GroupBy(pr => pr.repo_id)
-                    .ToDictionaryAsync(g => g.Key, g => g.Count());
+                try
+                {
+                    prCounts2 = await _unitOfWork.GitHubPullRequests.Query()
+                        .Where(pr => repoIds.Contains(pr.repo_id))
+                        .GroupBy(pr => pr.repo_id)
+                        .ToDictionaryAsync(g => g.Key, g => g.Count());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubPullRequests prCounts query failed, using empty dict");
+                    prCounts2 = new Dictionary<long, int>();
+                }
 
-                var lastCommitData = await _unitOfWork.GitHubCommits.Query()
-                    .Where(c => repoIds.Contains(c.repo_id) && c.committed_at.HasValue)
-                    .GroupBy(c => c.repo_id)
-                    .Select(g => new { RepoId = g.Key, Last = g.Max(x => x.committed_at) })
-                    .ToListAsync();
-                foreach (var lc in lastCommitData)
-                    lastCommitByRepo[lc.RepoId] = lc.Last;
+                try
+                {
+                    var lastCommitData = await _unitOfWork.GitHubCommits.Query()
+                        .Where(c => repoIds.Contains(c.repo_id) && c.committed_at.HasValue)
+                        .GroupBy(c => c.repo_id)
+                        .Select(g => new { RepoId = g.Key, Last = g.Max(x => x.committed_at) })
+                        .ToListAsync();
+                    foreach (var lc in lastCommitData)
+                        lastCommitByRepo[lc.RepoId] = lc.Last;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubCommits lastCommitData query failed, using empty dict");
+                    lastCommitByRepo = new Dictionary<long, DateTime?>();
+                }
             }
 
             // Bug #3 fix: wrap ReportExports in try-catch — table may not exist or have schema mismatch
@@ -346,7 +380,13 @@ public class ProjectCoreService : IProjectCoreService
             }
         }
 
-        return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
+            return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GetProjectsByCourseAsync] Failed courseId={CourseId}", courseId);
+            throw new Exception(ex.InnerException?.Message ?? ex.Message);
+        }
     }
 
     public async Task<List<CommitResponse>> GetProjectCommitsAsync(long projectId, int page = 1, int pageSize = 50)
