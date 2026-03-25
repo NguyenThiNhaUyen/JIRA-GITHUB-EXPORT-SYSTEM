@@ -171,7 +171,8 @@ class AuthService {
         "POST",
         "/api/auth/refresh",
         body: {
-          "refreshToken": oldRefreshToken,
+          // Backend RefreshRequest expects `token` (camelCase JSON -> "token").
+          "token": oldRefreshToken,
         },
       );
 
@@ -242,4 +243,4 @@ class AuthService {
   Future<String?> getToken() async {
     return await _storage.read(key: "token");
   }
-}
+}

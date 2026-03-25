@@ -247,7 +247,13 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponse> RefreshTokenAsync(RefreshRequest request)
     {
-        var principal = _jwtService.GetPrincipalFromExpiredToken(request.Token);
+        var refreshToken = request.Token ?? request.RefreshToken;
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            throw new UnauthorizedException("Refresh token is required");
+        }
+
+        var principal = _jwtService.GetPrincipalFromExpiredToken(refreshToken);
         if (principal == null)
         {
             throw new UnauthorizedException("Invalid token");
