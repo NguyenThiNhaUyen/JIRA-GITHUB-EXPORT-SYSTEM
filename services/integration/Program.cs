@@ -254,13 +254,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins(
-                "https://jira-github-export-system-2n2bcm67i-nguyenthinhauyens-projects.vercel.app",
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "https://localhost:5173",
-                "https://localhost:3000"
-            )
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+
+                if (origin.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+                    origin.StartsWith("https://localhost", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                       uri.Host.EndsWith("vercel.app", StringComparison.OrdinalIgnoreCase);
+            })
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
