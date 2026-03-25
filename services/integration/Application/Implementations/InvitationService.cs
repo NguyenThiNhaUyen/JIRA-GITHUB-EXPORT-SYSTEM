@@ -97,11 +97,7 @@ public class InvitationService : IInvitationService
     public async Task<PagedResponse<InvitationResponse>> GetMyPendingInvitationsAsync(long studentUserId, PagedRequest request)
     {
         var query = _context.team_invitations
-            .Include(i => i.project).ThenInclude(p => p.course)
-            .Include(i => i.invited_by_user)
-            // EF Core cần ThenInclude cho chuỗi navigation chain
-            .Include(i => i.invited_student_user)
-            .ThenInclude(s => s.user)
+            .AsNoTracking()
             .Where(i => i.invited_student_user_id == studentUserId && i.status == "PENDING")
             .OrderByDescending(i => i.created_at)
             .AsQueryable();
@@ -115,7 +111,7 @@ public class InvitationService : IInvitationService
             .Take(pageSize)
             .ToListAsync();
 
-        var mapped = items.Select(MapToResponse).ToList();
+        var mapped = await BuildInvitationResponsesAsync(items);
 
         return new PagedResponse<InvitationResponse>
         {
@@ -199,34 +195,71 @@ public class InvitationService : IInvitationService
     private async Task<InvitationResponse> GetInvitationResponseAsync(long invitationId)
     {
         var i = await _context.team_invitations
-            .Include(inv => inv.project).ThenInclude(p => p.course)
-            .Include(inv => inv.invited_by_user)
-            // EF Core cần ThenInclude cho chuỗi navigation chain
-            .Include(inv => inv.invited_student_user)
-            .ThenInclude(s => s.user)
+            .AsNoTracking()
             .FirstOrDefaultAsync(inv => inv.id == invitationId)
             ?? throw new NotFoundException($"Invitation {invitationId} not found");
 
-        return MapToResponse(i);
+        var mapped = await BuildInvitationResponsesAsync(new List<team_invitation> { i });
+        return mapped.First();
     }
 
-    private static InvitationResponse MapToResponse(team_invitation i)
+    private async Task<List<InvitationResponse>> BuildInvitationResponsesAsync(List<team_invitation> invitations)
     {
-        return new InvitationResponse
+        if (invitations.Count == 0) return new List<InvitationResponse>();
+
+        var projectIds = invitations.Select(x => x.project_id).Distinct().ToList();
+        var inviterUserIds = invitations.Select(x => x.invited_by_user_id).Distinct().ToList();
+        var invitedStudentUserIds = invitations.Select(x => x.invited_student_user_id).Distinct().ToList();
+
+        var projects = await _context.projects
+            .AsNoTracking()
+            .Where(p => projectIds.Contains(p.id))
+            .Select(p => new { p.id, p.name, p.course_id })
+            .ToListAsync();
+
+        var courseIds = projects.Select(p => p.course_id).Distinct().ToList();
+
+        var courses = await _context.courses
+            .AsNoTracking()
+            .Where(c => courseIds.Contains(c.id))
+            .Select(c => new { c.id, c.course_name })
+            .ToListAsync();
+
+        var userIds = inviterUserIds.Concat(invitedStudentUserIds).Distinct().ToList();
+        var users = await _context.users
+            .AsNoTracking()
+            .Where(u => userIds.Contains(u.id))
+            .Select(u => new { u.id, u.full_name })
+            .ToListAsync();
+
+        var projectMap = projects.ToDictionary(p => p.id);
+        var courseMap = courses.ToDictionary(c => c.id, c => c.course_name);
+        var userMap = users.ToDictionary(u => u.id, u => u.full_name);
+
+        return invitations.Select(i =>
         {
-            Id = i.id,
-            ProjectId = i.project_id,
-            ProjectName = i.project?.name ?? "",
-            CourseId = i.project?.course_id ?? 0,
-            CourseName = i.project?.course?.course_name ?? "N/A",
-            InvitedByUserId = i.invited_by_user_id,
-            InvitedByName = i.invited_by_user?.full_name ?? "",
-            InvitedStudentUserId = i.invited_student_user_id,
-            InvitedStudentName = i.invited_student_user?.user?.full_name ?? "",
-            Status = i.status,
-            Message = i.message,
-            CreatedAt = i.created_at,
-            RespondedAt = i.responded_at
-        };
+            projectMap.TryGetValue(i.project_id, out var project);
+            var courseId = project?.course_id ?? 0;
+            var courseName = courseMap.TryGetValue(courseId, out var cName) ? cName : "N/A";
+            var invitedByName = userMap.TryGetValue(i.invited_by_user_id, out var inviterName) ? inviterName : "";
+            var invitedStudentName = userMap.TryGetValue(i.invited_student_user_id, out var invitedName) ? invitedName : "";
+
+            return new InvitationResponse
+            {
+                Id = i.id,
+                ProjectId = i.project_id,
+                ProjectName = project?.name ?? "",
+                CourseId = courseId,
+                CourseName = courseName,
+                InvitedByUserId = i.invited_by_user_id,
+                InvitedByName = invitedByName,
+                InvitedStudentUserId = i.invited_student_user_id,
+                InvitedStudentName = invitedStudentName,
+                Status = i.status,
+                Message = i.message,
+                CreatedAt = i.created_at,
+                RespondedAt = i.responded_at
+            };
+        }).ToList();
     }
 }
