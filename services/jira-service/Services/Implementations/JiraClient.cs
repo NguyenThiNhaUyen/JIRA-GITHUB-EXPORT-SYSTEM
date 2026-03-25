@@ -65,68 +65,92 @@ public class JiraClient : IJiraClient
                 return;
             }
 
-            var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql=project={projectKey}&maxResults=100";
-            var response = await SendGetAsync(url, jiraToken);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Failed to fetch Jira issues for {ProjectKey}: {StatusCode}", projectKey, response.StatusCode);
-                return;
-            }
-
-            var searchResult = await response.Content.ReadFromJsonAsync<JiraSearchResponse>();
-            if (searchResult == null || !searchResult.Issues.Any()) return;
-
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            foreach (var jiraIssue in searchResult.Issues)
-            {
-                var existing = await unitOfWork.JiraIssues.FirstOrDefaultAsync(i => i.jira_issue_key == jiraIssue.Key);
-                
-                if (existing != null)
-                {
-                    existing.title = jiraIssue.Fields.Summary;
-                    existing.status = jiraIssue.Fields.Status.Name;
-                    existing.priority = jiraIssue.Fields.Priority?.Name;
-                    existing.updated_at = jiraIssue.Fields.Updated;
-                    existing.due_date = jiraIssue.Fields.Duedate;
-                    existing.resolution_date = jiraIssue.Fields.Resolutiondate;
-                    existing.story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData);
+            int startAt = 0;
+            int maxResults = 100;
+            int totalSynced = 0;
+            var hasMore = true;
 
-                    unitOfWork.JiraIssues.Update(existing);
-                }
-                else
+            while (hasMore)
+            {
+                var url = $"{siteUrl.TrimEnd('/')}/rest/api/3/search?jql=project={projectKey}&maxResults={maxResults}&startAt={startAt}";
+                var response = await SendGetAsync(url, jiraToken);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    // Create new issue
-                    var issue = new jira_issue
+                    _logger.LogWarning("Failed to fetch Jira issues for {ProjectKey}: {StatusCode}", projectKey, response.StatusCode);
+                    return;
+                }
+
+                var searchResult = await response.Content.ReadFromJsonAsync<JiraSearchResponse>();
+                if (searchResult == null)
+                {
+                    break;
+                }
+
+                if (searchResult.Issues.Count > 0)
+                {
+                    foreach (var jiraIssue in searchResult.Issues)
                     {
-                        jira_project_id = jiraProjectId,
-                        jira_issue_key = jiraIssue.Key,
-                        title = jiraIssue.Fields.Summary,
-                        issue_type = jiraIssue.Fields.Issuetype.Name,
-                        status = jiraIssue.Fields.Status.Name,
-                        priority = jiraIssue.Fields.Priority?.Name,
-                        created_at = jiraIssue.Fields.Created,
-                        updated_at = jiraIssue.Fields.Updated,
-                        due_date = jiraIssue.Fields.Duedate,
-                        resolution_date = jiraIssue.Fields.Resolutiondate,
-                        story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData)
-                    };
-                    unitOfWork.JiraIssues.Add(issue);
+                        var existing = await unitOfWork.JiraIssues.FirstOrDefaultAsync(i => i.jira_issue_key == jiraIssue.Key);
+
+                        if (existing != null)
+                        {
+                            existing.title = jiraIssue.Fields.Summary;
+                            existing.status = jiraIssue.Fields.Status.Name;
+                            existing.priority = jiraIssue.Fields.Priority?.Name;
+                            existing.updated_at = jiraIssue.Fields.Updated;
+                            existing.due_date = jiraIssue.Fields.Duedate;
+                            existing.resolution_date = jiraIssue.Fields.Resolutiondate;
+                            existing.story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData);
+
+                            unitOfWork.JiraIssues.Update(existing);
+                        }
+                        else
+                        {
+                            // Create new issue
+                            var issue = new jira_issue
+                            {
+                                jira_project_id = jiraProjectId,
+                                jira_issue_key = jiraIssue.Key,
+                                title = jiraIssue.Fields.Summary,
+                                issue_type = jiraIssue.Fields.Issuetype.Name,
+                                status = jiraIssue.Fields.Status.Name,
+                                priority = jiraIssue.Fields.Priority?.Name,
+                                created_at = jiraIssue.Fields.Created,
+                                updated_at = jiraIssue.Fields.Updated,
+                                due_date = jiraIssue.Fields.Duedate,
+                                resolution_date = jiraIssue.Fields.Resolutiondate,
+                                story_points = ExtractStoryPoints(jiraIssue.Fields.ExtensionData)
+                            };
+                            unitOfWork.JiraIssues.Add(issue);
+                        }
+                    }
+
+                    totalSynced += searchResult.Issues.Count;
+                    startAt += searchResult.Issues.Count;
+                }
+
+                if (searchResult.Issues.Count < maxResults || startAt >= searchResult.Total)
+                {
+                    hasMore = false;
                 }
             }
 
             await unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Successfully synced {Count} issues for Jira project {ProjectKey}", searchResult.Issues.Count, projectKey);
+            _logger.LogInformation("Successfully synced {Count} issues for Jira project {ProjectKey}", totalSynced, projectKey);
         }
         catch (System.Net.Sockets.SocketException ex)
         {
             _logger.LogWarning("DNS/Network error for Jira URL '{SiteUrl}': {Message}. Please verify the Jira URL is correct and accessible.", siteUrl, ex.Message);
+            throw;
         }
         catch (HttpRequestException ex)
         {
             _logger.LogWarning("HTTP request error for Jira project {ProjectKey}: {Message}. Please check your Jira URL and credentials.", projectKey, ex.Message);
+            throw;
         }
         catch (Exception ex)
         {

@@ -70,6 +70,10 @@ export function useSignalR() {
                 info(msg, { title, duration: 8000 });
             } else if (type === 'LINKS_APPROVED') {
                 success(msg, { title: 'Thành công' });
+            } else if (type === 'SYNC_SUCCESS') {
+                success(msg, { title: 'Đồng bộ thành công', duration: 5000 });
+            } else if (type === 'SYNC_ERROR') {
+                warning(msg, { title: 'Đồng bộ thất bại', duration: 10000 });
             } else {
                 info(msg, { title });
             }

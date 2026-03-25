@@ -27,6 +27,19 @@ export default function Contributions() {
     }, [selectedCourse]);
 
     const { data: metrics, isLoading: loadingMetrics } = useGetProjectMetrics(selectedProject);
+
+    // Fallback thông tin liên kết từ `groups` khi API metrics thiếu dữ liệu.
+    const currentGroup = groups.find((g) => String(g.id) === String(selectedProject));
+    const githubLink = currentGroup?.integration?.githubUrl || metrics?.githubStats?.repoName || "N/A";
+    const jiraLink = currentGroup?.integration?.jiraUrl || metrics?.jiraStats?.projectKey || "N/A";
+
+    const isHttpLink = (value) => typeof value === "string" && value.includes("http");
+    const truncateText = (value, maxLength = 26) => {
+        if (value === null || value === undefined) return "";
+        const str = String(value);
+        if (str.length <= maxLength) return str;
+        return `${str.slice(0, maxLength - 3)}...`;
+    };
     
     const weeklyCommits = metrics?.weeklyCommits || new Array(12).fill(0);
     const commitsByStudent = metrics?.contributions || [];
@@ -174,11 +187,33 @@ export default function Contributions() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-500">GitHub Repo:</span>
-                                        <span className="text-sm font-medium text-teal-600">{metrics?.githubStats?.repoName || "N/A"}</span>
+                                        {isHttpLink(githubLink) ? (
+                                            <a
+                                                href={githubLink}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm font-medium text-teal-600 hover:underline"
+                                            >
+                                                {truncateText(githubLink)}
+                                            </a>
+                                        ) : (
+                                            <span className="text-sm font-medium text-teal-600">{githubLink}</span>
+                                        )}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-500">Jira Project:</span>
-                                        <span className="text-sm font-medium text-blue-600">{metrics?.jiraStats?.projectKey || "N/A"}</span>
+                                        {isHttpLink(jiraLink) ? (
+                                            <a
+                                                href={jiraLink}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-sm font-medium text-blue-600 hover:underline"
+                                            >
+                                                {truncateText(jiraLink)}
+                                            </a>
+                                        ) : (
+                                            <span className="text-sm font-medium text-blue-600">{jiraLink}</span>
+                                        )}
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-500">Trạng thái:</span>

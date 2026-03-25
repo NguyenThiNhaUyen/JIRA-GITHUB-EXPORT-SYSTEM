@@ -515,7 +515,7 @@ export default function ManageGroups() {
                                                         <Button
                                                             size="sm"
                                                             onClick={() => handleOpenForceAdd(group.id)}
-                                                            className="h-6 px-2.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200/50 text-[10px] shadow-none flex items-center gap-1"
+                                                            className="h-6 px-2.5 rounded-md bg-teal-600 hover:bg-teal-700 text-white border border-teal-200/50 text-[10px] shadow-none flex items-center gap-1"
                                                         >
                                                             <UserPlus size={10} /> Thêm SV
                                                         </Button>

@@ -235,7 +235,7 @@ public class ProjectsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<IActionResult> SyncProjectCommits(long projectId)
     {
-        var result = await _coreService.SyncProjectCommitsAsync(projectId);
+        var result = await _coreService.SyncProjectCommitsAsync(projectId, GetCurrentUserId());
         return Ok(ApiResponse<object>.SuccessResponse(result, "Sync triggered"));
     }
 
