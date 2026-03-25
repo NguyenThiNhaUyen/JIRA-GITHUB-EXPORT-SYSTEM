@@ -80,7 +80,6 @@ public class SrsService : ISrsService
     {
         var query = _context.project_documents
             .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
             .Where(d => d.project_id == projectId && d.doc_type == "SRS")
             .AsQueryable();
 
@@ -162,7 +161,6 @@ public class SrsService : ISrsService
     {
         var query = _context.project_documents
             .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
             .Include(d => d.project)
             .Where(d => d.doc_type == "SRS")
             .AsQueryable();
@@ -261,7 +259,6 @@ public class SrsService : ISrsService
     {
         var srs = await _context.project_documents
             .Include(d => d.submitted_by_user)
-            .Include(d => d.reviewer_user)
             .FirstOrDefaultAsync(d => d.id == srsId)
             ?? throw new NotFoundException($"SRS document {srsId} not found");
 

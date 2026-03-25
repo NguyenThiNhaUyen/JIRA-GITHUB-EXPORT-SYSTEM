@@ -87,7 +87,7 @@ public class AnalyticsController : ControllerBase
 
     /// <summary>GET /api/analytics/team-activities</summary>
     [HttpGet("team-activities")]
-    [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+    [Authorize(Roles = "ADMIN,SUPER_ADMIN,LECTURER")]
     public async Task<IActionResult> GetTeamActivities()
     {
         var result = await _analyticsService.GetTeamActivitiesAsync();
