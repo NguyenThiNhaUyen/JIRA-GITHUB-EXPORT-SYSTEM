@@ -17,6 +17,25 @@ const NAV = [
             { to: "/student", icon: LayoutDashboard, label: "Dashboard", end: true },
         ],
     },
+    {
+        label: "Học tập",
+        items: [
+            { to: "/student/project", icon: Library, label: "Dự án của tôi" },
+            { to: "/student/groups", icon: Users, label: "Nhóm của tôi" },
+        ],
+    },
+    {
+        label: "Tài liệu",
+        items: [
+            { to: "/student/srs", icon: FileText, label: "Tài liệu SRS" },
+        ],
+    },
+    {
+        label: "Thông báo",
+        items: [
+            { to: "/student/notifications", icon: Bell, label: "Thông báo" },
+        ],
+    },
 ];
 
 export default function StudentLayout({ children }) {

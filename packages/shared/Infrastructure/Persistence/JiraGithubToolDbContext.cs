@@ -517,6 +517,10 @@ public partial class JiraGithubToolDbContext : DbContext
                 .HasForeignKey(d => d.reviewer_user_id)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("fk_project_documents_reviewer");
+
+            // Ignore the workaround property — it was added only for migration scaffolding
+            // The real FK uses reviewer_user_id above
+            entity.Ignore(e => e.reviewer_userid);
         });
 
         modelBuilder.Entity<project_integration>(entity =>
@@ -629,6 +633,32 @@ public partial class JiraGithubToolDbContext : DbContext
             entity.HasOne(d => d.student_user).WithMany(p => p.team_members)
                 .HasForeignKey(d => d.student_user_id)
                 .HasConstraintName("fk_team_members_student");
+        });
+
+        modelBuilder.Entity<team_invitation>(entity =>
+        {
+            entity.HasKey(e => e.id).HasName("PK_team_invitations");
+
+            entity.ToTable("team_invitations");
+
+            entity.Property(e => e.status)
+                .HasMaxLength(50)
+                .HasDefaultValueSql("'PENDING'::character varying");
+
+            entity.Property(e => e.created_at).HasDefaultValueSql("now()");
+
+            // Explicit FK mappings so EF does NOT generate shadow columns
+            entity.HasOne(d => d.project).WithMany()
+                .HasForeignKey(d => d.project_id)
+                .HasConstraintName("fk_team_invitations_project");
+
+            entity.HasOne(d => d.invited_by_user).WithMany()
+                .HasForeignKey(d => d.invited_by_user_id)
+                .HasConstraintName("fk_team_invitations_inviter");
+
+            entity.HasOne(d => d.invited_student_user).WithMany()
+                .HasForeignKey(d => d.invited_student_user_id)
+                .HasConstraintName("fk_team_invitations_invited_student");
         });
 
         modelBuilder.Entity<user>(entity =>
