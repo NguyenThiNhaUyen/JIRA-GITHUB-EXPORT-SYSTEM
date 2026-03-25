@@ -240,19 +240,21 @@ class LecturerService {
     final data = await _get("/reports");
     final items = ApiMapper.extractItems(data);
     return items.map((r) {
-      // Backend ReportExportResponse fields (camelCase từ System.Text.Json CamelCase policy)
       final id = r['id'] ?? r['reportId'];
       final type = r['type'] ?? r['reportType'] ?? 'Báo cáo';
       final format = (r['format'] ?? r['fileType'] ?? 'PDF').toString().toUpperCase();
       final status = r['status'] ?? 'COMPLETED';
-      // fileUrl = URL đầy đủ hoặc tương đối, ví dụ:
-      //   "https://jira-github-export-system.onrender.com/reports/file.pdf"
-      //   "/reports/file.pdf"
       final fileUrl = r['fileUrl'] ?? r['FileUrl'] ?? r['filePath'] ?? r['url'] ?? r['downloadUrl'];
       final fileName = r['fileName'] ?? r['FileName']
           ?? (fileUrl != null ? fileUrl.toString().split('/').last : null)
           ?? 'report_$id.${format.toLowerCase()}';
       final createdAt = r['createdAt'] ?? r['date'] ?? r['generatedAt'] ?? r['requestedAt'] ?? '';
+
+      // Parse scopeEntityId từ fileName vì backend chưa trả về trực tiếp
+      // Pattern: project_{id}_srs_... / project_{id}_roster_... / course_{id}_commits_...
+      final scopeEntityId = _parseScopeEntityId(fileName?.toString() ?? '');
+      // Infer reportTypeCode từ type string hoặc filename
+      final reportTypeCode = _inferReportTypeCode(type.toString(), fileName?.toString() ?? '');
 
       return {
         ...r,
@@ -261,14 +263,82 @@ class LecturerService {
         'type': type,
         'format': format,
         'status': status,
-        'fileUrl': fileUrl,   // key gốc từ backend
-        'filePath': fileUrl,  // alias dùng trong downloadReportFile
+        'fileUrl': fileUrl,
+        'filePath': fileUrl,
         'fileName': fileName,
         'date': createdAt,
         'errorMessage': r['errorMessage'],
+        'scopeEntityId': scopeEntityId,
+        'reportTypeCode': reportTypeCode,
       };
     }).toList();
   }
+
+  /// Parse project/course ID từ tên file
+  /// Ví dụ: project_24_srs_20260325.pdf → 24
+  ///         course_5_commits_20260325.pdf → 5
+  String? _parseScopeEntityId(String fileName) {
+    final patterns = [
+      RegExp(r'project_(\d+)_'),
+      RegExp(r'course_(\d+)_'),
+    ];
+    for (final p in patterns) {
+      final m = p.firstMatch(fileName);
+      if (m != null) return m.group(1);
+    }
+    return null;
+  }
+
+  /// Infer loại report từ type string hoặc tên file
+  String _inferReportTypeCode(String type, String fileName) {
+    final t = type.toLowerCase();
+    final f = fileName.toLowerCase();
+    if (t.contains('srs') || f.contains('_srs_') || f.contains('_sra_')) return 'SRS_ISO29148';
+    if (t.contains('commit') || f.contains('_commit')) return 'COMMIT_STATISTICS';
+    if (t.contains('roster') || f.contains('_roster')) return 'TEAM_ROSTER';
+    if (t.contains('activity') || t.contains('tổng kết') || f.contains('_activity')) return 'ACTIVITY_SUMMARY';
+    return 'SRS_ISO29148'; // default
+  }
+
+  /// Tái tạo report bằng cách gọi lại generate endpoint, trả về Map data của report mới
+  Future<Map<String, dynamic>?> regenerateReport(Map<String, dynamic> report) async {
+    final typeCode = report['reportTypeCode']?.toString() ?? 'SRS_ISO29148';
+    final entityId = report['scopeEntityId']?.toString();
+    final format = report['format']?.toString() ?? 'PDF';
+
+    if (entityId == null) throw Exception('Không xác định được ID nguồn của báo cáo này.');
+
+    Map<String, dynamic>? result;
+    switch (typeCode) {
+      case 'COMMIT_STATISTICS':
+        result = await generateCommitStats(courseId: entityId, format: format);
+        break;
+      case 'TEAM_ROSTER':
+        result = await generateTeamRoster(projectId: entityId, format: format);
+        break;
+      case 'SRS_ISO29148':
+      default:
+        result = await generateSrsReport(projectId: entityId, format: format);
+        break;
+    }
+    if (result == null) return null;
+
+    // Lấy reportId từ result (backend trả { reportId: long })
+    final newId = result['reportId'] ?? result['ReportId'] ?? result['id'];
+    if (newId == null) return result;
+
+    // Lấy fileUrl từ /download-link (file vừa tạo còn fresh trên disk)
+    final freshUrl = await getDownloadLink(newId);
+    return {
+      ...result,
+      'reportId': newId,
+      'id': newId,
+      'fileUrl': freshUrl,
+      'filePath': freshUrl,
+    };
+  }
+
+
   /// Download report file — gọi endpoint /download (tái tạo on-demand từ DB)
   /// Fallback về fileUrl hoặc /download-link nếu endpoint mới chưa deploy
   Future<String> downloadReportFile(dynamic reportId, String fileName, {String? filePath}) async {

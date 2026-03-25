@@ -637,16 +637,45 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
   }
 
   Future<void> _downloadReport(dynamic reportId) async {
+    final report = _exportHistory.firstWhere(
+      (r) => (r['id'] ?? r['reportId'])?.toString() == reportId?.toString(),
+      orElse: () => {},
+    );
+    final fileName = report['fileName']?.toString() ?? 'report_$reportId.pdf';
+    final filePath = report['filePath']?.toString();
+
     try {
       _snack('Đang tải file báo cáo...');
-      final report = _exportHistory.firstWhere(
-        (r) => (r['id'] ?? r['reportId'])?.toString() == reportId?.toString(),
-        orElse: () => {},
-      );
-      final fileName = report['fileName']?.toString() ?? 'report_$reportId.pdf';
-      final filePath = report['filePath']?.toString();
-      final path = await _lecturerService.downloadReportFile(reportId, fileName, filePath: filePath);
-      final result = await OpenFile.open(path);
+
+      // Thử 1: download file cũ (nếu vẫn còn trên server)
+      String? localPath;
+      try {
+        localPath = await _lecturerService.downloadReportFile(
+          reportId, fileName, filePath: filePath);
+      } catch (_) {
+        localPath = null;
+      }
+
+      // Thử 2: file không còn → regenerate rồi tải file mới vừa tạo
+      if (localPath == null) {
+        _snack('Đang tạo lại báo cáo...');
+        final newData = await _lecturerService.regenerateReport(report);
+        if (newData == null) throw Exception('Không thể tạo lại báo cáo này.');
+
+        final newId = newData['reportId'] ?? newData['ReportId'] ?? newData['id'];
+        if (newId == null) throw Exception('Không nhận được ID báo cáo mới.');
+
+        final newFileUrl = newData['fileUrl'] ?? newData['FileUrl']
+            ?? newData['filePath'] ?? newData['file_url'];
+
+        _snack('Đang tải file...');
+        localPath = await _lecturerService.downloadReportFile(
+          newId, fileName, filePath: newFileUrl?.toString());
+
+        _loadInitialData(); // refresh lịch sử
+      }
+
+      final result = await OpenFile.open(localPath);
       if (result.type != ResultType.done) {
         throw Exception('Không thể mở file: ${result.message}');
       }
