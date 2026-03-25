@@ -28,6 +28,10 @@ public static class DatabaseSeeder
                 ADD COLUMN IF NOT EXISTS due_date TIMESTAMP,
                 ADD COLUMN IF NOT EXISTS story_points INTEGER DEFAULT 0,
                 ADD COLUMN IF NOT EXISTS resolution_date TIMESTAMP;
+
+                ALTER TABLE project_integrations 
+                ADD COLUMN IF NOT EXISTS github_token TEXT,
+                ADD COLUMN IF NOT EXISTS jira_token TEXT;
             ");
 
             await SeedRolesAsync(dbContext);
