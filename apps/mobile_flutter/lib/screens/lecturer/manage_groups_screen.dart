@@ -54,7 +54,7 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
 
       final allCourses = results[0] as List<Map<String, dynamic>>;
       final course = allCourses.firstWhere(
-        (c) => (c['id'] ?? c['Id'] ?? '').toString() == widget.courseId,
+        (c) => (c['id'] ?? '').toString() == widget.courseId,
         orElse: () => {},
       );
 
@@ -78,41 +78,42 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
 
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
     return {
-      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-      'name': (c['name'] ?? c['courseName'] ?? c['className'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? 'N/A').toString(),
+      'id': (c['id'] ?? 0).toString(),
+      'name': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? 'N/A').toString(),
     };
   }
 
   Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
     final integration = g['integration'] ?? {};
-    final students = (g['students'] ?? g['members'] ?? []) as List;
+    final students = (g['students'] ?? g['members'] ?? g['teamMembers'] ?? []) as List;
     return {
-      'id': (g['id'] ?? g['Id'] ?? 0).toString(),
-      'name': (g['name'] ?? g['groupName'] ?? 'N/A').toString(),
-      'description': (g['topic'] ?? g['projectName'] ?? g['description'] ?? '').toString(),
-      'githubStatus': (g['githubStatus'] ?? integration['github_status'] ?? 'NONE').toString().toUpperCase(),
-      'jiraStatus': (g['jiraStatus'] ?? integration['jira_status'] ?? 'NONE').toString().toUpperCase(),
+      'id': (g['id'] ?? 0).toString(),
+      'name': (g['name'] ?? 'N/A').toString(),
+      'description': (g['description'] ?? g['topic'] ?? '').toString(),
+      'githubStatus': (g['githubStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase(),
+      'jiraStatus': (g['jiraStatus'] ?? integration['approvalStatus'] ?? 'NONE').toString().toUpperCase(),
       'riskScore': (g['riskScore'] ?? 0) as int,
       'progressPercent': (g['progressPercent'] ?? 0) as int,
       'students': students.map((e) => _normalizeMember(e as Map<String, dynamic>)).toList(),
       'commitCount': (g['commitCount'] ?? g['commitsCount'] ?? 0) as int,
       'issueCount': (g['issueCount'] ?? g['issuesCount'] ?? 0) as int,
-      'lastActivity': (g['lastActivity'] ?? g['last_activity'] ?? 'N/A').toString(),
+      'lastActivity': (g['lastActivity'] ?? 'N/A').toString(),
+      'integration': integration,
     };
   }
 
   Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
     return {
-      'id': (s['id'] ?? s['Id'] ?? 0).toString(),
-      'name': (s['name'] ?? s['fullName'] ?? 'N/A').toString(),
-      'code': (s['code'] ?? s['studentCode'] ?? '').toString(),
+      'id': (s['userId'] ?? s['id'] ?? 0).toString(),
+      'name': (s['fullName'] ?? s['name'] ?? 'N/A').toString(),
+      'code': (s['studentCode'] ?? s['code'] ?? '').toString(),
     };
   }
 
   Map<String, dynamic> _normalizeMember(Map<String, dynamic> m) {
     return {
-      'id': (m['id'] ?? m['Id'] ?? 0).toString(),
+      'id': (m['id'] ?? m['userId'] ?? 0).toString(),
       'fullName': (m['fullName'] ?? m['name'] ?? 'N/A').toString(),
       'role': (m['role'] ?? 'MEMBER').toString().toUpperCase(),
     };
@@ -288,9 +289,9 @@ class _ManageGroupsScreenState extends State<ManageGroupsScreen> {
           const Text('Vừa gửi yêu cầu', style: TextStyle(fontSize: 10, color: ts)),
         ]),
         const SizedBox(height: 8),
-        _integrationLink(Icons.account_tree_outlined, 'GitHub', g['integration']['github_url'] ?? 'Link GitHub'),
+        _integrationLink(Icons.account_tree_outlined, 'GitHub', g['integration']['githubRepoUrl'] ?? 'Link GitHub'),
         const SizedBox(height: 4),
-        _integrationLink(Icons.book_outlined, 'Jira', g['integration']['jira_url'] ?? 'Link Jira'),
+        _integrationLink(Icons.book_outlined, 'Jira', g['integration']['jiraSiteUrl'] ?? 'Link Jira'),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: _actionBtnMini('Từ chối', const Color(0xFFEF4444), () => _showRejectDialog(g))),

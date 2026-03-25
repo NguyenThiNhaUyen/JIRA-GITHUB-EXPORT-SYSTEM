@@ -89,9 +89,9 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
 
   List<Map<String, dynamic>> get _filteredSemesters {
     return _semesters.where((s) {
-      final name = (s["name"] ?? s["Name"] ?? "").toString();
-      final code = (s["code"] ?? s["Code"] ?? "").toString();
-      final status = (s["status"] ?? s["Status"] ?? "UPCOMING").toString().toUpperCase();
+      final name = (s["name"] ?? "").toString();
+      final code = (s["code"] ?? "").toString();
+      final status = (s["status"] ?? "UPCOMING").toString().toUpperCase();
       
       final nameMatches = name.toLowerCase().contains(_search.toLowerCase());
       final codeMatches = code.toLowerCase().contains(_search.toLowerCase());
@@ -248,7 +248,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
     int completedCount = 0;
 
     for (var s in _semesters) {
-      final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
+      final status = (s["status"] ?? "").toString().toUpperCase();
       if (status == "ACTIVE") activeCount++;
       else if (status == "UPCOMING") upcomingCount++;
       else if (status == "COMPLETED") completedCount++;
@@ -300,8 +300,8 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               const Center(child: Text("Không có dữ liệu", style: TextStyle(color: Colors.grey, fontSize: 12)))
             else
               ..._semesters.take(3).map((s) {
-                final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
-                final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
+                final startStr = s["startDate"] ?? "";
+                final endStr = s["endDate"] ?? "";
                 final start = DateTime.tryParse(startStr) ?? DateTime.now();
                 final end = DateTime.tryParse(endStr) ?? DateTime.now();
                 final totalDays = end.difference(start).inDays;
@@ -363,7 +363,7 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
               ..._semesters.take(3).map((s) {
                 final sId = s["id"] ?? s["Id"] ?? 0;
                 final count = _getCourseCount(sId);
-                final sName = s["name"] ?? s["Name"] ?? "N/A";
+                final sName = s["name"] ?? "N/A";
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -438,11 +438,11 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
                 rows: _filteredSemesters.map((s) {
                   final sId = s["id"] ?? s["Id"] ?? 0;
                   final count = _getCourseCount(sId);
-                  final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
-                  final sName = s["name"] ?? s["Name"] ?? "N/A";
-                  final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
-                  final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"];
-                  final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"];
+                  final status = (s["status"] ?? "").toString().toUpperCase();
+                  final sName = s["name"] ?? "N/A";
+                  final sCode = (s["code"] ?? "").toString().toUpperCase();
+                  final startStr = s["startDate"];
+                  final endStr = s["endDate"];
 
                   return DataRow(cells: [
                     DataCell(Column(
@@ -494,12 +494,12 @@ class _AdminSemestersScreenState extends State<AdminSemestersScreen> {
   Widget _buildSemesterCard(Map<String, dynamic> s) {
     final sId = s["id"] ?? s["Id"] ?? 0;
     final count = _getCourseCount(sId);
-    final status = (s["status"] ?? s["Status"] ?? "").toString().toUpperCase();
+    final status = (s["status"] ?? "").toString().toUpperCase();
     final Color statusColor = status == "ACTIVE" ? Colors.teal : (status == "UPCOMING" ? Colors.blue : Colors.grey);
-    final sName = s["name"] ?? s["Name"] ?? "N/A";
-    final sCode = (s["code"] ?? s["Code"] ?? "").toString().toUpperCase();
-    final startStr = s["startDate"] ?? s["start_date"] ?? s["StartDate"] ?? "";
-    final endStr = s["endDate"] ?? s["end_date"] ?? s["EndDate"] ?? "";
+    final sName = s["name"] ?? "N/A";
+    final sCode = (s["code"] ?? "").toString().toUpperCase();
+    final startStr = s["startDate"] ?? "";
+    final endStr = s["endDate"] ?? "";
     
     return Container(
       padding: const EdgeInsets.all(16),

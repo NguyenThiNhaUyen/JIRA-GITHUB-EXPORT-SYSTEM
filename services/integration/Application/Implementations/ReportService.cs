@@ -492,8 +492,8 @@ public class ReportService : IReportService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Generated ISO/IEEE 29148 SRS for Project {ProjectName}: {Features} features, {Nfrs} NFRs",
-                project.name, systemFeatures.Count, nfrs.Count);
+                "Generated ISO/IEEE 29148 SRS for Project {ProjectId}: saved to {FilePath}",
+                projectId, filePath);
 
             return reportExport.id;
         }
@@ -503,4 +503,149 @@ public class ReportService : IReportService
             throw;
         }
     }
+
+    public async Task<(byte[] Bytes, string FileName, string ContentType)?> RegenerateAndGetBytesAsync(long reportExportId)
+    {
+        var report = await _unitOfWork.ReportExports.GetByIdAsync(reportExportId);
+        if (report == null) return null;
+
+        var format    = report.format?.ToLower() ?? "pdf";
+        var entityId  = report.scope_entity_id;
+        byte[]? bytes = null;
+        string fileName;
+        string contentType = format == "pdf"
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        switch (report.report_type?.ToUpper())
+        {
+            case "COMMIT_STATISTICS":
+            {
+                // scope = COURSE
+                var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == entityId);
+                if (course == null) return null;
+                var projects = await _unitOfWork.Projects.Query()
+                    .Include(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(s => s.user)
+                    .Where(p => p.course_id == entityId).ToListAsync();
+                bytes = format == "pdf"
+                    ? _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Course", projects)
+                    : _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Course", projects);
+                fileName = $"commit_stats_{entityId}_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format == "pdf" ? "pdf" : "xlsx")}";
+                break;
+            }
+            case "TEAM_ROSTER":
+            {
+                if (report.scope?.ToUpper() == "COURSE")
+                {
+                    var projects = await _unitOfWork.Projects.Query()
+                        .Include(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(s => s.user)
+                        .Where(p => p.course_id == entityId).ToListAsync();
+                    bytes = format == "pdf"
+                        ? (projects.Any() ? _pdfReportGenerator.GenerateTeamRosterPdf(projects.First()) : new byte[0])
+                        : (projects.Any() ? _excelReportGenerator.GenerateTeamRosterReport(projects.First()) : new byte[0]);
+                }
+                else
+                {
+                    var project = await _unitOfWork.Projects.Query()
+                        .Include(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(s => s.user)
+                        .FirstOrDefaultAsync(p => p.id == entityId);
+                    if (project == null) return null;
+                    bytes = format == "pdf"
+                        ? _pdfReportGenerator.GenerateTeamRosterPdf(project)
+                        : _excelReportGenerator.GenerateTeamRosterReport(project);
+                }
+                fileName = $"team_roster_{entityId}_{DateTime.UtcNow:yyyyMMddHHmmss}.{(format == "pdf" ? "pdf" : "xlsx")}";
+                break;
+            }
+            case "SRS_ISO29148":
+            {
+                // scope = PROJECT
+                var project = await _unitOfWork.Projects.Query()
+                    .Include(p => p.course)
+                    .Include(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(s => s.user)
+                    .Include(p => p.project_integration)
+                        .ThenInclude(pi => pi!.jira_project)
+                            .ThenInclude(jp => jp!.jira_issues)
+                                .ThenInclude(i => i.jira_issue_linkparent_issues)
+                                    .ThenInclude(cl => cl.child_issue)
+                    .Include(p => p.project_integration)
+                        .ThenInclude(pi => pi!.github_repo)
+                    .FirstOrDefaultAsync(p => p.id == entityId);
+                if (project == null) return null;
+
+                var integration = project.project_integration;
+                if (integration?.jira_project == null) return null;
+
+                var jiraProject = integration.jira_project;
+                var githubRepo  = integration.github_repo;
+                var allIssues   = jiraProject.jira_issues ?? new List<jira_issue>();
+
+                int totalCommits = 0, totalPRs = 0;
+                if (githubRepo != null)
+                {
+                    totalCommits = await _unitOfWork.GitHubCommits.Query().CountAsync(c => c.repo_id == githubRepo.id);
+                    totalPRs     = await _unitOfWork.GitHubPullRequests.Query().CountAsync(pr => pr.repo_id == githubRepo.id);
+                }
+
+                var epicTypes     = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
+                var taskTypes     = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
+                var nfrKeywords   = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
+                var ifaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
+
+                var systemFeatures = allIssues
+                    .Where(i => i.issue_type != null && epicTypes.Contains(i.issue_type))
+                    .OrderBy(i => i.issue_type).ThenBy(i => i.jira_issue_key)
+                    .Select(i => new SrsFeature
+                    {
+                        IssueKey = i.jira_issue_key, Title = i.title ?? "(no title)",
+                        Description = i.description, IssueType = i.issue_type ?? "", Status = i.status,
+                        SubTasks = allIssues
+                            .Where(sub => sub.issue_type != null && taskTypes.Contains(sub.issue_type)
+                                && i.jira_issue_linkparent_issues != null
+                                && i.jira_issue_linkparent_issues.Any(cl => cl.child_issue_id == sub.id))
+                            .Select(sub => new SrsIssueRow { IssueKey = sub.jira_issue_key, Title = sub.title ?? "",
+                                Description = sub.description, Priority = sub.priority, Status = sub.status }).ToList()
+                    }).ToList();
+
+                var nfrs = allIssues
+                    .Where(i => i.issue_type?.ToUpper() == "NFR"
+                        || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                    .Select(i => new SrsIssueRow { IssueKey = i.jira_issue_key, Title = i.title ?? "",
+                        Description = i.description, Priority = i.priority, Status = i.status }).ToList();
+
+                var externalInterfaces = allIssues
+                    .Where(i => ifaceKeywords.Any(kw =>
+                        (i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                        || (i.description != null && i.description.Contains(kw, StringComparison.OrdinalIgnoreCase))))
+                    .Where(i => nfrs.All(n => n.IssueKey != i.jira_issue_key))
+                    .Select(i => new SrsIssueRow { IssueKey = i.jira_issue_key, Title = i.title ?? "",
+                        Description = i.description, Priority = i.priority, Status = i.status }).ToList();
+
+                var teamMembers = project.team_members
+                    ?.Select(tm => $"{tm.student_user?.user?.full_name ?? "Unknown"} [{tm.student_user?.student_code ?? ""}] — {tm.team_role}")
+                    .ToList() ?? new List<string>();
+
+                var srsData = new SrsReportData
+                {
+                    Project = project, JiraProjectKey = jiraProject.jira_project_key,
+                    JiraSiteUrl = jiraProject.jira_url ?? "", GithubRepoUrl = githubRepo?.repo_url ?? "",
+                    GithubDefaultBranch = githubRepo?.default_branch, GithubTotalCommits = totalCommits,
+                    GithubTotalPRs = totalPRs, TeamMembers = teamMembers, SystemFeatures = systemFeatures,
+                    NonFunctionalRequirements = nfrs, ExternalInterfaces = externalInterfaces,
+                    GeneratedAt = DateTime.UtcNow
+                };
+
+                bytes = _pdfReportGenerator.GenerateSrsReportPdf(srsData);
+                fileName = $"srs_iso29148_{entityId}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf";
+                contentType = "application/pdf";
+                break;
+            }
+            default:
+                return null;
+        }
+
+        if (bytes == null || bytes.Length == 0) return null;
+        return (bytes, fileName, contentType);
+    }
 }
+

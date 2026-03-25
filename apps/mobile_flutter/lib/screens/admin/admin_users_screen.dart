@@ -88,23 +88,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   String? _openMenuId;
 
   Map<String, dynamic> _normalizeUser(Map<String, dynamic> u) {
-    String role = (u['role'] ?? u['Role'] ?? 'STUDENT').toString().toUpperCase();
-    bool isActive = true;
-    if (u['status'] != null) {
-      isActive = u['status'].toString().toUpperCase() != 'DISABLED';
-    } else if (u['enabled'] != null) {
-      isActive = u['enabled'] == true;
-    } else if (u['isEnabled'] != null) {
-      isActive = u['isEnabled'] == true;
-    }
+    final String role = (u['role'] ?? 'STUDENT').toString().toUpperCase();
+    final bool isActive = (u['enabled'] == true) || (u['status']?.toString().toUpperCase() != 'DISABLED');
 
     return {
-      'id': (u['id'] ?? u['Id'] ?? 0).toString(),
-      'name': (u['name'] ?? u['fullName'] ?? u['FullName'] ?? 'N/A').toString(),
-      'email': (u['email'] ?? u['Email'] ?? '').toString(),
+      'id': (u['id'] ?? 0).toString(),
+      'name': (u['fullName'] ?? u['name'] ?? 'N/A').toString(),
+      'email': (u['email'] ?? '').toString(),
       'role': role,
       'status': isActive ? 'ACTIVE' : 'DISABLED',
-      'studentId': u['studentId'] ?? u['studentCode'] ?? u['StudentCode'],
+      'studentId': u['studentId'] ?? u['studentCode'],
     };
   }
 

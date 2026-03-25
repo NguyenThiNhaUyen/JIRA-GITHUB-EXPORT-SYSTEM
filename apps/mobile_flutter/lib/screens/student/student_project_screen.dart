@@ -39,9 +39,9 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
       final user = await _authService.getCurrentUser();
       final projects = await _studentService.getMyProjects();
       
-      // Find and normalize the specific project
+      // Find selected project from already-normalized service payload
       final rawTarget = projects.firstWhere(
-        (p) => p['id'].toString() == widget.projectId || p['projectId'].toString() == widget.projectId,
+        (p) => p['id'].toString() == widget.projectId,
         orElse: () => projects.isNotEmpty ? projects[0] : <String, dynamic>{},
       );
 
@@ -59,20 +59,18 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
 
   Map<String, dynamic> _normalizeProject(Map<String, dynamic> p) {
     if (p.isEmpty) return p;
-    final integration = p['integration'] ?? p['Integration'] ?? {};
-    final github = integration['github'] ?? integration['GitHub'] ?? {};
-    final jira = integration['jira'] ?? integration['Jira'] ?? {};
+    final integration = p['integration'] ?? {};
     final metrics = p['metrics'] ?? p['stats'] ?? {};
     
     return {
       ...p,
-      'title': p['name'] ?? p['topic'] ?? p['title'] ?? 'Dự án chưa tên',
-      'commits': metrics['totalCommits'] ?? github['commits'] ?? p['commits'] ?? 0,
-      'issuesDone': metrics['totalIssuesDone'] ?? jira['issuesDone'] ?? p['issuesDone'] ?? 0,
-      'prsMerged': metrics['totalPrsMerged'] ?? github['prsMerged'] ?? p['prsMerged'] ?? 0,
+      'title': p['name'] ?? p['title'] ?? 'Dự án chưa tên',
+      'commits': metrics['totalCommits'] ?? p['commits'] ?? 0,
+      'issuesDone': metrics['totalIssuesDone'] ?? p['issuesDone'] ?? 0,
+      'prsMerged': metrics['totalPrsMerged'] ?? p['prsMerged'] ?? 0,
       'myContribution': metrics['myContribution'] ?? p['myContribution'] ?? 0,
-      'repository': github['repositoryName'] ?? github['url'] ?? p['repository'] ?? 'No GitHub',
-      'jiraKey': jira['projectKey'] ?? p['jiraKey'] ?? 'No Jira',
+      'repository': p['repositoryName'] ?? p['repository'] ?? integration['githubRepoName'] ?? 'No GitHub',
+      'jiraKey': p['jiraProjectKey'] ?? p['jiraKey'] ?? integration['jiraProjectKey'] ?? 'No Jira',
       'srs': p['srs'] ?? p['srsHistory'] ?? [],
       'tasks': p['tasks'] ?? p['jiraTasks'] ?? [],
       'team': p['team'] ?? p['members'] ?? [],
@@ -438,8 +436,8 @@ class _StudentProjectScreenState extends State<StudentProjectScreen>
   Future<void> _handleUpdateIntegrations() async {
     // Show dialog to enter Github & Jira links
     final ok = await _studentService.updateIntegrations(_project['id'], {
-      "githubRepo": _project['repository'],
-      "jiraProject": _project['jiraKey'] ?? "PROJ",
+      "githubRepoUrl": _project['repository'],
+      "jiraProjectKey": _project['jiraKey'] ?? "PROJ",
     });
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật liên kết tích hợp thành công!'), backgroundColor: Color(0xFF10B981)));

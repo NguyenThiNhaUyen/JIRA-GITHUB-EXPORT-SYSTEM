@@ -95,8 +95,10 @@ class _LecturerWorkloadScreenState extends State<LecturerWorkloadScreen> {
 
       int studentCount = 0;
       for (var c in lecturerCourses) {
-        final enrollments = c["enrollments"] ?? c["students"] ?? c["Students"] ?? [];
-        studentCount += (enrollments as List).length;
+        final enrollments = c["enrollments"] ?? c["students"] ?? c["Students"];
+        if (enrollments is List) {
+          studentCount += enrollments.length;
+        }
       }
 
       return {

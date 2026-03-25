@@ -39,41 +39,14 @@ class _StudentCoursesScreenState extends State<StudentCoursesScreen> {
       if (mounted) {
         setState(() {
           _currentUser = user;
-          _courses = (results[0] as List).map(_normalizeCourse).toList();
-          _projects = (results[1] as List).map(_normalizeProject).toList();
+          _courses = List<Map<String, dynamic>>.from(results[0] as List);
+          _projects = List<Map<String, dynamic>>.from(results[1] as List);
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Map<String, dynamic> _normalizeCourse(dynamic c) {
-    final map = c as Map<String, dynamic>;
-    return {
-      'id': (map['id'] ?? map['Id'] ?? '').toString(),
-      'code': (map['code'] ?? map['SubjectCode'] ?? 'SWD392').toString(),
-      'name': (map['name'] ?? map['Title'] ?? map['topic'] ?? 'N/A').toString(),
-      'status': (map['status'] ?? 'ACTIVE').toString(),
-      'lecturerNames': map['lecturerNames'] ?? (map['lecturers'] as List?)?.map((l) => l['fullName'] ?? l['name']).toList() ?? [],
-    };
-  }
-
-  Map<String, dynamic> _normalizeProject(dynamic p) {
-    final map = p as Map<String, dynamic>;
-    final integration = map['integration'] ?? map['Integration'] ?? {};
-    final github = integration['github'] ?? integration['GitHub'] ?? {};
-    final jira = integration['jira'] ?? integration['Jira'] ?? {};
-    
-    return {
-      'id': (map['id'] ?? map['Id'] ?? '').toString(),
-      'name': (map['name'] ?? map['topic'] ?? map['teamName'] ?? 'Dự án chưa tên').toString(),
-      'courseId': (map['courseId'] ?? map['CourseId'] ?? '').toString(),
-      'team': map['team'] ?? map['members'] ?? [],
-      'repositoryName': github['repositoryName'] ?? map['repositoryName'] ?? 'No GitHub',
-      'jiraProjectKey': jira['projectKey'] ?? map['jiraProjectKey'] ?? 'No Jira',
-    };
   }
 
   @override

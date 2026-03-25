@@ -61,7 +61,7 @@ class _StudentContributionScreenState extends State<StudentContributionScreen> {
     );
 
     return {
-      'id': (p['id'] ?? p['Id'] ?? '').toString(),
+      'id': (p['id'] ?? '').toString(),
       'name': (p['name'] ?? p['topic'] ?? p['teamName'] ?? 'Dự án chưa tên').toString(),
       'courseName': (p['courseName'] ?? p['course']?['name'] ?? 'Software Architecture').toString(),
       'team': team,

@@ -127,13 +127,21 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
     return {
       'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'name': (c['courseName'] ?? c['name'] ?? c['CourseName'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? c['CourseCode'] ?? 'N/A').toString(),
       'semesterId': (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? 0),
       'subjectId': (c['subjectId'] ?? c['subject_id'] ?? c['SubjectId'] ?? 0),
-      'currentStudents': (c['currentStudents'] ?? c['current_students'] ?? c['enrollmentCount'] ?? (c['enrollments'] as List?)?.length ?? 0) as int,
+      'currentStudents': _toInt(c['currentStudents'] ?? c['current_students'] ?? c['enrollmentCount'] ?? (c['enrollments'] as List?)?.length),
+      'maxStudents': _toInt(c['maxStudents'] ?? c['capacity'] ?? c['max_students'] ?? 0),
       'lecturers': (c['lecturers'] ?? c['Lecturers'] ?? c['teachingBy'] ?? c['teaching_by'] ?? []) as List,
     };
+  }
+
+  int _toInt(dynamic val) {
+    if (val == null) return 0;
+    if (val is num) return val.toInt();
+    if (val is String) return int.tryParse(val) ?? 0;
+    return 0;
   }
 
   // ─── Filtered + Sorted Courses ──────────────────────────
@@ -863,7 +871,7 @@ class _LecturerAssignmentScreenState extends State<LecturerAssignmentScreen> {
     final subject = _subjectById(course["subjectId"]);
     final semester = _semesterById(course["semesterId"]);
     final current = course["currentStudents"] as int;
-    final max = (course["maxStudents"] as num).toInt();
+    final max = course["maxStudents"] as int;
     final ratio = max > 0 ? (current / max).clamp(0.0, 1.0) : 0.0;
     final workload = _lecturerWorkload;
 

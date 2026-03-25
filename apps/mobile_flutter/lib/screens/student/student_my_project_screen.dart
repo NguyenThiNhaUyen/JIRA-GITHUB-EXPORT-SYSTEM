@@ -50,10 +50,10 @@ class _StudentMyProjectScreenState extends State<StudentMyProjectScreen> {
     final metrics = p['metrics'] ?? p['stats'] ?? {};
 
     return {
-      'id': (p['id'] ?? p['Id'] ?? '').toString(),
+      'id': (p['id'] ?? '').toString(),
       'name': (p['name'] ?? p['topic'] ?? p['teamName'] ?? 'Dự án chưa tên').toString(),
       'courseName': (p['courseName'] ?? p['course']?['name'] ?? 'Software Architecture').toString(),
-      'courseId': (p['courseId'] ?? p['CourseId'] ?? '').toString(),
+      'courseId': (p['courseId'] ?? '').toString(),
       'courseCode': (p['courseCode'] ?? p['course']?['subject']?['code'] ?? 'N/A').toString(),
       'progressPercent': (p['progressPercent'] ?? 0).toInt(),
       'team': p['team'] ?? p['members'] ?? [],

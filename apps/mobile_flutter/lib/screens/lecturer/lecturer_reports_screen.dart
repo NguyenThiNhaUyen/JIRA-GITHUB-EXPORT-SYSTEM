@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:open_file/open_file.dart';
 import '../../widgets/app_top_header.dart';
 import '../../widgets/lecturer_navigation.dart';
 import '../../services/auth_service.dart';
@@ -90,7 +90,7 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
         final allStudents = <Map<String, dynamic>>[];
         
         for (final course in courses) {
-          final courseId = course['id'] ?? course['Id'];
+          final courseId = course['id'];
           if (courseId != null) {
             final results = await Future.wait([
               _lecturerService.getCourseGroups(courseId),
@@ -135,19 +135,19 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
 
   Map<String, dynamic> _normalizeCourse(Map<String, dynamic> c) {
     return {
-      'id': (c['id'] ?? c['Id'] ?? 0).toString(),
-      'name': (c['name'] ?? c['courseName'] ?? c['className'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? 'N/A').toString(),
-      'className': (c['className'] ?? c['name'] ?? 'N/A').toString(),
+      'id': (c['id'] ?? 0).toString(),
+      'name': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? 'N/A').toString(),
+      'className': (c['courseName'] ?? c['name'] ?? 'N/A').toString(),
     };
   }
 
   Map<String, dynamic> _normalizeGroup(Map<String, dynamic> g) {
     final integration = g['integration'] ?? {};
     return {
-      'id': (g['id'] ?? g['Id'] ?? 0).toString(),
-      'name': (g['name'] ?? g['groupName'] ?? 'N/A').toString(),
-      'project': (g['topic'] ?? g['projectName'] ?? 'No project').toString(),
+      'id': (g['id'] ?? 0).toString(),
+      'name': (g['name'] ?? 'N/A').toString(),
+      'project': (g['description'] ?? g['topic'] ?? 'No project').toString(),
       'commits': (g['commitsCount'] ?? 0) as int,
       'issuesDone': (g['issuesDone'] ?? 0) as int,
       'issuesTotal': (g['issuesTotal'] ?? 10) as int, // Default for mock
@@ -157,16 +157,16 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
       'githubCoverage': (g['githubCoverage'] ?? 0) as int,
       'riskLevel': (g['riskLevel'] ?? 'Low').toString(),
       'overdueTasks': (g['overdueTasks'] ?? 0) as int,
-      'githubStatus': (integration['githubStatus'] ?? integration['github_status'] ?? g['githubStatus'] ?? 'NOT_CONNECTED').toString(),
-      'jiraStatus': (integration['jiraStatus'] ?? integration['jira_status'] ?? g['jiraStatus'] ?? 'NOT_CONNECTED').toString(),
+      'githubStatus': (g['githubStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString(),
+      'jiraStatus': (g['jiraStatus'] ?? integration['approvalStatus'] ?? 'NOT_CONNECTED').toString(),
     };
   }
 
   Map<String, dynamic> _normalizeStudent(Map<String, dynamic> s) {
     return {
-      'id': (s['id'] ?? s['Id'] ?? 0).toString(),
-      'name': (s['name'] ?? s['fullName'] ?? 'N/A').toString(),
-      'studentCode': (s['studentCode'] ?? '').toString(),
+      'id': (s['userId'] ?? s['id'] ?? 0).toString(),
+      'name': (s['fullName'] ?? s['name'] ?? 'N/A').toString(),
+      'studentCode': (s['studentCode'] ?? s['code'] ?? '').toString(),
       'contributionScore': (s['contributionScore'] ?? 0) as int,
       'sprintCoverage': (s['sprintCoverage'] ?? 0) as int,
       'commits': (s['commitsCount'] ?? 0) as int,
@@ -254,21 +254,17 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
         return;
       }
 
-      if (res != null && (res['reportId'] != null || res['Id'] != null)) {
-        final rid = res['reportId'] ?? res['Id'];
-        _snack('Yêu cầu đã được ghi nhận. Đang lấy link tải...');
-        
-        // Wait a bit or fetch directly
-        final url = await _lecturerService.getDownloadLink(rid);
-        if (url != null && url.isNotEmpty) {
-          if (await canLaunchUrlString(url)) {
-            await launchUrlString(url, mode: LaunchMode.externalApplication);
-          } else {
-            throw Exception("Không thể mở đường dẫn: $url");
-          }
-        } else {
-          throw Exception("Không tìm thấy link tải báo cáo.");
+      if (res != null && res['reportId'] != null) {
+        final rid = res['reportId'];
+        final fileName = (res['fileName'] ?? 'report_$rid.${fmt.toLowerCase()}').toString();
+        final filePath = res['filePath'] ?? res['fileUrl'] ?? res['url'];
+        _snack('Đang tải file $fmt...');
+        final path = await _lecturerService.downloadReportFile(rid, fileName, filePath: filePath?.toString());
+        final result = await OpenFile.open(path);
+        if (result.type != ResultType.done) {
+          throw Exception('Không thể mở file: ${result.message}');
         }
+        _loadInitialData();
       } else {
         throw Exception("Không khởi tạo được yêu cầu trích xuất.");
       }
@@ -642,16 +638,17 @@ class _LecturerReportsScreenState extends State<LecturerReportsScreen> {
 
   Future<void> _downloadReport(dynamic reportId) async {
     try {
-      _snack('Đang lấy link tải báo cáo...');
-      final url = await _lecturerService.getDownloadLink(reportId);
-      if (url != null && url.isNotEmpty) {
-        if (await canLaunchUrlString(url)) {
-          await launchUrlString(url, mode: LaunchMode.externalApplication);
-        } else {
-          throw Exception("Không thể mở đường dẫn: $url");
-        }
-      } else {
-        throw Exception("Link tải không còn khả dụng.");
+      _snack('Đang tải file báo cáo...');
+      final report = _exportHistory.firstWhere(
+        (r) => (r['id'] ?? r['reportId'])?.toString() == reportId?.toString(),
+        orElse: () => {},
+      );
+      final fileName = report['fileName']?.toString() ?? 'report_$reportId.pdf';
+      final filePath = report['filePath']?.toString();
+      final path = await _lecturerService.downloadReportFile(reportId, fileName, filePath: filePath);
+      final result = await OpenFile.open(path);
+      if (result.type != ResultType.done) {
+        throw Exception('Không thể mở file: ${result.message}');
       }
     } catch (e) {
       _snack('Lỗi: ${e.toString().replaceAll('Exception: ', '')}');

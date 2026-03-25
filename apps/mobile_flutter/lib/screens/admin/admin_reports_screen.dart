@@ -86,7 +86,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   List<Map<String, dynamic>> get projectDistribution => filteredCourses
       .map<Map<String, dynamic>>(
         (course) => <String, dynamic>{
-          'name': course['code'] ?? course['courseCode'] ?? 'N/A',
+          'name': course['courseCode'] ?? course['code'] ?? 'N/A',
           'projects': course['projectsCount'] ?? course['projects_count'] ?? 0,
           'students': course['currentStudents'] ?? course['current_students'] ?? 0,
         },
@@ -178,8 +178,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     // Simulate CSV export
     String csv = 'Mã lớp,Tên lớp,Học kỳ,Sinh viên,Dự án,Trạng thái\n';
     for (var c in courses) {
-      final code = c['code'] ?? c['courseCode'] ?? 'N/A';
-      final name = c['name'] ?? c['courseName'] ?? 'N/A';
+      final code = c['courseCode'] ?? c['code'] ?? 'N/A';
+      final name = c['courseName'] ?? c['name'] ?? 'N/A';
       final sId = c['semesterId'] ?? c['semester_id'] ?? 'N/A';
       final students = '${c['currentStudents'] ?? 0}/${c['maxStudents'] ?? 40}';
       final projects = c['projectsCount'] ?? c['projects_count'] ?? 0;
@@ -543,7 +543,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
               .map(
                 (course) => DropdownMenuItem<String>(
                   value: course['id'].toString(),
-                  child: Text('${course['code']} - ${course['name']}'),
+                  child: Text('${course['courseCode'] ?? course['code']} - ${course['courseName'] ?? course['name']}'),
                 ),
               )
               .toList(),
@@ -762,8 +762,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 )
               else
                 ...filteredCourses.map((course) {
-                  final courseCode = course['code'] ?? course['courseCode'] ?? 'N/A';
-                  final courseName = course['name'] ?? course['courseName'] ?? 'N/A';
+                  final courseCode = course['courseCode'] ?? course['code'] ?? 'N/A';
+                  final courseName = course['courseName'] ?? course['name'] ?? 'N/A';
                   final currentStudents = course['currentStudents'] ?? course['current_students'] ?? 0;
                   final maxStudents = course['maxStudents'] ?? course['max_students'] ?? 40;
                   final projectsCount = course['projectsCount'] ?? course['projects_count'] ?? 0;

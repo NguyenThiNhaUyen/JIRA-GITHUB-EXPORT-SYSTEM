@@ -149,15 +149,21 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   Map<String, dynamic> _normalizeCourseData(Map<String, dynamic> c) {
     return {
       'id': c['id'] ?? c['Id'] ?? 0,
-      'name': (c['name'] ?? c['courseName'] ?? c['CourseName'] ?? 'N/A').toString(),
-      'code': (c['code'] ?? c['courseCode'] ?? c['CourseCode'] ?? 'N/A').toString(),
+      'name': (c['courseName'] ?? c['name'] ?? c['CourseName'] ?? 'N/A').toString(),
+      'code': (c['courseCode'] ?? c['code'] ?? c['CourseCode'] ?? 'N/A').toString(),
       'status': (c['status'] ?? c['Status'] ?? 'ACTIVE').toString().toUpperCase(),
-      'maxStudents': (c['maxStudents'] ?? c['max_students'] ?? c['MaxStudents'] ?? 40) as num,
+      'maxStudents': _toNum(c['maxStudents'] ?? c['max_students'] ?? c['MaxStudents'] ?? 40),
       'semesterId': (c['semesterId'] ?? c['semester_id'] ?? c['SemesterId'] ?? 0),
       'subjectId': (c['subjectId'] ?? c['subject_id'] ?? c['SubjectId'] ?? 0),
       'enrollments': c['enrollments'] ?? c['Enrollments'] ?? c['students'] ?? c['Students'] ?? [],
       'lecturers': c['lecturers'] ?? c['Lecturers'] ?? c['teachingBy'] ?? c['teaching_by'] ?? [],
     };
+  }
+
+  num _toNum(dynamic val) {
+    if (val is num) return val;
+    if (val is String) return num.tryParse(val) ?? 0;
+    return 0;
   }
 
   Widget _buildPageHeader(double width) {
@@ -201,7 +207,10 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     int upcoming = normalized.where((c) => c["status"] == "UPCOMING").length;
     int totalEnrollments = 0;
     for (var c in normalized) {
-      totalEnrollments += (c["enrollments"] as List).length;
+      final enrolls = c["enrollments"];
+      if (enrolls is List) {
+        totalEnrollments += enrolls.length;
+      }
     }
 
     return GridView.count(
@@ -316,8 +325,8 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   Widget _buildCourseItem(Map<String, dynamic> course, double width) {
     final c = _normalizeCourseData(course);
     final status = c["status"];
-    final enrollments = c["enrollments"] as List;
-    final lecturers = c["lecturers"] as List;
+    final enrollments = c["enrollments"] is List ? (c["enrollments"] as List) : [];
+    final lecturers = c["lecturers"] is List ? (c["lecturers"] as List) : [];
     final lecturer = lecturers.isNotEmpty ? lecturers[0] : null;
     final subject = _subjects.firstWhere((s) {
       final sId = s["id"] ?? s["Id"] ?? 0;
