@@ -313,6 +313,7 @@ app.UseSwaggerUI(c =>
                 RequestPath = "" // Serve at root
             });
 
+app.UseRouting();
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

@@ -25,15 +25,15 @@ export default function TeamMembersTable({ members }) {
                             className={`hover:bg-gray-50 transition-colors ${member?.isLeader ? "bg-orange-50/30" : ""}`}
                         >
                             <td className="px-4 py-3 font-mono text-xs text-gray-900">
-                                {member?.studentCode ?? `ID: ${member?.studentId ?? member?.id ?? "N/A"}`}
+                                {member?.studentCode ?? "—"}
                                 {member?.isLeader && (
                                     <Badge variant="outline" className="ml-2 text-xs bg-orange-100 text-orange-700 border-orange-300">
-                                        Nhóm trưởng
+                                        Leader
                                     </Badge>
                                 )}
                             </td>
                             <td className="px-4 py-3 font-medium text-gray-900">
-                                {member?.name ?? member?.studentName ?? `SV (ID: ${member?.studentId ?? member?.id ?? "N/A"})`}
+                                {member?.name ?? member?.studentName ?? member?.fullName ?? "Sinh viên"}
                             </td>
                             <td className="px-4 py-3 text-gray-600 text-xs">{member?.email ?? "-"}</td>
                         </tr>
