@@ -137,7 +137,7 @@ export default function StudentDashboard() {
         const err = requireLeader(
             {
                 ...group,
-                teamLeaderId: (Array.isArray(group?.team) ? group.team : []).find((m) => m?.role === 'LEADER')?.studentId,
+                teamLeaderId: (Array.isArray(group?.team) ? group.team : []).find((m) => m?.role === 'LEADER')?.studentUserId,
             },
             user?.id
         );
@@ -280,7 +280,7 @@ export default function StudentDashboard() {
                                         }
                                         const lsCfg = LINK_STATUS_CFG[linkStatus] || LINK_STATUS_CFG.NONE;
                                         const isLeader = (Array.isArray(grp?.team) ? grp.team : []).find(
-                                            (m) => String(m?.studentId ?? m?.studentUserId ?? m?.userId) === String(user?.id)
+                                            (m) => String(m?.studentUserId ?? m?.studentId ?? m?.userId) === String(user?.id)
                                         )?.role === 'LEADER';
                                         
                                         // Card layout inspired by the screenshot: Minimal, Dark/Clean

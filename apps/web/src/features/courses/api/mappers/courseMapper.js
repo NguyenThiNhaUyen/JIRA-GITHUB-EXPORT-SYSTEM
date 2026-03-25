@@ -1,6 +1,7 @@
 /**
  * courseMapper.js — Adapter: BE CourseDetailResponse → FE Mock shape
  */
+import { mapProject } from "../../projects/api/mappers/projectMapper.js";
 
 /**
  * Map một CourseDetailResponse từ BE sang FE course shape
@@ -55,25 +56,12 @@ export function mapCourse(beCourse) {
         })),
 
         // ── Groups & Enrollments (from BE CourseDetailResponse) ────
-        groups: (beCourse.groups || beCourse.Groups || []).map(g => ({
-            id: String(g.id || g.Id || ""),
-            name: g.name || g.Name || "",
-            status: g.status || g.Status || "PENDING",
-            githubStatus: g.githubStatus || g.GithubStatus || "NONE",
-            jiraStatus: g.jiraStatus || g.JiraStatus || "NONE",
-            topic: g.topic || g.Topic || "",
-            integration: g.integration || g.Integration || null,
-            team: (g.team || g.Team || []).map(tm => ({
-                studentId: String(tm.userId || tm.UserId || ""),
-                studentName: tm.fullName || tm.FullName || "",
-                studentCode: tm.studentCode || tm.StudentCode || ""
-            }))
-        })),
+        groups: (beCourse.groups || beCourse.Groups || beCourse.projects || beCourse.Projects || []).map(mapProject),
         enrollments: (beCourse.enrollments || beCourse.Enrollments || []).map(e => ({
             userId: String(e.userId || e.UserId || ""),
-            fullName: e.fullName || e.FullName || "",
+            fullName: e.fullName || e.FullName || e.studentName || e.StudentName || "",
             studentCode: e.studentCode || e.StudentCode || "",
-            studentId: e.studentId || e.StudentId || "",
+            studentId: e.studentId || e.StudentId || e.userId || e.UserId || "",
             email: e.email || e.Email || ""
         })),
 

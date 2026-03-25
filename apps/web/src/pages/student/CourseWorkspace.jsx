@@ -26,7 +26,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
     const [isInviting, setIsInviting] = useState(false);
 
     const normalizedGroupStudents = Array.isArray(groupStudents) ? groupStudents : [];
-    const myMember = normalizedGroupStudents.find(m => String(m?.studentId) === String(userId));
+    const myMember = normalizedGroupStudents.find(m => String(m?.studentUserId ?? m?.studentId ?? m?.userId) === String(userId));
     const isLeader = myMember?.role?.toUpperCase() === 'LEADER';
 
     // console.log("[Debug] Workspace Role:", { userId, myMember, isLeader });
@@ -329,11 +329,11 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         </CardHeader>
                         <CardContent className="p-0">
                             {normalizedGroupStudents.map((stu, idx) => {
-                                const displayName = stu?.studentName ?? stu?.name ?? `SV (ID: ${stu?.studentId ?? "N/A"})`;
-                                const displayCode = stu?.studentCode || `ID: ${stu?.studentId ?? "N/A"}`;
+                                const displayName = stu?.studentName ?? stu?.fullName ?? `SV (ID: ${stu?.studentUserId ?? stu?.studentId ?? idx + 1})`;
+                                const displayCode = stu?.studentCode || `ID: ${stu?.studentUserId ?? stu?.studentId ?? "N/A"}`;
                                 const displayInitial = displayName?.charAt(0) || "T";
-                                const isMe = String(stu?.studentId) === String(userId);
-                                const isLeaderM = stu.role === 'LEADER';
+                                const isMe = String(stu?.studentUserId ?? stu?.studentId ?? stu?.userId) === String(userId);
+                                const isLeaderM = stu.role?.toUpperCase() === 'LEADER';
                                 return (
                                     <div key={stu?.studentId ?? idx} className="flex items-center gap-3 px-5 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isLeaderM ? "bg-amber-100 text-amber-700" : "bg-teal-100 text-teal-700"}`}>
@@ -358,14 +358,14 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                             {isLeader && !isMe && (
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => handlePromoteToLeader(stu?.studentId, displayName)}
+                                                        onClick={() => handlePromoteToLeader(stu?.studentUserId ?? stu?.studentId, displayName)}
                                                         className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                         title="Chuyển quyền Leader"
                                                     >
                                                         <Crown size={14} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleRemoveMember(stu?.studentId, displayName)}
+                                                        onClick={() => handleRemoveMember(stu?.studentUserId ?? stu?.studentId, displayName)}
                                                         className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                         title="Xóa khỏi nhóm"
                                                     >

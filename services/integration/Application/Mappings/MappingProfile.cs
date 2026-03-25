@@ -119,8 +119,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.team_members != null ? src.team_members.Where(tm => tm.participation_status == "ACTIVE") : Enumerable.Empty<JiraGithubExport.Shared.Models.team_member>()))
             .ForMember(dest => dest.GithubRepoUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.github_repo != null ? src.project_integration.github_repo.repo_url : null))
             .ForMember(dest => dest.JiraProjectUrl, opt => opt.MapFrom(src => src.project_integration != null && src.project_integration.jira_project != null ? src.project_integration.jira_project.jira_url : null))
-            .ForMember(dest => dest.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : null))
-            .ForMember(dest => dest.JiraStatus, opt => opt.MapFrom(src => src.project_integration != null ? (src.project_integration.jira_project != null ? "LINKED" : "NONE") : null))
+            .ForMember(dest => dest.GithubStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"))
+            .ForMember(dest => dest.JiraStatus, opt => opt.MapFrom(src => src.project_integration != null ? src.project_integration.approval_status : "NONE"))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => (DateTime?)src.updated_at))
             .ForMember(dest => dest.Integration, opt => opt.Ignore())
@@ -136,7 +136,7 @@ public class MappingProfile : Profile
                         JiraProjectKey = src.project_integration.jira_project?.jira_project_key,
                         ApprovalStatus = src.project_integration.approval_status ?? "PENDING",
                         GithubStatus = src.project_integration.approval_status ?? "PENDING",
-                        JiraStatus = src.project_integration.jira_project != null ? "LINKED" : "NONE",
+                        JiraStatus = src.project_integration.approval_status ?? "PENDING",
                         SubmittedByUserId = src.project_integration.submitted_by_user_id,
                         SubmittedAt = src.project_integration.submitted_at,
                         ApprovedByUserId = src.project_integration.approved_by_user_id,

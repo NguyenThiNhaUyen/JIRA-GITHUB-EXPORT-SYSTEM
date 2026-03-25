@@ -46,10 +46,12 @@ export const mapProject = (project) => {
         integrationStatus: project.integrationStatus ?? project.IntegrationStatus ?? "NONE",
         integration: project.integration ? {
             githubRepoUrl: project.integration.githubRepoUrl ?? project.integration.GithubRepoUrl ?? project.integration.githubUrl ?? null,
+            githubUrl: project.integration.githubUrl ?? project.integration.GithubUrl ?? project.integration.githubRepoUrl ?? null,
             githubRepoOwner: project.integration.githubRepoOwner ?? project.integration.GithubRepoOwner ?? null,
             githubRepoName: project.integration.githubRepoName ?? project.integration.GithubRepoName ?? null,
             jiraProjectKey: project.integration.jiraProjectKey ?? project.integration.JiraProjectKey ?? null,
             jiraSiteUrl: project.integration.jiraSiteUrl ?? project.integration.JiraSiteUrl ?? project.integration.jiraUrl ?? null,
+            jiraUrl: project.integration.jiraUrl ?? project.integration.JiraUrl ?? project.integration.jiraSiteUrl ?? null,
             githubStatus: project.integration.githubStatus ?? project.integration.GithubStatus ?? "NONE",
             jiraStatus: project.integration.jiraStatus ?? project.integration.JiraStatus ?? "NONE",
             approvalStatus: project.integration.approvalStatus ?? project.integration.ApprovalStatus ?? "PENDING",

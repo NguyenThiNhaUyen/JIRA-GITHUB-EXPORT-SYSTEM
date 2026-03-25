@@ -119,6 +119,7 @@ export const useLinkIntegration = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+            queryClient.invalidateQueries({ queryKey: ["courses"] });
         },
     });
 };
@@ -139,6 +140,7 @@ export const useApproveIntegration = () => {
         onSuccess: (_, projectId) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+            queryClient.invalidateQueries({ queryKey: ["courses"] });
         },
     });
 };
@@ -150,6 +152,7 @@ export const useRejectIntegration = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.projectId) });
             queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.lists() });
+            queryClient.invalidateQueries({ queryKey: ["courses"] });
         },
     });
 };

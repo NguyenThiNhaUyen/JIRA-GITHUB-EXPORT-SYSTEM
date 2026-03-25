@@ -29,6 +29,9 @@ public class ProjectRepository : GenericRepository<project>, IProjectRepository
         var totalItems = await query.CountAsync();
         var items = await query
             .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.github_repo)
+            .Include(p => p.project_integration)
+                .ThenInclude(pi => pi!.jira_project)
             .Include(p => p.team_members)
                 .ThenInclude(tm => tm.student_user)
                     .ThenInclude(su => su.user)
