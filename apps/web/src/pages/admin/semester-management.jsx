@@ -18,6 +18,7 @@ import { Modal } from "../../components/ui/interactive.jsx";
 import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, PlayCircle, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
+import { SmartDatePicker } from "../../components/ui/smart-date-picker.jsx";
 
 // Parse "SPRING2026" / legacy names → season + year for the form controls
 const parseSemesterNameParts = (name) => {
@@ -92,10 +93,12 @@ export default function SemesterManagement() {
         const { season, year } = parseSemesterNameParts(semester.name);
         setSemesterSeason(season);
         setSemesterYear(year);
+        const startDate = semester.startDate ? semester.startDate.toString().split("T")[0] : "";
+        const endDate = semester.endDate ? semester.endDate.toString().split("T")[0] : "";
         setFormData({
             name: semester.name,
-            startDate: semester.startDate,
-            endDate: semester.endDate,
+            startDate,
+            endDate,
             status: semester.status,
         });
         setShowModal(true);
@@ -124,6 +127,10 @@ export default function SemesterManagement() {
         e.preventDefault();
         
         // BUG-55: Robust Date Validation (Stress Test Protection)
+        if (!formData.startDate || !formData.endDate) {
+            showError("Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc");
+            return;
+        }
         if (new Date(formData.endDate) <= new Date(formData.startDate)) {
             showError("Ngày kết thúc phải lớn hơn ngày bắt đầu");
             return;
@@ -349,67 +356,61 @@ export default function SemesterManagement() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ngày bắt đầu <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                                value={formData.startDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, startDate: e.target.value })
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ngày kết thúc <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                                value={formData.endDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, endDate: e.target.value })
-                                }
-                                required
-                            />
-                        </div>
+                    <div>
+                        <SmartDatePicker
+                            startDate={formData.startDate}
+                            endDate={formData.endDate}
+                            onChange={({ startDate, endDate }) =>
+                                setFormData({ ...formData, startDate, endDate })
+                            }
+                        />
                     </div>
 
-                    {editingSemester && (
+                    {!editingSemester ? (
+                        <div className="text-sm font-medium text-gray-700">
+                            Trạng thái: Sắp tới (UPCOMING)
+                        </div>
+                    ) : (
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Trạng thái
-                            </label>
-                            <select
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                                value={formData.status}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, status: e.target.value })
-                                }
-                                disabled={formData.status === "COMPLETED"}
-                            >
-                                {formData.status === "UPCOMING" && (
-                                    <>
-                                        <option value="UPCOMING">Sắp tới (UPCOMING)</option>
-                                        <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
-                                    </>
-                                )}
-                                {formData.status === "ACTIVE" && (
-                                    <>
-                                        <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
-                                        <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
-                                    </>
-                                )}
-                                {formData.status === "COMPLETED" && (
-                                    <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
-                                )}
-                            </select>
+                            {formData.status === "COMPLETED" ? (
+                                <div className="text-sm font-medium text-gray-700">Đã hoàn thành</div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="text-sm font-medium text-gray-700">
+                                        Trạng thái:{" "}
+                                        {formData.status === "ACTIVE"
+                                            ? "Đang diễn ra (ACTIVE)"
+                                            : "Sắp tới (UPCOMING)"}
+                                    </div>
+
+                                    {formData.status === "UPCOMING" && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setFormData({ ...formData, status: "ACTIVE" })}
+                                            className="rounded-xl border-gray-200"
+                                        >
+                                            Kích hoạt (Đang diễn ra)
+                                        </Button>
+                                    )}
+
+                                    {formData.status === "ACTIVE" && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                const ok = window.confirm(
+                                                    "Bạn có chắc chắn muốn kết thúc học kỳ này không?"
+                                                );
+                                                if (ok) setFormData({ ...formData, status: "COMPLETED" });
+                                            }}
+                                            className="rounded-xl border-gray-200"
+                                        >
+                                            Kết thúc học kỳ
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
