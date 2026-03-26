@@ -7,7 +7,7 @@ import { BurndownChart } from '../../components/charts/burndown-chart.jsx';
 import { CommitFrequencyChart } from '../../components/charts/commit-frequency-chart.jsx';
 import { ContributorsChart } from '../../components/charts/contributors-chart.jsx';
 import { WeeklyTrendsChart } from '../../components/charts/weekly-trends-chart.jsx';
-import { BookOpen, Users, FolderKanban, AlertCircle, CheckCircle, FileText, Download, Printer } from 'lucide-react';
+import { BookOpen, Users, FolderKanban, AlertCircle, CheckCircle, FileText, Download, Printer, ChevronRight } from 'lucide-react';
 import { useGetCourses } from '../../features/courses/hooks/useCourses.js';
 import { useGetSemesters } from '../../features/system/hooks/useSystem.js';
 import {

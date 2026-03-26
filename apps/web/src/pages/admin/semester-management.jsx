@@ -372,45 +372,51 @@ export default function SemesterManagement() {
                         </div>
                     ) : (
                         <div>
-                            {formData.status === "COMPLETED" ? (
-                                <div className="text-sm font-medium text-gray-700">Đã hoàn thành</div>
-                            ) : (
-                                <div className="flex items-center gap-3">
-                                    <div className="text-sm font-medium text-gray-700">
-                                        Trạng thái:{" "}
-                                        {formData.status === "ACTIVE"
+                            <div className="flex flex-col gap-2">
+                                <div className="text-sm font-medium text-gray-700">
+                                    Trạng thái hiện tại:{" "}
+                                    <span className={`font-bold ${editingSemester.status === 'ACTIVE' ? 'text-green-600' : editingSemester.status === 'UPCOMING' ? 'text-blue-600' : 'text-gray-600'}`}>
+                                        {editingSemester.status === "ACTIVE"
                                             ? "Đang diễn ra (ACTIVE)"
-                                            : "Sắp tới (UPCOMING)"}
-                                    </div>
-
-                                    {formData.status === "UPCOMING" && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setFormData({ ...formData, status: "ACTIVE" })}
-                                            className="rounded-xl border-gray-200"
-                                        >
-                                            Kích hoạt (Đang diễn ra)
-                                        </Button>
-                                    )}
-
-                                    {formData.status === "ACTIVE" && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => {
-                                                const ok = window.confirm(
-                                                    "Bạn có chắc chắn muốn kết thúc học kỳ này không?"
-                                                );
-                                                if (ok) setFormData({ ...formData, status: "COMPLETED" });
-                                            }}
-                                            className="rounded-xl border-gray-200"
-                                        >
-                                            Kết thúc học kỳ
-                                        </Button>
-                                    )}
+                                            : editingSemester.status === "UPCOMING" 
+                                            ? "Sắp tới (UPCOMING)" : "Đã hoàn thành"}
+                                    </span>
                                 </div>
-                            )}
+
+                                {/* Hành động chuyển trạng thái */}
+                                {editingSemester.status === "UPCOMING" && (
+                                    <div className="mt-1">
+                                        <Button
+                                            type="button"
+                                            variant={formData.status === "ACTIVE" ? "default" : "outline"}
+                                            onClick={() => setFormData({ ...formData, status: formData.status === "ACTIVE" ? "UPCOMING" : "ACTIVE" })}
+                                            className={`rounded-xl transition-all ${formData.status === "ACTIVE" ? "bg-green-600 hover:bg-green-700 text-white" : "border-gray-300"}`}
+                                        >
+                                            {formData.status === "ACTIVE" ? "✓ Sẽ kích hoạt (Nhấn cập nhật để lưu)" : "Chuyển sang: Đang diễn ra"}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {editingSemester.status === "ACTIVE" && (
+                                    <div className="mt-1">
+                                        <Button
+                                            type="button"
+                                            variant={formData.status === "COMPLETED" ? "default" : "outline"}
+                                            onClick={() => {
+                                                if (formData.status !== "COMPLETED") {
+                                                    const ok = window.confirm("Bạn có chắc chắn muốn kết thúc học kỳ này không?");
+                                                    if (ok) setFormData({ ...formData, status: "COMPLETED" });
+                                                } else {
+                                                    setFormData({ ...formData, status: "ACTIVE" }); // Hoàn tác
+                                                }
+                                            }}
+                                            className={`rounded-xl transition-all ${formData.status === "COMPLETED" ? "bg-red-600 hover:bg-red-700 text-white" : "border-gray-300"}`}
+                                        >
+                                            {formData.status === "COMPLETED" ? "✓ Sẽ kết thúc (Nhấn cập nhật để lưu)" : "Chuyển sang: Đã hoàn thành"}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
