@@ -86,26 +86,26 @@ export async function updateContributionScore(projectId, studentUserId, contribu
 }
 
 /**
- * POST /api/projects/:id/integrations
+ * POST /api/projects/:id/links
  */
 export async function linkIntegration(projectId, body) {
-    const res = await client.post(`/projects/${projectId}/integrations`, body);
+    const res = await client.post(`/projects/${projectId}/links`, body);
     return unwrap(res);
 }
 
 /**
- * POST /api/projects/:id/integrations/approve
+ * POST /api/projects/:id/links/approve
  */
 export async function approveIntegration(projectId) {
-    const res = await client.post(`/projects/${projectId}/integrations/approve`);
+    const res = await client.post(`/projects/${projectId}/links/approve`);
     return unwrap(res);
 }
 
 /**
- * POST /api/projects/:id/integrations/reject
+ * POST /api/projects/:id/links/reject
  */
 export async function rejectIntegration(projectId, reason) {
-    const res = await client.post(`/projects/${projectId}/integrations/reject`, { reason });
+    const res = await client.post(`/projects/${projectId}/links/reject`, { reason });
     return unwrap(res);
 }
 
