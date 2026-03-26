@@ -62,9 +62,15 @@ public class SemesterInfo
     {
         get
         {
-            var today = DateTime.UtcNow;
-            if (today < StartDate) return "UPCOMING";
-            if (today > EndDate) return "COMPLETED";
+            // StartDate/EndDate originate from DateOnly (time part usually 00:00).
+            // Compare by date (inclusive EndDate) to avoid switching to COMPLETED
+            // immediately after 00:00 of end date.
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var start = DateOnly.FromDateTime(StartDate);
+            var end = DateOnly.FromDateTime(EndDate);
+
+            if (today < start) return "UPCOMING";
+            if (today > end) return "COMPLETED";
             return "ACTIVE";
         }
     }
