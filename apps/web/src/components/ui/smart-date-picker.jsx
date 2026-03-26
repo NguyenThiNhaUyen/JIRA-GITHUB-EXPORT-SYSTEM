@@ -159,6 +159,7 @@ export function SmartDatePicker({
     const clicked = dayjs(iso, "YYYY-MM-DD", true);
     if (clicked.isValid() && clicked.isAfter(start, "day")) {
       applyDates(startDate, iso);
+      setOpen(false); // Tự động đóng popup sau khi đã chọn xong cả 2 ngày
       return;
     }
 
