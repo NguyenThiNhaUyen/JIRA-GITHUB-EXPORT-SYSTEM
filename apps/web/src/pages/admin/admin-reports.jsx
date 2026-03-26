@@ -67,9 +67,17 @@ export default function AdminReports() {
     projectsWithSrs: 0
   };
 
-  // Normalize commit trends for chart: BE → [{ name, commits }]
+  // Normalize commit trends for chart:
+  // BE → [{ day, commits }]
+  // FE chart components expect: { date, commits, issuesClosed?, tasksDone? }
   const commitChartData = Array.isArray(commitTrendsRaw)
-    ? commitTrendsRaw.map(d => ({ name: d.date || d.label || d.week, commits: d.count || d.commits || 0 }))
+    ? commitTrendsRaw.map((d) => ({
+        date: d?.date ?? d?.day ?? d?.Day ?? d?.label ?? d?.week ?? "",
+        commits: d?.commits ?? d?.Commits ?? d?.count ?? d?.Count ?? 0,
+        // Nếu BE chưa trả issues/tasks thì render như 0 để biểu đồ không bị trống/ngoằn ngoèo.
+        issuesClosed: d?.issuesClosed ?? d?.issues ?? 0,
+        tasksDone: d?.tasksDone ?? d?.tasks ?? 0,
+      }))
     : [];
 
   const handleGenerateReport = async (type, id) => {
@@ -97,12 +105,35 @@ export default function AdminReports() {
 
   const loading = loadingSemesters || loadingCourses;
 
-  // Prepare chart data from real commit trends
+  // Chart: project distribution (per course)
   const projectDistribution = (Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
     name: course?.code ?? `Course-${course?.id ?? "N/A"}`,
     projects: course?.projectsCount ?? 0,
     students: course?.currentStudents ?? 0
   }));
+
+  // CommitFrequencyChart expects: { date, commits }
+  const commitFrequencyChartData = projectDistribution.map((d) => ({
+    date: d.name,
+    commits: d.projects,
+  }));
+
+  // BurndownChart expects: { date, remaining, ideal }
+  const burndownChartData = (() => {
+    const list = (Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
+      date: course?.code ?? `Course-${course?.id ?? "N/A"}`,
+      // Interpreting "remaining" as remaining enrollment slots (work left).
+      remaining: Math.max(0, (course?.maxStudents || 0) - (course?.currentStudents || 0)),
+    }));
+
+    if (list.length === 0) return [];
+    const initial = list[0].remaining ?? 0;
+    const denom = Math.max(1, list.length - 1);
+    return list.map((p, idx) => ({
+      ...p,
+      ideal: initial * (1 - idx / denom),
+    }));
+  })();
 
   const srsStatusData = [
     { name: 'Draft', value: integrationStats?.srsStatus?.draft || 0, color: '#64748b' },
@@ -216,58 +247,16 @@ export default function AdminReports() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Commit Trends */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Lịch sử Commit (30 ngày qua)</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <WeeklyTrendsChart data={commitChartData} />
-            </div>
-          </CardContent>
-        </Card>
+        <WeeklyTrendsChart data={commitChartData} />
 
         {/* SRS Status Distribution */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Tình trạng Báo cáo SRS</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <ContributorsChart data={srsStatusData} />
-            </div>
-          </CardContent>
-        </Card>
+        <ContributorsChart data={srsStatusData} />
 
         {/* Project Distribution */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Dự án theo Lớp học</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <CommitFrequencyChart data={projectDistribution} />
-            </div>
-          </CardContent>
-        </Card>
+        <CommitFrequencyChart data={commitFrequencyChartData} />
 
         {/* Course Performance */}
-        <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
-          <CardHeader className="border-b border-gray-50 pb-4">
-            <CardTitle className="text-lg text-gray-800 font-bold">Tiến độ Các môn học</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-64">
-              <BurndownChart
-                data={(Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => ({
-                  name: course?.code ?? `Course-${course?.id ?? "N/A"}`,
-                  completed: course?.projectsCount ?? 0,
-                  remaining: Math.max(0, (course?.maxStudents || 0) - (course?.currentStudents || 0))
-                }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <BurndownChart data={burndownChartData} />
       </div>
 
       {/* Detailed Tables */}

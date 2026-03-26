@@ -21,12 +21,19 @@ export function ContributorsChart({ data = [], isLoading, isError, limit = 5 }) 
           margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis type="number" tick={{ fontSize: 12 }} />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            tickLine={false}
+            axisLine={false}
+          />
           <YAxis
             dataKey="name"
             type="category"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 11, fill: "#6b7280" }}
             width={70}
+            tickLine={false}
+            axisLine={false}
           />
           <Tooltip
             contentStyle={{
@@ -35,7 +42,7 @@ export function ContributorsChart({ data = [], isLoading, isError, limit = 5 }) 
               borderRadius: "8px",
             }}
           />
-          <Bar dataKey="value" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+          <Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>

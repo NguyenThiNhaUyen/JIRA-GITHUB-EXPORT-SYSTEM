@@ -384,38 +384,31 @@ export default function SemesterManagement() {
                                 </div>
 
                                 {/* Hành động chuyển trạng thái */}
-                                {editingSemester.status === "UPCOMING" && (
-                                    <div className="mt-1">
-                                        <Button
-                                            type="button"
-                                            variant={formData.status === "ACTIVE" ? "default" : "outline"}
-                                            onClick={() => setFormData({ ...formData, status: formData.status === "ACTIVE" ? "UPCOMING" : "ACTIVE" })}
-                                            className={`rounded-xl transition-all ${formData.status === "ACTIVE" ? "bg-green-600 hover:bg-green-700 text-white" : "border-gray-300"}`}
-                                        >
-                                            {formData.status === "ACTIVE" ? "✓ Sẽ kích hoạt (Nhấn cập nhật để lưu)" : "Chuyển sang: Đang diễn ra"}
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {editingSemester.status === "ACTIVE" && (
-                                    <div className="mt-1">
-                                        <Button
-                                            type="button"
-                                            variant={formData.status === "COMPLETED" ? "default" : "outline"}
-                                            onClick={() => {
-                                                if (formData.status !== "COMPLETED") {
-                                                    const ok = window.confirm("Bạn có chắc chắn muốn kết thúc học kỳ này không?");
-                                                    if (ok) setFormData({ ...formData, status: "COMPLETED" });
-                                                } else {
-                                                    setFormData({ ...formData, status: "ACTIVE" }); // Hoàn tác
-                                                }
-                                            }}
-                                            className={`rounded-xl transition-all ${formData.status === "COMPLETED" ? "bg-red-600 hover:bg-red-700 text-white" : "border-gray-300"}`}
-                                        >
-                                            {formData.status === "COMPLETED" ? "✓ Sẽ kết thúc (Nhấn cập nhật để lưu)" : "Chuyển sang: Đã hoàn thành"}
-                                        </Button>
-                                    </div>
-                                )}
+                                <div className="mt-1">
+                                    <Button
+                                        type="button"
+                                        variant={formData.status === "ACTIVE" ? "default" : "outline"}
+                                        onClick={() => {
+                                            if (formData.status === "ACTIVE") {
+                                                const ok = window.confirm("Bạn có chắc chắn muốn ngừng học kỳ này không?");
+                                                if (!ok) return;
+                                                setFormData({ ...formData, status: "COMPLETED" });
+                                            } else {
+                                                // UPCOMING / COMPLETED => chuyển sang ACTIVE (nút “đang diễn ra”)
+                                                setFormData({ ...formData, status: "ACTIVE" });
+                                            }
+                                        }}
+                                        className={`rounded-xl transition-all ${
+                                            formData.status === "ACTIVE"
+                                                ? "bg-red-600 hover:bg-red-700 text-white"
+                                                : "bg-green-600 hover:bg-green-700 text-white"
+                                        }`}
+                                    >
+                                        {formData.status === "ACTIVE"
+                                            ? "Ngừng (Nhấn cập nhật để lưu)"
+                                            : "Đang diễn ra (Nhấn cập nhật để lưu)"}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     )}

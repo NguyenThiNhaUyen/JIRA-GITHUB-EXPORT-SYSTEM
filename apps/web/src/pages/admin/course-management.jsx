@@ -645,17 +645,27 @@ export default function CourseManagement() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Trạng thái
               </label>
-              <select
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
+              <Button
+                type="button"
+                onClick={() => {
+                  if (formData.status === "ACTIVE") {
+                    const ok = window.confirm("Bạn có chắc chắn muốn ngừng lớp học này không?");
+                    if (!ok) return;
+                    setFormData({ ...formData, status: "COMPLETED" });
+                  } else {
+                    // UPCOMING / COMPLETED => chuyển sang ACTIVE
+                    setFormData({ ...formData, status: "ACTIVE" });
+                  }
+                }}
+                className={`w-full rounded-xl transition-all ${
+                  formData.status === "ACTIVE"
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                }`}
+                title="Bấm để đổi trạng thái (nhớ nhấn Cập nhật/Tạo mới để lưu)"
               >
-                <option value="ACTIVE">Đang mở (ACTIVE)</option>
-                <option value="UPCOMING">Sắp mở (UPCOMING)</option>
-                <option value="COMPLETED">Đã đóng (COMPLETED)</option>
-              </select>
+                {formData.status === "ACTIVE" ? "Ngừng (ACTIVE → COMPLETED)" : "Đang mở (→ ACTIVE)"}
+              </Button>
             </div>
           </div>
 

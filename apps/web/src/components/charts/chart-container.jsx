@@ -10,11 +10,11 @@ export function ChartContainer({
   emptyMessage = "Không có dữ liệu",
 }) {
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-blue-100 ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 ${className}`}>
       {(title || subtitle) && (
-        <div className="px-6 py-4 border-b border-blue-100">
-          {title && <h3 className="text-lg font-semibold text-blue-900">{title}</h3>}
-          {subtitle && <p className="text-sm text-blue-600 mt-1">{subtitle}</p>}
+        <div className="px-6 py-4 border-b border-gray-100">
+          {title && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
+          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
         </div>
       )}
       <div className="p-6">
@@ -29,7 +29,7 @@ export function ChartContainer({
           </div>
         )}
         {isEmpty && !isLoading && !isError && (
-          <div className="flex items-center justify-center h-64 text-blue-500">
+          <div className="flex items-center justify-center h-64 text-gray-500">
             <p>{emptyMessage}</p>
           </div>
         )}

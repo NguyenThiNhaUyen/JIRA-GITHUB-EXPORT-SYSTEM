@@ -4,11 +4,13 @@ import { ChartContainer } from "./chart-container.jsx";
 
 export function WeeklyTrendsChart({ data = [], isLoading, isError }) {
   const isEmpty = !data || data.length === 0;
+  const hasIssues = Array.isArray(data) && data.some((d) => (d?.issuesClosed ?? 0) > 0);
+  const hasTasks = Array.isArray(data) && data.some((d) => (d?.tasksDone ?? 0) > 0);
 
   return (
     <ChartContainer
       title="Weekly Activity Trends"
-      subtitle="Commits, Issues và Tasks theo ngày"
+      subtitle="Commits theo ngày"
       isLoading={isLoading}
       isError={isError}
       isEmpty={isEmpty}
@@ -30,8 +32,14 @@ export function WeeklyTrendsChart({ data = [], isLoading, isError }) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 11, fill: "#6b7280" }}
+            interval="preserveStartEnd"
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} tickLine={false} axisLine={false} />
           <Tooltip
             contentStyle={{
               backgroundColor: "white",
@@ -39,7 +47,7 @@ export function WeeklyTrendsChart({ data = [], isLoading, isError }) {
               borderRadius: "8px",
             }}
           />
-          <Legend />
+          <Legend verticalAlign="top" height={24} />
           <Area
             type="monotone"
             dataKey="commits"
@@ -48,22 +56,26 @@ export function WeeklyTrendsChart({ data = [], isLoading, isError }) {
             fill="url(#colorCommits)"
             name="Commits"
           />
-          <Area
-            type="monotone"
-            dataKey="issuesClosed"
-            stackId="1"
-            stroke="#f97316"
-            fill="url(#colorIssues)"
-            name="Issues"
-          />
-          <Area
-            type="monotone"
-            dataKey="tasksDone"
-            stackId="1"
-            stroke="#10b981"
-            fill="url(#colorTasks)"
-            name="Tasks"
-          />
+          {hasIssues && (
+            <Area
+              type="monotone"
+              dataKey="issuesClosed"
+              stackId="1"
+              stroke="#f97316"
+              fill="url(#colorIssues)"
+              name="Issues"
+            />
+          )}
+          {hasTasks && (
+            <Area
+              type="monotone"
+              dataKey="tasksDone"
+              stackId="1"
+              stroke="#10b981"
+              fill="url(#colorTasks)"
+              name="Tasks"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </ChartContainer>
