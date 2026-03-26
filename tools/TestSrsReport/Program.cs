@@ -31,8 +31,6 @@ var data = new SrsReportData
     JiraSiteUrl        = "https://myteam.atlassian.net",
     GithubRepoUrl      = "https://github.com/myorg/JIRA-GITHUB-EXPORT-SYSTEM",
     GithubDefaultBranch = "feature/Backend",
-    GithubTotalCommits = 142,
-    GithubTotalPRs     = 28,
     GeneratedAt        = DateTime.UtcNow,
 
     TeamMembers = new List<string>

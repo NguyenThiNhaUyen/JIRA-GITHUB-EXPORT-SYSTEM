@@ -1,3 +1,4 @@
+using System.Linq;
 using JiraGithubExport.IntegrationService.Application.Interfaces.Reports;
 using JiraGithubExport.Shared.Models;
 using QuestPDF.Fluent;
@@ -161,6 +162,10 @@ public class PdfReportGenerator : IPdfReportGenerator
             ? data.ProjectName
             : data.Project?.name ?? "N/A";
 
+        var productDescription = string.IsNullOrWhiteSpace(data.Project?.description)
+            ? "No product description was provided in the project record."
+            : data.Project!.description!.Trim();
+
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -193,7 +198,7 @@ public class PdfReportGenerator : IPdfReportGenerator
                 // ── FOOTER ──
                 page.Footer().AlignCenter().Text(txt =>
                 {
-                    txt.Span("JIRA-GITHUB Export System  |  ").FontSize(8).FontColor(TextGray);
+                    txt.Span("Software Requirements Specification  |  ").FontSize(8).FontColor(TextGray);
                     txt.Span("Page ").FontSize(8).FontColor(TextGray);
                     txt.CurrentPageNumber().FontSize(8).FontColor(TextGray);
                     txt.Span(" of ").FontSize(8).FontColor(TextGray);
@@ -236,10 +241,11 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "1.2 Scope");
                     doc.Item().PaddingLeft(10).Text(
-                        $"The system is the '{projectName}' software project. It integrates with " +
-                        $"Jira ({data.JiraSiteUrl}) for issue tracking and GitHub ({data.GithubRepoUrl}) " +
-                        "for source code management. The system aims to automate reporting and monitoring " +
-                        "of student project activities.").FontSize(10).FontColor(TextGray);
+                        $"This document specifies requirements for the software product '{projectName}'. " +
+                        "Where configured, requirements are traced to issues in the linked Jira project " +
+                        "and to the linked source repository. The scope is bounded by the issues and " +
+                        "materials included at the time this document was generated.")
+                        .FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "1.3 Definitions, Acronyms, and Abbreviations");
                     AcronymTable(doc, new[]
@@ -263,29 +269,37 @@ public class PdfReportGenerator : IPdfReportGenerator
                     });
 
                     // ───────────────────────────────────────────────
-                    // 2. OVERALL DESCRIPTION
+                    // 2. GENERAL SYSTEM DESCRIPTION (ISO 29148)
                     // ───────────────────────────────────────────────
-                    SectionHeader(doc, "2. Overall Description");
+                    SectionHeader(doc, "2. General System Description");
 
                     SubSection(doc, "2.1 Product Perspective");
-                    doc.Item().PaddingLeft(10).Text(
-                        $"This system is a standalone web application that integrates with Jira and GitHub " +
-                        $"to track, monitor, and export student project data. It operates as an API " +
-                        $"backend deployed on cloud infrastructure (Render.com + Supabase PostgreSQL).").FontSize(10).FontColor(TextGray);
+                    doc.Item().PaddingLeft(10).Text(productDescription).FontSize(10).FontColor(TextGray);
+                    doc.Item().PaddingLeft(10).PaddingTop(6).Text(
+                        "This perspective reflects the product as described above. Functional requirements " +
+                        "derived from the linked issue tracker appear in Section 3. The document content " +
+                        "is synchronized from the configured integrations at generation time.")
+                        .FontSize(10).FontColor(TextGray).Italic();
 
                     SubSection(doc, "2.2 Product Functions (Summary)");
-                    doc.Item().PaddingLeft(10).Column(funcs =>
+                    doc.Item().PaddingLeft(10).Text(
+                        "The following summary lists high-level capabilities implied by Epic and Story issues " +
+                        "in the linked Jira project (see Section 3 for full traceability). If no such issues " +
+                        "exist, the product functions shall be elaborated by the project team outside this export.")
+                        .FontSize(10).FontColor(TextGray);
+                    doc.Item().PaddingLeft(10).PaddingTop(4).Column(funcs =>
                     {
-                        foreach (var f in new[]
+                        if (data.SystemFeatures.Count == 0)
                         {
-                            "Synchronise Jira issues and GitHub commits/pull requests automatically",
-                            "Allow lecturers to approve or reject group Jira/GitHub link submissions",
-                            "Generate SRS, Activity Summary, and Commit Statistics reports",
-                            "Monitor inactive team members and raise alerts",
-                            "Provide secure JWT authentication with role-based access control",
-                        })
+                            funcs.Item().Text("• [Placeholder] Functional capabilities shall be stated as Epic/Story issues in Jira or in project documentation.")
+                                .FontSize(10).FontColor(TextGray).Italic();
+                        }
+                        else
                         {
-                            funcs.Item().Text($"• {f}").FontSize(10).FontColor(TextGray);
+                            foreach (var f in data.SystemFeatures.Take(12))
+                                funcs.Item().Text($"• [{f.IssueKey}] {f.Title}").FontSize(10).FontColor(TextGray);
+                            if (data.SystemFeatures.Count > 12)
+                                funcs.Item().Text($"• … ({data.SystemFeatures.Count - 12} additional items in Section 3)").FontSize(9).FontColor(TextGray).Italic();
                         }
                     });
 
@@ -317,12 +331,16 @@ public class PdfReportGenerator : IPdfReportGenerator
                     SubSection(doc, "2.4 Operating Environment");
                     doc.Item().PaddingLeft(10).Column(env =>
                     {
-                        env.Item().Text("• Backend: ASP.NET Core Web API (.NET 8), deployed on Render.com").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("• Database: PostgreSQL on Supabase").FontSize(10).FontColor(TextGray);
-                        env.Item().Text("• Cache: Redis on Upstash").FontSize(10).FontColor(TextGray);
-                        env.Item().Text($"• Source Control: GitHub ({data.GithubRepoUrl})").FontSize(10).FontColor(TextGray);
+                        env.Item().Text(
+                            "• Deployment target, runtime stack, and infrastructure constraints are determined by the project team and are not prescribed by this requirements export.")
+                            .FontSize(10).FontColor(TextGray);
+                        env.Item().Text(
+                            string.IsNullOrWhiteSpace(data.GithubRepoUrl)
+                                ? "• Linked source repository: not configured for this project."
+                                : $"• Linked source repository: {data.GithubRepoUrl}")
+                            .FontSize(10).FontColor(TextGray);
                         if (!string.IsNullOrEmpty(data.GithubDefaultBranch))
-                            env.Item().Text($"• Default Branch: {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
+                            env.Item().Text($"• Default branch (reference): {data.GithubDefaultBranch}").FontSize(10).FontColor(TextGray);
                     });
 
                     SubSection(doc, "2.5 Team Composition");
@@ -419,9 +437,10 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "4.1 User Interfaces");
                     doc.Item().PaddingLeft(10).Text(
-                        "The system exposes a RESTful HTTP API consumed by a web-based frontend. " +
-                        "The API follows OpenAPI 3.0 specification and is documented via Swagger UI " +
-                        "at /swagger/index.html.").FontSize(10).FontColor(TextGray);
+                        "Human–machine interfaces for this product shall be defined in project-specific design " +
+                        "artifacts. This SRS does not prescribe a particular UI technology; any UI-related " +
+                        "requirements appear in Section 3 or Section 4.3 when captured as Jira issues.")
+                        .FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "4.2 Software Interfaces");
                     doc.Item().PaddingLeft(10).Table(t =>
@@ -429,16 +448,13 @@ public class PdfReportGenerator : IPdfReportGenerator
                         t.ColumnsDefinition(c => { c.ConstantColumn(130); c.RelativeColumn(); });
                         t.Header(h =>
                         {
-                            h.Cell().Background(TableHeader).Padding(4).Text("System").FontColor(Colors.White).Bold().FontSize(9);
-                            h.Cell().Background(TableHeader).Padding(4).Text("Purpose").FontColor(Colors.White).Bold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("Interface").FontColor(Colors.White).Bold().FontSize(9);
+                            h.Cell().Background(TableHeader).Padding(4).Text("Role in this SRS").FontColor(Colors.White).Bold().FontSize(9);
                         });
                         var ifaces = new (string, string)[]
                         {
-                            ("Jira REST API v3", "Retrieve issues, worklogs, sprints, and project metadata"),
-                            ("GitHub REST API v3","Retrieve commits, pull requests, branches, and repository info"),
-                            ("PostgreSQL (Supabase)", "Persistent data storage"),
-                            ("Redis (Upstash)", "Distributed locking and caching for background sync worker"),
-                            ("JWT (HS256)", "Stateless authentication and authorisation"),
+                            ("Jira (linked project)", "Source of structured requirements issues (Epics, Stories, tasks) imported for this document."),
+                            ("Source repository (linked)", "Reference for implementation artifacts; not a substitute for stated requirements."),
                         };
                         bool alt = false;
                         foreach (var (sys, purpose) in ifaces)
@@ -458,73 +474,24 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "4.4 Communication Interfaces");
                     doc.Item().PaddingLeft(10).Text(
-                        "• All API communication uses HTTPS (TLS 1.2+).\n" +
-                        "• Jira and GitHub APIs are accessed over HTTPS REST.\n" +
-                        "• Redis connection uses SSL on port 6379.\n" +
-                        "• PostgreSQL connection uses SSL on port 5432.").FontSize(10).FontColor(TextGray);
-
-                    // GitHub stats box
-                    if (data.GithubTotalCommits > 0 || data.GithubTotalPRs > 0)
-                    {
-                        doc.Item().PaddingTop(8).Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); c.RelativeColumn(); });
-                            void StatBox(string label, string value)
-                            {
-                                t.Cell().Border(1).BorderColor(BorderGray).Padding(8).Column(col =>
-                                {
-                                    col.Item().Text(value).Bold().FontSize(20).FontColor(AccentColor).AlignCenter();
-                                    col.Item().Text(label).FontSize(9).FontColor(TextGray).AlignCenter();
-                                });
-                            }
-                            StatBox("Total Commits", data.GithubTotalCommits.ToString());
-                            StatBox("Pull Requests", data.GithubTotalPRs.ToString());
-                            StatBox("Default Branch", data.GithubDefaultBranch ?? "N/A");
-                        });
-                    }
+                        "External communication constraints (protocols, endpoints, authentication) shall be " +
+                        "specified in design documentation or as explicit Jira issues. This SRS does not " +
+                        "embed implementation-specific port or middleware assumptions.")
+                        .FontSize(10).FontColor(TextGray);
 
                     // ───────────────────────────────────────────────
                     // 5. NON-FUNCTIONAL REQUIREMENTS
                     // ───────────────────────────────────────────────
                     SectionHeader(doc, "5. Non-Functional Requirements");
 
-                    // Standard NFRs table (always included)
-                    SubSection(doc, "5.1 Standard Non-Functional Requirements");
-                    doc.Item().Table(t =>
-                    {
-                        t.ColumnsDefinition(c => { c.ConstantColumn(40); c.ConstantColumn(120); c.RelativeColumn(); c.ConstantColumn(80); });
-                        t.Header(h =>
-                        {
-                            foreach (var col in new[] { "ID", "Category", "Requirement", "Metric" })
-                                h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold().FontSize(9);
-                        });
-                        var nfrRows = new[]
-                        {
-                            ("NFR-01", "Performance",   "API response time for non-report endpoints must be ≤ 500ms under normal load.", "≤ 500 ms"),
-                            ("NFR-02", "Availability",  "The system must be available at least 99% of the time (excluding scheduled maintenance).", "≥ 99% uptime"),
-                            ("NFR-03", "Security",      "All passwords must be stored using BCrypt hashing. JWT tokens expire after a configurable period.", "BCrypt + JWT"),
-                            ("NFR-04", "Scalability",   "The sync worker must handle at least 50 concurrent project integrations without bottlenecks.", "50+ projects"),
-                            ("NFR-05", "Reliability",   "Failed sync jobs must be logged and retried without data loss.", "Auto-retry"),
-                            ("NFR-06", "Maintainability","Code must follow C# naming conventions and include XML documentation for public APIs.", "Code review"),
-                            ("NFR-07", "Portability",   "The system is containerised with Docker and deployable on any OCI-compliant platform.", "Docker image"),
-                        };
-                        bool alt = false;
-                        foreach (var (id, cat, req, metric) in nfrRows)
-                        {
-                            string bg = alt ? TableRowAlt : Colors.White;
-                            t.Cell().Background(bg).Padding(4).Text(id).Bold().FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(cat).FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(req).FontSize(9);
-                            t.Cell().Background(bg).Padding(4).Text(metric).FontSize(9);
-                            alt = !alt;
-                        }
-                    });
-
-                    // NFRs from Jira (if any)
                     if (data.NonFunctionalRequirements.Count > 0)
                     {
-                        SubSection(doc, "5.2 Additional NFRs from Jira");
                         IssueTable(doc, data.NonFunctionalRequirements);
+                    }
+                    else
+                    {
+                        doc.Item().PaddingTop(6).Text("No specific non-functional requirements tracked in Jira.")
+                            .FontSize(10).FontColor(TextGray).Italic();
                     }
 
                     // ───────────────────────────────────────────────
@@ -534,16 +501,15 @@ public class PdfReportGenerator : IPdfReportGenerator
 
                     SubSection(doc, "6.1 Legal and Compliance");
                     doc.Item().PaddingLeft(10).Text(
-                        "• The system must comply with applicable data protection regulations " +
-                        "(e.g. privacy of student data).\n" +
-                        "• API tokens for Jira and GitHub must be stored as encrypted environment " +
-                        "variables and never committed to version control.")
+                        "The product shall comply with applicable laws, institutional policies, and data " +
+                        "protection obligations applicable to the deployment context. Credential handling " +
+                        "and third-party API access shall follow the project team's security policies.")
                         .FontSize(10).FontColor(TextGray);
 
                     SubSection(doc, "6.2 Localisation");
                     doc.Item().PaddingLeft(10).Text(
-                        "The primary language of the user interface is English. " +
-                        "Date/time values must be stored as UTC and converted to the local timezone on the frontend.")
+                        "Languages, locales, and time-zone conventions for the delivered product shall be " +
+                        "specified by the project team where not already covered by Jira issues in this document.")
                         .FontSize(10).FontColor(TextGray);
 
                     // ── SIGN-OFF TABLE ──
@@ -620,25 +586,11 @@ public class PdfReportGenerator : IPdfReportGenerator
                         {
                             content.Item().Text("No Jira features found.").Italic().FontColor(TextGray);
                         }
-
-                        content.Item().PaddingTop(4).Row(row =>
-                        {
-                            row.RelativeItem().Border(1).BorderColor(BorderGray).Padding(8).Column(c =>
-                            {
-                                c.Item().Text(report.GithubTotalCommits.ToString()).Bold().FontSize(16).FontColor(AccentColor).AlignCenter();
-                                c.Item().Text("Total Commits").FontSize(9).FontColor(TextGray).AlignCenter();
-                            });
-                            row.RelativeItem().Border(1).BorderColor(BorderGray).Padding(8).Column(c =>
-                            {
-                                c.Item().Text(report.GithubTotalPRs.ToString()).Bold().FontSize(16).FontColor(AccentColor).AlignCenter();
-                                c.Item().Text("Total Pull Requests").FontSize(9).FontColor(TextGray).AlignCenter();
-                            });
-                        });
                     });
 
                     page.Footer().AlignCenter().Text(txt =>
                     {
-                        txt.Span("JIRA-GITHUB Export System  |  ").FontSize(8).FontColor(TextGray);
+                        txt.Span("Course SRS bundle  |  ").FontSize(8).FontColor(TextGray);
                         txt.Span("Page ").FontSize(8).FontColor(TextGray);
                         txt.CurrentPageNumber().FontSize(8).FontColor(TextGray);
                     });

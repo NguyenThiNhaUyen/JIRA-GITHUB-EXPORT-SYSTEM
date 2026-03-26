@@ -2,6 +2,7 @@ using JiraGithubExport.Shared.Contracts.Responses.Reports;
 using System.Security.Claims;
 using JiraGithubExport.IntegrationService.Application.Interfaces;
 using JiraGithubExport.Shared.Common.Exceptions;
+using JiraGithubExport.Shared.Infrastructure.ExternalServices.Interfaces;
 using JiraGithubExport.Shared.Infrastructure.Repositories.Interfaces;
 using JiraGithubExport.Shared.Models;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,8 @@ public class ReportService : IReportService
     private readonly IWebHostEnvironment _env;
     private readonly IExcelReportGenerator _excelReportGenerator;
     private readonly IPdfReportGenerator _pdfReportGenerator;
+    private readonly IJiraClient _jiraClient;
+    private readonly IGitHubClient _githubClient;
 
     public ReportService(
         IUnitOfWork unitOfWork, 
@@ -27,7 +30,9 @@ public class ReportService : IReportService
         IHttpContextAccessor httpContextAccessor, 
         IWebHostEnvironment env,
         IExcelReportGenerator excelReportGenerator,
-        IPdfReportGenerator pdfReportGenerator)
+        IPdfReportGenerator pdfReportGenerator,
+        IJiraClient jiraClient,
+        IGitHubClient githubClient)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -35,6 +40,69 @@ public class ReportService : IReportService
         _env = env;
         _excelReportGenerator = excelReportGenerator;
         _pdfReportGenerator = pdfReportGenerator;
+        _jiraClient = jiraClient;
+        _githubClient = githubClient;
+    }
+
+    /// <summary>
+    /// Synchronizes Jira issues and GitHub commits/PRs into the database before SRS generation so the report reflects current remote state.
+    /// </summary>
+    private async Task SyncProjectIntegrationBeforeSrsAsync(long projectId)
+    {
+        var integration = await _unitOfWork.ProjectIntegrations.Query()
+            .Include(pi => pi.jira_project)
+            .Include(pi => pi.github_repo)
+            .FirstOrDefaultAsync(pi => pi.project_id == projectId);
+
+        if (integration == null)
+            return;
+
+        if (integration.jira_project != null && !string.IsNullOrWhiteSpace(integration.jira_token))
+        {
+            try
+            {
+                await _jiraClient.SyncIssuesAsync(
+                    integration.jira_project.id,
+                    integration.jira_project.jira_project_key ?? "",
+                    integration.jira_project.jira_url ?? "https://atlassian.net",
+                    integration.jira_token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[SRS] Jira SyncIssuesAsync failed before SRS for project {ProjectId}", projectId);
+            }
+        }
+
+        if (integration.github_repo != null && !string.IsNullOrWhiteSpace(integration.github_token))
+        {
+            try
+            {
+                var repo = integration.github_repo;
+                await _githubClient.SyncCommitsAsync(
+                    repo.id,
+                    repo.owner_login ?? "",
+                    repo.name ?? "",
+                    integration.github_token);
+                await _githubClient.SyncPullRequestsAsync(
+                    repo.id,
+                    repo.owner_login ?? "",
+                    repo.name ?? "",
+                    integration.github_token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[SRS] GitHub sync failed before SRS for project {ProjectId}", projectId);
+            }
+        }
+    }
+
+    private static bool IsJiraNonFunctionalIssueType(string? issueType)
+    {
+        if (string.IsNullOrWhiteSpace(issueType))
+            return false;
+        var t = issueType.Trim();
+        return t.Equals("NFR", StringComparison.OrdinalIgnoreCase)
+               || t.Equals("Non-Functional Requirement", StringComparison.OrdinalIgnoreCase);
     }
 
     private long GetCurrentUserId()
@@ -189,6 +257,13 @@ public class ReportService : IReportService
             var course = await _unitOfWork.Courses.FirstOrDefaultAsync(c => c.id == courseId);
             if (course == null) throw new NotFoundException("Course not found");
 
+            var courseProjectIds = await _unitOfWork.Projects.Query()
+                .Where(p => p.course_id == courseId)
+                .Select(p => p.id)
+                .ToListAsync();
+            foreach (var pid in courseProjectIds)
+                await SyncProjectIntegrationBeforeSrsAsync(pid);
+
             var projects = await _unitOfWork.Projects.Query()
                 .Include(p => p.course)
                 .Include(p => p.team_members)
@@ -206,7 +281,6 @@ public class ReportService : IReportService
 
             var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
             var taskTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
-            var nfrKeywords = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
             var interfaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
 
             var srsReports = new List<SrsReportData>();
@@ -216,14 +290,6 @@ public class ReportService : IReportService
                 var jiraProject = integration?.jira_project;
                 var githubRepo = integration?.github_repo;
                 var allIssues = jiraProject?.jira_issues ?? new List<jira_issue>();
-
-                int totalCommits = 0;
-                int totalPRs = 0;
-                if (githubRepo != null)
-                {
-                    totalCommits = await _unitOfWork.GitHubCommits.Query().CountAsync(c => c.repo_id == githubRepo.id);
-                    totalPRs = await _unitOfWork.GitHubPullRequests.Query().CountAsync(pr => pr.repo_id == githubRepo.id);
-                }
 
                 var systemFeatures = allIssues
                     .Where(i => i.issue_type != null && epicAndStoryTypes.Contains(i.issue_type))
@@ -251,8 +317,7 @@ public class ReportService : IReportService
                     }).ToList();
 
                 var nfrs = allIssues
-                    .Where(i => i.issue_type?.ToUpper() == "NFR"
-                        || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                    .Where(i => IsJiraNonFunctionalIssueType(i.issue_type))
                     .Select(i => new SrsIssueRow
                     {
                         IssueKey = i.jira_issue_key,
@@ -289,8 +354,6 @@ public class ReportService : IReportService
                     JiraSiteUrl = jiraProject?.jira_url ?? "",
                     GithubRepoUrl = githubRepo?.repo_url ?? "",
                     GithubDefaultBranch = githubRepo?.default_branch,
-                    GithubTotalCommits = totalCommits,
-                    GithubTotalPRs = totalPRs,
                     TeamMembers = teamMembers,
                     SystemFeatures = systemFeatures,
                     NonFunctionalRequirements = nfrs,
@@ -510,6 +573,8 @@ public class ReportService : IReportService
     {
         try
         {
+            await SyncProjectIntegrationBeforeSrsAsync(projectId);
+
             // Load project with team, Jira, and GitHub data
             var project = await _unitOfWork.Projects.Query()
                 .Include(p => p.course)
@@ -534,21 +599,11 @@ public class ReportService : IReportService
             var githubRepo   = integration?.github_repo;
             var allIssues    = jiraProject?.jira_issues ?? new List<jira_issue>();
 
-            // GitHub stats
-            int totalCommits = 0, totalPRs = 0;
             string? defaultBranch = githubRepo?.default_branch;
-            if (githubRepo != null)
-            {
-                totalCommits = await _unitOfWork.GitHubCommits.Query()
-                    .CountAsync(c => c.repo_id == githubRepo.id);
-                totalPRs = await _unitOfWork.GitHubPullRequests.Query()
-                    .CountAsync(pr => pr.repo_id == githubRepo.id);
-            }
 
             // Classify issues
             var epicAndStoryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EPIC", "STORY", "USER STORY" };
             var taskTypes         = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "TASK", "SUB-TASK", "SUBTASK" };
-            var nfrKeywords       = new[] { "NFR", "NON-FUNCTIONAL", "SECURITY", "PERFORMANCE", "RELIABILITY" };
             var interfaceKeywords = new[] { "API", "INTERFACE", "UI", "INTEGRATION", "ENDPOINT" };
 
             var systemFeatures = allIssues
@@ -576,8 +631,7 @@ public class ReportService : IReportService
                 }).ToList();
 
             var nfrs = allIssues
-                .Where(i => i.issue_type?.ToUpper() == "NFR"
-                    || nfrKeywords.Any(kw => i.title != null && i.title.Contains(kw, StringComparison.OrdinalIgnoreCase)))
+                .Where(i => IsJiraNonFunctionalIssueType(i.issue_type))
                 .Select(i => new SrsIssueRow
                 {
                     IssueKey    = i.jira_issue_key,
@@ -614,8 +668,6 @@ public class ReportService : IReportService
                 JiraSiteUrl              = jiraProject?.jira_url ?? "",
                 GithubRepoUrl            = githubRepo?.repo_url ?? "",
                 GithubDefaultBranch      = defaultBranch,
-                GithubTotalCommits       = totalCommits,
-                GithubTotalPRs           = totalPRs,
                 TeamMembers              = teamMembers,
                 SystemFeatures           = systemFeatures,
                 NonFunctionalRequirements = nfrs,
