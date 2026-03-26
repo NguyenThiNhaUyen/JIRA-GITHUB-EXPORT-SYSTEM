@@ -35,7 +35,6 @@ public class SemesterService : ISemesterService
             name = request.Name,
             start_date = DateOnly.FromDateTime(request.StartDate),
             end_date = DateOnly.FromDateTime(request.EndDate),
-            status = string.IsNullOrWhiteSpace(request.Status) ? "UPCOMING" : request.Status,
             created_at = DateTime.UtcNow
         };
 
@@ -95,8 +94,6 @@ public class SemesterService : ISemesterService
         semester.name = request.Name;
         semester.start_date = DateOnly.FromDateTime(request.StartDate);
         semester.end_date = DateOnly.FromDateTime(request.EndDate);
-        if (!string.IsNullOrWhiteSpace(request.Status))
-            semester.status = request.Status;
 
         _unitOfWork.Semesters.Update(semester);
         await _unitOfWork.SaveChangesAsync();

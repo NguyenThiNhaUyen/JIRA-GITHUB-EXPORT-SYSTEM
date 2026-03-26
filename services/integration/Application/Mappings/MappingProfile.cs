@@ -47,8 +47,7 @@ public class MappingProfile : Profile
         CreateMap<semester, SemesterInfo>()
             .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.name))
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.start_date))
-            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.status));
+            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.end_date));
 
         CreateMap<subject, SubjectInfo>()
             .ForMember(dest => dest.SubjectCode, opt => opt.MapFrom(src => src.subject_code))
