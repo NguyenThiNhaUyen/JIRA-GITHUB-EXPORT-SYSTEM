@@ -34,10 +34,8 @@ public class SrsReportData
     // Chapter 5 - Nonfunctional Requirements (NFR)
     public List<SrsIssueRow> NonFunctionalRequirements { get; set; } = new();
 
-    // For Chapter 2 - Overall Description
+    // Chapter 2 - General system description (linked repository metadata only; no VCS activity metrics in SRS)
     public string? GithubDefaultBranch { get; set; }
-    public int GithubTotalCommits { get; set; }
-    public int GithubTotalPRs { get; set; }
     public List<string> TeamMembers { get; set; } = new();
 }
 
