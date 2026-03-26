@@ -197,7 +197,8 @@ export function SmartDatePicker({
   const renderMonth = (month) => {
     // Monday-first (ISO): 1..7
     const firstOfMonth = month.startOf("month");
-    const offset = firstOfMonth.isoWeekday() - 1; // Mon => 0
+    const dayOfWeek = firstOfMonth.day();
+    const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon => 0
 
     const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
     const cells = [];
@@ -320,7 +321,7 @@ export function SmartDatePicker({
                   if (!iso) return;
 
                   // Nếu end đang là một ngày hợp lệ và <= start mới => clear end để duy trì range hợp lệ.
-                  if (endDate && dayjs(iso).isSameOrAfter(dayjs(endDate), "day")) {
+                  if (endDate && (dayjs(iso).isAfter(dayjs(endDate), "day") || dayjs(iso).isSame(dayjs(endDate), "day"))) {
                     applyDates(iso, ISO_EMPTY);
                     return;
                   }
@@ -343,7 +344,7 @@ export function SmartDatePicker({
                     return;
                   }
 
-                  if (startDate && dayjs(iso).isSameOrBefore(dayjs(startDate), "day")) {
+                  if (startDate && (dayjs(iso).isBefore(dayjs(startDate), "day") || dayjs(iso).isSame(dayjs(startDate), "day"))) {
                     applyDates(startDate, ISO_EMPTY);
                     return;
                   }
