@@ -78,6 +78,8 @@ public class StudentService : IStudentService
             .Include(t => t.project).ThenInclude(p => p.course)
             .Include(t => t.project).ThenInclude(p => p.project_integration)
             .Include(t => t.project).ThenInclude(p => p.team_members)
+                .ThenInclude(tm => tm.student_user)
+                    .ThenInclude(su => su.user)
             .Where(t => t.student_user_id == userId && t.participation_status == "ACTIVE")
             .Select(t => new
             {
@@ -94,7 +96,12 @@ public class StudentService : IStudentService
                      githubStatus = t.project.project_integration.approval_status,
                      jiraStatus = t.project.project_integration.approval_status
                 } : null,
-                team = t.project.team_members.Select(tm => new { studentId = tm.student_user_id, role = tm.team_role }).ToList()
+                team = t.project.team_members.Select(tm => new {
+                    studentId = tm.student_user_id,
+                    studentCode = tm.student_user != null ? tm.student_user.student_code : null,
+                    fullName = tm.student_user != null && tm.student_user.user != null ? tm.student_user.user.full_name : null,
+                    role = tm.team_role
+                }).ToList()
             })
             .ToListAsync();
 

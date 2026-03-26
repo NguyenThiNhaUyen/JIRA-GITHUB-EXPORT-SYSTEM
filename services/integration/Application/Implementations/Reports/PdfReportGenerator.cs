@@ -396,6 +396,27 @@ public class PdfReportGenerator : IPdfReportGenerator
                             Row2("Description", string.IsNullOrWhiteSpace(feat.Description) ? "No description provided." : feat.Description);
                         });
 
+                        if (!string.IsNullOrWhiteSpace(feat.Description))
+                        {
+                            doc.Item().PaddingLeft(10).PaddingTop(4)
+                                .Text("Description:").Bold().FontSize(10).FontColor(PrimaryColor);
+                            doc.Item().PaddingLeft(10).Text(feat.Description).FontSize(9).FontColor(TextGray);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(feat.AcceptanceCriteria))
+                        {
+                            doc.Item().PaddingLeft(10).PaddingTop(4)
+                                .Text("Acceptance Criteria:").Bold().FontSize(10).FontColor(PrimaryColor);
+                            doc.Item().PaddingLeft(10).Text(feat.AcceptanceCriteria).FontSize(9).FontColor(TextGray);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(feat.Preconditions))
+                        {
+                            doc.Item().PaddingLeft(10).PaddingTop(4)
+                                .Text("Preconditions:").Bold().FontSize(10).FontColor(PrimaryColor);
+                            doc.Item().PaddingLeft(10).Text(feat.Preconditions).FontSize(9).FontColor(TextGray);
+                        }
+
                         // Sub-tasks as detailed requirements
                         if (feat.SubTasks.Count > 0)
                         {
@@ -511,6 +532,35 @@ public class PdfReportGenerator : IPdfReportGenerator
                         "Languages, locales, and time-zone conventions for the delivered product shall be " +
                         "specified by the project team where not already covered by Jira issues in this document.")
                         .FontSize(10).FontColor(TextGray);
+
+                    SectionHeader(doc, "Appendix A - Requirements Traceability Matrix");
+                    doc.Item().PaddingLeft(10).Table(t =>
+                    {
+                        t.ColumnsDefinition(c =>
+                        {
+                            c.ConstantColumn(90);
+                            c.ConstantColumn(70);
+                            c.RelativeColumn(2);
+                            c.RelativeColumn(3);
+                        });
+                        t.Header(h =>
+                        {
+                            foreach (var col in new[] { "Jira ID", "FR ID", "Type", "Title" })
+                                h.Cell().Background(TableHeader).Padding(4).Text(col).FontColor(Colors.White).Bold().FontSize(9);
+                        });
+                        bool alt = false;
+                        int frIdx = 1;
+                        foreach (var feat in data.SystemFeatures)
+                        {
+                            string bg = alt ? TableRowAlt : Colors.White;
+                            t.Cell().Background(bg).Padding(4).Text(feat.IssueKey).FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text($"FR-{frIdx:D2}").FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text(feat.IssueType).FontSize(9);
+                            t.Cell().Background(bg).Padding(4).Text(feat.Title).FontSize(9);
+                            alt = !alt;
+                            frIdx++;
+                        }
+                    });
 
                     // ── SIGN-OFF TABLE ──
                     doc.Item().PaddingTop(30).Table(t =>

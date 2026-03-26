@@ -15,6 +15,10 @@ public partial class jira_issue
 
     public string? description { get; set; }
 
+    public string? acceptance_criteria { get; set; }
+
+    public string? preconditions { get; set; }
+
     public string? issue_type { get; set; }
 
     public string? status { get; set; }

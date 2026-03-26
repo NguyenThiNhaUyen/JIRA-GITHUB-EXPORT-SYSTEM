@@ -44,6 +44,8 @@ public class SrsFeature
     public string IssueKey { get; set; } = "";
     public string Title { get; set; } = "";
     public string? Description { get; set; }
+    public string? AcceptanceCriteria { get; set; }
+    public string? Preconditions { get; set; }
     public string IssueType { get; set; } = "";
     public string? Status { get; set; }
     public List<SrsIssueRow> SubTasks { get; set; } = new();
@@ -54,6 +56,7 @@ public class SrsIssueRow
     public string IssueKey { get; set; } = "";
     public string Title { get; set; } = "";
     public string? Description { get; set; }
+    public string? AcceptanceCriteria { get; set; }
     public string? Priority { get; set; }
     public string? Status { get; set; }
 }

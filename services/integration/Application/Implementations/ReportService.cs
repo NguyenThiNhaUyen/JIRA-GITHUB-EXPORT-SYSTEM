@@ -300,6 +300,8 @@ public class ReportService : IReportService
                         IssueKey = i.jira_issue_key,
                         Title = i.title ?? "(no title)",
                         Description = i.description,
+                        AcceptanceCriteria = i.acceptance_criteria ?? i.description,
+                        Preconditions = i.preconditions,
                         IssueType = i.issue_type ?? "",
                         Status = i.status,
                         SubTasks = allIssues
@@ -311,6 +313,7 @@ public class ReportService : IReportService
                                 IssueKey = sub.jira_issue_key,
                                 Title = sub.title ?? "",
                                 Description = sub.description,
+                                AcceptanceCriteria = sub.acceptance_criteria ?? sub.description,
                                 Priority = sub.priority,
                                 Status = sub.status
                             }).ToList()
@@ -614,6 +617,8 @@ public class ReportService : IReportService
                     IssueKey    = i.jira_issue_key,
                     Title       = i.title ?? "(no title)",
                     Description = i.description,
+                    AcceptanceCriteria = i.acceptance_criteria ?? i.description,
+                    Preconditions = i.preconditions,
                     IssueType   = i.issue_type ?? "",
                     Status      = i.status,
                     SubTasks    = allIssues
@@ -625,6 +630,7 @@ public class ReportService : IReportService
                             IssueKey    = sub.jira_issue_key,
                             Title       = sub.title ?? "",
                             Description = sub.description,
+                            AcceptanceCriteria = sub.acceptance_criteria ?? sub.description,
                             Priority    = sub.priority,
                             Status      = sub.status
                         }).ToList()
