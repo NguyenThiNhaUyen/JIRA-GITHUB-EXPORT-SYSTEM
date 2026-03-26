@@ -10,7 +10,7 @@ export function mapSemester(beSem) {
         code: beSem.code || beSem.Code || beSem.name || beSem.Name || "",
         startDate: beSem.startDate || beSem.StartDate,
         endDate: beSem.endDate || beSem.EndDate,
-        status: beSem.status || beSem.Status || "ACTIVE" // Fallback fallback
+        status: beSem.status || beSem.Status || "UPCOMING" // Fallback fallback
     };
 }
 

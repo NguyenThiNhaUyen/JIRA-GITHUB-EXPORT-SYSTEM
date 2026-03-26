@@ -647,65 +647,22 @@ export default function CourseManagement() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Trạng thái
             </label>
-            <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4">
-              <p className="text-sm font-medium text-gray-700">
-                Trạng thái hiện tại:{" "}
-                <span
-                  className={`font-bold ${
-                    formData.status === "ACTIVE"
-                      ? "text-green-600"
-                      : formData.status === "UPCOMING"
-                        ? "text-blue-600"
-                        : "text-gray-600"
-                  }`}
-                >
-                  {formData.status === "ACTIVE"
-                    ? "Đang diễn ra (ACTIVE)"
-                    : formData.status === "UPCOMING"
-                      ? "Chưa diễn ra (UPCOMING)"
-                      : "Hoàn thành (COMPLETED)"}
-                </span>
+            <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 text-sm text-gray-600">
+              Trạng thái hiện tại:{" "}
+              <span className={`font-bold ${
+                formData.status === "ACTIVE" ? "text-green-600"
+                : formData.status === "UPCOMING" ? "text-blue-600"
+                : "text-gray-500"
+              }`}>
+                {formData.status === "ACTIVE" ? "Đang mở (ACTIVE)"
+                  : formData.status === "UPCOMING" ? "Chưa mở (UPCOMING)"
+                  : "Đã đóng (COMPLETED)"}
+              </span>
+              <p className="text-xs text-gray-400 mt-1">
+                {editingCourse
+                  ? "Trạng thái chỉ hiển thị, không thể thay đổi thủ công."
+                  : "Khi tạo mới, lớp mặc định ở trạng thái Upcoming."}
               </p>
-
-              {/* Status flow copied from SemesterManagement */}
-              {editingCourse ? (
-                <div className="mt-3">
-                  {formData.status === "UPCOMING" ? (
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const ok = window.confirm("Bạn có chắc chắn muốn chuyển lớp sang Đang diễn ra không?");
-                        if (!ok) return;
-                        setFormData({ ...formData, status: "ACTIVE" });
-                      }}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-none text-sm"
-                    >
-                      Hoạt động
-                    </Button>
-                  ) : formData.status === "ACTIVE" ? (
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const ok = window.confirm("Bạn có chắc chắn muốn kết thúc lớp này không?");
-                        if (!ok) return;
-                        setFormData({ ...formData, status: "COMPLETED" });
-                      }}
-                      className="w-full bg-gray-700 hover:bg-gray-800 text-white rounded-xl shadow-none text-sm"
-                    >
-                      Kết thúc
-                    </Button>
-                  ) : null}
-                  {formData.status === "COMPLETED" && (
-                    <div className="text-xs text-gray-500 pt-1 text-center">
-                      Lớp đã hoàn thành.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500 pt-1 text-center">
-                  Khi tạo mới, lớp mặc định ở trạng thái Upcoming.
-                </div>
-              )}
             </div>
           </div>
 

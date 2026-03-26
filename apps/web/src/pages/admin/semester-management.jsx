@@ -366,52 +366,20 @@ export default function SemesterManagement() {
                         />
                     </div>
 
-                    {!editingSemester ? (
-                        <div className="text-sm font-medium text-gray-700">
-                            Trạng thái: Sắp tới (UPCOMING)
-                        </div>
-                    ) : (
-                        <div>
-                            <div className="flex flex-col gap-2">
-                                <div className="text-sm font-medium text-gray-700">
-                                    Trạng thái hiện tại:{" "}
-                                    <span className={`font-bold ${editingSemester.status === 'ACTIVE' ? 'text-green-600' : editingSemester.status === 'UPCOMING' ? 'text-blue-600' : 'text-gray-600'}`}>
-                                        {editingSemester.status === "ACTIVE"
-                                            ? "Đang diễn ra (ACTIVE)"
-                                            : editingSemester.status === "UPCOMING" 
-                                            ? "Sắp tới (UPCOMING)" : "Đã hoàn thành"}
-                                    </span>
-                                </div>
-
-                                {/* Hành động chuyển trạng thái */}
-                                <div className="mt-1">
-                                    <Button
-                                        type="button"
-                                        variant={formData.status === "ACTIVE" ? "default" : "outline"}
-                                        onClick={() => {
-                                            if (formData.status === "ACTIVE") {
-                                                const ok = window.confirm("Bạn có chắc chắn muốn ngừng học kỳ này không?");
-                                                if (!ok) return;
-                                                setFormData({ ...formData, status: "COMPLETED" });
-                                            } else {
-                                                // UPCOMING / COMPLETED => chuyển sang ACTIVE (nút “đang diễn ra”)
-                                                setFormData({ ...formData, status: "ACTIVE" });
-                                            }
-                                        }}
-                                        className={`rounded-xl transition-all ${
-                                            formData.status === "ACTIVE"
-                                                ? "bg-red-600 hover:bg-red-700 text-white"
-                                                : "bg-green-600 hover:bg-green-700 text-white"
-                                        }`}
-                                    >
-                                        {formData.status === "ACTIVE"
-                                            ? "Ngừng (Nhấn cập nhật để lưu)"
-                                            : "Đang diễn ra (Nhấn cập nhật để lưu)"}
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Trạng thái — chỉ hiển thị, tự động theo ngày */}
+                    <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 text-sm text-gray-600">
+                        Trạng thái:{" "}
+                        <span className={`font-bold ${
+                            formData.status === "ACTIVE" ? "text-green-600"
+                            : formData.status === "UPCOMING" ? "text-blue-600"
+                            : "text-gray-500"
+                        }`}>
+                            {formData.status === "ACTIVE" ? "Đang diễn ra (ACTIVE)"
+                                : formData.status === "UPCOMING" ? "Sắp tới (UPCOMING)"
+                                : "Đã kết thúc (COMPLETED)"}
+                        </span>
+                        <p className="text-xs text-gray-400 mt-1">Trạng thái được tính tự động theo ngày bắt đầu/kết thúc.</p>
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                         <Button

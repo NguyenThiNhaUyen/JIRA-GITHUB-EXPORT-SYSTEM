@@ -45,7 +45,16 @@ export async function getCourseById(id) {
  * @returns {Promise<FECourse>}
  */
 export async function createCourse(body) {
-    const res = await client.post("/courses", body);
+    const payload = {
+        courseCode: body.code || body.courseCode,
+        courseName: body.name || body.courseName,
+        subjectId: body.subjectId ? Number(body.subjectId) : undefined,
+        semesterId: body.semesterId ? Number(body.semesterId) : undefined,
+        maxStudents: body.maxStudents || 40,
+        description: body.description || "",
+        status: body.status || "UPCOMING",
+    };
+    const res = await client.post("/courses", payload);
     return mapCourse(unwrap(res));
 }
 
@@ -56,7 +65,16 @@ export async function createCourse(body) {
  * @returns {Promise<FECourse>}
  */
 export async function updateCourse(id, body) {
-    const res = await client.put(`/courses/${id}`, body);
+    const payload = {
+        courseCode: body.code || body.courseCode,
+        courseName: body.name || body.courseName,
+        subjectId: body.subjectId ? Number(body.subjectId) : undefined,
+        semesterId: body.semesterId ? Number(body.semesterId) : undefined,
+        maxStudents: body.maxStudents,
+        description: body.description,
+        status: body.status,
+    };
+    const res = await client.put(`/courses/${id}`, payload);
     return mapCourse(unwrap(res));
 }
 

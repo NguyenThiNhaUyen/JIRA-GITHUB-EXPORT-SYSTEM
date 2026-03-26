@@ -13,6 +13,8 @@ public partial class semester
 
     public DateOnly? end_date { get; set; }
 
+    public string status { get; set; } = "UPCOMING";
+
     public DateTime created_at { get; set; }
 
     public virtual ICollection<course> courses { get; set; } = new List<course>();

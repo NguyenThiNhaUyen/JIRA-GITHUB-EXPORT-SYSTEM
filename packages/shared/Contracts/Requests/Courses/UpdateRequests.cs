@@ -13,6 +13,8 @@ public class UpdateSemesterRequest : IValidatableObject
     [JsonPropertyName("endDate")]
     public DateTime EndDate { get; set; }
 
+    public string? Status { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (StartDate == DateTime.MinValue)

@@ -31,7 +31,17 @@ export const mapProject = (project) => {
         team: (project.teamMembers ?? project.TeamMembers ?? project.members ?? project.Members ?? project.team ?? []).map(member => ({
             studentUserId: member.studentUserId ?? member.StudentUserId ?? member.studentId,
             studentId: member.studentUserId ?? member.StudentUserId ?? member.studentId,
-            studentName: member.fullName ?? member.FullName ?? member.studentName ?? "",
+            studentName: member.fullName
+                ?? member.FullName
+                ?? member.studentName
+                ?? member.StudentName
+                ?? member.studentFullName
+                ?? member.StudentFullName
+                ?? member.name
+                ?? member.Name
+                ?? member.student?.name
+                ?? member.student?.fullName
+                ?? "",
             studentCode: member.studentCode ?? member.StudentCode ?? "",
             role: member.teamRole ?? member.TeamRole ?? member.role ?? member.Role ?? "MEMBER",
             teamRole: member.teamRole ?? member.TeamRole ?? member.role ?? "MEMBER",

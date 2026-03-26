@@ -58,22 +58,7 @@ public class SemesterInfo
     public string? Code { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public string Status
-    {
-        get
-        {
-            // StartDate/EndDate originate from DateOnly (time part usually 00:00).
-            // Compare by date (inclusive EndDate) to avoid switching to COMPLETED
-            // immediately after 00:00 of end date.
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var start = DateOnly.FromDateTime(StartDate);
-            var end = DateOnly.FromDateTime(EndDate);
-
-            if (today < start) return "UPCOMING";
-            if (today > end) return "COMPLETED";
-            return "ACTIVE";
-        }
-    }
+    public string Status { get; set; } = "UPCOMING";
 }
 
 public class LecturerInfo
