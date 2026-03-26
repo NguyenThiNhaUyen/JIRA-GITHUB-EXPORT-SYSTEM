@@ -480,7 +480,7 @@ export default function CourseManagement() {
                               <Button
                                 size="sm"
                                 onClick={() => handleOpenImport(course)}
-                                className="h-8 px-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/50 shadow-none text-xs flex items-center gap-1"
+                                className="h-8 px-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 shadow-none text-xs flex items-center gap-1"
                                 title="Import sinh viên vào lớp"
                               >
                                 <Upload size={11} /> Import SV

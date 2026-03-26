@@ -19,6 +19,20 @@ import { useToast } from "../../components/ui/toast.jsx";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, PlayCircle, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 
+// Parse "SPRING2026" / legacy names → season + year for the form controls
+const parseSemesterNameParts = (name) => {
+    const fallbackYear = new Date().getFullYear();
+    if (!name || typeof name !== "string") {
+        return { season: "SPRING", year: fallbackYear };
+    }
+    const compact = name.toUpperCase().replace(/\s+/g, "");
+    const m = /^(SPRING|SUMMER|FALL)(\d{4})$/.exec(compact);
+    if (m) {
+        return { season: m[1], year: parseInt(m[2], 10) };
+    }
+    return { season: "SPRING", year: fallbackYear };
+};
+
 // Helper: format ISO date → "dd thg MM, yyyy"
 const fmtDate = (iso) => {
     if (!iso) return '—';
@@ -57,9 +71,13 @@ export default function SemesterManagement() {
         endDate: "",
         status: "UPCOMING",
     });
+    const [semesterSeason, setSemesterSeason] = useState("SPRING");
+    const [semesterYear, setSemesterYear] = useState(() => new Date().getFullYear());
 
     const handleCreate = () => {
         setEditingSemester(null);
+        setSemesterSeason("SPRING");
+        setSemesterYear(new Date().getFullYear());
         setFormData({
             name: "",
             startDate: "",
@@ -71,6 +89,9 @@ export default function SemesterManagement() {
 
     const handleEdit = (semester) => {
         setEditingSemester(semester);
+        const { season, year } = parseSemesterNameParts(semester.name);
+        setSemesterSeason(season);
+        setSemesterYear(year);
         setFormData({
             name: semester.name,
             startDate: semester.startDate,
@@ -108,14 +129,25 @@ export default function SemesterManagement() {
             return;
         }
 
-        const code = formData.name.toUpperCase().replace(/\s+/g, '');
+        const y = Number(semesterYear);
+        if (!Number.isFinite(y) || y < 2000 || y > 2100) {
+            showError("Vui lòng nhập năm hợp lệ (2000–2100)");
+            return;
+        }
+
+        const name = `${semesterSeason}${y}`;
+        const code = name.toUpperCase().replace(/\s+/g, "");
+        const status = editingSemester ? formData.status : "UPCOMING";
 
         try {
             if (editingSemester) {
-                await updateMutation.mutateAsync({ id: editingSemester.id, updates: { ...formData, code } });
+                await updateMutation.mutateAsync({
+                    id: editingSemester.id,
+                    updates: { ...formData, name, code, status },
+                });
                 success("Cập nhật học kỳ thành công!");
             } else {
-                await createMutation.mutateAsync({ ...formData, code });
+                await createMutation.mutateAsync({ ...formData, name, code, status });
                 success("Tạo học kỳ thành công!");
             }
             setShowModal(false);
@@ -289,23 +321,38 @@ export default function SemesterManagement() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tên học kỳ *
+                            Tên học kỳ <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            type="text"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                            value={formData.name}
-                            onChange={(e) =>
-                                setFormData({ ...formData, name: e.target.value })
-                            }
-                            required
-                        />
+                        <div className="flex flex-row gap-3 items-stretch">
+                            <select
+                                className="flex-1 min-w-0 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                                value={semesterSeason}
+                                onChange={(e) => setSemesterSeason(e.target.value)}
+                                required
+                            >
+                                <option value="SPRING">SPRING</option>
+                                <option value="SUMMER">SUMMER</option>
+                                <option value="FALL">FALL</option>
+                            </select>
+                            <input
+                                type="number"
+                                min={2000}
+                                max={2100}
+                                className="w-28 shrink-0 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                                value={semesterYear}
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    setSemesterYear(v === "" ? "" : Number(v));
+                                }}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ngày bắt đầu *
+                                Ngày bắt đầu <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -320,7 +367,7 @@ export default function SemesterManagement() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ngày kết thúc *
+                                Ngày kết thúc <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="date"
@@ -334,22 +381,37 @@ export default function SemesterManagement() {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Trạng thái
-                        </label>
-                        <select
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                            value={formData.status}
-                            onChange={(e) =>
-                                setFormData({ ...formData, status: e.target.value })
-                            }
-                        >
-                            <option value="UPCOMING">Sắp tới (UPCOMING)</option>
-                            <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
-                            <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
-                        </select>
-                    </div>
+                    {editingSemester && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Trạng thái
+                            </label>
+                            <select
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                value={formData.status}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, status: e.target.value })
+                                }
+                                disabled={formData.status === "COMPLETED"}
+                            >
+                                {formData.status === "UPCOMING" && (
+                                    <>
+                                        <option value="UPCOMING">Sắp tới (UPCOMING)</option>
+                                        <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
+                                    </>
+                                )}
+                                {formData.status === "ACTIVE" && (
+                                    <>
+                                        <option value="ACTIVE">Đang diễn ra (ACTIVE)</option>
+                                        <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
+                                    </>
+                                )}
+                                {formData.status === "COMPLETED" && (
+                                    <option value="COMPLETED">Đã kết thúc (COMPLETED)</option>
+                                )}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                         <Button
