@@ -39,8 +39,8 @@ export const mapProject = (project) => {
                 ?? member.StudentFullName
                 ?? member.name
                 ?? member.Name
-                ?? member.student?.name
-                ?? member.student?.fullName
+                ?? member.user?.name
+                ?? member.user?.fullName
                 ?? "",
             studentCode: member.studentCode ?? member.StudentCode ?? "",
             role: member.teamRole ?? member.TeamRole ?? member.role ?? member.Role ?? "MEMBER",

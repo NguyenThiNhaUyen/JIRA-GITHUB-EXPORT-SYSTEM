@@ -323,8 +323,14 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         </CardHeader>
                         <CardContent className="p-0">
                             {normalizedGroupStudents.map((stu, idx) => {
-                                const displayName = stu?.studentName ?? stu?.fullName ?? stu?.name ?? "Sinh viên";
-                                const displayInitial = displayName?.charAt(0) || "T";
+                                const displayName = stu?.studentName
+                                    || stu?.fullName
+                                    || stu?.name
+                                    || stu?.studentFullName
+                                    || stu?.user?.name
+                                    || stu?.user?.fullName
+                                    || "";
+                                const displayInitial = displayName?.charAt(0)?.toUpperCase() || "?";
                                 const isMe = String(stu?.studentUserId ?? stu?.studentId ?? stu?.userId) === String(userId);
                                 const isLeaderM = stu.role?.toUpperCase() === 'LEADER';
                                 return (
@@ -334,7 +340,9 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
+                                                <p className="text-sm font-semibold text-gray-800 truncate">
+                                                    {displayName || `Thành viên #${idx + 1}`}
+                                                </p>
                                                 {isLeaderM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                                                 {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
                                             </div>
