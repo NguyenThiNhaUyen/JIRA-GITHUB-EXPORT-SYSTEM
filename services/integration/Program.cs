@@ -177,7 +177,22 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 
 // Background Services
-builder.Services.AddHostedService<SyncWorker>();
+var isRailwaySync = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") != null;
+var isRenderSync = Environment.GetEnvironmentVariable("RENDER") != null;
+var hasPortSync = Environment.GetEnvironmentVariable("PORT") != null;
+var isCloudSync = isRailwaySync || isRenderSync || hasPortSync;
+
+// On cloud tiers, SyncWorker can compete with API cold-start (CPU/RAM + DB/Redis + upstream calls).
+// Default: disable SyncWorker on cloud unless explicitly enabled.
+var enableSyncOnCloud = Environment.GetEnvironmentVariable("ENABLE_SYNC_WORKER_ON_CLOUD") != null;
+if (!isCloudSync || enableSyncOnCloud)
+{
+    builder.Services.AddHostedService<SyncWorker>();
+}
+else
+{
+    Console.WriteLine("[STARTUP] SyncWorker disabled on cloud (to prevent API starvation/503).");
+}
 
 // External Services (with HttpClient)
 builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
