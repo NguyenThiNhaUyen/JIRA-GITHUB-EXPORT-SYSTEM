@@ -25,6 +25,19 @@ public class SyncWorker : BackgroundService
     {
         _logger.LogInformation("Sync Worker starting...");
 
+        // On cloud (Railway/Render/PORT), avoid competing with the API cold-start.
+        // Seeder is disabled, but we still delay the first sync to prevent thread pool/DB pressure.
+        var isRailway = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") != null;
+        var isRender = Environment.GetEnvironmentVariable("RENDER") != null;
+        var hasPort = Environment.GetEnvironmentVariable("PORT") != null;
+        var isCloud = isRailway || isRender || hasPort;
+        if (isCloud)
+        {
+            var delay = TimeSpan.FromSeconds(60);
+            _logger.LogInformation("Cloud detected. Delaying initial SyncWorker by {DelaySeconds}s.", delay.TotalSeconds);
+            await Task.Delay(delay, stoppingToken);
+        }
+
         // Use PeriodicTimer for robust loop execution
         using var timer = new PeriodicTimer(_syncInterval);
 
@@ -107,12 +120,19 @@ public class SyncWorker : BackgroundService
         var githubClient = scope.ServiceProvider.GetRequiredService<IGitHubClient>();
         var jiraClient = scope.ServiceProvider.GetRequiredService<IJiraClient>();
 
+        var isRailway = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") != null;
+        var isRender = Environment.GetEnvironmentVariable("RENDER") != null;
+        var hasPort = Environment.GetEnvironmentVariable("PORT") != null;
+        var isCloud = isRailway || isRender || hasPort;
+        var maxIntegrations = isCloud ? 3 : int.MaxValue;
+
         // Fetch data and release DB connection IMMEDIATELY
         var integrations = await unitOfWork.ProjectIntegrations.Query()
             .Include(pi => pi.github_repo)
             .Include(pi => pi.jira_project)
             .Include(pi => pi.project)
             .Where(pi => pi.project.status == "ACTIVE" && pi.approval_status == "APPROVED")
+            .Take(maxIntegrations)
             .AsNoTracking() // Optimize Memory
             .ToListAsync(stoppingToken);
             

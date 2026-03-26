@@ -266,16 +266,11 @@ builder.Services.AddCors(options =>
         policy
             .SetIsOriginAllowed(origin =>
             {
+                // Always allow any origin that sends an Origin header.
+                // This avoids missing CORS headers when frontend subdomains change (Vercel, preview URLs, etc.).
+                // Security can be tightened later via an allowlist if needed.
                 if (string.IsNullOrWhiteSpace(origin)) return false;
-
-                if (origin.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
-                    origin.StartsWith("https://localhost", StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-
-                return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-                       uri.Host.EndsWith("vercel.app", StringComparison.OrdinalIgnoreCase);
+                return Uri.TryCreate(origin, UriKind.Absolute, out _);
             })
             .AllowAnyMethod()
             .AllowAnyHeader()
