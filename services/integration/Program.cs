@@ -353,31 +353,13 @@ app.UseAuthorization();
             // ============================================
             // DATABASE SEEDING (Background)
             // ============================================
-            // Railway/Cloud: seeding is extremely expensive (CPU/RAM + DB migrations) and can starve the thread pool.
-            // Only run seeding in local/dev unless explicitly forced.
-            var disableSeeder = Environment.GetEnvironmentVariable("DISABLE_DB_SEEDER") != null;
-            var hasPort = Environment.GetEnvironmentVariable("PORT") != null;
-            var isCloud = isRailway || isRender || hasPort;
-
-            if (!disableSeeder && !isCloud)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
-                    }
-                });
-            }
-            else
-            {
-                Console.WriteLine("[STARTUP] DatabaseSeeder disabled (cloud/prod environment).");
-            }
-
+              _ = Task.Run(async () => {
+                try {
+                    await JiraGithubExport.IntegrationService.Application.Startup.DatabaseSeeder.SeedAsync(app.Services);
+                } catch (Exception ex) {
+                    Console.WriteLine($"[CRITICAL] Background Seed failed: {ex.Message}");
+                }
+            });
             // ============================================
             // RUN APPLICATION
             // ============================================
