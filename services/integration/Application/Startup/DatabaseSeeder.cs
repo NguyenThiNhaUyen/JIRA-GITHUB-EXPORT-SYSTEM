@@ -13,12 +13,25 @@ public static class DatabaseSeeder
     {
         using var scope = services.CreateScope();
         var sp = scope.ServiceProvider;
-        var dbContext = sp.GetRequiredService<JiraGithubToolDbContext>();
-        var hasher = sp.GetRequiredService<IPasswordHasher>();
         var seedLogger = sp.GetRequiredService<ILogger<Program>>();
 
         try
         {
+            // Defense-in-depth: on Railway/Render/Cloud we never want heavy background seeding.
+            // Return early before creating DbContext connections.
+            var isRailway = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") != null;
+            var isRender = Environment.GetEnvironmentVariable("RENDER") != null;
+            var hasPort = Environment.GetEnvironmentVariable("PORT") != null;
+            var isCloud = isRailway || isRender || hasPort;
+            if (isCloud)
+            {
+                seedLogger.LogWarning("[DatabaseSeeder] Disabled in cloud environment (Railway/Render/PORT present).");
+                return;
+            }
+
+            var dbContext = sp.GetRequiredService<JiraGithubToolDbContext>();
+            var hasher = sp.GetRequiredService<IPasswordHasher>();
+
             seedLogger.LogInformation("Applying database migrations...");
             await dbContext.Database.MigrateAsync();
             
