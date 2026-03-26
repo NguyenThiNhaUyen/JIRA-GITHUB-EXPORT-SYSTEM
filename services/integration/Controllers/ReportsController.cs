@@ -15,12 +15,14 @@ public class ReportsController : ControllerBase
     private readonly IReportService _reportService;
     private readonly ISrsService _srsService;
     private readonly ILogger<ReportsController> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public ReportsController(IReportService reportService, ISrsService srsService, ILogger<ReportsController> logger)
+    public ReportsController(IReportService reportService, ISrsService srsService, ILogger<ReportsController> logger, IWebHostEnvironment env)
     {
         _reportService = reportService;
         _srsService = srsService;
         _logger = logger;
+        _env = env;
     }
 
     private long GetCurrentUserId()
@@ -75,6 +77,13 @@ public class ReportsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Report generation started"));
     }
 
+    [HttpPost("commit-statistics/download")]
+    public async Task<IActionResult> DownloadCommitStats([FromQuery] long courseId, [FromQuery] string format = "PDF")
+    {
+        var reportId = await _reportService.GenerateCommitStatisticsReportAsync(courseId, format);
+        return await DownloadByReportId(reportId);
+    }
+
     /// <summary>
     /// Generate team roster report
     /// </summary>
@@ -90,6 +99,21 @@ public class ReportsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "Report generation started"));
     }
 
+    [HttpPost("team-roster/download")]
+    public async Task<IActionResult> DownloadTeamRoster([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
+    {
+        long reportId;
+        if (courseId.HasValue)
+        {
+            reportId = await _reportService.GenerateTeamRosterForCourseAsync(courseId.Value, format);
+        }
+        else
+        {
+            reportId = await _reportService.GenerateTeamRosterReportAsync(projectId!.Value, format);
+        }
+        return await DownloadByReportId(reportId);
+    }
+
     /// <summary>
     /// Generate activity summary report for a project in a date range
     /// </summary>
@@ -102,6 +126,17 @@ public class ReportsController : ControllerBase
     {
         var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, format);
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportId }, "Activity summary report generation started"));
+    }
+
+    [HttpPost("activity-summary/download")]
+    public async Task<IActionResult> DownloadActivitySummary(
+        [FromQuery] long projectId,
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate,
+        [FromQuery] string format = "PDF")
+    {
+        var reportId = await _reportService.GenerateActivitySummaryReportAsync(projectId, startDate, endDate, format);
+        return await DownloadByReportId(reportId);
     }
 
     /// <summary>
@@ -119,6 +154,21 @@ public class ReportsController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(new { ReportId = reportIdProj }, "SRS Report generation started"));
     }
 
+    [HttpPost("srs/download")]
+    public async Task<IActionResult> DownloadSrs([FromQuery] long? projectId, [FromQuery] long? courseId, [FromQuery] string format = "PDF")
+    {
+        long reportId;
+        if (courseId.HasValue)
+        {
+            reportId = await _reportService.GenerateSrsForCourseAsync(courseId.Value, format);
+        }
+        else
+        {
+            reportId = await _reportService.GenerateSrsReportAsync(projectId!.Value, format);
+        }
+        return await DownloadByReportId(reportId);
+    }
+
     /// <summary>
     /// Get report download link
     /// </summary>
@@ -128,5 +178,44 @@ public class ReportsController : ControllerBase
         var url = await _reportService.GetReportFileUrlAsync(id);
         if (url == null) return NotFound(ApiResponse.ErrorResponse("Report not found or not ready"));
         return Ok(ApiResponse<object>.SuccessResponse(new { DownloadUrl = url }));
+    }
+
+    private async Task<IActionResult> DownloadByReportId(long reportId)
+    {
+        var url = await _reportService.GetReportFileUrlAsync(reportId);
+        if (string.IsNullOrWhiteSpace(url)) return NotFound(ApiResponse.ErrorResponse("Report not found or not ready"));
+
+        var relative = url;
+        if (relative.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Uri.TryCreate(relative, UriKind.Absolute, out var uri))
+                relative = uri.AbsolutePath;
+        }
+
+        if (!relative.StartsWith("/reports/", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(ApiResponse.ErrorResponse("Invalid report file path"));
+
+        var fileName = Path.GetFileName(relative);
+        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var filePath = Path.Combine(webRoot, "reports", fileName);
+
+        if (!System.IO.File.Exists(filePath))
+            return NotFound(ApiResponse.ErrorResponse("Report file not found on server"));
+
+        var contentType = GetContentTypeByExtension(Path.GetExtension(fileName));
+        var bytes = await System.IO.File.ReadAllBytesAsync(filePath);
+        return File(bytes, contentType, fileName);
+    }
+
+    private static string GetContentTypeByExtension(string ext)
+    {
+        return ext.ToLowerInvariant() switch
+        {
+            ".pdf" => "application/pdf",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            _ => "application/octet-stream"
+        };
     }
 }

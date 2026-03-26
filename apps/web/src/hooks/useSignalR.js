@@ -12,12 +12,21 @@ export function useSignalR() {
     const { isAuthenticated, user } = useAuth();
     const { info, success, warning } = useToast();
     const connectionRef = useRef(null);
+    const startPromiseRef = useRef(null);
 
     useEffect(() => {
+        let didCancel = false;
+        const safeStop = (conn) => {
+            const startPromise = startPromiseRef.current;
+            void (async () => {
+                try { await startPromise; } catch { /* ignore */ }
+                try { await conn.stop(); } catch { /* ignore */ }
+            })();
+        };
         // Only connect if authenticated
         if (!isAuthenticated || !user) {
             if (connectionRef.current) {
-                connectionRef.current.stop();
+                safeStop(connectionRef.current);
                 connectionRef.current = null;
             }
             return;
@@ -70,6 +79,10 @@ export function useSignalR() {
                 info(msg, { title, duration: 8000 });
             } else if (type === 'LINKS_APPROVED') {
                 success(msg, { title: 'Thành công' });
+            } else if (type === 'SYNC_SUCCESS') {
+                success(msg, { title: 'Đồng bộ thành công', duration: 5000 });
+            } else if (type === 'SYNC_ERROR') {
+                warning(msg, { title: 'Đồng bộ thất bại', duration: 10000 });
             } else {
                 info(msg, { title });
             }
@@ -84,9 +97,14 @@ export function useSignalR() {
         // Start connection
         const startConnection = async () => {
             try {
-                await connection.start();
+                const p = connection.start();
+                startPromiseRef.current = p;
+                await p;
+                if (didCancel) return;
                 console.log('SignalR Connected to Hub');
             } catch (err) {
+                if (didCancel) return;
+                if (err?.name === 'AbortError') return;
                 console.error('SignalR Connection Error: ', err);
             }
         };
@@ -95,8 +113,9 @@ export function useSignalR() {
 
         // Cleanup on unmount or logout
         return () => {
+            didCancel = true;
             if (connectionRef.current) {
-                connectionRef.current.stop();
+                safeStop(connectionRef.current);
                 connectionRef.current = null;
             }
         };

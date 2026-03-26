@@ -43,10 +43,10 @@ export function StudentContributionPage() {
 
     const totalMyCommits = metricQueries.reduce((sum, q) => {
         if (!q.data) return sum;
-        const myMetric = (Array.isArray(q?.data?.studentMetrics) ? q.data.studentMetrics : []).find(
-            (m) => String(m?.studentId) === String(user?.id)
+        const myContribution = (Array.isArray(q?.data?.contributions) ? q.data.contributions : []).find(
+            (m) => String(m?.studentUserId) === String(user?.id)
         );
-        return sum + (myMetric?.commitCount || 0);
+        return sum + (myContribution?.commits || 0);
     }, 0);
 
     const activeGroups = myGroups.filter((_, i) => {
@@ -107,9 +107,9 @@ function ProjectContributionCard({ project, userId }) {
 
     if (isLoading || !metrics) return null;
 
-    const studentMetrics = Array.isArray(metrics?.studentMetrics) ? metrics.studentMetrics : [];
-    const myMetric = studentMetrics.find((m) => String(m?.studentId) === String(userId)) || { commitCount: 0 };
-    const maxCommits = Math.max(...(studentMetrics.map((m) => m?.commitCount ?? 0) || [1]), 1);
+    const contributions = Array.isArray(metrics?.contributions) ? metrics.contributions : [];
+    const myMetric = contributions.find((m) => String(m?.studentUserId) === String(userId)) || { commits: 0 };
+    const maxCommits = Math.max(...(contributions.map((m) => m?.commits ?? 0) || [1]), 1);
 
     return (
         <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
@@ -121,7 +121,7 @@ function ProjectContributionCard({ project, userId }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <p className="text-lg font-bold text-teal-700">{myMetric.commitCount}</p>
+                            <p className="text-lg font-bold text-teal-700">{myMetric.commits ?? 0}</p>
                             <p className="text-[10px] text-gray-400">My commits</p>
                         </div>
                         <div className="text-right">
@@ -132,14 +132,14 @@ function ProjectContributionCard({ project, userId }) {
                 </div>
             </CardHeader>
             <CardContent className="py-4 px-5 space-y-3">
-                {studentMetrics.map((m) => {
+                {contributions.map((m) => {
                     const student =
-                        members.find((s) => String(s?.studentId ?? s?.id) === String(m?.studentId)) ||
-                        { studentName: `SV (ID: ${m?.studentId ?? "N/A"})`, studentCode: m?.studentId };
-                    const displayName = student?.studentName ?? student?.name ?? student?.fullName ?? `SV (ID: ${m?.studentId ?? "N/A"})`;
-                    const isMe = String(m?.studentId) === String(userId);
+                        members.find((s) => String(s?.studentUserId ?? s?.studentId ?? s?.id) === String(m?.studentUserId)) ||
+                        { studentName: m?.fullName || "Sinh viên", studentCode: m?.studentCode };
+                    const displayName = student?.studentName ?? student?.name ?? student?.fullName ?? m?.fullName ?? "Sinh viên";
+                    const isMe = String(m?.studentUserId) === String(userId);
                     return (
-                        <div key={m?.studentId} className="flex items-center gap-3">
+                        <div key={m?.studentUserId ?? m?.studentCode} className="flex items-center gap-3">
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"}`}>
                                 {displayName?.charAt?.(0) ?? "S"}
                             </div>
@@ -150,10 +150,10 @@ function ProjectContributionCard({ project, userId }) {
                                 </div>
                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div className={`h-full rounded-full ${isMe ? "bg-teal-500" : "bg-gray-300"}`}
-                                        style={{ width: `${((m?.commitCount ?? 0) / maxCommits) * 100}%` }} />
+                                        style={{ width: `${((m?.commits ?? 0) / maxCommits) * 100}%` }} />
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-gray-600 shrink-0">{m?.commitCount ?? 0}</span>
+                            <span className="text-xs font-bold text-gray-600 shrink-0">{m?.commits ?? 0}</span>
                         </div>
                     );
                 })}

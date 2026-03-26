@@ -264,12 +264,6 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             ) : (
                                 // Member: view only
                                 <div className="space-y-3">
-                                    {!isLeader && (
-                                        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 px-3 py-2 rounded-xl">
-                                            <AlertTriangle size={12} className="shrink-0 mt-0.5" />
-                                            Chỉ Team Leader mới được submit/chỉnh sửa links.
-                                        </div>
-                                    )}
                                     <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">GitHub</p>
                                         <p className="text-xs text-gray-700 break-all">{group.integration?.githubUrl || "Chưa liên kết"}</p>
@@ -329,8 +323,7 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                         </CardHeader>
                         <CardContent className="p-0">
                             {normalizedGroupStudents.map((stu, idx) => {
-                                const displayName = stu?.studentName ?? stu?.fullName ?? `SV (ID: ${stu?.studentUserId ?? stu?.studentId ?? idx + 1})`;
-                                const displayCode = stu?.studentCode || `ID: ${stu?.studentUserId ?? stu?.studentId ?? "N/A"}`;
+                                const displayName = stu?.studentName ?? stu?.fullName ?? stu?.name ?? "Sinh viên";
                                 const displayInitial = displayName?.charAt(0) || "T";
                                 const isMe = String(stu?.studentUserId ?? stu?.studentId ?? stu?.userId) === String(userId);
                                 const isLeaderM = stu.role?.toUpperCase() === 'LEADER';
@@ -345,12 +338,11 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                                                 {isLeaderM && <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Star size={8} />Leader</span>}
                                                 {isMe && <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-100 px-1.5 py-0.5 rounded-full">Bạn</span>}
                                             </div>
-                                            <p className="text-xs text-gray-400">{displayCode}</p>
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <p className="text-xs font-bold text-gray-700">
-                                                    {metrics?.contributions?.find(m => String(m.studentUserId) === String(stu.studentId))?.commits ?? "0"}
+                                                    {metrics?.contributions?.find(m => String(m.studentUserId) === String(stu?.studentUserId ?? stu?.studentId))?.commits ?? "0"}
                                                 </p>
                                                 <p className="text-[10px] text-gray-400">commits</p>
                                             </div>
@@ -406,12 +398,6 @@ export default function CourseWorkspace({ course, group, groupStudents, srsRepor
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {!isLeader && (
-                                <div className="flex items-start gap-2 mx-5 mt-3 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-2 rounded-xl">
-                                    <AlertTriangle size={12} className="shrink-0 mt-0.5 text-amber-500" />
-                                    Chỉ Team Leader mới được thao tác quản lý SRS.
-                                </div>
-                            )}
                             {normalizedSrsReports.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                                     <BookOpen size={24} className="text-gray-300" />

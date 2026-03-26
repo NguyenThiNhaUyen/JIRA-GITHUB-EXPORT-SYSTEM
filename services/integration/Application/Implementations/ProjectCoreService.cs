@@ -554,7 +554,7 @@ public class ProjectCoreService : IProjectCoreService
         return result;
     }
 
-    public async Task<object> SyncProjectCommitsAsync(long projectId)
+    public async Task<object> SyncProjectCommitsAsync(long projectId, long currentUserId)
     {
         var integration = await _unitOfWork.ProjectIntegrations.Query()
             .Include(pi => pi.github_repo)
@@ -605,10 +605,24 @@ public class ProjectCoreService : IProjectCoreService
                 }
 
                 _logger.LogInformation("[ManualSync] Successfully completed sync for project {ProjectId}", projectId);
+
+                await _hub.Clients.User(currentUserId.ToString())
+                    .SendAsync("ReceiveNotification", new
+                    {
+                        Type = "SYNC_SUCCESS",
+                        Message = $"Đồng bộ dữ liệu thành công cho dự án {integration.project.name}."
+                    });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[ManualSync] Failed to sync project {ProjectId}", projectId);
+
+                await _hub.Clients.User(currentUserId.ToString())
+                    .SendAsync("ReceiveNotification", new
+                    {
+                        Type = "SYNC_ERROR",
+                        Message = $"Lỗi đồng bộ dữ liệu dự án {integration.project.name}. Vui lòng kiểm tra lại URL hoặc Token truy cập!"
+                    });
             }
         });
 

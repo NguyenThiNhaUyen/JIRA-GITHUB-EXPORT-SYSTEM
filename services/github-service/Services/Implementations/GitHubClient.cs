@@ -51,71 +51,82 @@ public class GitHubClient : IGitHubClient
         try
         {
             _logger.LogInformation("Syncing commits for {Owner}/{Repo}", owner, repo);
-            
-            var response = await SendGetAsync($"repos/{owner}/{repo}/commits?per_page=100", githubToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning("Repository {Owner}/{Repo} not found (404). Please verify the repository exists and you have access to it.", owner, repo);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to fetch commits for {Owner}/{Repo}: {StatusCode}", owner, repo, response.StatusCode);
-                }
-                return;
-            }
 
-            var commits = await response.Content.ReadFromJsonAsync<List<GitHubCommitResponse>>();
-            if (commits == null || !commits.Any()) return;
+            int page = 1;
+            int totalFetched = 0;
 
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            foreach (var gitHubCommit in commits)
+            while (true)
             {
-                // Check if commit already exists
-                var existing = await unitOfWork.GitHubCommits.FirstOrDefaultAsync(c => c.commit_sha == gitHubCommit.Sha);
-                if (existing != null) continue;
-
-                // Sync user if present or fallback to email
-                long? authorId = null;
-                if (gitHubCommit.Author != null)
+                var response = await SendGetAsync($"repos/{owner}/{repo}/commits?per_page=100&page={page}", githubToken);
+                if (!response.IsSuccessStatusCode)
                 {
-                    authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Author, gitHubCommit.Commit.Author.Email);
-                }
-                else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Author.Email))
-                {
-                    authorId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Author.Name, gitHubCommit.Commit.Author.Email);
-                }
-
-                long? committerId = null;
-                if (gitHubCommit.Committer != null)
-                {
-                    committerId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Committer, gitHubCommit.Commit.Committer.Email);
-                }
-                else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Committer.Email))
-                {
-                    committerId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Committer.Name, gitHubCommit.Commit.Committer.Email);
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogWarning("Repository {Owner}/{Repo} not found (404). Please verify the repository exists and you have access to it.", owner, repo);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to fetch commits for {Owner}/{Repo}: {StatusCode}", owner, repo, response.StatusCode);
+                    }
+                    return;
                 }
 
-                var commit = new github_commit
-                {
-                    repo_id = repositoryId,
-                    commit_sha = gitHubCommit.Sha,
-                    message = gitHubCommit.Commit.Message,
-                    author_github_user_id = authorId,
-                    committer_github_user_id = committerId,
-                    committed_at = gitHubCommit.Commit.Committer.Date,
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
+                var commits = await response.Content.ReadFromJsonAsync<List<GitHubCommitResponse>>();
+                if (commits == null) break;
 
-                unitOfWork.GitHubCommits.Add(commit);
+                foreach (var gitHubCommit in commits)
+                {
+                    // Check if commit already exists
+                    var existing = await unitOfWork.GitHubCommits.FirstOrDefaultAsync(c => c.commit_sha == gitHubCommit.Sha);
+                    if (existing != null) continue;
+
+                    // Sync user if present or fallback to email
+                    long? authorId = null;
+                    if (gitHubCommit.Author != null)
+                    {
+                        authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Author, gitHubCommit.Commit.Author.Email);
+                    }
+                    else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Author.Email))
+                    {
+                        authorId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Author.Name, gitHubCommit.Commit.Author.Email);
+                    }
+
+                    long? committerId = null;
+                    if (gitHubCommit.Committer != null)
+                    {
+                        committerId = await EnsureGitHubUserAsync(unitOfWork, gitHubCommit.Committer, gitHubCommit.Commit.Committer.Email);
+                    }
+                    else if (!string.IsNullOrEmpty(gitHubCommit.Commit.Committer.Email))
+                    {
+                        committerId = await EnsureGitHubUserByEmailAsync(unitOfWork, gitHubCommit.Commit.Committer.Name, gitHubCommit.Commit.Committer.Email);
+                    }
+
+                    var commit = new github_commit
+                    {
+                        repo_id = repositoryId,
+                        commit_sha = gitHubCommit.Sha,
+                        message = gitHubCommit.Commit.Message,
+                        author_github_user_id = authorId,
+                        committer_github_user_id = committerId,
+                        committed_at = gitHubCommit.Commit.Committer.Date,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+
+                    unitOfWork.GitHubCommits.Add(commit);
+                }
+
+                totalFetched += commits.Count;
+                page++;
+
+                if (commits.Count < 100) break;
             }
 
             await unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Successfully synced {Count} new commits for {Owner}/{Repo}", commits.Count, owner, repo);
+            _logger.LogInformation("Successfully synced {Count} new commits for {Owner}/{Repo}", totalFetched, owner, repo);
         }
         catch (Exception ex)
         {
@@ -129,68 +140,79 @@ public class GitHubClient : IGitHubClient
         try
         {
             _logger.LogInformation("Syncing pull requests for {Owner}/{Repo}", owner, repo);
-            
-            var response = await SendGetAsync($"repos/{owner}/{repo}/pulls?state=all&per_page=100", githubToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning("Repository {Owner}/{Repo} not found (404). Please verify the repository exists and you have access to it.", owner, repo);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to fetch PRs for {Owner}/{Repo}: {StatusCode}", owner, repo, response.StatusCode);
-                }
-                return;
-            }
 
-            var prs = await response.Content.ReadFromJsonAsync<List<GitHubPullRequestResponse>>();
-            if (prs == null || !prs.Any()) return;
+            int page = 1;
+            int totalFetched = 0;
 
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            foreach (var gitHubPr in prs)
+            while (true)
             {
-                var existing = await unitOfWork.GitHubPullRequests.FirstOrDefaultAsync(p => p.repo_id == repositoryId && p.pr_number == gitHubPr.Number);
-                
-                long? authorId = null;
-                if (gitHubPr.User != null)
+                var response = await SendGetAsync($"repos/{owner}/{repo}/pulls?state=all&per_page=100&page={page}", githubToken);
+                if (!response.IsSuccessStatusCode)
                 {
-                    authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubPr.User);
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogWarning("Repository {Owner}/{Repo} not found (404). Please verify the repository exists and you have access to it.", owner, repo);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to fetch PRs for {Owner}/{Repo}: {StatusCode}", owner, repo, response.StatusCode);
+                    }
+                    return;
+                }
+                
+                var prs = await response.Content.ReadFromJsonAsync<List<GitHubPullRequestResponse>>();
+                if (prs == null) break;
+
+                foreach (var gitHubPr in prs)
+                {
+                    var existing = await unitOfWork.GitHubPullRequests.FirstOrDefaultAsync(p => p.repo_id == repositoryId && p.pr_number == gitHubPr.Number);
+
+                    long? authorId = null;
+                    if (gitHubPr.User != null)
+                    {
+                        authorId = await EnsureGitHubUserAsync(unitOfWork, gitHubPr.User);
+                    }
+
+                    if (existing != null)
+                    {
+                        // Update existing PR
+                        existing.title = gitHubPr.Title;
+                        existing.state = gitHubPr.State;
+                        existing.updated_at = gitHubPr.UpdatedAt;
+                        existing.closed_at = gitHubPr.ClosedAt;
+                        existing.merged_at = gitHubPr.MergedAt;
+                        unitOfWork.GitHubPullRequests.Update(existing);
+                    }
+                    else
+                    {
+                        // Create new PR
+                        var pr = new github_pull_request
+                        {
+                            repo_id = repositoryId,
+                            pr_number = (int)gitHubPr.Number,
+                            title = gitHubPr.Title,
+                            state = gitHubPr.State,
+                            author_github_user_id = authorId,
+                            created_at = gitHubPr.CreatedAt,
+                            updated_at = gitHubPr.UpdatedAt,
+                            closed_at = gitHubPr.ClosedAt,
+                            merged_at = gitHubPr.MergedAt
+                        };
+                        unitOfWork.GitHubPullRequests.Add(pr);
+                    }
                 }
 
-                if (existing != null)
-                {
-                    // Update existing PR
-                    existing.title = gitHubPr.Title;
-                    existing.state = gitHubPr.State;
-                    existing.updated_at = gitHubPr.UpdatedAt;
-                    existing.closed_at = gitHubPr.ClosedAt;
-                    existing.merged_at = gitHubPr.MergedAt;
-                    unitOfWork.GitHubPullRequests.Update(existing);
-                }
-                else
-                {
-                    // Create new PR
-                    var pr = new github_pull_request
-                    {
-                        repo_id = repositoryId,
-                        pr_number = (int)gitHubPr.Number,
-                        title = gitHubPr.Title,
-                        state = gitHubPr.State,
-                        author_github_user_id = authorId,
-                        created_at = gitHubPr.CreatedAt,
-                        updated_at = gitHubPr.UpdatedAt,
-                        closed_at = gitHubPr.ClosedAt,
-                        merged_at = gitHubPr.MergedAt
-                    };
-                    unitOfWork.GitHubPullRequests.Add(pr);
-                }
+                totalFetched += prs.Count;
+                page++;
+
+                if (prs.Count < 100) break;
             }
 
             await unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Successfully synced {Count} PRs for {Owner}/{Repo}", prs.Count, owner, repo);
+            _logger.LogInformation("Successfully synced {Count} PRs for {Owner}/{Repo}", totalFetched, owner, repo);
         }
         catch (Exception ex)
         {

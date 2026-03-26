@@ -254,10 +254,23 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) 
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); 
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+
+                if (origin.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+                    origin.StartsWith("https://localhost", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                       uri.Host.EndsWith("vercel.app", StringComparison.OrdinalIgnoreCase);
+            })
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
@@ -272,6 +285,8 @@ var app = builder.Build();
 // ============================================
 
 app.UseForwardedHeaders();
+app.UseRouting();
+app.UseCors("AllowAll");
 app.UseCustomExceptionHandler();
 
 
@@ -299,8 +314,6 @@ app.UseSwaggerUI(c =>
                 FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(wwwroot),
                 RequestPath = "" // Serve at root
             });
-
-app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

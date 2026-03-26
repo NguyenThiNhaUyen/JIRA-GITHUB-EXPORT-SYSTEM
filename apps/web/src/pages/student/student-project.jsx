@@ -272,11 +272,11 @@ export default function StudentProject() {
       {/* ── Tabs: Commits / Jira / Team / SRS ── */}
       <Tabs defaultValue="commits" activeTab={activeTab} setActiveTab={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="commits">Commits ({myCommits.length})</TabsTrigger>
-          <TabsTrigger value="jira">Jira Tasks</TabsTrigger>
-          <TabsTrigger value="team">Nhóm</TabsTrigger>
-          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-          <TabsTrigger value="srs">SRS</TabsTrigger>
+          <TabsTrigger key="commits" value="commits">Commits ({myCommits.length})</TabsTrigger>
+          <TabsTrigger key="jira" value="jira">Jira Tasks</TabsTrigger>
+          <TabsTrigger key="team" value="team">Nhóm</TabsTrigger>
+          <TabsTrigger key="roadmap" value="roadmap">Roadmap</TabsTrigger>
+          <TabsTrigger key="srs" value="srs">SRS</TabsTrigger>
         </TabsList>
 
         {/* ── Commits tab ── */}
@@ -433,10 +433,10 @@ export default function StudentProject() {
                 const isMe = String(m?.studentUserId ?? m?.studentId ?? m?.userId) === String(user?.id);
                 const isLeadM = m.role === "LEADER";
                 const contribution = (Array.isArray(metrics?.contributions) ? metrics.contributions : []).find(
-                  (c) => String(c?.studentCode ?? c?.studentId ?? c?.studentUserId) === String(m?.studentCode ?? m?.studentId ?? m?.studentUserId)
+                  (c) => String(c?.studentUserId ?? c?.studentCode) === String(m?.studentUserId ?? m?.studentCode)
                 );
                 const commitsCount = contribution?.commits || 0;
-                const displayName = m?.studentName ?? m?.student?.name ?? `SV (ID: ${m?.studentId ?? m?.studentUserId ?? m?.userId ?? "N/A"})`;
+                const displayName = m?.studentName ?? m?.student?.name ?? m?.name ?? m?.fullName ?? "Sinh viên";
                 
                 return (
                   <div key={m?.studentUserId ?? m?.studentId ?? m?.userId ?? idx} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">

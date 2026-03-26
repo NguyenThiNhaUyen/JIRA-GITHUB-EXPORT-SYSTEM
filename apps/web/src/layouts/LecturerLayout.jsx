@@ -8,7 +8,6 @@ import {
     Users,
     BarChart3,
     AlertTriangle,
-    FileText,
     Download,
     Menu,
 } from "lucide-react";
@@ -39,7 +38,6 @@ const navSections = [
     {
         label: "Tài liệu",
         items: [
-            { to: "/lecturer/srs", icon: FileText, label: "SRS Reports" },
             { to: "/lecturer/reports", icon: Download, label: "Báo cáo & Export" },
         ],
     },

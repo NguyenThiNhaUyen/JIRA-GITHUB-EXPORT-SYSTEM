@@ -95,21 +95,26 @@ public class ReportService : IReportService
                     Issues = g.Sum(x => x.issues_completed) 
                 }).Cast<dynamic>().ToList();
 
+            byte[] fileBytes;
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects, activityList);
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _excelReportGenerator.GenerateCommitStatisticsReport(course.course_name ?? "Unknown Course", projects, activityList);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects, activityList);
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _pdfReportGenerator.GenerateCommitStatisticsPdf(course.course_name ?? "Unknown Course", projects, activityList);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported format: {format}");
             }
 
             _logger.LogInformation("Generated commit stats for course {CourseName} at {FilePath}", course.course_name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
 
             return reportExport.id;
         }
@@ -149,21 +154,25 @@ public class ReportService : IReportService
                 file_url = $"/reports/{fileName}"
             };
 
-            // Simplified: Use the first project for now or combined logic if I had a course-wide generator
-            // To make it functional, we'll just use the mock logic to create a valid file entry
+            _unitOfWork.ReportExports.Add(reportExport);
+            
+            byte[] fileBytes;
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = projects.Any() ? _excelReportGenerator.GenerateTeamRosterReport(projects.First()) : new byte[0];
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = projects.Any() ? _excelReportGenerator.GenerateTeamRosterReport(projects.First()) : [];
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = projects.Any() ? _pdfReportGenerator.GenerateTeamRosterPdf(projects.First()) : new byte[0];
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = projects.Any() ? _pdfReportGenerator.GenerateTeamRosterPdf(projects.First()) : [];
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported format: {format}");
             }
 
-            _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
             return reportExport.id;
         }
         catch (Exception ex)
@@ -300,7 +309,6 @@ public class ReportService : IReportService
             var fileBytes = _pdfReportGenerator.GenerateCourseSrsReportPdf(
                 course.course_name ?? course.course_code ?? $"Course {courseId}",
                 srsReports);
-            await File.WriteAllBytesAsync(filePath, fileBytes);
 
             var reportExport = new report_export
             {
@@ -314,7 +322,9 @@ public class ReportService : IReportService
                 file_url = $"/reports/{fileName}"
             };
             _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
             _logger.LogInformation("Generated course SRS PDF for {CourseId} with {ProjectCount} projects", courseId, srsReports.Count);
             return reportExport.id;
         }
@@ -351,21 +361,26 @@ public class ReportService : IReportService
                 file_url = $"/reports/{fileName}"
             };
 
+            byte[] fileBytes;
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateTeamRosterReport(project);
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _excelReportGenerator.GenerateTeamRosterReport(project);
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(project);
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _pdfReportGenerator.GenerateTeamRosterPdf(project);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported format: {format}");
             }
 
             _logger.LogInformation("Generated team roster for project {ProjectName} at {FilePath}", project.name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
 
             return reportExport.id;
         }
@@ -415,21 +430,26 @@ public class ReportService : IReportService
                     Issues = g.Sum(x => x.issues_completed) 
                 }).ToList();
 
+            byte[] fileBytes;
             if (format.Equals("excel", StringComparison.OrdinalIgnoreCase) || format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(project, activityList.Cast<dynamic>().ToList());
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _excelReportGenerator.GenerateActivitySummaryReport(project, activityList.Cast<dynamic>().ToList());
             }
             else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(project, activityList.Cast<dynamic>().ToList());
-                await File.WriteAllBytesAsync(filePath, fileBytes);
+                fileBytes = _pdfReportGenerator.GenerateActivitySummaryPdf(project, activityList.Cast<dynamic>().ToList());
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported format: {format}");
             }
 
             _logger.LogInformation("Generated activity summary for project {ProjectName} at {FilePath}", project.name, filePath);
 
             _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
 
             return reportExport.id;
         }
@@ -607,7 +627,6 @@ public class ReportService : IReportService
             string filePath = Path.Combine(GetReportDirectory(), fileName);
 
             var fileBytes = _pdfReportGenerator.GenerateSrsReportPdf(srsData);
-            await File.WriteAllBytesAsync(filePath, fileBytes);
 
             var reportExport = new report_export
             {
@@ -622,7 +641,9 @@ public class ReportService : IReportService
             };
 
             _unitOfWork.ReportExports.Add(reportExport);
-            await _unitOfWork.SaveChangesAsync();
+            var writeTask = File.WriteAllBytesAsync(filePath, fileBytes);
+            var saveTask = _unitOfWork.SaveChangesAsync();
+            await Task.WhenAll(writeTask, saveTask);
 
             _logger.LogInformation(
                 "Generated ISO/IEEE 29148 SRS for Project {ProjectName}: {Features} features, {Nfrs} NFRs",

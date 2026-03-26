@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JiraGithubExport.Shared.Models;
 
@@ -23,8 +24,11 @@ public partial class project_document
 
     public long? reviewer_user_id { get; set; }
 
-    // NOTE: Migration snapshot creates an extra column/index named `reviewer_userid` (missing underscore).
-    // Adding it here lets EF tooling infer the type and prevents migrations scaffolding from failing.
+    // Database schema in production uses `reviewer_user_id`.
+    // Some migration snapshots/older scaffolds introduce an extra property `reviewer_userid`
+    // (missing underscore), but that column does not exist in prod.
+    // Mark as NotMapped to avoid EF generating SQL referencing the wrong column.
+    [NotMapped]
     public long? reviewer_userid { get; set; }
 
     public decimal? score { get; set; }

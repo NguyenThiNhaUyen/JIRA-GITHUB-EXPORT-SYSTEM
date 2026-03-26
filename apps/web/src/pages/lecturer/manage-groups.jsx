@@ -377,7 +377,17 @@ export default function ManageGroups() {
                                             <p className="text-xs text-gray-400">Tất cả học sinh đã được phân nhóm</p>
                                         </div>
                                     ) : (
-                                        availableStudents.map((student) => {
+                                            availableStudents
+                                                .slice()
+                                                .sort((a, b) => {
+                                                    const aId = a?.id ?? a?.studentId;
+                                                    const bId = b?.id ?? b?.studentId;
+                                                    const aAssigned = assignedStudentIds.has(String(aId));
+                                                    const bAssigned = assignedStudentIds.has(String(bId));
+                                                    // false (chưa có nhóm) -> lên trên; true (đã có nhóm) -> xuống dưới
+                                                    return Number(aAssigned) - Number(bAssigned);
+                                                })
+                                                .map((student) => {
                                             const studentUniqueId = student?.id ?? student?.studentId;
                                             const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
                                             const isAlreadyAssigned = assignedStudentIds.has(String(studentUniqueId));
@@ -515,7 +525,7 @@ export default function ManageGroups() {
                                                         <Button
                                                             size="sm"
                                                             onClick={() => handleOpenForceAdd(group.id)}
-                                                            className="h-6 px-2.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200/50 text-[10px] shadow-none flex items-center gap-1"
+                                                            className="h-6 px-2.5 rounded-md bg-teal-600 hover:bg-teal-700 text-white border border-teal-200/50 text-[10px] shadow-none flex items-center gap-1"
                                                         >
                                                             <UserPlus size={10} /> Thêm SV
                                                         </Button>
@@ -588,33 +598,42 @@ export default function ManageGroups() {
                                     <p className="text-sm text-gray-500">Không có sinh viên nào trong lớp.</p>
                                 </div>
                             ) : (
-                                students.map((student) => {
-                                    const isAssigned = assignedStudentIds.has(String(student?.id ?? student?.studentId));
-                                    const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
-                                    return (
-                                        <label
-                                            key={student?.id ?? student?.studentId}
-                                            className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={forceAddSelectedIds.includes(student?.id)}
-                                                onChange={() => toggleForceAddStudent(student?.id)}
-                                                className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
-                                            />
-                                            <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                                {displayName?.charAt?.(0) ?? "S"}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1">
-                                                    <p className="text-sm font-medium text-gray-800 truncate">{displayName}</p>
-                                                    {isAssigned && <span className="text-[9px] text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full font-bold">ĐÃ CÓ NHÓM</span>}
+                                students
+                                    .slice()
+                                    .sort((a, b) => {
+                                        const aId = a?.id ?? a?.studentId;
+                                        const bId = b?.id ?? b?.studentId;
+                                        const aAssigned = assignedStudentIds.has(String(aId));
+                                        const bAssigned = assignedStudentIds.has(String(bId));
+                                        return Number(aAssigned) - Number(bAssigned);
+                                    })
+                                    .map((student) => {
+                                        const isAssigned = assignedStudentIds.has(String(student?.id ?? student?.studentId));
+                                        const displayName = student?.name ?? student?.fullName ?? `SV (ID: ${student?.id ?? student?.studentId ?? "N/A"})`;
+                                        return (
+                                            <label
+                                                key={student?.id ?? student?.studentId}
+                                                className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50/30 cursor-pointer transition-colors"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={forceAddSelectedIds.includes(student?.id)}
+                                                    onChange={() => toggleForceAddStudent(student?.id)}
+                                                    className="w-4 h-4 rounded text-teal-600 border-gray-300 focus:ring-teal-400"
+                                                />
+                                                <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                                    {displayName?.charAt?.(0) ?? "S"}
                                                 </div>
-                                                <p className="text-xs text-gray-400">{student?.studentCode ?? student?.studentId ?? student?.id ?? "N/A"}</p>
-                                            </div>
-                                        </label>
-                                    );
-                                })
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <p className="text-sm font-medium text-gray-800 truncate">{displayName}</p>
+                                                        {isAssigned && <span className="text-[9px] text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full font-bold">ĐÃ CÓ NHÓM</span>}
+                                                    </div>
+                                                    <p className="text-xs text-gray-400">{student?.studentCode ?? student?.studentId ?? student?.id ?? "N/A"}</p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })
                             )}
                         </div>
 

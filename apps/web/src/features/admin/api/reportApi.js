@@ -1,6 +1,9 @@
 import client from "../../../api/client.js";
 import { unwrap } from "../../../api/unwrap.js";
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? "https://jira-github-export-system-production.up.railway.app";
+const API_BASE = `${BASE_URL}/api`;
+
 /**
  * Tạo báo cáo Commit Statistics
  */
@@ -39,6 +42,58 @@ export async function generateSrs(projectId, format = "PDF") {
         params: { projectId, format }
     });
     return unwrap(res);
+}
+
+async function postDownloadBlob(path, params = {}) {
+    const token = localStorage.getItem("accessToken");
+
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+        if (v === undefined || v === null || v === "") return;
+        qs.set(k, String(v));
+    });
+
+    const url = `${API_BASE}${path}${qs.toString() ? `?${qs.toString()}` : ""}`;
+    const res = await fetch(url, {
+        method: "POST",
+        headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    });
+
+    if (!res.ok) {
+        let message = `Download failed (${res.status})`;
+        try {
+            const data = await res.json();
+            message = data?.message ?? data?.Message ?? message;
+        } catch {
+            // ignore
+        }
+        throw new Error(message);
+    }
+
+    const blob = await res.blob();
+    const cd = res.headers.get("content-disposition") || "";
+    const match = cd.match(/filename\*?=(?:UTF-8''|")?([^;"\n]+)"?/i);
+    const filename = match?.[1] ? decodeURIComponent(match[1]) : null;
+
+    return { blob, filename, contentType: res.headers.get("content-type") };
+}
+
+export async function downloadCommitStats(courseId, format = "PDF") {
+    return postDownloadBlob(`/reports/commit-statistics/download`, { courseId, format });
+}
+
+export async function downloadTeamRoster({ projectId, courseId, format = "PDF" }) {
+    return postDownloadBlob(`/reports/team-roster/download`, { projectId, courseId, format });
+}
+
+export async function downloadActivitySummary({ projectId, startDate, endDate, format = "PDF" }) {
+    return postDownloadBlob(`/reports/activity-summary/download`, { projectId, startDate, endDate, format });
+}
+
+export async function downloadSrs({ projectId, courseId, format = "PDF" }) {
+    return postDownloadBlob(`/reports/srs/download`, { projectId, courseId, format });
 }
 
 /**
