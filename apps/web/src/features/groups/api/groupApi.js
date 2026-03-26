@@ -17,13 +17,13 @@ export async function getGroupById(groupId) {
 
 export async function approveGroupLink(groupId, linkType, lecturerId) {
     // Gọi API của Project Service
-    const res = await client.post(`/projects/${groupId}/integrations/approve`);
+    const res = await client.post(`/projects/${groupId}/links/approve`);
     return unwrap(res);
 }
 
 export async function rejectGroupLink(groupId, linkType, lecturerId) {
     // Bắt buộc đẩy lý do theo request DTO
-    const res = await client.post(`/projects/${groupId}/integrations/reject`, { reason: "Rejected by Lecturer" });
+    const res = await client.post(`/projects/${groupId}/links/reject`, { reason: "Rejected by Lecturer" });
     return unwrap(res);
 }
 

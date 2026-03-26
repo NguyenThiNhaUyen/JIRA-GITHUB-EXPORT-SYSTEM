@@ -299,9 +299,12 @@ app.UseSwaggerUI(c =>
     c.DocumentTitle = "PBL Platform – Jira & GitHub Export API";
 });
 
-            // Render/Cloud handles SSL/TLS termination at the proxy level.
-            // We use HttpsRedirection only for local development or non-Render environments.
-            if (!app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("RENDER") == null)
+            // Render/Railway handles SSL/TLS termination at the proxy level.
+            // We use HttpsRedirection only for local development or non-cloud environments.
+            var isRender = Environment.GetEnvironmentVariable("RENDER") != null;
+            var isRailway = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") != null;
+            var isRailwayPort = Environment.GetEnvironmentVariable("PORT") != null;
+            if (!app.Environment.IsDevelopment() && !isRender && !isRailway && !isRailwayPort)
             {
                 app.UseHttpsRedirection();
             }

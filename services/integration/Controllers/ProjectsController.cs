@@ -133,8 +133,8 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Link GitHub and/or Jira integration (Leader submits, status becomes PENDING)
     /// </summary>
-    [HttpPost("{projectId}/integrations")]
-    [HttpPut("{projectId}/integration")]
+    [HttpPost("{projectId}/links")]
+    [HttpPut("{projectId}/links")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkIntegration(long projectId, [FromBody] LinkIntegrationRequest request)
     {
@@ -146,7 +146,7 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Approve integration (Lecturer only)
     /// </summary>
-    [HttpPost("{projectId}/integrations/approve")]
+    [HttpPost("{projectId}/links/approve")]
     [HttpPut("{projectId}/approve-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -160,7 +160,7 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Reject integration (Lecturer only)
     /// </summary>
-    [HttpPost("{projectId}/integrations/reject")]
+    [HttpPost("{projectId}/links/reject")]
     [HttpPut("{projectId}/reject-integration")]
     [Authorize(Roles = "LECTURER,ADMIN")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
@@ -174,7 +174,7 @@ public class ProjectsController : ControllerBase
     /// <summary>
     /// Get integration status for a project (all roles)
     /// </summary>
-    [HttpGet("{projectId}/integration")]
+    [HttpGet("{projectId}/links/status")]
     [ProducesResponseType(typeof(ApiResponse<IntegrationInfo>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetIntegration(long projectId)
     {
