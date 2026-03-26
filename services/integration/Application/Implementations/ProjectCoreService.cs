@@ -217,54 +217,24 @@ public class ProjectCoreService : IProjectCoreService
         {
             IEnumerable<project> items;
             int totalItems;
-            try
-            {
-                (items, totalItems) = await _unitOfWork.Projects.GetPagedProjectsByCourseAsync(
-                    courseId,
-                    request.Q,
-                    request.SortDir,
-                    request.Page,
-                    request.PageSize
-                );
-            }
-            catch (Exception ex)
-            {
-                // Fallback: retry without project_integration include so group list survives
-                _logger.LogWarning(ex, "[GetProjectsByCourseAsync] Core projects query failed, retrying without project_integration. courseId={CourseId}", courseId);
 
-                var query = _unitOfWork.Projects.Query()
-                    .AsNoTracking()
-                    .Where(p => p.course_id == courseId && p.status == "ACTIVE");
+            (items, totalItems) = await _unitOfWork.Projects.GetPagedProjectsByCourseAsync(
+                courseId,
+                request.Q,
+                request.SortDir,
+                request.Page,
+                request.PageSize
+            );
 
-                if (!string.IsNullOrWhiteSpace(request.Q))
-                {
-                    var lowerKeyword = request.Q.ToLower();
-                    query = query.Where(p => p.name.ToLower().Contains(lowerKeyword));
-                }
-
-                if (request.SortDir?.ToLower() == "desc")
-                    query = query.OrderByDescending(x => x.created_at);
-                else
-                    query = query.OrderBy(x => x.created_at);
-
-                totalItems = await query.CountAsync();
-
-                items = await query
-                    .Include(p => p.course)
-                    .Include(p => p.team_members).ThenInclude(tm => tm.student_user).ThenInclude(su => su.user)
-                    .Skip((request.Page - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .ToListAsync();
-            }
-
-            var dtoList = _mapper.Map<List<ProjectDetailResponse>>(items);
+            var itemList = items.ToList();
+            var dtoList = _mapper.Map<List<ProjectDetailResponse>>(itemList);
 
             if (dtoList.Any())
             {
-                var repoIds = items.Where(p => p.project_integration?.github_repo_id != null)
+                var repoIds = itemList.Where(p => p.project_integration?.github_repo_id != null)
                     .Select(p => p.project_integration!.github_repo_id!.Value)
                     .ToList();
-                var jiraIds = items.Where(p => p.project_integration?.jira_project_id != null)
+                var jiraIds = itemList.Where(p => p.project_integration?.jira_project_id != null)
                     .Select(p => p.project_integration!.jira_project_id!.Value)
                     .ToList();
 
@@ -313,106 +283,115 @@ public class ProjectCoreService : IProjectCoreService
                     }
                 }
 
-            var lastCommitByRepo = new Dictionary<long, DateTime?>();
-            var prCounts2 = new Dictionary<long, int>();
-            if (repoIds.Any())
-            {
+                var lastCommitByRepo = new Dictionary<long, DateTime?>();
+                var prCounts2 = new Dictionary<long, int>();
+                if (repoIds.Any())
+                {
+                    try
+                    {
+                        prCounts2 = await _unitOfWork.GitHubPullRequests.Query()
+                            .Where(pr => repoIds.Contains(pr.repo_id))
+                            .GroupBy(pr => pr.repo_id)
+                            .ToDictionaryAsync(g => g.Key, g => g.Count());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubPullRequests prCounts query failed, using empty dict");
+                        prCounts2 = new Dictionary<long, int>();
+                    }
+
+                    try
+                    {
+                        var lastCommitData = await _unitOfWork.GitHubCommits.Query()
+                            .Where(c => repoIds.Contains(c.repo_id) && c.committed_at.HasValue)
+                            .GroupBy(c => c.repo_id)
+                            .Select(g => new { RepoId = g.Key, Last = g.Max(x => x.committed_at) })
+                            .ToListAsync();
+
+                        foreach (var lc in lastCommitData)
+                        {
+                            lastCommitByRepo[lc.RepoId] = lc.Last;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubCommits lastCommitData query failed, using empty dict");
+                        lastCommitByRepo = new Dictionary<long, DateTime?>();
+                    }
+                }
+
+                // Wrap ReportExports in try-catch — table may not exist or have schema mismatch
+                Dictionary<long, int> srsExportsByProject;
                 try
                 {
-                    prCounts2 = await _unitOfWork.GitHubPullRequests.Query()
-                        .Where(pr => repoIds.Contains(pr.repo_id))
-                        .GroupBy(pr => pr.repo_id)
-                        .ToDictionaryAsync(g => g.Key, g => g.Count());
+                    srsExportsByProject = await _unitOfWork.ReportExports.Query()
+                        .Where(r => r.report_type == "SRS" && r.scope == "PROJECT")
+                        .GroupBy(r => r.scope_entity_id)
+                        .Select(g => new { ProjectId = g.Key, Count = g.Count() })
+                        .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubPullRequests prCounts query failed, using empty dict");
-                    prCounts2 = new Dictionary<long, int>();
+                    _logger.LogWarning(ex, "[GetProjectsByCourse] ReportExports query failed, using empty dict");
+                    srsExportsByProject = new Dictionary<long, int>();
                 }
 
-                try
+                foreach (var dto in dtoList)
                 {
-                    var lastCommitData = await _unitOfWork.GitHubCommits.Query()
-                        .Where(c => repoIds.Contains(c.repo_id) && c.committed_at.HasValue)
-                        .GroupBy(c => c.repo_id)
-                        .Select(g => new { RepoId = g.Key, Last = g.Max(x => x.committed_at) })
-                        .ToListAsync();
-                    foreach (var lc in lastCommitData)
-                        lastCommitByRepo[lc.RepoId] = lc.Last;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "[GetProjectsByCourse] GitHubCommits lastCommitData query failed, using empty dict");
-                    lastCommitByRepo = new Dictionary<long, DateTime?>();
-                }
-            }
+                    var project = itemList.First(p => p.id == dto.Id);
 
-            // Bug #3 fix: wrap ReportExports in try-catch — table may not exist or have schema mismatch
-            Dictionary<long, int> srsExportsByProject;
-            try
-            {
-                srsExportsByProject = await _unitOfWork.ReportExports.Query()
-                    .Where(r => r.report_type == "SRS" && r.scope == "PROJECT")
-                    .GroupBy(r => r.scope_entity_id)
-                    .Select(g => new { ProjectId = g.Key, Count = g.Count() })
-                    .ToDictionaryAsync(x => x.ProjectId, x => x.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[GetProjectsByCourse] ReportExports query failed, using empty dict");
-                srsExportsByProject = new Dictionary<long, int>();
-            }
+                    dto.CommitCount = 0;
+                    dto.Commits = 0;
+                    dto.IssueCount = 0;
+                    dto.ProgressPercent = 0;
+                    dto.SprintCompletion = 0;
+                    dto.RiskScore = 0;
+                    dto.CourseCode = project.course?.course_code ?? "";
+                    dto.CourseName = project.course?.course_name ?? dto.CourseName;
+                    dto.TeamSize = (project.team_members ?? new List<team_member>()).Count(tm => tm.participation_status == "ACTIVE");
 
-            foreach (var dto in dtoList)
-            {
-                var project = items.First(p => p.id == dto.Id);
-                
-                dto.CommitCount = 0;
-                dto.Commits = 0;
-                dto.IssueCount = 0;
-                dto.ProgressPercent = 0;
-                dto.SprintCompletion = 0;
-                dto.RiskScore = 0;
-                dto.CourseCode = project.course?.course_code ?? "";
-                dto.CourseName = project.course?.course_name ?? dto.CourseName;
-                dto.TeamSize = (project.team_members ?? new List<team_member>()).Count(tm => tm.participation_status == "ACTIVE");
-
-                if (project.project_integration?.github_repo_id != null)
-                {
-                    var repoId = project.project_integration.github_repo_id.Value;
-                    if (commitCounts.TryGetValue(repoId, out int commits))
+                    if (project.project_integration?.github_repo_id != null)
                     {
-                        dto.CommitCount = commits;
-                        dto.Commits = commits;
-                    }
-                    if (prCounts2.TryGetValue(repoId, out int prCount))
-                        dto.PrsMerged = prCount;
-                    if (lastCommitByRepo.TryGetValue(repoId, out var lastCommit) && lastCommit.HasValue)
-                    {
-                        var mins = (int)(DateTime.UtcNow - lastCommit.Value).TotalMinutes;
-                        dto.LastCommit = mins < 60 ? $"{mins} phút trước"
-                            : mins < 1440 ? $"{mins / 60} giờ trước"
-                            : $"{mins / 1440} ngày trước";
-                        dto.LastActivity = lastCommit.Value;
-                    }
-                    dto.RiskScore = Math.Max(0, 100 - (dto.CommitCount * 2));
-                }
-                
-                if (project.project_integration?.jira_project_id != null)
-                {
-                    var jiraId = project.project_integration.jira_project_id.Value;
-                    if (issueStats.TryGetValue(jiraId, out var stats))
-                    {
-                        dto.IssueCount = stats.Total;
-                        dto.IssuesDone = stats.Done;
-                        dto.OpenIssues = stats.Total - stats.Done;
-                        dto.ProgressPercent = stats.Total > 0 ? (int)Math.Round((double)stats.Done * 100 / stats.Total) : 0;
-                        dto.SprintCompletion = dto.ProgressPercent;
-                    }
-                }
+                        var repoId = project.project_integration.github_repo_id.Value;
+                        if (commitCounts.TryGetValue(repoId, out int commits))
+                        {
+                            dto.CommitCount = commits;
+                            dto.Commits = commits;
+                        }
 
-                dto.SrsVersions = srsExportsByProject.GetValueOrDefault(project.id, 0);
-            }
+                        if (prCounts2.TryGetValue(repoId, out int prCount))
+                        {
+                            dto.PrsMerged = prCount;
+                        }
+
+                        if (lastCommitByRepo.TryGetValue(repoId, out var lastCommit) && lastCommit.HasValue)
+                        {
+                            var mins = (int)(DateTime.UtcNow - lastCommit.Value).TotalMinutes;
+                            dto.LastCommit = mins < 60
+                                ? $"{mins} phút trước"
+                                : mins < 1440 ? $"{mins / 60} giờ trước"
+                                : $"{mins / 1440} ngày trước";
+                            dto.LastActivity = lastCommit.Value;
+                        }
+
+                        dto.RiskScore = Math.Max(0, 100 - (dto.CommitCount * 2));
+                    }
+
+                    if (project.project_integration?.jira_project_id != null)
+                    {
+                        var jiraId = project.project_integration.jira_project_id.Value;
+                        if (issueStats.TryGetValue(jiraId, out var stats))
+                        {
+                            dto.IssueCount = stats.Total;
+                            dto.IssuesDone = stats.Done;
+                            dto.OpenIssues = stats.Total - stats.Done;
+                            dto.ProgressPercent = stats.Total > 0 ? (int)Math.Round((double)stats.Done * 100 / stats.Total) : 0;
+                            dto.SprintCompletion = dto.ProgressPercent;
+                        }
+                    }
+
+                    dto.SrsVersions = srsExportsByProject.GetValueOrDefault(project.id, 0);
+                }
             }
 
             return new PagedResponse<ProjectDetailResponse>(dtoList, totalItems, request.Page, request.PageSize);

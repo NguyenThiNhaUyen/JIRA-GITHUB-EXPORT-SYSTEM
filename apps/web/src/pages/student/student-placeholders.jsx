@@ -330,7 +330,7 @@ function ProjectSrsRows({ project }) {
 export default function StudentCoursesPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const { data: coursesData, isLoading: loadingCourses } = useGetCourses();
+    const { data: coursesData, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const { data: projectsData, isLoading: loadingProjects } = useGetMyProjects();
 
     const coursesList = Array.isArray(coursesData?.items) ? coursesData.items : [];

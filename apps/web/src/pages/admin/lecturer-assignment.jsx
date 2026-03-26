@@ -19,7 +19,7 @@ export default function LecturerAssignment() {
     const { success, error: showError } = useToast();
 
     // Data Fetching
-    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
+    const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
     const courses = coursesData.items || [];
 
     const { data: lecturers = [], isLoading: loadingLects } = useGetUsers("LECTURER");

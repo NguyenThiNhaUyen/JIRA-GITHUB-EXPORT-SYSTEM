@@ -32,7 +32,7 @@ export default function CourseManagement() {
     person?.name || `${prefix} ${person?.studentId || person?.studentCode || person?.id || "N/A"}`;
 
   // Data Fetching
-  const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses();
+  const { data: coursesData = { items: [] }, isLoading: loadingCourses } = useGetCourses({ pageSize: 100 });
   const courses = safeArray(coursesData?.items);
 
   const { data: semestersData = [], isLoading: loadingSems } = useGetSemesters();

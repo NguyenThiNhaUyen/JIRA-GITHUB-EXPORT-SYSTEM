@@ -143,6 +143,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("user");
+
+    // Force React to fully unload cached memory (helps during testing login/logout loops)
+    window.location.replace("/login");
   };
 
   const value = {

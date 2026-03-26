@@ -211,11 +211,12 @@ public static class DatabaseSeeder
                 course_code = courseCode, course_name = "SWD392 - SE1831", semester_id = sem.id, subject_id = sub.id,
                 created_by_user_id = lect.id, status = "ACTIVE", max_students = 30
             };
-            
-            var allLecturers = await dbContext.lecturers.ToListAsync();
-            foreach (var l in allLecturers)
+
+            // Assign only a single lecturer for test isolation (avoid every lecturer sharing identical course/group data).
+            var lecturerEntity = await dbContext.lecturers.FirstOrDefaultAsync(l => l.user_id == lect.id);
+            if (lecturerEntity != null)
             {
-                newCourse.lecturer_users.Add(l);
+                newCourse.lecturer_users.Add(lecturerEntity);
             }
             
             dbContext.courses.Add(newCourse);
@@ -224,13 +225,12 @@ public static class DatabaseSeeder
         }
         else
         {
-            var allLecturers = await dbContext.lecturers.ToListAsync();
-            foreach (var l in allLecturers)
+            // Replace lecturer assignment with the same deterministic lecturer entity.
+            existingCourse.lecturer_users.Clear();
+            var lecturerEntity = await dbContext.lecturers.FirstOrDefaultAsync(l => l.user_id == lect.id);
+            if (lecturerEntity != null)
             {
-                if (!existingCourse.lecturer_users.Any(lu => lu.user_id == l.user_id))
-                {
-                    existingCourse.lecturer_users.Add(l);
-                }
+                existingCourse.lecturer_users.Add(lecturerEntity);
             }
             await dbContext.SaveChangesAsync();
         }

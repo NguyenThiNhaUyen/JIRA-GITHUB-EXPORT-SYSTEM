@@ -91,7 +91,7 @@ export default function LecturerDashboard() {
   const selectedCourseId = selectedCourse ? parseInt(selectedCourse) : null;
 
   const { data: subjects = [] } = useGetSubjects();
-  const { data: coursesData = { items: [] } } = useGetCourses();
+  const { data: coursesData = { items: [] } } = useGetCourses({ pageSize: 100 });
   const { data: course } = useGetCourseById(selectedCourseId);
   const { data: metricsData, isLoading: loadingMetrics } = useGetCourseProjectsMetrics(selectedCourseId);
   const { data: projectsData, isLoading: loadingProjects } = useGetProjects({
@@ -122,7 +122,10 @@ export default function LecturerDashboard() {
   const resolveAlertMutation = useResolveAlert();
 
   const courses = (Array.isArray(coursesData?.items) ? coursesData.items : []).filter(
-    (c) => !selectedSubjectId || String(c?.subjectId) === String(selectedSubjectId)
+    (c) => {
+      const sid = c?.subjectId ?? c?.subject_id ?? c?.subject?.id;
+      return !selectedSubjectId || String(sid) === String(selectedSubjectId);
+    }
   );
   const groups = Array.isArray(projectsData?.items) ? projectsData.items : [];
 
