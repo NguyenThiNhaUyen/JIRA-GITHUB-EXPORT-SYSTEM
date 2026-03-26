@@ -33,6 +33,13 @@ public static class DatabaseSeeder
                 ALTER TABLE project_integrations 
                 ADD COLUMN IF NOT EXISTS github_token TEXT,
                 ADD COLUMN IF NOT EXISTS jira_token TEXT;
+                
+                -- Drop the unique constraints to allow DUPLICATES for testing
+                ALTER TABLE project_integrations DROP CONSTRAINT IF EXISTS uq_project_integrations_github_repo;
+                DROP INDEX IF EXISTS uq_project_integrations_github_repo;
+                
+                ALTER TABLE project_integrations DROP CONSTRAINT IF EXISTS uq_project_integrations_jira_project;
+                DROP INDEX IF EXISTS uq_project_integrations_jira_project;
             ");
 
             await SeedRolesAsync(dbContext);
