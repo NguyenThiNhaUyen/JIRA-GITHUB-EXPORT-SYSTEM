@@ -25,6 +25,15 @@ using Microsoft.OpenApi.Models;
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
+// Bind dynamic PORT early (Railway/Cloud) before building the app.
+var envPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(envPort))
+{
+    var url = $"http://0.0.0.0:{envPort}";
+    builder.WebHost.UseUrls(url);
+    Console.WriteLine($"[STARTUP] PORT detected: {envPort}. Binding to {url}");
+}
+
 // Forwarded Headers for reverse proxy (Load Balancer)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -362,21 +371,13 @@ app.UseAuthorization();
             // ============================================
             // RUN APPLICATION
             // ============================================
-            var envPort = Environment.GetEnvironmentVariable("PORT");
             if (!string.IsNullOrEmpty(envPort))
             {
-                // On Render/Cloud, listen on 0.0.0.0 with the assigned PORT
-                var url = $"http://0.0.0.0:{envPort}";
-                Console.WriteLine($"[STARTUP] Render PORT detected: {envPort}. Binding to {url}");
-                app.Urls.Clear(); // Clear any pre-configured URLs
-                app.Urls.Add(url);
-                await app.RunAsync();
+                app.Run($"http://0.0.0.0:{envPort}");
             }
             else
             {
-                // Local development will use launchSettings.json URLs (localhost:5032, etc.)
-                Console.WriteLine("[STARTUP] No PORT env var found. Running with default/launchSettings URLs.");
-                await app.RunAsync();
+                app.Run();
             }
 
 
