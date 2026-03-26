@@ -112,39 +112,48 @@ public class ProjectIntegrationService : IProjectIntegrationService
         {
             long? githubRepoId = null;
             long? jiraProjectId = null;
-
             if (!string.IsNullOrWhiteSpace(request.GithubRepoUrl))
             {
                 var (owner, repoName) = ParseGitHubUrl(request.GithubRepoUrl);
-                var githubRepo = new github_repository
+                // SỬA: Kiểm tra tồn tại trước khi add
+                var githubRepo = await _unitOfWork.GitHubRepositories.FirstOrDefaultAsync(gr =>
+                    gr.owner_login == owner && gr.name == repoName);
+                if (githubRepo == null)
                 {
-                    name = repoName,
-                    owner_login = owner,
-                    full_name = $"{owner}/{repoName}",
-                    repo_url = request.GithubRepoUrl,
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                _unitOfWork.GitHubRepositories.Add(githubRepo);
-                await _unitOfWork.SaveChangesAsync();
+                    githubRepo = new github_repository
+                    {
+                        name = repoName,
+                        owner_login = owner,
+                        full_name = $"{owner}/{repoName}",
+                        repo_url = request.GithubRepoUrl,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    _unitOfWork.GitHubRepositories.Add(githubRepo);
+                    await _unitOfWork.SaveChangesAsync();
+                }
                 githubRepoId = githubRepo.id;
             }
-
             if (!string.IsNullOrWhiteSpace(request.JiraProjectKey))
             {
-                var jiraProject = new jira_project
+                // SỬA: Kiểm tra tồn tại trước khi add
+                var jiraProject = await _unitOfWork.JiraProjects.FirstOrDefaultAsync(jp =>
+                    jp.jira_project_key == request.JiraProjectKey);
+                if (jiraProject == null)
                 {
-                    jira_project_key = request.JiraProjectKey,
-                    project_name = request.JiraProjectKey,
-                    jira_url = request.JiraSiteUrl ?? "https://atlassian.net",
-                    created_at = DateTime.UtcNow,
-                    updated_at = DateTime.UtcNow
-                };
-                _unitOfWork.JiraProjects.Add(jiraProject);
-                await _unitOfWork.SaveChangesAsync();
+                    jiraProject = new jira_project
+                    {
+                        jira_project_key = request.JiraProjectKey,
+                        project_name = request.JiraProjectKey,
+                        jira_url = request.JiraSiteUrl ?? "https://atlassian.net",
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    _unitOfWork.JiraProjects.Add(jiraProject);
+                    await _unitOfWork.SaveChangesAsync();
+                }
                 jiraProjectId = jiraProject.id;
             }
-
             var integration = new project_integration
             {
                 project_id = projectId,
@@ -158,7 +167,6 @@ public class ProjectIntegrationService : IProjectIntegrationService
                 created_at = DateTime.UtcNow,
                 updated_at = DateTime.UtcNow
             };
-
             _unitOfWork.ProjectIntegrations.Add(integration);
         }
 
