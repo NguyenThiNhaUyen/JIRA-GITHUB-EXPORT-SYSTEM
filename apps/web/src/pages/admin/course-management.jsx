@@ -88,7 +88,8 @@ export default function CourseManagement() {
     subjectId: "",
     semesterId: "",
     maxStudents: 40,
-    status: "ACTIVE",
+    // Default when creating a course: Upcoming (not started yet)
+    status: "UPCOMING",
   });
   const [assignForm, setAssignForm] = useState({
     lecturerId: "",
@@ -143,7 +144,7 @@ export default function CourseManagement() {
       subjectId: "",
       semesterId: "",
       maxStudents: 40,
-      status: "ACTIVE",
+      status: "UPCOMING",
     });
     setShowModal(true);
   };
@@ -368,7 +369,7 @@ export default function CourseManagement() {
       <Card className="border border-gray-100 shadow-sm rounded-[24px] overflow-hidden bg-white">
         <CardHeader className="border-b border-gray-50 pb-4 pt-6 px-6">
           <div className="flex justify-between items-center gap-4">
-            <CardTitle className="text-xl text-gray-800 font-bold whitespace-nowrap">Danh sách lớp học</CardTitle>
+            <CardTitle className="text-xl text-gray-800 font-bold">Danh sách lớp học</CardTitle>
             <div className="flex items-center gap-3 w-full justify-end">
               <select
                 className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm max-w-xs w-full"
@@ -421,7 +422,7 @@ export default function CourseManagement() {
                                 <div className="font-semibold text-gray-800 text-sm">
                                   {course.code || "Không có dữ liệu"}
                                 </div>
-                                <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] truncate">
+                                <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] sm:max-w-[200px] md:max-w-[250px] truncate">
                                   {course.name || "Không có dữ liệu"}
                                 </div>
                               </div>
@@ -606,22 +607,22 @@ export default function CourseManagement() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mô tả
-            </label>
-            <textarea
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-              rows="2"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Không có dữ liệu"
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4 items-start">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mô tả
+              </label>
+              <textarea
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm resize-none h-[52px]"
+                rows="2"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Không có dữ liệu"
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sĩ số tối đa *
@@ -640,32 +641,71 @@ export default function CourseManagement() {
                 required
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Trạng thái
-              </label>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (formData.status === "ACTIVE") {
-                    const ok = window.confirm("Bạn có chắc chắn muốn ngừng lớp học này không?");
-                    if (!ok) return;
-                    setFormData({ ...formData, status: "COMPLETED" });
-                  } else {
-                    // UPCOMING / COMPLETED => chuyển sang ACTIVE
-                    setFormData({ ...formData, status: "ACTIVE" });
-                  }
-                }}
-                className={`w-full rounded-xl transition-all ${
-                  formData.status === "ACTIVE"
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }`}
-                title="Bấm để đổi trạng thái (nhớ nhấn Cập nhật/Tạo mới để lưu)"
-              >
-                {formData.status === "ACTIVE" ? "Ngừng (ACTIVE → COMPLETED)" : "Đang mở (→ ACTIVE)"}
-              </Button>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trạng thái
+            </label>
+            <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4">
+              <p className="text-sm font-medium text-gray-700">
+                Trạng thái hiện tại:{" "}
+                <span
+                  className={`font-bold ${
+                    formData.status === "ACTIVE"
+                      ? "text-green-600"
+                      : formData.status === "UPCOMING"
+                        ? "text-blue-600"
+                        : "text-gray-600"
+                  }`}
+                >
+                  {formData.status === "ACTIVE"
+                    ? "Đang diễn ra (ACTIVE)"
+                    : formData.status === "UPCOMING"
+                      ? "Chưa diễn ra (UPCOMING)"
+                      : "Hoàn thành (COMPLETED)"}
+                </span>
+              </p>
+
+              {/* Status flow copied from SemesterManagement */}
+              {editingCourse ? (
+                <div className="mt-3">
+                  {formData.status === "UPCOMING" ? (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const ok = window.confirm("Bạn có chắc chắn muốn chuyển lớp sang Đang diễn ra không?");
+                        if (!ok) return;
+                        setFormData({ ...formData, status: "ACTIVE" });
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-none text-sm"
+                    >
+                      Hoạt động
+                    </Button>
+                  ) : formData.status === "ACTIVE" ? (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const ok = window.confirm("Bạn có chắc chắn muốn kết thúc lớp này không?");
+                        if (!ok) return;
+                        setFormData({ ...formData, status: "COMPLETED" });
+                      }}
+                      className="w-full bg-gray-700 hover:bg-gray-800 text-white rounded-xl shadow-none text-sm"
+                    >
+                      Kết thúc
+                    </Button>
+                  ) : null}
+                  {formData.status === "COMPLETED" && (
+                    <div className="text-xs text-gray-500 pt-1 text-center">
+                      Lớp đã hoàn thành.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-gray-500 pt-1 text-center">
+                  Khi tạo mới, lớp mặc định ở trạng thái Upcoming.
+                </div>
+              )}
             </div>
           </div>
 

@@ -32,6 +32,16 @@ export default function AdminDashboard() {
   const { data: teamRankingsRaw } = useGetTeamRankings(5);
   const { data: inactiveTeamsRaw } = useGetInactiveTeams();
 
+  // Used to map AuditLog entity IDs → human-readable course code.
+  // (Backend AuditLogResponse currently only returns Message/Time/Timestamp,
+  // so we attempt mapping on FE using the recent courses we already fetch.)
+  const recentCourses = Array.isArray(coursesData?.items) ? coursesData.items : [];
+  const courseCodeById = recentCourses.reduce((acc, c) => {
+    if (!c?.id) return acc;
+    acc[String(c.id)] = c?.code ?? c?.course_code ?? c?.name ?? "";
+    return acc;
+  }, {});
+
   // Normalize activityLog — BE trả về AuditLogResponse[]: { type, message, time, timestamp }
   const ICON_MAP = {
     info: { icon: Activity, color: "text-blue-600 bg-blue-50" },
@@ -39,13 +49,38 @@ export default function AdminDashboard() {
     warning: { icon: AlertCircle, color: "text-orange-600 bg-orange-50" },
     error: { icon: WifiOff, color: "text-red-600 bg-red-50" },
   };
-  const activityLog = Array.isArray(activityLogRaw) ? activityLogRaw.map((log, i) => ({
-    ...log,
-    ...(ICON_MAP[log.type] || ICON_MAP.info),
-    id: i,
-    msg: log.message,
-    time: log.time || new Date(log.timestamp).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
-  })) : [];
+  const activityLog = Array.isArray(activityLogRaw)
+    ? activityLogRaw.map((log, i) => {
+      let msg = log?.message ?? "";
+
+      // If BE message includes class ID, try replacing with course code.
+      // Example: "Admin đã phân công giảng viên vào lớp (ID: 3)"
+      if (typeof msg === "string" && msg.includes("vào lớp") && /\(ID:\s*\d+\)/.test(msg)) {
+        const payloadCourseCode =
+          log?.payload?.courseCode ??
+          log?.payload?.code ??
+          log?.payload?.course?.code ??
+          null;
+
+        const idMatch = /\(ID:\s*(\d+)\)/.exec(msg);
+        const courseId = idMatch?.[1];
+        const mappedCourseCode = courseCodeById[String(courseId)] || null;
+
+        const replacement = payloadCourseCode || mappedCourseCode;
+        if (replacement) {
+          msg = msg.replace(/\(ID:\s*\d+\)/, `(${replacement})`);
+        }
+      }
+
+      return {
+        ...log,
+        ...(ICON_MAP[log.type] || ICON_MAP.info),
+        id: i,
+        msg,
+        time: log.time || new Date(log.timestamp).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }),
+      };
+    })
+    : [];
 
   // Normalize team rankings
   const teamRankings = Array.isArray(teamRankingsRaw) ? teamRankingsRaw : [];
@@ -54,7 +89,6 @@ export default function AdminDashboard() {
 
   const safeSemesters = Array.isArray(semesters) ? semesters : [];
   const safeSubjects = Array.isArray(subjects) ? subjects : [];
-  const recentCourses = Array.isArray(coursesData?.items) ? coursesData.items : [];
   const isLoading = loadingStats || loadingCourses || loadingSems || loadingSubs || loadingProjects;
 
   const stats = {

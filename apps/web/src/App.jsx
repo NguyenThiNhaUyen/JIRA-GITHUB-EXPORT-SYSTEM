@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/protected-route.jsx";
 import RoleGuard from "./components/role-guard.jsx";
 import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import TestUI from "./pages/test-ui.jsx";
@@ -74,6 +75,7 @@ export default function App() {
       <Route path="/test-ui" element={<TestUI />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/not-found" element={<NotFound />} />
 

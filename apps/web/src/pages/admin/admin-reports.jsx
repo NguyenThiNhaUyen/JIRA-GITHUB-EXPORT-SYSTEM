@@ -294,7 +294,9 @@ export default function AdminReports() {
                              <ChevronRight size={14} className={`transition-transform ${expandedCourse === course?.id ? 'rotate-90' : ''}`} />
                              <div>
                                 <div className="font-semibold text-gray-800">{course?.code ?? "N/A"}</div>
-                                <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course?.name ?? `Lớp (ID: ${course?.id ?? "N/A"})`}</div>
+                               <div className="text-xs text-gray-500 mt-0.5 max-w-[150px] sm:max-w-[200px] md:max-w-[250px] truncate">
+                                 {course?.name ?? `Lớp (ID: ${course?.id ?? "N/A"})`}
+                               </div>
                              </div>
                           </div>
                         </td>
@@ -395,7 +397,7 @@ export default function AdminReports() {
           <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center text-center space-y-4 h-full py-4">
               <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-2">
-                  <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
+                <span className="text-2xl font-bold">{projectStats.silentProjects}</span>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 text-lg">Dự án chưa hoạt động</h4>
@@ -406,17 +408,7 @@ export default function AdminReports() {
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card className="border border-green-100 shadow-sm rounded-[24px] overflow-hidden bg-green-50/30 flex items-center justify-center min-h-[250px]">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} />
-            </div>
-            <h4 className="font-semibold text-gray-800 text-lg">Tất cả dự án đang hoạt động</h4>
-            <p className="text-sm text-gray-600 mt-1">Không có dự án nào bị bỏ trống tuần này</p>
-          </div>
-        </Card>
-      )}
+      ) : null}
     </div>
   );
 }

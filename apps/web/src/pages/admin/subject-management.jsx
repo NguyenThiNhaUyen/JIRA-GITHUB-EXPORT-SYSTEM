@@ -35,7 +35,8 @@ export default function SubjectManagement() {
         name: "",
         department: "",
         credits: 3,
-        status: "ACTIVE",
+        // Default status for "create new" mode: Chưa áp dụng
+        status: "PENDING",
     });
 
     const handleCreate = () => {
@@ -45,7 +46,7 @@ export default function SubjectManagement() {
             name: "",
             department: "",
             credits: 3,
-            status: "ACTIVE",
+            status: "PENDING",
         });
         setShowModal(true);
     };
@@ -163,7 +164,9 @@ export default function SubjectManagement() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-center">
-                                            <span className="text-sm text-gray-700">{subject.name}</span>
+                                            <div className="mx-auto text-sm text-gray-700 max-w-[150px] sm:max-w-[200px] md:max-w-[250px] truncate">
+                                                {subject.name}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-center">
                                             <span className="font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full text-xs">
@@ -171,10 +174,20 @@ export default function SubjectManagement() {
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-center">
-                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${subject.status === 'ACTIVE' ? 'text-green-600 bg-green-50' :
-                                                'text-gray-600 bg-gray-100'
-                                                }`}>
-                                                {subject.status === 'ACTIVE' ? 'ĐANG ÁP DỤNG' : 'NGỪNG ÁP DỤNG'}
+                                            <span
+                                                className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider inline-block whitespace-nowrap ${
+                                                    subject.status === "ACTIVE"
+                                                        ? "text-green-600 bg-green-50"
+                                                        : subject.status === "PENDING"
+                                                          ? "text-blue-600 bg-blue-50"
+                                                          : "text-gray-600 bg-gray-100"
+                                                }`}
+                                            >
+                                                {subject.status === "ACTIVE"
+                                                    ? "ĐANG ÁP DỤNG"
+                                                    : subject.status === "PENDING"
+                                                      ? "CHƯA ÁP DỤNG"
+                                                      : "NGỪNG ÁP DỤNG"}
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-center">
@@ -246,23 +259,23 @@ export default function SubjectManagement() {
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Khoa / Bộ môn *
-                        </label>
-                        <input
-                            type="text"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                            value={formData.department}
-                            onChange={(e) =>
-                                setFormData({ ...formData, department: e.target.value })
-                            }
-                            placeholder="VD: Kỹ thuật phần mềm"
-                            required
-                        />
-                    </div>
-
                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Khoa / Bộ môn *
+                            </label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                                value={formData.department}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, department: e.target.value })
+                                }
+                                placeholder="VD: Kỹ thuật phần mềm"
+                                required
+                            />
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Số tín chỉ *
@@ -282,22 +295,74 @@ export default function SubjectManagement() {
                                 required
                             />
                         </div>
+                    </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Trạng thái
-                            </label>
-                            <select
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                                value={formData.status}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, status: e.target.value })
-                                }
-                            >
-                                <option value="ACTIVE">Đang áp dụng (ACTIVE)</option>
-                                <option value="INACTIVE">Ngừng áp dụng (INACTIVE)</option>
-                            </select>
-                        </div>
+                    <div className="w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Trạng thái
+                        </label>
+                        {editingSubject ? (
+                            <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4">
+                                <p className="text-sm font-medium text-gray-700">
+                                    Trạng thái hiện tại:{" "}
+                                    <span
+                                        className={`font-bold ${
+                                            formData.status === "ACTIVE"
+                                                ? "text-green-600"
+                                                : formData.status === "PENDING"
+                                                  ? "text-blue-600"
+                                                  : "text-gray-600"
+                                        }`}
+                                    >
+                                        {formData.status === "ACTIVE"
+                                            ? "Đang áp dụng"
+                                            : formData.status === "PENDING"
+                                              ? "Chưa áp dụng"
+                                              : "Ngừng áp dụng"}
+                                    </span>
+                                </p>
+
+                                <div className="mt-3">
+                                    {formData.status === "PENDING" && (
+                                        <Button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, status: "ACTIVE" })}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-none text-sm"
+                                        >
+                                            Áp dụng
+                                        </Button>
+                                    )}
+
+                                    {formData.status === "ACTIVE" && (
+                                        <Button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, status: "INACTIVE" })}
+                                            className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-none text-sm"
+                                        >
+                                            Ngừng
+                                        </Button>
+                                    )}
+
+                                    {formData.status === "INACTIVE" && (
+                                        <Button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, status: "ACTIVE" })}
+                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-none text-sm"
+                                        >
+                                            Áp dụng
+                                        </Button>
+                                    )}
+
+                                    <div className="text-[11px] text-gray-500 pt-2 text-center">
+                                        Nhấn “Cập nhật” để lưu thay đổi.
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 text-sm text-gray-600">
+                                Chưa áp dụng
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">

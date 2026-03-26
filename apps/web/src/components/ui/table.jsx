@@ -47,7 +47,7 @@ export function TableHead({ children, className = '', ...props }) {
 
 export function TableCell({ children, className = '', ...props }) {
   return (
-    <td className={`px-6 py-4 whitespace-nowrap text-sm text-secondary-900 ${className}`} {...props}>
+    <td className={`px-6 py-4 text-sm text-secondary-900 ${className}`} {...props}>
       {children}
     </td>
   );

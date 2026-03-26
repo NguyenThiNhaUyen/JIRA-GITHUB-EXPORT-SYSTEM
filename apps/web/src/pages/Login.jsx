@@ -89,7 +89,12 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                  <Link to="/forgot-password" className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors">
+                    Quên mật khẩu?
+                  </Link>
+                </div>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
